@@ -11,4 +11,17 @@
 
 	<include package="nti.contenttypes.presentation" />
 
+	<!-- Events -->
+	<subscriber handler=".subscribers._update_data_when_content_changes"
+				for="nti.contentlibrary.interfaces.IContentPackage
+					 zope.lifecycleevent.IObjectAddedEvent" />
+
+	<subscriber handler=".subscribers._update_data_when_content_changes"
+				for="nti.contentlibrary.interfaces.IContentPackage
+					 zope.lifecycleevent.IObjectModifiedEvent" />
+					 
+	<subscriber handler=".subscribers._clear_data_when_content_changes"
+				for="nti.contentlibrary.interfaces.IContentPackage
+					 zope.lifecycleevent.IObjectRemovedEvent" />
+
 </configure>
