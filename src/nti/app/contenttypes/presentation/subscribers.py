@@ -12,7 +12,9 @@ logger = __import__('logging').getLogger(__name__)
 import simplejson
 
 from zope import component
+from zope.lifecycleevent import IObjectRemovedEvent
 
+from nti.contentlibrary.interfaces import IContentPackage
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IGlobalContentPackageLibrary
 
@@ -150,6 +152,7 @@ def _update_data_when_content_changes(content_package, event):
 	for icontainer, item_iface in INTERFACE_PAIRS:
 		_register_items_when_content_changes(content_package,icontainer, item_iface)
 
+@component.adapter(IContentPackage, IObjectRemovedEvent)
 def _clear_data_when_content_changes(content_package, event):
 	for _, item_iface in INTERFACE_PAIRS:
 		_remove_from_registry_with_interface(content_package, item_iface)
