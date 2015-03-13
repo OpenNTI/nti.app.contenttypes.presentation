@@ -70,7 +70,7 @@ def _remove_from_registry_with_index(pacakge, index_interface, item_iterface,
 def _remove_from_registry_with_interface(pacakge, item_iterface, registry=None):
 	result = []
 	registry = _registry(registry)
-	for name , utility in list(registry.getAllUtilitiesRegisteredFor(item_iterface)):
+	for name , utility in list(registry.getUtilitiesFor(item_iterface)):
 		if getattr(utility, 'content_pacakge_ntiid', None) == pacakge.ntiid:
 			result.append(utility)
 			registry.unregisterUtility(provided=item_iterface, name=name)

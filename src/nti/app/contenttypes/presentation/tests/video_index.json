@@ -1,0 +1,3172 @@
+{
+    "Items": {
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Scopes": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "The Scopes Trial",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Scopes",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_z906mvig/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_z906mvig"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_z906mvig/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/2f9b7e8de8da184f8eaef8e606caba0ce5199791/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/2f9b7e8de8da184f8eaef8e606caba0ce5199791/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_FDR_and_1932_Election": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "FDR and the 1932 Election",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_FDR_and_1932_Election",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_tjra2xl0/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_tjra2xl0"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_tjra2xl0/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/851cfbccd4e404ac9addda649283804d43639702/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/851cfbccd4e404ac9addda649283804d43639702/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Second_Industrial_Revolution": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "The Second Industrial Revolution",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Second_Industrial_Revolution",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_yijey088/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_yijey088"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_yijey088/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/12c65cdf527eacc01b1a17a2526cd43b9219e70b/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/12c65cdf527eacc01b1a17a2526cd43b9219e70b/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_FDR_and_Polio": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "FDR and Polio",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_FDR_and_Polio",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_2ti6k2ub/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_2ti6k2ub"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_2ti6k2ub/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/77276c2aacee6ab00d55694e2ccdcd71f61d0b58/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/77276c2aacee6ab00d55694e2ccdcd71f61d0b58/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Populist_Moment": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Populist Moment",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Populist_Moment",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_24mqfgvx/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_24mqfgvx"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_24mqfgvx/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/3b60ccc280050bdefc7ddf59ed884fc832d4e239/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/3b60ccc280050bdefc7ddf59ed884fc832d4e239/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Many_Faces_of_Progressivism": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "The Many Faces of Progressivism",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Many_Faces_of_Progressivism",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id//width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id//width/640/"
+                }
+            ],
+            "transcripts": []
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_1924_Democratic_Convention": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "The 1924 Democratic Convention",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_1924_Democratic_Convention",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_vlpebdoh/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_vlpebdoh"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_vlpebdoh/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/132c19d244e7445edd67caec0766f92aec9cf60f/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/132c19d244e7445edd67caec0766f92aec9cf60f/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_The_Bomb": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "The Bomb",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_The_Bomb",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_6qh67wbl/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_6qh67wbl"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_6qh67wbl/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/c7984eabce92869e70da6e361f0e240f5c3d0fe9/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/c7984eabce92869e70da6e361f0e240f5c3d0fe9/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Elvis_and_Rock_and_Roll": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Elvis and Rock and Roll",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Elvis_and_Rock_and_Roll",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_c21kd8w1/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_c21kd8w1"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_c21kd8w1/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/52bd09e14549a9a1e9032c34be1d97f273af4ebf/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/52bd09e14549a9a1e9032c34be1d97f273af4ebf/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Fear_Itself": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "\u201cFear Itself\u201d",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Fear_Itself",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_yq0nwfe1/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_yq0nwfe1"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_yq0nwfe1/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/8b4f02d940881641141a31f428389bda7d5132ae/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/8b4f02d940881641141a31f428389bda7d5132ae/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Integrity": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Academic Integrity at OU",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Integrity",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_ov8bvmqy/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_ov8bvmqy"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_ov8bvmqy/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/380c0b190f6f7d4ced765008d44e815e20a9c9ac/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/380c0b190f6f7d4ced765008d44e815e20a9c9ac/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Plagiarism": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Academic Integrity: Plagiarism",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Plagiarism",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_735lhd4b/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_735lhd4b"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_735lhd4b/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/c00f2356b4215b9abcf47f5b1668cbcd0db77bd5/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/c00f2356b4215b9abcf47f5b1668cbcd0db77bd5/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Protecting": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Protecting OU\u2019s Academic Integrity",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Protecting",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_7b0xu2ci/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_7b0xu2ci"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_7b0xu2ci/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/90a8fe33861c533cb92aa3bfb8f84c4ad277e980/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/90a8fe33861c533cb92aa3bfb8f84c4ad277e980/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Andrew_Johnson": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Andrew Johnson",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Andrew_Johnson",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_hwfe5zjr/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_hwfe5zjr"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_hwfe5zjr/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/cd0332efcd704487fab382b76fdc0523fb2dad7e/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/cd0332efcd704487fab382b76fdc0523fb2dad7e/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Philadelphia_Centennial": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "The Philadelphia Centennial",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Philadelphia_Centennial",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_t1yqg0hw/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_t1yqg0hw"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_t1yqg0hw/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/7abc104bbe7cdc2a89d501c04d260211ba2c63b7/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/7abc104bbe7cdc2a89d501c04d260211ba2c63b7/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Understanding_Roosevelt": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Understanding Roosevelt",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Understanding_Roosevelt",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_cb3r6kp9/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_cb3r6kp9"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_cb3r6kp9/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/8d20481577bb98544b397043a9a803bff0e4f919/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/8d20481577bb98544b397043a9a803bff0e4f919/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Second_New_Deal": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "The Second New Deal",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Second_New_Deal",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_suoiru3s/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_suoiru3s"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_suoiru3s/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/abde7516921080e4ac05cc78b734ca442484a153/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/abde7516921080e4ac05cc78b734ca442484a153/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Pearl_Harbor_Conspiracy": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Pearl Harbor Conspiracy Theories",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Pearl_Harbor_Conspiracy",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_nludy1ae/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_nludy1ae"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_nludy1ae/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/09f5f806c1ad63092d87ef1c9efc64e80869fc24/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/09f5f806c1ad63092d87ef1c9efc64e80869fc24/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Goldwater_Political_Prophet": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Goldwater: Political Prophet",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Goldwater_Political_Prophet",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_sasqjs1u/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_sasqjs1u"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_sasqjs1u/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/dcacf48697b4a5c8cb8f2260446ec32a500ed431/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/dcacf48697b4a5c8cb8f2260446ec32a500ed431/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_William_Jennings_Bryan": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Bryan, McKinley, and the 1896 Election",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_William_Jennings_Bryan",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_pgren46u/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_pgren46u"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_pgren46u/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/006ad04a4cd55a238803c44099c7f3d475a4175e/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/006ad04a4cd55a238803c44099c7f3d475a4175e/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_forumns_discussions": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "NextThought",
+            "title": "Janux Forums and Discussions",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_forumns_discussions",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_3x3pk33p/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_3x3pk33p"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_3x3pk33p/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/197be71dc1c6d45635c4a897b20610ca93350cf1/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/197be71dc1c6d45635c4a897b20610ca93350cf1/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_The_Myth_and_the_West": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "The Myth of the West",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_The_Myth_and_the_West",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_nd4ag39n/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_nd4ag39n"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_nd4ag39n/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/5fddbf2885bf9c15e887a9a11d32a255b8919e80/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/5fddbf2885bf9c15e887a9a11d32a255b8919e80/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Blending_Quotes_pt2": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Blending Quotes, Part 2",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Blending_Quotes_pt2",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_y2fcfexj/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_y2fcfexj"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_y2fcfexj/width/640/"
+                }
+            ],
+            "transcripts": []
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Blending_Quotes_pt1": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Blending Quotes, Part 1",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Blending_Quotes_pt1",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_9i94u868/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_9i94u868"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_9i94u868/width/640/"
+                }
+            ],
+            "transcripts": []
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_social_feeds": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "NextThought",
+            "title": "Janux Social Feeds",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_social_feeds",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_eid7r3d5/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_eid7r3d5"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_eid7r3d5/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/84b55538c7b0505191d78c9b75c35e93b87e2b14/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/84b55538c7b0505191d78c9b75c35e93b87e2b14/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Life_of_Kennedys_Death": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Life of Kennedy\u2019s Death",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Life_of_Kennedys_Death",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_p0fv51oo/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_p0fv51oo"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_p0fv51oo/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/0991847a4416318056fd7aa32b454fbbb91ff678/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/0991847a4416318056fd7aa32b454fbbb91ff678/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Eleanor_Roosevelt": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Eleanor Roosevelt",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Eleanor_Roosevelt",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_ujeql3av/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_ujeql3av"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_ujeql3av/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/02a7ae0fd1e780a6744f44208092e27b1e0b3076/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/02a7ae0fd1e780a6744f44208092e27b1e0b3076/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Eisenhower_and_1956_Campaign": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Eisenhower and the 1956 Campaign",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Eisenhower_and_1956_Campaign",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_6bllhk3w/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_6bllhk3w"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_6bllhk3w/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/15dd67336a57d042121c4de4ff0980bc28676e8d/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/15dd67336a57d042121c4de4ff0980bc28676e8d/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_2_Overview": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Wounded Knee",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_2_Overview",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_xsbrebjx/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_xsbrebjx"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_xsbrebjx/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/edc80a8bd011884ba167f592a304ff56d780a244/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/edc80a8bd011884ba167f592a304ff56d780a244/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Pearl_Harbor_Legacies": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Pearl Harbor Legacies",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Pearl_Harbor_Legacies",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_s9onl4cp/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_s9onl4cp"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_s9onl4cp/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/b5ce776ac90ea9a74a74d682eb53c3062a39cc3b/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/b5ce776ac90ea9a74a74d682eb53c3062a39cc3b/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Reviving_the_Economy": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Reviving the Economy",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Reviving_the_Economy",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_vzrpbeje/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_vzrpbeje"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_vzrpbeje/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/c8048a338b1f0fdc3bfbb5e1c485f2eb79966094/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/c8048a338b1f0fdc3bfbb5e1c485f2eb79966094/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Atomic_Anxiety_in_1950s": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Atomic Anxiety in the 1950s",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Atomic_Anxiety_in_1950s",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_949q36n1/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_949q36n1"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_949q36n1/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/8fbb09ba451153b96dd78bc44218119363ab5a98/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/8fbb09ba451153b96dd78bc44218119363ab5a98/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Truman_and_History": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Truman and History",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Truman_and_History",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_ippwmzhg/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_ippwmzhg"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_ippwmzhg/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/f304cbd8bb93a6bbdc951834dba9077a1f0ec77b/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/f304cbd8bb93a6bbdc951834dba9077a1f0ec77b/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Compromise_of_1877": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "The Compromise of 1877",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Compromise_of_1877",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_4lxl21zh/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_4lxl21zh"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_4lxl21zh/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/e5413ce92e89822f05a48dcb12db606c3f66cb67/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/e5413ce92e89822f05a48dcb12db606c3f66cb67/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_1928_Election": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "The 1928 Presidential Election",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_1928_Election",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_6orzz3um/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_6orzz3um"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_6orzz3um/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/9e1c67efbb1ac84d9d5718bd3ea169efcb6ce4a1/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/9e1c67efbb1ac84d9d5718bd3ea169efcb6ce4a1/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Wilson_Goes_to_War": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Woodrow Wilson Goes to War",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Wilson_Goes_to_War",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_e9rxq8sz/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_e9rxq8sz"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_e9rxq8sz/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/dc587610031ae4af051620bd4b7fb4eb2362108e/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/dc587610031ae4af051620bd4b7fb4eb2362108e/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Freedom_Summer": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Freedom Summer",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Freedom_Summer",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_rloyy0ze/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_rloyy0ze"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_rloyy0ze/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/9146b0ede815eb944c591cd75d7446211252b91f/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/9146b0ede815eb944c591cd75d7446211252b91f/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_The_Pacific_War": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "War in the Pacific",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_The_Pacific_War",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_22641odq/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_22641odq"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_22641odq/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/064b7fa8c571b497df1b6a194b1e20a47e4308f5/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/064b7fa8c571b497df1b6a194b1e20a47e4308f5/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Cultural_Crosscurrents": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Cultural Crosscurrents of the 1920s",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Cultural_Crosscurrents",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_4c5i9afc/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_4c5i9afc"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_4c5i9afc/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/73a81d2c7926ce8c83833438f64344d43aedac6c/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/73a81d2c7926ce8c83833438f64344d43aedac6c/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_War_and_Society": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "War and Society",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_War_and_Society",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_mmsmnmeu/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_mmsmnmeu"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_mmsmnmeu/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/2dcb0e07d6c022e410d7b6c2b77ae8122cc3fbd5/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/2dcb0e07d6c022e410d7b6c2b77ae8122cc3fbd5/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_contacts": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "NextThought",
+            "title": "Janux Contacts",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_contacts",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_ju4xxej3/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_ju4xxej3"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_ju4xxej3/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/e8ff33002bf02e906fed24f22e9222c501a8ecde/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/e8ff33002bf02e906fed24f22e9222c501a8ecde/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_video_features": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "NextThought",
+            "title": "Janux Video Features",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_video_features",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_8kadnbxx/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_8kadnbxx"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_8kadnbxx/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/a6a9fad99b42a704dd1d499c35f09d8cf8293c43/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/a6a9fad99b42a704dd1d499c35f09d8cf8293c43/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Thesis": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Video: Thesis",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Thesis",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_ay66ym1v/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_ay66ym1v"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_ay66ym1v/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/80ca192c4d297458706ecf62dfd9bfc2dd3378d0/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/80ca192c4d297458706ecf62dfd9bfc2dd3378d0/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_FDR_and_Pearl_Harbor": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "FDR and Pearl Harbor",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_FDR_and_Pearl_Harbor",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_va8u5lki/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_va8u5lki"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_va8u5lki/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/5c3bbcd803b3eb974b88a0521619ace45ca078c3/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/5c3bbcd803b3eb974b88a0521619ace45ca078c3/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Debating_Containment": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Debating Containment",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Debating_Containment",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_pcysuzun/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_pcysuzun"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_pcysuzun/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/62a19169939bc90ad573846f9e51cadfc2dcfa4d/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/62a19169939bc90ad573846f9e51cadfc2dcfa4d/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Harry_Truman_and_1948_Presidential_Election": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Harry Truman and the 1948 Presidential Election",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Harry_Truman_and_1948_Presidential_Election",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_nig84oo0/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_nig84oo0"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_nig84oo0/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/b2b3686720725f5c95a1958ef89765820f1df417/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/b2b3686720725f5c95a1958ef89765820f1df417/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_TR_Wilson_and_Competing_Views_of_Government": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "T.R., Wilson, and Competing Views of Government Power",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_TR_Wilson_and_Competing_Views_of_Government",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_o09zclcj/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_o09zclcj"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_o09zclcj/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/8b6a884eefaf553ac658d1ee774d56b354a0dde1/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/8b6a884eefaf553ac658d1ee774d56b354a0dde1/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Vital_Center": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "The Vital Center",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Vital_Center",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_bjsnosvj/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_bjsnosvj"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_bjsnosvj/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/2cb62ee8d3a2f3d57cf6c2d8cafd4c27db88b791/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/2cb62ee8d3a2f3d57cf6c2d8cafd4c27db88b791/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_D_Day": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "D-Day",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_D_Day",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_joip13ln/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_joip13ln"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_joip13ln/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/2e66ee84705935d5fead5345c760cb3cbcaebe51/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/2e66ee84705935d5fead5345c760cb3cbcaebe51/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Jane_Addams": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Jane Addams and Hull House",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Jane_Addams",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_uu2nbb5l/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_uu2nbb5l"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_uu2nbb5l/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/60d38cd74cb2e1be7af2e34a964dce2efed8fe8d/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/60d38cd74cb2e1be7af2e34a964dce2efed8fe8d/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_course_overview": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Welcome to the Course",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_course_overview",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_zbc0juua/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_zbc0juua"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_zbc0juua/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/9977d12d977d81498a72467932d710c777f157ef/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/9977d12d977d81498a72467932d710c777f157ef/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Day_of_Infamy_Speech": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Day of Infamy",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Day_of_Infamy_Speech",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_4zjrwc3u/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_4zjrwc3u"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_4zjrwc3u/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/b331210bd9814b83cb2c80ad4545f8373521ec58/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/b331210bd9814b83cb2c80ad4545f8373521ec58/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Water_and_Waste": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Water and Waste",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Water_and_Waste",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_4ioh0sn4/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_4ioh0sn4"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_4ioh0sn4/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/582621b8cfcf2af26ab5f20c9481542194d6d4fa/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/582621b8cfcf2af26ab5f20c9481542194d6d4fa/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Thaddeus_Stevens": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Thaddeus Stevens and the Radical Republicans",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Thaddeus_Stevens",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_5vday45h/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_5vday45h"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_5vday45h/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/a2531e5ec3e844bf82bfeb4a47af487ada212552/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/a2531e5ec3e844bf82bfeb4a47af487ada212552/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Assassination_of_Abraham_Lincoln": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "The Assassination of Abraham Lincoln",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Assassination_of_Abraham_Lincoln",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_99xl8es0/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_99xl8es0"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_99xl8es0/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/f3a4bbb8ff2abed0875a5e405fb02fc370e975ba/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/f3a4bbb8ff2abed0875a5e405fb02fc370e975ba/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Boomer_NationGenerational_Identity": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Boomer Nation: Generational Identity and Social Change in Modern America",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Boomer_NationGenerational_Identity",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_ojc4szu0/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_ojc4szu0"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_ojc4szu0/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/d781d9423011360da5370c2bdbdb5a4d196f75de/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/d781d9423011360da5370c2bdbdb5a4d196f75de/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Individual_Liberty_vs_National_Security": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Individual Liberty vs. National Security",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Individual_Liberty_vs_National_Security",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_iyf26bue/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_iyf26bue"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_iyf26bue/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/8aea0a2a7a5b9db7cb2922eb97c9e294e844dd24/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/8aea0a2a7a5b9db7cb2922eb97c9e294e844dd24/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Vocabulary_of_Progressivism": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "The Vocabulary of Progressivism",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Vocabulary_of_Progressivism",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_wbtm94pn/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_wbtm94pn"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_wbtm94pn/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/12807139bc63365eb349a6b1698f95e9b9a261a9/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/12807139bc63365eb349a6b1698f95e9b9a261a9/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Paragraphs_Unity": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Paragraphs: Unity",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Paragraphs_Unity",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_t5f5t0pq/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_t5f5t0pq"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_t5f5t0pq/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/189d3f97b16b8800bdb55c102ba4942f0623e059/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/189d3f97b16b8800bdb55c102ba4942f0623e059/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Joseph_McCarthy": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Joseph McCarthy and the Politics of Fear",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Joseph_McCarthy",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_gur6tu5j/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_gur6tu5j"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_gur6tu5j/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/a125d05fd2c0a3aa5ff7b27717e29778bfb03507/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/a125d05fd2c0a3aa5ff7b27717e29778bfb03507/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Homestead": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Homestead Strike",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Homestead",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_ooxzulwi/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_ooxzulwi"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_ooxzulwi/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/c3736824ec9005a2fb2d80403334714157c677d4/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/c3736824ec9005a2fb2d80403334714157c677d4/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_assignments": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "NextThought",
+            "title": "Janux Self-Checks, Assignments, and Quizzes",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_assignments",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_iw3nyv22/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_iw3nyv22"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_iw3nyv22/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/a536f102125ae2fb892f26e270675d2576652331/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/a536f102125ae2fb892f26e270675d2576652331/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Southern_Violence": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Southern Violence and the End of Presidential Reconstruction",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Southern_Violence",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_qig6ozza/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_qig6ozza"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_qig6ozza/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/30b2bdeaf7616cced1f0e92d98e05440a9f3ede3/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/30b2bdeaf7616cced1f0e92d98e05440a9f3ede3/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Roots_of_Cold_War": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Roots of the Cold War",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Roots_of_Cold_War",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_6mcuzlvk/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_6mcuzlvk"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_6mcuzlvk/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/9a5ce098a3b410a282bf3d08423f9289d582f13f/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/9a5ce098a3b410a282bf3d08423f9289d582f13f/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Prohibition": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Prohibition and Progressivism",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Prohibition",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_xum87kk8/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_xum87kk8"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_xum87kk8/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/1f65128f94b462c473aca3994dc7fb2bd67a62ae/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/1f65128f94b462c473aca3994dc7fb2bd67a62ae/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Depression_and_New_Deal": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Depression and the New Deal",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Depression_and_New_Deal",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_ux9ckocj/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_ux9ckocj"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_ux9ckocj/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/b8599458003cf105e7106c5d5ff05dcb0b758722/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/b8599458003cf105e7106c5d5ff05dcb0b758722/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Coming_to_Terms_with_JFK": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Coming to Terms with the Legacy of Kennedy",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Coming_to_Terms_with_JFK",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_r4k4bl0s/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_r4k4bl0s"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_r4k4bl0s/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/6155f6c4c7d2a959d1dde170a18584a9e1c89215/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/6155f6c4c7d2a959d1dde170a18584a9e1c89215/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Kennedy_and_Civil_Rights": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Kennedy and Civil Rights",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Kennedy_and_Civil_Rights",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_zodfyteo/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_zodfyteo"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_zodfyteo/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/7fafd67eaff278a5875ae61a9c9ea2829e5c4828/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/7fafd67eaff278a5875ae61a9c9ea2829e5c4828/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Competing_Views_of_Cities": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Competing Views of Cities",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Competing_Views_of_Cities",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_1kfxvfoa/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_1kfxvfoa"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_1kfxvfoa/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/056b66ed26e9c25edc96810c53b8d5ed7fc6b3d1/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/056b66ed26e9c25edc96810c53b8d5ed7fc6b3d1/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Over_There": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Over There",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Over_There",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_tc7iur63/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_tc7iur63"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_tc7iur63/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/3756ea4810f5fda92db0610a476953b586c73f8f/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/3756ea4810f5fda92db0610a476953b586c73f8f/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Womens_Suffrage": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Women\u2019s Suffrage",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Womens_Suffrage",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_wnorvzw9/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_wnorvzw9"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_wnorvzw9/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/8ad877aa6fb130d06475fbc75b6afd90b643f665/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/8ad877aa6fb130d06475fbc75b6afd90b643f665/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_reading_features": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "NextThought",
+            "title": "Janux Reading Features",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_reading_features",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_80nbofri/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_80nbofri"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_80nbofri/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/7e78f8860a21832c72fde5f78c12dfd808a62983/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/7e78f8860a21832c72fde5f78c12dfd808a62983/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Streetcars_and_Suburbs": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Streetcars and Suburbs",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Streetcars_and_Suburbs",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_4zfciy70/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_4zfciy70"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_4zfciy70/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/c08e165ba0f6cfc1a60c18705dcbf7b5aa1b3c8e/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/c08e165ba0f6cfc1a60c18705dcbf7b5aa1b3c8e/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Brown_v_Board_and_Politics_of_Race": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Brown v. Board and the Politics of Race",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Brown_v_Board_and_Politics_of_Race",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_28x8fz0v/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_28x8fz0v"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_28x8fz0v/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/3362241f0e60ca38823d855b58c4c7bbc3d84cb3/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/3362241f0e60ca38823d855b58c4c7bbc3d84cb3/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_overview": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "NextThought",
+            "title": "Janux: An Overview",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_overview",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_jxpynlmg/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_jxpynlmg"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_jxpynlmg/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/c66192dde55d929e93982237ae068acbfec77ce7/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/c66192dde55d929e93982237ae068acbfec77ce7/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Taft_and_TR": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Taft and T.R.",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Taft_and_TR",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id//width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id//width/640/"
+                }
+            ],
+            "transcripts": []
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Skyscrapers_and_Apartments": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Skyscrapers and Apartments",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Skyscrapers_and_Apartments",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_lellbylu/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_lellbylu"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_lellbylu/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/c53db7a58bfeac50c640a1c2a5c7ecaebbcae620/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/c53db7a58bfeac50c640a1c2a5c7ecaebbcae620/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_George_Kennan_and_Containment_863": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "George Kennan and Containment",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_George_Kennan_and_Containment_863",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_z4y31out/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_z4y31out"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_z4y31out/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/e953a600dfbe67994011afa68c2e7c4186054672/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/e953a600dfbe67994011afa68c2e7c4186054672/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Splendid_Little_War": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "A Splendid Little War",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Splendid_Little_War",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_irwc0x5o/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_irwc0x5o"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_irwc0x5o/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/946b032bd3c9d6b6bef68d888cbb8c1426c0436a/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/946b032bd3c9d6b6bef68d888cbb8c1426c0436a/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_TR": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Theodore Roosevelt",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_TR",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_28zyxwne/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_28zyxwne"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_28zyxwne/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/8124f66a330ed10f6db9b52c401e911ee68ed39b/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/8124f66a330ed10f6db9b52c401e911ee68ed39b/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_5_Overview": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "American Empire",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_5_Overview",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_uavf9np8/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_uavf9np8"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_uavf9np8/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/e5e30a56740894aa2639579dc69333e2620a4346/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/e5e30a56740894aa2639579dc69333e2620a4346/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_TR_Wilson_and_1912_Election": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "T.R., Wilson, and the 1912 Election",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_TR_Wilson_and_1912_Election",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_me8gpkfr/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_me8gpkfr"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_me8gpkfr/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/ea9c5fcd3187f0a4ec4820ce854dccffda48e013/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/ea9c5fcd3187f0a4ec4820ce854dccffda48e013/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_JFK_and_1960_Campaign": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "JFK and the 1960 Campaign",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_JFK_and_1960_Campaign",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_vl6pngzq/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_vl6pngzq"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_vl6pngzq/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/741841d1975f0dfc54246d5a286f99ad004f2985/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/741841d1975f0dfc54246d5a286f99ad004f2985/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Truman_Doctrine_and_Marshall_Plan": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "The Truman Doctrine and the Marshall Plan",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Truman_Doctrine_and_Marshall_Plan",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_x48wu1sv/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_x48wu1sv"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_x48wu1sv/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/dbfe5ec6a9d138e80a454043133792f3f90b0f9f/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/dbfe5ec6a9d138e80a454043133792f3f90b0f9f/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Launching_New_Deal": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Launching the New Deal",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Launching_New_Deal",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_wehmlp0u/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_wehmlp0u"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_wehmlp0u/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/e6236aa7e3ac6c105d63328c7bb2b134b860429e/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/e6236aa7e3ac6c105d63328c7bb2b134b860429e/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Suburban_Living": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Suburban Living",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Suburban_Living",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_dzlxxu3x/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_dzlxxu3x"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_dzlxxu3x/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/f029ff3e45ce4cc2542bf8da4815a0fb420946a6/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/f029ff3e45ce4cc2542bf8da4815a0fb420946a6/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Custers_Last_Stand": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Custer\u2019s Last Stand",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Custers_Last_Stand",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_8q75cq33/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_8q75cq33"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_8q75cq33/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/cf26d7941a3568f0e2060b7c2820ecb17290f99d/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/cf26d7941a3568f0e2060b7c2820ecb17290f99d/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Public_Power": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Public Power",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Public_Power",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_v6gdg8qi/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_v6gdg8qi"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_v6gdg8qi/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/347842ce9693a2bd0a120985608587d1f20e82dc/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/347842ce9693a2bd0a120985608587d1f20e82dc/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Evolution_of_MLK": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "The Evolution of MLK",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Evolution_of_MLK",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_a0tqkytm/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_a0tqkytm"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_a0tqkytm/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/ec03cfd32a968054f7686c426daff09ac6b0dcf1/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/ec03cfd32a968054f7686c426daff09ac6b0dcf1/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Japanese_Internment": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Japanese Internment",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Japanese_Internment",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_wrlv8l0w/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_wrlv8l0w"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_wrlv8l0w/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/ec2edd838a809986060803b02b55628b8458fb19/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/ec2edd838a809986060803b02b55628b8458fb19/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Decline_New_Deal": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Decline of the New Deal",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Decline_New_Deal",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_sx4a4zk9/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_sx4a4zk9"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_sx4a4zk9/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/7be57ae4179dea320440bd7f31ca736200526938/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/7be57ae4179dea320440bd7f31ca736200526938/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_6_Overview": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Introduction to Cultural Crosscurrents of the 1920s",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_6_Overview",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_j9r0i9iv/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_j9r0i9iv"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_j9r0i9iv/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/e75f1b489cc1417c6d9babe444ceacff2440e2b2/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/e75f1b489cc1417c6d9babe444ceacff2440e2b2/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Buffalo": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Buffalo",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Buffalo",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_8oz43ll3/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_8oz43ll3"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_8oz43ll3/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/57e5c0a610af8e4b4a3337cb4bc9592435dcfe2e/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/57e5c0a610af8e4b4a3337cb4bc9592435dcfe2e/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        },
+        "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Paragraphs_Bridge_Sentences": {
+            "mimeType": "application/vnd.nextthought.ntivideo",
+            "description": "",
+            "creator": "OU",
+            "title": "Paragraphs: Bridge Sentences",
+            "closedCaptions": null,
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Paragraphs_Bridge_Sentences",
+            "sources": [
+                {
+                    "service": "kaltura",
+                    "width": 640,
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_59vs2tyi/width/1280/",
+                    "height": 480,
+                    "source": [
+                        "1500101:0_59vs2tyi"
+                    ],
+                    "type": [
+                        "video/kaltura"
+                    ],
+                    "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_59vs2tyi/width/640/"
+                }
+            ],
+            "transcripts": [
+                {
+                    "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/c11e0aaf69951411c2ed7dd8e90a141b2c260aea/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+                    "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/c11e0aaf69951411c2ed7dd8e90a141b2c260aea/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+                    "type": "text/vtt",
+                    "lang": "en",
+                    "purpose": "normal"
+                }
+            ]
+        }
+    },
+    "Containers": {
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:11.02_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Life_of_Kennedys_Death"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:08.03_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_FDR_and_Pearl_Harbor",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Pearl_Harbor_Legacies",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Pearl_Harbor_Conspiracy",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Japanese_Internment",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_D_Day"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:04.03_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Populist_Moment"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:06.02_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Cultural_Crosscurrents",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Scopes"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:03.03_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Homestead",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Competing_Views_of_Cities",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Streetcars_and_Suburbs",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Skyscrapers_and_Apartments",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Water_and_Waste"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:07.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Fear_Itself"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:00.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_course_overview",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Integrity",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Protecting",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Plagiarism"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:10.02_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Suburban_Living",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Elvis_and_Rock_and_Roll"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:10.04_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Eisenhower_and_1956_Campaign",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Atomic_Anxiety_in_1950s",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_JFK_and_1960_Campaign"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:04.05_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Jane_Addams",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Womens_Suffrage",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Prohibition"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:00.01_5aep_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_course_overview",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Integrity",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Protecting",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Plagiarism"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.united_states_history,_1865_to_the_present": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Blending_Quotes_pt1",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Blending_Quotes_pt2",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Many_Faces_of_Progressivism",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Taft_and_TR"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:01.02_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Andrew_Johnson",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Thaddeus_Stevens"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:03.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Philadelphia_Centennial"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:09.02_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Roots_of_Cold_War",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Truman_Doctrine_and_Marshall_Plan",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Debating_Containment"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:02.04_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_The_Myth_and_the_West"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:11.03_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Goldwater_Political_Prophet"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:02.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_2_Overview"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:01.03_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Southern_Violence",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Compromise_of_1877"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:Paper_01_Summary_Paragraph_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Thesis"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:09.03_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Harry_Truman_and_1948_Presidential_Election",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Vital_Center"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:07.03_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Understanding_Roosevelt",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Eleanor_Roosevelt",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_FDR_and_Polio",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_FDR_and_1932_Election",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Launching_New_Deal",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Reviving_the_Economy",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Public_Power",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Second_New_Deal",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Decline_New_Deal"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:08.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Day_of_Infamy_Speech"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:05.03_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Wilson_Goes_to_War",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Over_There",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Individual_Liberty_vs_National_Security"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:Paper_01_Rough_Draft_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Paragraphs_Unity",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Paragraphs_Bridge_Sentences"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:05.02_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Splendid_Little_War"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:00.02_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_overview",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_reading_features",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_video_features",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_contacts",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_social_feeds",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_assignments",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_janux_forumns_discussions"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:04.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_William_Jennings_Bryan"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:08.04_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_The_Pacific_War",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_The_Bomb",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_War_and_Society"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:03.02_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Second_Industrial_Revolution"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:06.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_6_Overview"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:01.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Assassination_of_Abraham_Lincoln"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:00.01_Stripe_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_course_overview",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Integrity",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Protecting",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Plagiarism"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:07.02_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Depression_and_New_Deal"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:09.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_George_Kennan_and_Containment_863"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:10.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Boomer_NationGenerational_Identity"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:09.04_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Joseph_McCarthy",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Truman_and_History"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:05.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_5_Overview"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:10.03_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Brown_v_Board_and_Politics_of_Race"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:11.04_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Kennedy_and_Civil_Rights",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Freedom_Summer",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Evolution_of_MLK"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:02.03_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Buffalo",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Custers_Last_Stand"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:04.04_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Vocabulary_of_Progressivism",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_TR",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_TR_Wilson_and_1912_Election",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_TR_Wilson_and_Competing_Views_of_Government"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:11.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Coming_to_Terms_with_JFK"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:06.03_LESSON": [
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_1924_Democratic_Convention",
+            "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_1928_Election"
+        ]
+    }
+}
