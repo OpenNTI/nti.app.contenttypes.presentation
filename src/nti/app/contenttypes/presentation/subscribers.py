@@ -62,16 +62,19 @@ def _remove_from_registry_with_index(pacakge, index_interface, item_iterface,
 	def _recur(unit):
 		container = index_interface(unit, None) or ()
 		for ntiid in container:
-			registry.unregisterUtility(item_iterface, name=ntiid)
+			registry.unregisterUtility(provided=item_iterface, name=ntiid)
 		for child in unit.children:
 			_recur(child)
 	_recur(pacakge)
 
 def _remove_from_registry_with_interface(pacakge, item_iterface, registry=None):
+	result = []
 	registry = _registry(registry)
 	for name , utility in list(registry.getAllUtilitiesRegisteredFor(item_iterface)):
 		if getattr(utility, 'content_pacakge_ntiid', None) == pacakge.ntiid:
-			registry.unregisterUtility(item_iterface, name=name)
+			result.append(utility)
+			registry.unregisterUtility(provided=item_iterface, name=name)
+	return result
 
 def _load_and_register_json(item_iterface, jtext, canonicalizer=identity, registry=None):
 	result = []
@@ -97,9 +100,9 @@ def _register_items_when_content_changes(content_package, index_iface, item_ifac
 	root_index_container = index_iface(content_package)
 	if root_index_container.lastModified >= sibling_key.lastModified:
 		return
-	
-		
+
 	_remove_from_registry_with_interface(content_package, item_iface)
+
 	index_text = content_package.read_contents_of_sibling_entry(namespace)
 	registered = _load_and_register_json(item_iface, index_text)
 	for item in registered:
