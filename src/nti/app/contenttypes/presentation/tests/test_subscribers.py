@@ -34,7 +34,7 @@ class TestSubscribers(unittest.TestCase):
 
 	def _set_item_pkg_ntiid(self, result):
 		for item in result:
-			item.content_pacakge_ntiid = 'xxx'
+			item.content_package_ntiid = 'xxx'
 
 	def _test_feed(self, source, iface, count):
 		path = os.path.join(os.path.dirname(__file__), source)
@@ -48,8 +48,8 @@ class TestSubscribers(unittest.TestCase):
 
 		self._set_item_pkg_ntiid(result)
 		
-		pacakge = fudge.Fake().has_attr(ntiid='xxx')
-		result = _remove_from_registry_with_interface(pacakge, iface, registry=registry)
+		package = fudge.Fake().has_attr(ntiid='xxx')
+		result = _remove_from_registry_with_interface(package, iface, registry=registry)
 		assert_that(result, has_length(count))
 
 	def test_video_index(self):
@@ -72,9 +72,9 @@ class TestSubscribers(unittest.TestCase):
 
 		self._set_item_pkg_ntiid(result)
 		
-		pacakge = fudge.Fake().has_attr(ntiid='xxx')
-		result = _remove_from_registry_with_interface(pacakge, INTISlideDeck, registry=registry)
+		package = fudge.Fake().has_attr(ntiid='xxx')
+		result = _remove_from_registry_with_interface(package, INTISlideDeck, registry=registry)
 		assert_that(result, has_length(57))
 		
-		result = _remove_from_registry_with_interface(pacakge, INTISlide, registry=registry)
+		result = _remove_from_registry_with_interface(package, INTISlide, registry=registry)
 		assert_that(result, has_length(234))
