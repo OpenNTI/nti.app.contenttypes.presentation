@@ -18,6 +18,7 @@ from zope.interface.registry import Components
 
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTITimeline
+from nti.contenttypes.presentation.interfaces import INTIRelatedWork
 
 from nti.app.contenttypes.presentation.subscribers import _load_and_register_json
 from nti.app.contenttypes.presentation.subscribers import _remove_from_registry_with_interface
@@ -50,3 +51,6 @@ class TestSubscribers(unittest.TestCase):
 
 	def test_timeline_index(self):
 		self._test_feed('timeline_index.json', INTITimeline, 11)
+
+	def test_related_content_index(self):
+		self._test_feed('related_content_index.json', INTIRelatedWork, 372)

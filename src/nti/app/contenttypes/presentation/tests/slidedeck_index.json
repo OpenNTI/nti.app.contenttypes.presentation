@@ -1,0 +1,127 @@
+{
+    "Items": {
+        "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.heading_west": {
+            "MimeType": "application/vnd.nextthought.timeline",
+            "label": "Heading West",
+            "ntiid": "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.heading_west",
+            "href": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/d1b15ecbe7e15f47d1927624e23b40509d37f135/90784fa2c5c148922446e05d45ff35f0aee3e69b.json",
+            "icon": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/75d1ec44cd623dfdc373b705523e05259f61c821/fd35e23767020999111e1f49239199b4c5eff23e.jpg",
+            "desc": "An overview of key dates and events"
+        },
+        "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.the_liberal_hour": {
+            "MimeType": "application/vnd.nextthought.timeline",
+            "label": "The Liberal Hour",
+            "ntiid": "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.the_liberal_hour",
+            "href": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/0a4316ecb8dbf526f96d70febaf5dc952a1db36c/90784fa2c5c148922446e05d45ff35f0aee3e69b.json",
+            "icon": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/7dd96223523df6502cb674dc81713a9cbd947f59/fd35e23767020999111e1f49239199b4c5eff23e.jpg",
+            "desc": "An overview of key dates and events"
+        },
+        "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.booms,_babies_and_bombs": {
+            "MimeType": "application/vnd.nextthought.timeline",
+            "label": "Booms, Babies and Bombs",
+            "ntiid": "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.booms,_babies_and_bombs",
+            "href": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/aff3e1ea4a54001d2de2a837e05c6abfd695ad14/90784fa2c5c148922446e05d45ff35f0aee3e69b.json",
+            "icon": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/1cc10c3a10b1bf8a80fdf4c44a05fe96652c21a2/fd35e23767020999111e1f49239199b4c5eff23e.jpg",
+            "desc": "An overview of key dates and events"
+        },
+        "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.the_cold_war": {
+            "MimeType": "application/vnd.nextthought.timeline",
+            "label": "The Cold War",
+            "ntiid": "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.the_cold_war",
+            "href": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/2d8cb723ebf871ac83d89f06dc502653d0355e4b/90784fa2c5c148922446e05d45ff35f0aee3e69b.json",
+            "icon": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/857375fc7232f581f7a7ed56d45aabdaa52967d6/fd35e23767020999111e1f49239199b4c5eff23e.jpg",
+            "desc": "An overview of key dates and events"
+        },
+        "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.depression_and_the_new_deal": {
+            "MimeType": "application/vnd.nextthought.timeline",
+            "label": "Depression and the New Deal",
+            "ntiid": "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.depression_and_the_new_deal",
+            "href": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/abacaf4a8e6f526761cabdcfac69c95f48a98a7d/90784fa2c5c148922446e05d45ff35f0aee3e69b.json",
+            "icon": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/53ead4080c0e8712fdae1e633a34d42537326686/fd35e23767020999111e1f49239199b4c5eff23e.jpg",
+            "desc": "An overview of key dates and events"
+        },
+        "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.industrialization_and_urbanization": {
+            "MimeType": "application/vnd.nextthought.timeline",
+            "label": "Industrialization and Urbanization",
+            "ntiid": "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.industrialization_and_urbanization",
+            "href": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/c4ece013ca27cb1db09dd27346fa7f6a7c2bc3f0/90784fa2c5c148922446e05d45ff35f0aee3e69b.json",
+            "icon": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/0985ca6a750df1d1983053bf1517e7caaa3ab49c/fd35e23767020999111e1f49239199b4c5eff23e.jpg",
+            "desc": "An overview of key dates and events"
+        },
+        "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.america_in_the_1920s": {
+            "MimeType": "application/vnd.nextthought.timeline",
+            "label": "America in the 1920s",
+            "ntiid": "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.america_in_the_1920s",
+            "href": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/9ea04b0a38ff7ef5bfa04e2abfcbc8f4f907a849/90784fa2c5c148922446e05d45ff35f0aee3e69b.json",
+            "icon": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/82ee22c3a42a20cd4c9957a7b4aa5aaa2bd70c41/fd35e23767020999111e1f49239199b4c5eff23e.jpg",
+            "desc": "An overview of key dates and events"
+        },
+        "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.the_gilded_age_and_progressivism": {
+            "MimeType": "application/vnd.nextthought.timeline",
+            "label": "The Gilded Age and Progressivism",
+            "ntiid": "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.the_gilded_age_and_progressivism",
+            "href": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/c1f584172fc472e223a41ad7f4c1567348a331ed/90784fa2c5c148922446e05d45ff35f0aee3e69b.json",
+            "icon": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/2d297185109bd201299a67f4daab68b9891244c3/fd35e23767020999111e1f49239199b4c5eff23e.jpg",
+            "desc": "An overview of key dates and events"
+        },
+        "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.american_empire_and_wwi": {
+            "MimeType": "application/vnd.nextthought.timeline",
+            "label": "American Empire and WWI",
+            "ntiid": "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.american_empire_and_wwi",
+            "href": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/d163953bf0740dbe68a9a156f1ab4324692dd535/90784fa2c5c148922446e05d45ff35f0aee3e69b.json",
+            "icon": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/a126998aea3e31e6f2e5b0a345352cbaf49a5dfb/fd35e23767020999111e1f49239199b4c5eff23e.jpg",
+            "desc": "An overview of key dates and events"
+        },
+        "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.wwii:_war_and_society": {
+            "MimeType": "application/vnd.nextthought.timeline",
+            "label": "WWII: War and Society",
+            "ntiid": "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.wwii:_war_and_society",
+            "href": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/eadfb1c67d0f688ca34865d501539b69ca06f483/90784fa2c5c148922446e05d45ff35f0aee3e69b.json",
+            "icon": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/7b6f6382f2d709f24d3cd0e987210fb3eb4f1f8c/fd35e23767020999111e1f49239199b4c5eff23e.jpg",
+            "desc": "An overview of key dates and events"
+        },
+        "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.reconstruction_and_the_new_south": {
+            "MimeType": "application/vnd.nextthought.timeline",
+            "label": "Reconstruction and The New South",
+            "ntiid": "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.reconstruction_and_the_new_south",
+            "href": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/78ce0e2995d1fee5d2be8caf1b98ce56698a56dd/90784fa2c5c148922446e05d45ff35f0aee3e69b.json",
+            "icon": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/b6aae2745b753ec75302c7e95e329983b43fb606/fd35e23767020999111e1f49239199b4c5eff23e.jpg",
+            "desc": "An overview of key dates and events"
+        }
+    },
+    "Containers": {
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:01.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.reconstruction_and_the_new_south"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:02.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.heading_west"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:03.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.industrialization_and_urbanization"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:04.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.the_gilded_age_and_progressivism"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:05.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.american_empire_and_wwi"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:06.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.america_in_the_1920s"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:07.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.depression_and_the_new_deal"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:08.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.wwii:_war_and_society"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:09.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.the_cold_war"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:10.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.booms,_babies_and_bombs"
+        ],
+        "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:11.01_LESSON": [
+            "tag:nextthought.com,2011-10:OU-JSON:Timeline-LSTD1153_S_2015_History_United_States_1865_to_Present.timeline.the_liberal_hour"
+        ]
+    }
+}
