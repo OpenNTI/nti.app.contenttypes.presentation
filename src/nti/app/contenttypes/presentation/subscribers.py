@@ -57,7 +57,7 @@ def _registry(registry=None):
 	return registry
 
 def _remove_from_registry_with_index(pacakge, index_interface, item_iterface,
-                                     registry=None):
+									 registry=None):
 	registry = _registry(registry)
 	def _recur(unit):
 		container = index_interface(unit, None) or ()
