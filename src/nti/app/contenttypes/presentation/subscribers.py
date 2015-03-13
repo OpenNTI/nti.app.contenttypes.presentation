@@ -13,8 +13,6 @@ import simplejson
 
 from zope import component
 
-from nti.common.functional import identity
-
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IGlobalContentPackageLibrary
 
@@ -27,6 +25,7 @@ from nti.contentlibrary.indexed_data.interfaces import IRelatedContentIndexedDat
 
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTIAudio
+from nti.contenttypes.presentation.interfaces import INTISlide
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTIRelatedWork
@@ -76,19 +75,54 @@ def _remove_from_registry_with_interface(pacakge, item_iterface, registry=None):
 			registry.unregisterUtility(provided=item_iterface, name=name)
 	return result
 
-def _load_and_register_json(item_iterface, jtext, canonicalizer=identity, registry=None):
+def _load_and_register_json(item_iterface, jtext, registry=None):
 	result = []
 	registry = _registry(registry)
 	index = simplejson.loads(prepare_json_text(jtext))
 	items = index.get(ITEMS) or {}
 	for ntiid, data in items.items():
 		internal = create_object_from_external(data)
-		internal = canonicalizer(internal)
-		registry.registerUtility( internal,
-								  provided=item_iterface,
-								  name=ntiid,
-								  event=False)
-		result.append(internal)
+		if item_iterface.providedBy(internal):
+			registry.registerUtility( internal,
+									  provided=item_iterface,
+									  name=ntiid,
+									  event=False)
+			result.append(internal)
+	return result
+
+def _load_and_register_slidedeck_json(jtext, registry=None):
+	result = []
+	registry = _registry(registry)
+	index = simplejson.loads(prepare_json_text(jtext))
+	items = index.get(ITEMS) or {}
+	for ntiid, data in items.items():
+		internal = create_object_from_external(data)
+		if INTISlide.providedBy(internal):
+			registry.registerUtility( internal,
+									  provided=INTISlide,
+									  name=ntiid,
+									  event=False)
+			result.append(internal)
+		elif INTISlideDeck.providedBy(internal):
+			# canonicalize
+			slides = internal.Slides
+			for idx, slide in enumerate(slides or ()):
+				ntiid = slide.ntiid
+				registered =  registry.queryUtility(INTISlide, name=ntiid)
+				if registered is None:
+					registry.registerUtility(slide,
+									  		 provided=INTISlide,
+									  		 name=ntiid,
+									  		 event=False)
+					result.append(internal)
+				else:
+					slides[idx] = registered # replaced w/ registered
+
+			registry.registerUtility(internal,
+								 	 provided=INTISlideDeck,
+								  	 name=ntiid,
+								  	 event=False)		
+			result.append(internal)
 	return result
 
 def _register_items_when_content_changes(content_package, index_iface, item_iface):
@@ -104,7 +138,11 @@ def _register_items_when_content_changes(content_package, index_iface, item_ifac
 	_remove_from_registry_with_interface(content_package, item_iface)
 
 	index_text = content_package.read_contents_of_sibling_entry(namespace)
-	registered = _load_and_register_json(item_iface, index_text)
+	if item_iface == INTISlideDeck:
+		registered = _load_and_register_slidedeck_json(index_text)
+	else:
+		registered = _load_and_register_json(item_iface, index_text)
+		
 	for item in registered:
 		item.content_pacakge_ntiid = content_package.ntiid # save pacakge source
 	
@@ -115,3 +153,4 @@ def _update_data_when_content_changes(content_package, event):
 def _clear_data_when_content_changes(content_package, event):
 	for _, item_iface in INTERFACE_PAIRS:
 		_remove_from_registry_with_interface(content_package, item_iface)
+	_remove_from_registry_with_interface(content_package, INTISlide)
