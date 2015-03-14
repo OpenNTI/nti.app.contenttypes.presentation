@@ -20,6 +20,7 @@ from nti.contenttypes.presentation.interfaces import INTISlide
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
+from nti.contenttypes.presentation.interfaces import INTISlideVideo
 from nti.contenttypes.presentation.interfaces import INTIRelatedWork
 
 from nti.app.contenttypes.presentation.subscribers import _load_and_register_json
@@ -68,7 +69,7 @@ class TestSubscribers(unittest.TestCase):
 			
 		registry = Components()
 		result = _load_and_register_slidedeck_json(source, registry=registry)
-		assert_that(result, has_length(1079))
+		assert_that(result, has_length(742))
 
 		self._set_item_pkg_ntiid(result)
 		
@@ -76,5 +77,8 @@ class TestSubscribers(unittest.TestCase):
 		result = _remove_from_registry_with_interface(package, INTISlideDeck, registry=registry)
 		assert_that(result, has_length(57))
 		
+		result = _remove_from_registry_with_interface(package, INTISlideVideo, registry=registry)
+		assert_that(result, has_length(57))
+		
 		result = _remove_from_registry_with_interface(package, INTISlide, registry=registry)
-		assert_that(result, has_length(234))
+		assert_that(result, has_length(628))

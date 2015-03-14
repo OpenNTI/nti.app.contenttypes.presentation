@@ -28,11 +28,12 @@ from nti.contentlibrary.indexed_data.interfaces import ITimelineIndexedDataConta
 from nti.contentlibrary.indexed_data.interfaces import ISlideDeckIndexedDataContainer
 from nti.contentlibrary.indexed_data.interfaces import IRelatedContentIndexedDataContainer
 
-from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTIAudio
+from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTISlide
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
+from nti.contenttypes.presentation.interfaces import INTISlideVideo
 from nti.contenttypes.presentation.interfaces import INTIRelatedWork
 
 from nti.contenttypes.presentation.utils import create_object_from_external
@@ -80,19 +81,44 @@ def _remove_from_registry_with_interface(package, item_iterface, registry=None):
 			registry.unregisterUtility(provided=item_iterface, name=name)
 	return result
 
-def _load_and_register_json(item_iterface, jtext, registry=None):
+def _register_utility(item, item_iface, ntiid, registry):
+	if 	item_iface.providedBy(item) and \
+		registry.queryUtility(item_iface, name=ntiid) is None:
+		registry.registerUtility(item,
+								 provided=item_iface,
+								 name=ntiid,
+								 event=False)
+		return True
+	return False
+		
+def _load_and_register_items(item_iterface, items, registry=None):
 	result = []
 	registry = _registry(registry)
-	index = simplejson.loads(prepare_json_text(jtext))
-	items = index.get(ITEMS) or {}
 	for ntiid, data in items.items():
 		internal = create_object_from_external(data)
-		if item_iterface.providedBy(internal):
-			registry.registerUtility( internal,
-									  provided=item_iterface,
-									  name=ntiid,
-									  event=False)
+		if _register_utility(internal, item_iterface, ntiid, registry):
 			result.append(internal)
+	return result
+
+def _load_and_register_json(item_iterface, jtext, registry=None):
+	index = simplejson.loads(prepare_json_text(jtext))
+	items = index.get(ITEMS) or {}
+	result = _load_and_register_items(item_iterface, items, registry)
+	return result
+
+def _canonicalize(items, item_iface, registry):
+	result = []
+	for idx, item in enumerate(items or ()):
+		ntiid = item.ntiid
+		registered = registry.queryUtility(item_iface, name=ntiid)
+		if registered is None:
+			registry.registerUtility(item,
+							  		 provided=item_iface,
+							  		 name=ntiid,
+							  		 event=False)
+			result.append(item)
+		else:
+			items[idx] = registered # replaced w/ registered
 	return result
 
 def _load_and_register_slidedeck_json(jtext, registry=None):
@@ -102,32 +128,17 @@ def _load_and_register_slidedeck_json(jtext, registry=None):
 	items = index.get(ITEMS) or {}
 	for ntiid, data in items.items():
 		internal = create_object_from_external(data)
-		if INTISlide.providedBy(internal):
-			registry.registerUtility( internal,
-									  provided=INTISlide,
-									  name=ntiid,
-									  event=False)
+		if 	INTISlide.providedBy(internal) and \
+			_register_utility(internal, INTISlide, ntiid, registry):
+			result.append(internal)
+		elif INTISlideVideo.providedBy(internal) and \
+			 _register_utility(internal, INTISlideVideo, ntiid, registry):
 			result.append(internal)
 		elif INTISlideDeck.providedBy(internal):
-			# canonicalize
-			slides = internal.Slides
-			for idx, slide in enumerate(slides or ()):
-				ntiid = slide.ntiid
-				registered =  registry.queryUtility(INTISlide, name=ntiid)
-				if registered is None:
-					registry.registerUtility(slide,
-									  		 provided=INTISlide,
-									  		 name=ntiid,
-									  		 event=False)
-					result.append(internal)
-				else:
-					slides[idx] = registered # replaced w/ registered
-
-			registry.registerUtility(internal,
-								 	 provided=INTISlideDeck,
-								  	 name=ntiid,
-								  	 event=False)		
-			result.append(internal)
+			result.extend(_canonicalize(internal.Slides, INTISlide, registry))
+			result.extend(_canonicalize(internal.Videos, INTISlideVideo, registry))
+			if _register_utility(internal, INTISlideDeck, ntiid, registry):
+				result.append(internal)
 	return result
 
 def _get_data_lastModified(content_package, item_iface):
@@ -177,3 +188,4 @@ def _clear_data_when_content_changes(content_package, event):
 	for _, item_iface in INTERFACE_PAIRS:
 		_remove_from_registry_with_interface(content_package, item_iface)
 	_remove_from_registry_with_interface(content_package, INTISlide)
+	_remove_from_registry_with_interface(content_package, INTISlideVideo)

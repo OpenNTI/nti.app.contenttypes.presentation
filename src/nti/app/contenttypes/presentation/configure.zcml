@@ -8,14 +8,27 @@
 	<include package="zope.security" file="meta.zcml" />
 	<include package="zope.component" />
 	<include package="zope.security" />
-
+	
 	<include package="nti.contenttypes.presentation" />
 
+	<!-- Traversal-ish stuff -->
+	<utility factory=".ntiids._NTIAudioResolver" name="NTIAudio" />
+	<utility factory=".ntiids._NTIVideoResolver" name="NTIVideo" />
+	
+	<utility factory=".ntiids._NTITimeLineResolver" name="Timeline" />
+	
+	<utility factory=".ntiids._NTISlideResolver" name="NTISlide" />
+	<utility factory=".ntiids._NTISlideDeckResolver" name="NTISlideDeck" />
+	<utility factory=".ntiids._NTISlideVideoResolver" name="NTISlideVideo" />
+	  
+	<utility factory=".ntiids._NTIRelatedWorkResolver" name="RelatedWork" />
+	<utility factory=".ntiids._NTIRelatedWorkResolver" name="RelatedWorkRef" />
+	
 	<!-- Events -->
 	<subscriber handler=".subscribers._update_data_when_content_changes"
 				for="nti.contentlibrary.interfaces.IContentPackage
 					 zope.lifecycleevent.IObjectAddedEvent" />
-
+	
 	<subscriber handler=".subscribers._update_data_when_content_changes"
 				for="nti.contentlibrary.interfaces.IContentPackage
 					 zope.lifecycleevent.IObjectModifiedEvent" />
