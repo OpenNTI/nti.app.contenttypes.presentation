@@ -76,7 +76,7 @@ def _remove_from_registry_with_interface(package, item_iterface, registry=None):
 	result = []
 	registry = _registry(registry)
 	for name , utility in list(registry.getUtilitiesFor(item_iterface)):
-		if getattr(utility, 'content_package_ntiid', None) == package.ntiid:
+		if getattr(utility, '_content_package_ntiid', None) == package.ntiid:
 			result.append(utility)
 			registry.unregisterUtility(provided=item_iterface, name=name)
 	return result
@@ -175,7 +175,7 @@ def _register_items_when_content_changes(content_package, index_iface, item_ifac
 		registered = _load_and_register_json(item_iface, index_text)
 		
 	for item in registered:
-		item.content_package_ntiid = content_package.ntiid # save package source
+		item._content_package_ntiid = content_package.ntiid # save package source
 
 	_set_data_lastModified(content_package, item_iface, sibling_lastModified)
 	
