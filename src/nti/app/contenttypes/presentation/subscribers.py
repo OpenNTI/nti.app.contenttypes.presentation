@@ -12,6 +12,9 @@ logger = __import__('logging').getLogger(__name__)
 import simplejson
 
 from zope import component
+
+from zope.annotation.interfaces import IAnnotations
+
 from zope.lifecycleevent import IObjectRemovedEvent
 
 from nti.contentlibrary.interfaces import IContentPackage
@@ -127,16 +130,31 @@ def _load_and_register_slidedeck_json(jtext, registry=None):
 			result.append(internal)
 	return result
 
+def _get_data_lastModified(content_package, item_iface):
+	annotations = IAnnotations(content_package)
+	key = '%s.%s.lastModified' % (item_iface.__module__, item_iface.__name__)
+	try:
+		result = annotations[key]
+	except KeyError:
+		result = 0
+	return result
+
+def _set_data_lastModified(content_package, item_iface, lastModified=0):
+	annotations = IAnnotations(content_package)
+	key = '%s.%s.lastModified' % (item_iface.__module__, item_iface.__name__)
+	annotations[key] = lastModified
+
 def _register_items_when_content_changes(content_package, index_iface, item_iface):
 	namespace = index_iface.getTaggedValue(TAG_NAMESPACE_FILE)
 	sibling_key = content_package.does_sibling_entry_exist(namespace)
 	if not sibling_key:
 		return
 	
-	root_index_container = index_iface(content_package)
-	if root_index_container.lastModified >= sibling_key.lastModified:
+	sibling_lastModified = sibling_key.lastModified
+	root_lastModified = _get_data_lastModified(content_package, item_iface)
+	if root_lastModified >= sibling_lastModified:
 		return
-
+	
 	_remove_from_registry_with_interface(content_package, item_iface)
 
 	index_text = content_package.read_contents_of_sibling_entry(namespace)
@@ -147,10 +165,12 @@ def _register_items_when_content_changes(content_package, index_iface, item_ifac
 		
 	for item in registered:
 		item.content_package_ntiid = content_package.ntiid # save package source
+
+	_set_data_lastModified(content_package, item_iface, sibling_lastModified)
 	
 def _update_data_when_content_changes(content_package, event):
 	for icontainer, item_iface in INTERFACE_PAIRS:
-		_register_items_when_content_changes(content_package,icontainer, item_iface)
+		_register_items_when_content_changes(content_package, icontainer, item_iface)
 
 @component.adapter(IContentPackage, IObjectRemovedEvent)
 def _clear_data_when_content_changes(content_package, event):
