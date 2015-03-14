@@ -28,6 +28,9 @@ from nti.contentlibrary.indexed_data.interfaces import ITimelineIndexedDataConta
 from nti.contentlibrary.indexed_data.interfaces import ISlideDeckIndexedDataContainer
 from nti.contentlibrary.indexed_data.interfaces import IRelatedContentIndexedDataContainer
 
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
+
 from nti.contenttypes.presentation.interfaces import INTIAudio
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTISlide
@@ -121,6 +124,8 @@ def _canonicalize(items, item_iface, registry):
 			items[idx] = registered # replaced w/ registered
 	return result
 
+## Library
+
 def _load_and_register_slidedeck_json(jtext, registry=None):
 	result = []
 	registry = _registry(registry)
@@ -189,3 +194,9 @@ def _clear_data_when_content_changes(content_package, event):
 		_remove_from_registry_with_interface(content_package, item_iface)
 	_remove_from_registry_with_interface(content_package, INTISlide)
 	_remove_from_registry_with_interface(content_package, INTISlideVideo)
+
+## Courses
+
+@component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
+def _on_course_instance_available(course, event):
+	pass

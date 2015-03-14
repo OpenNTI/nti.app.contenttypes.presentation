@@ -37,4 +37,10 @@
 				for="nti.contentlibrary.interfaces.IContentPackage
 					 zope.lifecycleevent.IObjectRemovedEvent" />
 
+	<subscriber handler=".subscribers._clear_data_when_content_changes"
+				for="nti.contentlibrary.interfaces.IContentPackage
+					 zope.lifecycleevent.IObjectRemovedEvent" />
+
+	<subscriber handler=".subscribers._on_course_instance_available" />
+	
 </configure>
