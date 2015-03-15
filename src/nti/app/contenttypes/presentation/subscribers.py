@@ -200,6 +200,50 @@ def _clear_data_when_content_changes(content_package, event):
 
 ## Courses
 
+def _load_and_register_lesson_overview_json(jtext, registry=None):
+	return
+	result = []
+	registry = _registry(registry)
+	index = simplejson.loads(prepare_json_text(jtext))
+	items = index.get(ITEMS) or {}
+	for ntiid, data in items.items():
+		internal = create_object_from_external(data)
+		if 	INTISlide.providedBy(internal) and \
+			_register_utility(internal, INTISlide, ntiid, registry):
+			result.append(internal)
+		elif INTISlideVideo.providedBy(internal) and \
+			 _register_utility(internal, INTISlideVideo, ntiid, registry):
+			result.append(internal)
+		elif INTISlideDeck.providedBy(internal):
+			result.extend(_canonicalize(internal.Slides, INTISlide, registry))
+			result.extend(_canonicalize(internal.Videos, INTISlideVideo, registry))
+			if _register_utility(internal, INTISlideDeck, ntiid, registry):
+				result.append(internal)
+	return result
+
+def _get_source_lastModified(course, source):
+	annotations = IAnnotations(course)
+	try:
+		key = '%s.lastModified' % source
+		result = annotations[key]
+	except KeyError:
+		result = 0
+	return result
+
+def _set_source_lastModified(course, source, lastModified=0):
+	annotations = IAnnotations(course)
+	key = '%s.lastModified' % source
+	annotations[key] = lastModified
+	
+def get_course_packages(context):
+	packages = ()
+	context = ICourseInstance(context)
+	try:
+		packages = context.ContentPackageBundle.ContentPackages
+	except AttributeError:
+		packages = (context.legacy_content_package,)
+	return packages
+
 def _outline_nodes(outline):
 	result = []
 	def _recur(node):
@@ -217,4 +261,19 @@ def _outline_nodes(outline):
 
 @component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
 def _on_course_instance_available(course, event):
-	_outline_nodes(course.Outline)
+	nodes = _outline_nodes(course.Outline)
+	for node in nodes:
+		namespace = node.src
+		for content_package in get_course_packages(course):
+			sibling_key = content_package.does_sibling_entry_exist(namespace)
+			if not sibling_key:
+				break
+
+			sibling_lastModified = sibling_key.lastModified
+			root_lastModified = _get_source_lastModified(course, namespace)
+			if root_lastModified >= sibling_lastModified:
+				return
+
+			index_text = content_package.read_contents_of_sibling_entry(namespace)
+			_load_and_register_lesson_overview_json(index_text)
+			_set_source_lastModified(course, namespace, sibling_lastModified)
