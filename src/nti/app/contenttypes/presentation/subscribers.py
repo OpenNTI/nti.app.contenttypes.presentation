@@ -75,13 +75,16 @@ def _remove_from_registry_with_index(package, index_interface, item_iterface,
 			_recur(child)
 	_recur(package)
 
-def _remove_from_registry_with_interface(package, item_iterface, registry=None):
+def _remove_from_registry_with_interface(parent, item_iterface, registry=None):
 	result = []
 	registry = _registry(registry)
 	for name , utility in list(registry.getUtilitiesFor(item_iterface)):
-		if getattr(utility, '_content_package_ntiid', None) == package.ntiid:
-			result.append(utility)
-			registry.unregisterUtility(provided=item_iterface, name=name)
+		try:
+			if utility._parent_ntiid_ == parent.ntiid:
+				result.append(utility)
+				registry.unregisterUtility(provided=item_iterface, name=name)
+		except AttributeError:
+			pass
 	return result
 
 def _register_utility(item, item_iface, ntiid, registry):
@@ -197,6 +200,21 @@ def _clear_data_when_content_changes(content_package, event):
 
 ## Courses
 
+def _outline_nodes(outline):
+	result = []
+	def _recur(node):
+		src = getattr(node, 'src', None)
+		if src:
+			result.append(node)
+					
+		# parse children
+		for child in node.values():
+			_recur(child, result)
+	
+	if outline is not None:
+		_recur(outline, result)
+	return result
+
 @component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
 def _on_course_instance_available(course, event):
-	pass
+	_outline_nodes(course.Outline)

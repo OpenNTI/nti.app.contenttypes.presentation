@@ -35,7 +35,7 @@ class TestSubscribers(unittest.TestCase):
 
 	def _set_item_pkg_ntiid(self, result):
 		for item in result:
-			item._content_package_ntiid = 'xxx'
+			item._parent_ntiid_ = 'xxx'
 
 	def _test_feed(self, source, iface, count):
 		path = os.path.join(os.path.dirname(__file__), source)
