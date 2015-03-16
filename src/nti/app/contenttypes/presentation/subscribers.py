@@ -192,7 +192,7 @@ def _register_items_when_content_changes(content_package, index_iface, item_ifac
 		registered = _load_and_register_json(item_iface, index_text)
 		
 	for item in registered:
-		item._content_package_ntiid = content_package.ntiid # save package source
+		item._parent_ntiid_ = content_package.ntiid # save package source
 
 	_set_data_lastModified(content_package, item_iface, sibling_lastModified)
 	
@@ -292,9 +292,9 @@ def _outline_nodes(outline):
 @component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
 def _on_course_instance_available(course, event):
 	result = []
+	ntiid = to_external_ntiid_oid(course)
 	
 	## remove old course registration
-	ntiid = to_external_ntiid_oid(course)
 	_remove_from_registry_with_interface(ntiid, IGroupOverViewable)
 	_remove_from_registry_with_interface(ntiid, INTILessonOverview)
 	
@@ -316,3 +316,6 @@ def _on_course_instance_available(course, event):
 			result.extend(_load_and_register_lesson_overview_json(index_text))
 
 			_set_source_lastModified(course, namespace, sibling_lastModified)
+
+	for item in result:
+		item._parent_ntiid_ = ntiid # save course ntiid
