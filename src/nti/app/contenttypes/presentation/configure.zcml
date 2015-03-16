@@ -24,6 +24,9 @@
 	<utility factory=".ntiids._NTIRelatedWorkResolver" name="RelatedWork" />
 	<utility factory=".ntiids._NTIRelatedWorkResolver" name="RelatedWorkRef" />
 	
+	<utility factory=".ntiids._NTILessonOverviewResolver" name="NTILessonOverview" />	
+	<utility factory=".ntiids._NTICourseOverviewGroupResolver" name="NTICourseOverviewGroup" />
+	
 	<!-- Events -->
 	<subscriber handler=".subscribers._update_data_when_content_changes"
 				for="nti.contentlibrary.interfaces.IContentPackage

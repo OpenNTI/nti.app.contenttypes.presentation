@@ -86,7 +86,7 @@ def _remove_from_registry_with_interface(parent_ntiid, item_iterface, registry=N
 	registry = _registry(registry)
 	for name , utility in list(registry.getUtilitiesFor(item_iterface)):
 		try:
-			if utility._parent_ntiid_ == parent_ntiid:
+			if utility._parent_ntiid_ == parent_ntiid: #TODO: Consider indexing
 				result.append(utility)
 				registry.unregisterUtility(provided=item_iterface, name=name)
 		except AttributeError:
@@ -222,6 +222,8 @@ def _load_and_register_lesson_overview_json(jtext, registry=None):
 	## read and parse json text
 	data = simplejson.loads(prepare_json_text(jtext))
 	overview = create_object_from_external(data)
+	if _was_utility_registered(overview, INTILessonOverview, overview.ntiid, registry):
+		recorded.append(overview)
 
 	## canonicalize group
 	groups = overview.Items
@@ -246,7 +248,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None):
 											   		registry)
 			#TODO: Validate item ref
 			if result:
-				recorded.append(group)
+				recorded.append(item)
 			else:
 				items[idx] = registered
 	return recorded
@@ -293,16 +295,18 @@ def _outline_nodes(outline):
 def _on_course_instance_available(course, event):
 	result = []
 	ntiid = to_external_ntiid_oid(course)
+	course_packages = get_course_packages(course)
 	
 	## remove old course registration
 	_remove_from_registry_with_interface(ntiid, IGroupOverViewable)
+	_remove_from_registry_with_interface(ntiid, INTICourseOverviewGroup)
 	_remove_from_registry_with_interface(ntiid, INTILessonOverview)
-	
+
 	## parse and register
 	nodes = _outline_nodes(course.Outline)
 	for node in nodes:
 		namespace = node.src
-		for content_package in get_course_packages(course):
+		for content_package in course_packages:
 			sibling_key = content_package.does_sibling_entry_exist(namespace)
 			if not sibling_key:
 				break
