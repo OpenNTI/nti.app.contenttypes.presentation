@@ -11,6 +11,9 @@
 	
 	<include package="nti.contenttypes.presentation" />
 
+	<!-- Adapters -->
+	<adapter factory=".validators._AssignmentRefValidator" />	
+
 	<!-- Traversal-ish stuff -->
 	<utility factory=".ntiids._NTIAudioResolver" name="NTIAudio" />
 	<utility factory=".ntiids._NTIVideoResolver" name="NTIVideo" />

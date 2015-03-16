@@ -52,6 +52,8 @@ from nti.contenttypes.presentation.utils import create_lessonoverview_from_exter
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.externalization import to_external_ntiid_oid
 
+from .interfaces import IItemRefValidator
+
 ITEMS = StandardExternalFields.ITEMS
 
 INTERFACE_PAIRS = ( (IAudioIndexedDataContainer, INTIAudio),
@@ -229,7 +231,7 @@ def _iface_of_thing(item):
 			return iface
 	return None
 
-def _load_and_register_lesson_overview_json(jtext, registry=None):
+def _load_and_register_lesson_overview_json(jtext, registry=None, validate=False):
 	recorded = []
 	registry = _registry(registry)
 	
@@ -260,8 +262,10 @@ def _load_and_register_lesson_overview_json(jtext, registry=None):
 													item_iface,
 											   		item.ntiid,
 											   		registry)
-			#TODO: Validate item ref
 			if result:
+				validator = IItemRefValidator(item, None)
+				if validate and validator is not None:
+					validator.validate()
 				recorded.append(item)
 			else:
 				items[idx] = registered
@@ -331,7 +335,8 @@ def _on_course_instance_available(course, event):
 				return
 
 			index_text = content_package.read_contents_of_sibling_entry(namespace)
-			result.extend(_load_and_register_lesson_overview_json(index_text))
+			items = _load_and_register_lesson_overview_json(index_text, validate=True)
+			result.extend(items)
 
 			_set_source_lastModified(course, namespace, sibling_lastModified)
 
