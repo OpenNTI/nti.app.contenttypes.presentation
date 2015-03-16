@@ -46,6 +46,7 @@ from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.contenttypes.presentation.utils import create_object_from_external
 from nti.contenttypes.presentation.utils import create_ntivideo_from_external
+from nti.contenttypes.presentation.utils import create_relatedwork_from_external
 from nti.contenttypes.presentation.utils import create_lessonoverview_from_external
 
 from nti.externalization.interfaces import StandardExternalFields
@@ -198,6 +199,9 @@ def _register_items_when_content_changes(content_package, index_iface, item_ifac
 	elif item_iface == INTIVideo:
 		registered = _load_and_register_json(item_iface, index_text,
 											 external_object_creator=create_ntivideo_from_external)
+	elif item_iface == INTIRelatedWork:
+		registered = _load_and_register_json(item_iface, index_text,
+											 external_object_creator=create_relatedwork_from_external)
 	else:
 		registered = _load_and_register_json(item_iface, index_text)
 		
