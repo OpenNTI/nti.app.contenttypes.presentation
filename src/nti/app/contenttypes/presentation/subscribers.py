@@ -45,6 +45,8 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.contenttypes.presentation.utils import create_object_from_external
+from nti.contenttypes.presentation.utils import create_ntivideo_from_external
+from nti.contenttypes.presentation.utils import create_lessonoverview_from_external
 
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.externalization import to_external_ntiid_oid
@@ -109,19 +111,22 @@ def _was_utility_registered(item, item_iface, ntiid, registry):
 	result, _ = _register_utility(item, item_iface, ntiid, registry)
 	return result
 
-def _load_and_register_items(item_iterface, items, registry=None):
+def _load_and_register_items(item_iterface, items, registry=None, 
+							 external_object_creator=create_object_from_external):
 	result = []
 	registry = _registry(registry)
 	for ntiid, data in items.items():
-		internal = create_object_from_external(data)
+		internal = external_object_creator(data)
 		if _was_utility_registered(internal, item_iterface, ntiid, registry):
 			result.append(internal)
 	return result
 
-def _load_and_register_json(item_iterface, jtext, registry=None):
+def _load_and_register_json(item_iterface, jtext, registry=None,
+							external_object_creator=create_object_from_external):
 	index = simplejson.loads(prepare_json_text(jtext))
 	items = index.get(ITEMS) or {}
-	result = _load_and_register_items(item_iterface, items, registry)
+	result = _load_and_register_items(item_iterface, items, registry,
+									  external_object_creator=external_object_creator)
 	return result
 
 def _canonicalize(items, item_iface, registry):
@@ -137,13 +142,14 @@ def _canonicalize(items, item_iface, registry):
 
 ## Library
 
-def _load_and_register_slidedeck_json(jtext, registry=None):
+def _load_and_register_slidedeck_json(jtext, registry=None, 
+									  external_object_creator=create_object_from_external):
 	result = []
 	registry = _registry(registry)
 	index = simplejson.loads(prepare_json_text(jtext))
 	items = index.get(ITEMS) or {}
 	for ntiid, data in items.items():
-		internal = create_object_from_external(data)
+		internal = external_object_creator(data)
 		if 	INTISlide.providedBy(internal) and \
 			_was_utility_registered(internal, INTISlide, ntiid, registry):
 			result.append(internal)
@@ -189,6 +195,9 @@ def _register_items_when_content_changes(content_package, index_iface, item_ifac
 		_remove_from_registry_with_interface(content_package.ntiid, INTISlide)
 		_remove_from_registry_with_interface(content_package.ntiid, INTISlideVideo)
 		registered = _load_and_register_slidedeck_json(index_text)
+	elif item_iface == INTIVideo:
+		registered = _load_and_register_json(item_iface, index_text,
+											 external_object_creator=create_ntivideo_from_external)
 	else:
 		registered = _load_and_register_json(item_iface, index_text)
 		
@@ -222,7 +231,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None):
 	
 	## read and parse json text
 	data = simplejson.loads(prepare_json_text(jtext))
-	overview = create_object_from_external(data)
+	overview = create_lessonoverview_from_external(data)
 	if _was_utility_registered(overview, INTILessonOverview, overview.ntiid, registry):
 		recorded.append(overview)
 

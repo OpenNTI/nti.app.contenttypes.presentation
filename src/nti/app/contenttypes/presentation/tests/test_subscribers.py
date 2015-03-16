@@ -25,6 +25,10 @@ from nti.contenttypes.presentation.interfaces import IGroupOverViewable
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
+from nti.contenttypes.presentation.utils import create_object_from_external
+from nti.contenttypes.presentation.utils import create_ntivideo_from_external
+from nti.contenttypes.presentation.utils import create_relatedwork_from_external
+
 from nti.app.contenttypes.presentation.subscribers import _load_and_register_json
 from nti.app.contenttypes.presentation.subscribers import _load_and_register_slidedeck_json
 from nti.app.contenttypes.presentation.subscribers import _remove_from_registry_with_interface
@@ -40,13 +44,14 @@ class TestSubscribers(unittest.TestCase):
 		for item in result:
 			item._parent_ntiid_ = 'xxx'
 
-	def _test_feed(self, source, iface, count):
+	def _test_feed(self, source, iface, count, object_creator=create_object_from_external):
 		path = os.path.join(os.path.dirname(__file__), source)
 		with open(path, "r") as fp:
 			source = fp.read()
 			
 		registry = Components()
-		result = _load_and_register_json(iface, source, registry=registry)
+		result = _load_and_register_json(iface, source, registry=registry,
+										 external_object_creator=object_creator)
 		assert_that(result, has_length(count))
 		assert_that(list(registry.registeredUtilities()), has_length(count))
 
@@ -56,13 +61,15 @@ class TestSubscribers(unittest.TestCase):
 		assert_that(result, has_length(count))
 
 	def test_video_index(self):
-		self._test_feed('video_index.json', INTIVideo, 94)
+		self._test_feed('video_index.json', INTIVideo, 94,
+						create_ntivideo_from_external)
 
 	def test_timeline_index(self):
 		self._test_feed('timeline_index.json', INTITimeline, 11)
 
 	def test_related_content_index(self):
-		self._test_feed('related_content_index.json', INTIRelatedWork, 372)
+		self._test_feed('related_content_index.json', INTIRelatedWork, 372,
+						create_relatedwork_from_external)
 	
 	def test_slidedeck_index(self):
 		path = os.path.join(os.path.dirname(__file__), 'slidedeck_index.json')
