@@ -285,10 +285,10 @@ def _outline_nodes(outline):
 					
 		# parse children
 		for child in node.values():
-			_recur(child, result)
+			_recur(child)
 	
 	if outline is not None:
-		_recur(outline, result)
+		_recur(outline)
 	return result
 
 @component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
