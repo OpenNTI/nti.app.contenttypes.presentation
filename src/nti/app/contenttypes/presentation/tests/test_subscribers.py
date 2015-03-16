@@ -11,7 +11,6 @@ from hamcrest import has_length
 from hamcrest import assert_that
 
 import os
-import fudge
 import unittest
 
 from zope.interface.registry import Components
@@ -49,8 +48,7 @@ class TestSubscribers(unittest.TestCase):
 
 		self._set_item_pkg_ntiid(result)
 		
-		package = fudge.Fake().has_attr(ntiid='xxx')
-		result = _remove_from_registry_with_interface(package, iface, registry=registry)
+		result = _remove_from_registry_with_interface('xxx', iface, registry=registry)
 		assert_that(result, has_length(count))
 
 	def test_video_index(self):
@@ -73,12 +71,11 @@ class TestSubscribers(unittest.TestCase):
 
 		self._set_item_pkg_ntiid(result)
 		
-		package = fudge.Fake().has_attr(ntiid='xxx')
-		result = _remove_from_registry_with_interface(package, INTISlideDeck, registry=registry)
+		result = _remove_from_registry_with_interface('xxx', INTISlideDeck, registry=registry)
 		assert_that(result, has_length(57))
 		
-		result = _remove_from_registry_with_interface(package, INTISlideVideo, registry=registry)
+		result = _remove_from_registry_with_interface('xxx', INTISlideVideo, registry=registry)
 		assert_that(result, has_length(57))
 		
-		result = _remove_from_registry_with_interface(package, INTISlide, registry=registry)
+		result = _remove_from_registry_with_interface('xxx', INTISlide, registry=registry)
 		assert_that(result, has_length(628))

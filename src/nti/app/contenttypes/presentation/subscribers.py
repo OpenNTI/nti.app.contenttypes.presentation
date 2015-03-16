@@ -31,6 +31,8 @@ from nti.contentlibrary.indexed_data.interfaces import IRelatedContentIndexedDat
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
+from nti.contenttypes.presentation import GROUP_OVERVIEWABLE_INTERFACES
+
 from nti.contenttypes.presentation.interfaces import INTIAudio
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTISlide
@@ -38,10 +40,14 @@ from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTISlideVideo
 from nti.contenttypes.presentation.interfaces import INTIRelatedWork
+from nti.contenttypes.presentation.interfaces import IGroupOverViewable
+from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.contenttypes.presentation.utils import create_object_from_external
 
 from nti.externalization.interfaces import StandardExternalFields
+from nti.externalization.externalization import to_external_ntiid_oid
 
 ITEMS = StandardExternalFields.ITEMS
 
@@ -75,12 +81,12 @@ def _remove_from_registry_with_index(package, index_interface, item_iterface,
 			_recur(child)
 	_recur(package)
 
-def _remove_from_registry_with_interface(parent, item_iterface, registry=None):
+def _remove_from_registry_with_interface(parent_ntiid, item_iterface, registry=None):
 	result = []
 	registry = _registry(registry)
 	for name , utility in list(registry.getUtilitiesFor(item_iterface)):
 		try:
-			if utility._parent_ntiid_ == parent.ntiid:
+			if utility._parent_ntiid_ == parent_ntiid:
 				result.append(utility)
 				registry.unregisterUtility(provided=item_iterface, name=name)
 		except AttributeError:
@@ -88,21 +94,26 @@ def _remove_from_registry_with_interface(parent, item_iterface, registry=None):
 	return result
 
 def _register_utility(item, item_iface, ntiid, registry):
-	if 	item_iface.providedBy(item) and \
-		registry.queryUtility(item_iface, name=ntiid) is None:
-		registry.registerUtility(item,
-								 provided=item_iface,
-								 name=ntiid,
-								 event=False)
-		return True
-	return False
+	if item_iface.providedBy(item):
+		registered = registry.queryUtility(item_iface, name=ntiid)
+		if registered is None:
+			registry.registerUtility(item,
+									 provided=item_iface,
+									 name=ntiid,
+									 event=False)
+			return (True, item)
+	return (False, registered)
 		
+def _was_utility_registered(item, item_iface, ntiid, registry):
+	result, _ = _register_utility(item, item_iface, ntiid, registry)
+	return result
+
 def _load_and_register_items(item_iterface, items, registry=None):
 	result = []
 	registry = _registry(registry)
 	for ntiid, data in items.items():
 		internal = create_object_from_external(data)
-		if _register_utility(internal, item_iterface, ntiid, registry):
+		if _was_utility_registered(internal, item_iterface, ntiid, registry):
 			result.append(internal)
 	return result
 
@@ -113,19 +124,15 @@ def _load_and_register_json(item_iterface, jtext, registry=None):
 	return result
 
 def _canonicalize(items, item_iface, registry):
-	result = []
+	recorded = []
 	for idx, item in enumerate(items or ()):
 		ntiid = item.ntiid
-		registered = registry.queryUtility(item_iface, name=ntiid)
-		if registered is None:
-			registry.registerUtility(item,
-							  		 provided=item_iface,
-							  		 name=ntiid,
-							  		 event=False)
-			result.append(item)
+		result, registered = _register_utility(item, item_iface, ntiid, registry)
+		if result:
+			recorded.append(item)
 		else:
 			items[idx] = registered # replaced w/ registered
-	return result
+	return recorded
 
 ## Library
 
@@ -137,15 +144,15 @@ def _load_and_register_slidedeck_json(jtext, registry=None):
 	for ntiid, data in items.items():
 		internal = create_object_from_external(data)
 		if 	INTISlide.providedBy(internal) and \
-			_register_utility(internal, INTISlide, ntiid, registry):
+			_was_utility_registered(internal, INTISlide, ntiid, registry):
 			result.append(internal)
 		elif INTISlideVideo.providedBy(internal) and \
-			 _register_utility(internal, INTISlideVideo, ntiid, registry):
+			 _was_utility_registered(internal, INTISlideVideo, ntiid, registry):
 			result.append(internal)
 		elif INTISlideDeck.providedBy(internal):
 			result.extend(_canonicalize(internal.Slides, INTISlide, registry))
 			result.extend(_canonicalize(internal.Videos, INTISlideVideo, registry))
-			if _register_utility(internal, INTISlideDeck, ntiid, registry):
+			if _was_utility_registered(internal, INTISlideDeck, ntiid, registry):
 				result.append(internal)
 	return result
 
@@ -174,10 +181,12 @@ def _register_items_when_content_changes(content_package, index_iface, item_ifac
 	if root_lastModified >= sibling_lastModified:
 		return
 	
-	_remove_from_registry_with_interface(content_package, item_iface)
+	_remove_from_registry_with_interface(content_package.ntiid, item_iface)
 
 	index_text = content_package.read_contents_of_sibling_entry(namespace)
 	if item_iface == INTISlideDeck:
+		_remove_from_registry_with_interface(content_package.ntiid, INTISlide)
+		_remove_from_registry_with_interface(content_package.ntiid, INTISlideVideo)
 		registered = _load_and_register_slidedeck_json(index_text)
 	else:
 		registered = _load_and_register_json(item_iface, index_text)
@@ -194,32 +203,53 @@ def _update_data_when_content_changes(content_package, event):
 @component.adapter(IContentPackage, IObjectRemovedEvent)
 def _clear_data_when_content_changes(content_package, event):
 	for _, item_iface in INTERFACE_PAIRS:
-		_remove_from_registry_with_interface(content_package, item_iface)
-	_remove_from_registry_with_interface(content_package, INTISlide)
-	_remove_from_registry_with_interface(content_package, INTISlideVideo)
+		_remove_from_registry_with_interface(content_package.ntiid, item_iface)
+	_remove_from_registry_with_interface(content_package.ntiid, INTISlide)
+	_remove_from_registry_with_interface(content_package.ntiid, INTISlideVideo)
 
 ## Courses
 
+def _iface_of_thing(item):
+	for iface in GROUP_OVERVIEWABLE_INTERFACES:
+		if iface.providedBy(item):
+			return iface
+	return None
+
 def _load_and_register_lesson_overview_json(jtext, registry=None):
-	return
-	result = []
+	recorded = []
 	registry = _registry(registry)
-	index = simplejson.loads(prepare_json_text(jtext))
-	items = index.get(ITEMS) or {}
-	for ntiid, data in items.items():
-		internal = create_object_from_external(data)
-		if 	INTISlide.providedBy(internal) and \
-			_register_utility(internal, INTISlide, ntiid, registry):
-			result.append(internal)
-		elif INTISlideVideo.providedBy(internal) and \
-			 _register_utility(internal, INTISlideVideo, ntiid, registry):
-			result.append(internal)
-		elif INTISlideDeck.providedBy(internal):
-			result.extend(_canonicalize(internal.Slides, INTISlide, registry))
-			result.extend(_canonicalize(internal.Videos, INTISlideVideo, registry))
-			if _register_utility(internal, INTISlideDeck, ntiid, registry):
-				result.append(internal)
-	return result
+	
+	## read and parse json text
+	data = simplejson.loads(prepare_json_text(jtext))
+	overview = create_object_from_external(data)
+
+	## canonicalize group
+	groups = overview.Items
+	for gdx, group in enumerate(groups):
+		## register course overview roup
+		result, registered = _register_utility(	group, 
+												INTICourseOverviewGroup,
+											   	group.ntiid,
+											   	registry)
+		if result:
+			recorded.append(group)
+		else:
+			groups[gdx] = registered
+
+		## canonicalize item refs
+		items = group.Items
+		for idx, item in enumerate(items):
+			item_iface = _iface_of_thing(item)
+			result, registered = _register_utility(	item, 
+													item_iface,
+											   		item.ntiid,
+											   		registry)
+			#TODO: Validate item ref
+			if result:
+				recorded.append(group)
+			else:
+				items[idx] = registered
+	return recorded
 
 def _get_source_lastModified(course, source):
 	annotations = IAnnotations(course)
@@ -261,6 +291,14 @@ def _outline_nodes(outline):
 
 @component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
 def _on_course_instance_available(course, event):
+	result = []
+	
+	## remove old course registration
+	ntiid = to_external_ntiid_oid(course)
+	_remove_from_registry_with_interface(ntiid, IGroupOverViewable)
+	_remove_from_registry_with_interface(ntiid, INTILessonOverview)
+	
+	## parse and register
 	nodes = _outline_nodes(course.Outline)
 	for node in nodes:
 		namespace = node.src
@@ -275,5 +313,6 @@ def _on_course_instance_available(course, event):
 				return
 
 			index_text = content_package.read_contents_of_sibling_entry(namespace)
-			_load_and_register_lesson_overview_json(index_text)
+			result.extend(_load_and_register_lesson_overview_json(index_text))
+
 			_set_source_lastModified(course, namespace, sibling_lastModified)
