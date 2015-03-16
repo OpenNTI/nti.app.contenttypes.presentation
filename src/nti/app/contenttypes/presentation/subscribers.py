@@ -102,7 +102,8 @@ def _register_utility(item, item_iface, ntiid, registry):
 									 name=ntiid,
 									 event=False)
 			return (True, item)
-	return (False, registered)
+		return (False, registered)
+	return (False, None)
 		
 def _was_utility_registered(item, item_iface, ntiid, registry):
 	result, _ = _register_utility(item, item_iface, ntiid, registry)
