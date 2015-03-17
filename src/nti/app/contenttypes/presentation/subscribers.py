@@ -52,7 +52,6 @@ from nti.contenttypes.presentation.utils import create_relatedwork_from_external
 from nti.contenttypes.presentation.utils import create_lessonoverview_from_external
 
 from nti.externalization.interfaces import StandardExternalFields
-from nti.externalization.externalization import to_external_ntiid_oid
 
 from .interfaces import IItemRefValidator
 
@@ -334,7 +333,7 @@ def _outline_nodes(outline):
 def synchronize_course_lesson_overview(course):
 	result = []
 	course_packages = get_course_packages(course)
-	
+
 	entry = ICourseCatalogEntry(course, None)
 	name = entry.ProviderUniqueID if entry is not None else course.__name__
 	
@@ -344,16 +343,6 @@ def synchronize_course_lesson_overview(course):
 	if ICourseSubInstance.providedBy(course):
 		parent = course.__parent__.__parent__
 	
-	ntiid = to_external_ntiid_oid(parent)
-	
-	if not ICourseSubInstance.providedBy(course):
-		## remove old course registration.
-		## CS: 20150317 since sub-instances shared the same content pacakge(s)
-		## we only remove the items once
-		_remove_from_registry_with_interface(ntiid, IGroupOverViewable)
-		_remove_from_registry_with_interface(ntiid, INTICourseOverviewGroup)
-		_remove_from_registry_with_interface(ntiid, INTILessonOverview)
-
 	## parse and register
 	nodes = _outline_nodes(course.Outline)
 	for node in nodes:
@@ -366,18 +355,21 @@ def synchronize_course_lesson_overview(course):
 			sibling_lastModified = sibling_key.lastModified
 			root_lastModified = _get_source_lastModified(parent, namespace)
 			if root_lastModified >= sibling_lastModified:
-				return
-
+				break
+			
+			_remove_from_registry_with_interface(namespace, IGroupOverViewable)
+			_remove_from_registry_with_interface(namespace, INTICourseOverviewGroup)
+			_remove_from_registry_with_interface(namespace, INTILessonOverview)
+		
 			logger.debug("Synchronizing %s", namespace)
 			index_text = content_package.read_contents_of_sibling_entry(namespace)
 			items = _load_and_register_lesson_overview_json(index_text, validate=True)
 			result.extend(items)
-
+			
+			for item in items: #TODO: Use index
+				item._parent_ntiid_ = namespace # save location name 
 			_set_source_lastModified(parent, namespace, sibling_lastModified)
 
-	for item in result:
-		item._parent_ntiid_ = ntiid # save course ntiid
-		
 	logger.info('Lessons overviews for %s have been synchronized', name)
 	return result
 
