@@ -322,6 +322,8 @@ def _on_course_instance_available(course, event):
 	ntiid = to_external_ntiid_oid(course)
 	course_packages = get_course_packages(course)
 	
+	logger.info('Synchronizing lesson overview(s) for %s', course.__name__)
+
 	## remove old course registration
 	_remove_from_registry_with_interface(ntiid, IGroupOverViewable)
 	_remove_from_registry_with_interface(ntiid, INTICourseOverviewGroup)
@@ -349,3 +351,5 @@ def _on_course_instance_available(course, event):
 
 	for item in result:
 		item._parent_ntiid_ = ntiid # save course ntiid
+		
+	logger.info('Lesson overview(s) for %s have been synchronized', course.__name__)
