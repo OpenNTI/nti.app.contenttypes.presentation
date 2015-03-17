@@ -29,6 +29,8 @@ from nti.contentlibrary.indexed_data.interfaces import ISlideDeckIndexedDataCont
 from nti.contentlibrary.indexed_data.interfaces import IRelatedContentIndexedDataContainer
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseSubInstance
+from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
 from nti.contenttypes.presentation import GROUP_OVERVIEWABLE_INTERFACES
@@ -191,6 +193,8 @@ def _register_items_when_content_changes(content_package, index_iface, item_ifac
 	if root_lastModified >= sibling_lastModified:
 		return
 	
+	logger.info('Synchronizing %s for %s', namespace, content_package.ntiid)
+	
 	_remove_from_registry_with_interface(content_package.ntiid, item_iface)
 
 	index_text = content_package.read_contents_of_sibling_entry(namespace)
@@ -211,6 +215,8 @@ def _register_items_when_content_changes(content_package, index_iface, item_ifac
 		item._parent_ntiid_ = content_package.ntiid # save package source
 
 	_set_data_lastModified(content_package, item_iface, sibling_lastModified)
+	
+	logger.info('%s for %s has been synchronized', namespace, content_package.ntiid)
 	
 def _update_data_when_content_changes(content_package, event):
 	for icontainer, item_iface in INTERFACE_PAIRS:
@@ -319,15 +325,26 @@ def _outline_nodes(outline):
 @component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
 def _on_course_instance_available(course, event):
 	result = []
-	ntiid = to_external_ntiid_oid(course)
 	course_packages = get_course_packages(course)
 	
-	logger.info('Synchronizing lesson overview(s) for %s', course.__name__)
+	entry = ICourseCatalogEntry(course, None)
+	name = entry.ProviderUniqueID if entry is not None else course.__name__
+	
+	logger.info('Synchronizing lesson overview(s) for %s', name)
 
-	## remove old course registration
-	_remove_from_registry_with_interface(ntiid, IGroupOverViewable)
-	_remove_from_registry_with_interface(ntiid, INTICourseOverviewGroup)
-	_remove_from_registry_with_interface(ntiid, INTILessonOverview)
+	parent = course
+	if ICourseSubInstance.providedBy(course):
+		parent = course.__parent__.__parent__
+	
+	ntiid = to_external_ntiid_oid(parent)
+	
+	if not ICourseSubInstance.providedBy(course):
+		## remove old course registration.
+		## CS: 20150317 since sub-instances shared the same content pacakge(s)
+		## we only remove the items once
+		_remove_from_registry_with_interface(ntiid, IGroupOverViewable)
+		_remove_from_registry_with_interface(ntiid, INTICourseOverviewGroup)
+		_remove_from_registry_with_interface(ntiid, INTILessonOverview)
 
 	## parse and register
 	nodes = _outline_nodes(course.Outline)
@@ -339,7 +356,7 @@ def _on_course_instance_available(course, event):
 				break
 
 			sibling_lastModified = sibling_key.lastModified
-			root_lastModified = _get_source_lastModified(course, namespace)
+			root_lastModified = _get_source_lastModified(parent, namespace)
 			if root_lastModified >= sibling_lastModified:
 				return
 
@@ -347,9 +364,9 @@ def _on_course_instance_available(course, event):
 			items = _load_and_register_lesson_overview_json(index_text, validate=True)
 			result.extend(items)
 
-			_set_source_lastModified(course, namespace, sibling_lastModified)
+			_set_source_lastModified(parent, namespace, sibling_lastModified)
 
 	for item in result:
 		item._parent_ntiid_ = ntiid # save course ntiid
 		
-	logger.info('Lesson overview(s) for %s have been synchronized', course.__name__)
+	logger.info('Lesson overview(s) for %s have been synchronized', name)
