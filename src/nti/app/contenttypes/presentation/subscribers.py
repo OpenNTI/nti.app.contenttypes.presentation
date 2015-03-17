@@ -186,12 +186,12 @@ def _register_items_when_content_changes(content_package, index_iface, item_ifac
 	namespace = index_iface.getTaggedValue(TAG_NAMESPACE_FILE)
 	sibling_key = content_package.does_sibling_entry_exist(namespace)
 	if not sibling_key:
-		return
+		return ()
 	
 	sibling_lastModified = sibling_key.lastModified
 	root_lastModified = _get_data_lastModified(content_package, item_iface)
 	if root_lastModified >= sibling_lastModified:
-		return
+		return ()
 	
 	logger.info('Synchronizing %s for %s', namespace, content_package.ntiid)
 	
@@ -218,9 +218,18 @@ def _register_items_when_content_changes(content_package, index_iface, item_ifac
 	
 	logger.info('%s for %s has been synchronized', namespace, content_package.ntiid)
 	
-def _update_data_when_content_changes(content_package, event):
+	return registered
+	
+def synchronize_content_package(content_package):
+	result = []
 	for icontainer, item_iface in INTERFACE_PAIRS:
-		_register_items_when_content_changes(content_package, icontainer, item_iface)
+		items = _register_items_when_content_changes(content_package, icontainer, 
+													 item_iface)
+		result.extend(items or ())
+	return result
+
+def _update_data_when_content_changes(content_package, event):
+	synchronize_content_package(content_package)
 
 @component.adapter(IContentPackage, IObjectRemovedEvent)
 def _clear_data_when_content_changes(content_package, event):
@@ -322,8 +331,7 @@ def _outline_nodes(outline):
 		_recur(outline)
 	return result
 
-@component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
-def _on_course_instance_available(course, event):
+def synchronize_course_lesson_overview(course):
 	result = []
 	course_packages = get_course_packages(course)
 	
@@ -370,3 +378,8 @@ def _on_course_instance_available(course, event):
 		item._parent_ntiid_ = ntiid # save course ntiid
 		
 	logger.info('Lesson overview(s) for %s have been synchronized', name)
+	return result
+
+@component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
+def _on_course_instance_available(course, event):
+	synchronize_course_lesson_overview(course)
