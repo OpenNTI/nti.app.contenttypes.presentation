@@ -40,6 +40,7 @@ from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
 from nti.contenttypes.presentation import GROUP_OVERVIEWABLE_INTERFACES
+from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.contenttypes.presentation.interfaces import INTIAudio
 from nti.contenttypes.presentation.interfaces import INTIVideo
@@ -85,23 +86,9 @@ def _registry(registry=None):
 	return registry
 
 def _iface_of_thing(item):
-
-	for iface in GROUP_OVERVIEWABLE_INTERFACES:
+	for iface in ALL_PRESENTATION_ASSETS_INTERFACES:
 		if iface.providedBy(item):
 			return iface
-
-	if INTICourseOverviewGroup.providedBy(item):
-		return INTICourseOverviewGroup
-	elif INTILessonOverview.providedBy(item):
-		return INTILessonOverview
-	
-	if INTISlideDeck.providedBy(item):
-		return INTISlideDeck
-	elif INTISlideVideo.providedBy(item):
-		return INTISlideVideo
-	elif INTISlide.providedBy(item):
-		return INTISlide
-
 	return None
 
 def _remove_from_registry_with_interface(parent_ntiid, item_iterface, registry=None, intids=None):
