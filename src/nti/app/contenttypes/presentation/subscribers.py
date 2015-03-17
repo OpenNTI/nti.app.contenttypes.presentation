@@ -338,7 +338,7 @@ def synchronize_course_lesson_overview(course):
 	entry = ICourseCatalogEntry(course, None)
 	name = entry.ProviderUniqueID if entry is not None else course.__name__
 	
-	logger.info('Synchronizing lesson overview(s) for %s', name)
+	logger.info('Synchronizing lessons overviews for %s', name)
 
 	parent = course
 	if ICourseSubInstance.providedBy(course):
@@ -368,6 +368,7 @@ def synchronize_course_lesson_overview(course):
 			if root_lastModified >= sibling_lastModified:
 				return
 
+			logger.debug("Synchronizing %s", namespace)
 			index_text = content_package.read_contents_of_sibling_entry(namespace)
 			items = _load_and_register_lesson_overview_json(index_text, validate=True)
 			result.extend(items)
@@ -377,7 +378,7 @@ def synchronize_course_lesson_overview(course):
 	for item in result:
 		item._parent_ntiid_ = ntiid # save course ntiid
 		
-	logger.info('Lesson overview(s) for %s have been synchronized', name)
+	logger.info('Lessons overviews for %s have been synchronized', name)
 	return result
 
 @component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)

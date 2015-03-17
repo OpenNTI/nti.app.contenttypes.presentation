@@ -17,6 +17,7 @@ from zope import component
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseSubInstance
 
 from nti.dataserver.utils import run_with_dataserver
 from nti.dataserver.utils.base_script import set_site
@@ -51,6 +52,10 @@ def _process_args(args):
         result.extend(items or ())
     
     items = synchronize_course_lesson_overview(course_instance)
+    
+    if not ICourseSubInstance.providedBy(course_instance):
+        for sub_instance in (course_instance.SubInstances or {}).values():
+            synchronize_course_lesson_overview(sub_instance)
     result.extend(items or ())
     
     return result
@@ -73,6 +78,7 @@ def main():
     context = create_context(env_dir, with_library=True)
 
     run_with_dataserver(environment_dir=env_dir,
+                        verbose=args.verbose,
                         xmlconfig_packages=conf_packages,
                         context=context,
                         minimal_ds=True,
