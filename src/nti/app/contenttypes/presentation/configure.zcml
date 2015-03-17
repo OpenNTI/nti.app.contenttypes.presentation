@@ -11,6 +11,14 @@
 	
 	<include package="nti.contenttypes.presentation" />
 
+	<!-- Database creation and migration -->
+	<include package="zope.generations" />
+	<include package="zope.generations" file="subscriber.zcml" />
+
+	<utility factory=".generations.install._SchemaManager"
+			 name="nti.dataserver-app-contenttypes-presentation"
+			 provides="zope.generations.interfaces.IInstallableSchemaManager" />
+			 
 	<!-- Adapters -->
 	<adapter factory=".validators._AssignmentRefValidator" />	
 

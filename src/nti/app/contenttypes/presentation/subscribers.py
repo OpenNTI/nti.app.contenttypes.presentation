@@ -15,7 +15,11 @@ from zope import component
 
 from zope.annotation.interfaces import IAnnotations
 
+from zope.lifecycleevent import added
+from zope.lifecycleevent import removed
 from zope.lifecycleevent import IObjectRemovedEvent
+
+from ZODB.interfaces import IConnection
 
 from nti.contentlibrary.interfaces import IContentPackage
 from nti.contentlibrary.interfaces import IContentPackageLibrary
@@ -95,6 +99,7 @@ def _remove_from_registry_with_interface(parent_ntiid, item_iterface, registry=N
 			if utility._parent_ntiid_ == parent_ntiid: #TODO: Consider indexing
 				result.append(utility)
 				registry.unregisterUtility(provided=item_iterface, name=name)
+				removed(utility) # remove from intids
 		except AttributeError:
 			pass
 	return result
@@ -107,6 +112,10 @@ def _register_utility(item, item_iface, ntiid, registry):
 									 provided=item_iface,
 									 name=ntiid,
 									 event=False)
+			connection = IConnection(registry, None)
+			if connection is not None:
+				connection.add(item)
+				added(item) # get an intid
 			return (True, item)
 		return (False, registered)
 	return (False, None)

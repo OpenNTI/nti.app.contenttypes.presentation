@@ -13,8 +13,6 @@ from hamcrest import assert_that
 import os
 import unittest
 
-from zope.interface.registry import Components
-
 from nti.contenttypes.presentation.interfaces import INTISlide
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTITimeline
@@ -34,7 +32,11 @@ from nti.app.contenttypes.presentation.subscribers import _load_and_register_sli
 from nti.app.contenttypes.presentation.subscribers import _remove_from_registry_with_interface
 from nti.app.contenttypes.presentation.subscribers import _load_and_register_lesson_overview_json
 
+from nti.app.contenttypes.presentation.tests import PersistentComponents
 from nti.app.contenttypes.presentation.tests import SharedConfiguringTestLayer
+
+from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
+import nti.dataserver.tests.mock_dataserver as mock_dataserver
 
 class TestSubscribers(unittest.TestCase):
 
@@ -49,7 +51,9 @@ class TestSubscribers(unittest.TestCase):
 		with open(path, "r") as fp:
 			source = fp.read()
 			
-		registry = Components()
+		registry = PersistentComponents()
+		mock_dataserver.current_transaction.add(registry)
+
 		result = _load_and_register_json(iface, source, registry=registry,
 										 external_object_creator=object_creator)
 		assert_that(result, has_length(count))
@@ -60,23 +64,29 @@ class TestSubscribers(unittest.TestCase):
 		result = _remove_from_registry_with_interface('xxx', iface, registry=registry)
 		assert_that(result, has_length(count))
 
+	@WithMockDSTrans
 	def test_video_index(self):
 		self._test_feed('video_index.json', INTIVideo, 94,
 						create_ntivideo_from_external)
 
+	@WithMockDSTrans
 	def test_timeline_index(self):
 		self._test_feed('timeline_index.json', INTITimeline, 11)
 
+	@WithMockDSTrans
 	def test_related_content_index(self):
 		self._test_feed('related_content_index.json', INTIRelatedWork, 372,
 						create_relatedwork_from_external)
 	
+	@WithMockDSTrans
 	def test_slidedeck_index(self):
 		path = os.path.join(os.path.dirname(__file__), 'slidedeck_index.json')
 		with open(path, "r") as fp:
 			source = fp.read()
 			
-		registry = Components()
+		registry = PersistentComponents()
+		mock_dataserver.current_transaction.add(registry)
+		
 		result = _load_and_register_slidedeck_json(source, registry=registry)
 		assert_that(result, has_length(742))
 
@@ -91,12 +101,15 @@ class TestSubscribers(unittest.TestCase):
 		result = _remove_from_registry_with_interface('xxx', INTISlide, registry=registry)
 		assert_that(result, has_length(628))
 
+	@WithMockDSTrans
 	def test_lessong_overview(self):
 		path = os.path.join(os.path.dirname(__file__), 'lesson_overview.json')
 		with open(path, "r") as fp:
 			source = fp.read()
 			
-		registry = Components()
+		registry = PersistentComponents()
+		mock_dataserver.current_transaction.add(registry)
+
 		result = _load_and_register_lesson_overview_json(source, registry=registry)
 		assert_that(result, has_length(11))
 

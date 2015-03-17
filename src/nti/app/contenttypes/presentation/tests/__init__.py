@@ -43,3 +43,10 @@ class SharedConfiguringTestLayer(ZopeComponentLayer,
     @classmethod
     def testTearDown(cls):
         pass
+
+from persistent import Persistent
+
+from zope.component.persistentregistry import PersistentComponents as Components
+
+class PersistentComponents(Components, Persistent):
+    pass
