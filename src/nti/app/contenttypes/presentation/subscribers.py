@@ -255,8 +255,10 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, validate=False
 			groups[gdx] = registered
 
 		## canonicalize item refs
+		idx = 0
 		items = group.Items
-		for idx, item in enumerate(items):
+		while idx < len(items):
+			item = items[idx]
 			item_iface = _iface_of_thing(item)
 			result, registered = _register_utility(	item, 
 													item_iface,
@@ -264,11 +266,16 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, validate=False
 											   		registry)
 			if result:
 				validator = IItemRefValidator(item, None)
-				if validate and validator is not None:
-					validator.validate()
-				recorded.append(item)
+				is_valid = (not validate or validator is None or \
+							validator.validate())
+				if is_valid:
+					recorded.append(item)
+				else:
+					del items[idx]
+					continue
 			else:
 				items[idx] = registered
+			idx += 1
 	return recorded
 
 def _get_source_lastModified(course, source):

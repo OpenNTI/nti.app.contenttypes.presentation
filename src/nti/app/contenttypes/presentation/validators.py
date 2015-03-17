@@ -11,7 +11,6 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope import component
 from zope import interface
-from zope.component.interfaces import ComponentLookupError
 
 from nti.assessment.interfaces import IQAssignment
 
@@ -30,5 +29,5 @@ class _AssignmentRefValidator(object):
 		target = self.item.target
 		assignment = component.queryUtility(IQAssignment, name=target)
 		if assignment is None:
-			__traceback_info__ = self.item
-			raise ComponentLookupError("Could not find assignment %s" % target)
+			logger.error("Could not find assignment %s", target)
+		return bool(assignment is None)
