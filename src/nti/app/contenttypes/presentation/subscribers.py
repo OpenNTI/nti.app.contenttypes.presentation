@@ -80,17 +80,6 @@ def _registry(registry=None):
 			registry = component.getSiteManager()
 	return registry
 
-def _remove_from_registry_with_index(package, index_interface, item_iterface,
-									 registry=None):
-	registry = _registry(registry)
-	def _recur(unit):
-		container = index_interface(unit, None) or ()
-		for ntiid in container:
-			registry.unregisterUtility(provided=item_iterface, name=ntiid)
-		for child in unit.children:
-			_recur(child)
-	_recur(package)
-
 def _remove_from_registry_with_interface(parent_ntiid, item_iterface, registry=None):
 	result = []
 	registry = _registry(registry)

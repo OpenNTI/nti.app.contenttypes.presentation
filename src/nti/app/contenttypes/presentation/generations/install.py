@@ -16,7 +16,7 @@ from zope import interface
 from zope.generations.interfaces import IInstallableSchemaManager
 from zope.generations.generations import SchemaManager as BaseSchemaManager
 
-from ..index import install_parent_index
+from ..index import install_indices
 
 @interface.implementer(IInstallableSchemaManager)
 class _SchemaManager(BaseSchemaManager):
@@ -33,4 +33,4 @@ class _SchemaManager(BaseSchemaManager):
         pass
 
 def evolve(context):
-    install_parent_index(context)
+    install_indices(context)

@@ -9,11 +9,6 @@ __docformat__ = "restructuredtext en"
 
 from zope import interface
 
-from zc.catalog.interfaces import IValueIndex
-
-class IParentIndex(IValueIndex):
-    pass
-
 class IItemRefValidator(interface.Interface):
     
     def validate():
