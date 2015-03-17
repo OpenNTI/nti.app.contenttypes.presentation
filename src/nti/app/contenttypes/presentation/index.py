@@ -61,23 +61,20 @@ def install_indices(context):
 		index.__name__ = name
 
 		intids.register(index)
-		lsm.registerUtility(index, provided=iface)
+		lsm.registerUtility(index, provided=iface, name=name)
 
-def index_item(docid, item_iface=None, parents=(), intids=None):
-	intids = component.getUtility(zope.intid.IIntIds) if intids is None else None
-	if docid is not None:
-		index = component.getUtility(ISetIndex, name=PARENT_INDEX_NAME)
-		index.index_doc(docid, parents)
+def index_item(docid, item_iface=None, parents=()):
+	index = component.getUtility(ISetIndex, name=PARENT_INDEX_NAME)
+	index.index_doc(docid, parents)
 		
-		index = component.getUtility(IValueIndex, name=INTERFACE_INDEX_NAME)
-		index.index_doc(docid, item_iface)
+	index = component.getUtility(IValueIndex, name=INTERFACE_INDEX_NAME)
+	index.index_doc(docid, item_iface)
 
 def unindex_item(docid):
-	if docid is not None:
-		for name, iface in ((PARENT_INDEX_NAME, ISetIndex),
-						  	(INTERFACE_INDEX_NAME, IValueIndex)):
-			index = component.getUtility(iface, name=name)
-			index.unindex_doc(docid)
+	for name, iface in ((PARENT_INDEX_NAME, ISetIndex),
+					  	(INTERFACE_INDEX_NAME, IValueIndex)):
+		index = component.getUtility(iface, name=name)
+		index.unindex_doc(docid)
 
 def search_by(item_iface=None, parents=()):
 	if item_iface is not None:

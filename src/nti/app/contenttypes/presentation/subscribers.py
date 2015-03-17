@@ -11,6 +11,8 @@ logger = __import__('logging').getLogger(__name__)
 
 import simplejson
 
+import zope.intid
+
 from zope import component
 
 from zope.annotation.interfaces import IAnnotations
@@ -46,7 +48,6 @@ from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTISlideVideo
 from nti.contenttypes.presentation.interfaces import INTIRelatedWork
-from nti.contenttypes.presentation.interfaces import IGroupOverViewable
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
@@ -57,6 +58,9 @@ from nti.contenttypes.presentation.utils import create_lessonoverview_from_exter
 
 from nti.externalization.interfaces import StandardExternalFields
 
+from .index import search_by
+from .index import index_item
+from .index import unindex_item
 from .interfaces import IItemRefValidator
 
 ITEMS = StandardExternalFields.ITEMS
@@ -80,17 +84,43 @@ def _registry(registry=None):
 			registry = component.getSiteManager()
 	return registry
 
-def _remove_from_registry_with_interface(parent_ntiid, item_iterface, registry=None):
-	result = []
-	registry = _registry(registry)
-	for name , utility in list(registry.getUtilitiesFor(item_iterface)):
-		try:
-			if utility._parent_ntiid_ == parent_ntiid: #TODO: Consider indexing
+def _iface_of_thing(item):
+
+	for iface in GROUP_OVERVIEWABLE_INTERFACES:
+		if iface.providedBy(item):
+			return iface
+
+	if INTICourseOverviewGroup.providedBy(item):
+		return INTICourseOverviewGroup
+	elif INTILessonOverview.providedBy(item):
+		return INTILessonOverview
+	
+	if INTISlideDeck.providedBy(item):
+		return INTISlideDeck
+	elif INTISlideVideo.providedBy(item):
+		return INTISlideVideo
+	elif INTISlide.providedBy(item):
+		return INTISlide
+
+	return None
+
+def _remove_from_registry_with_interface(parent_ntiid, item_iterface, registry=None, intids=None):
+	intids = component.queryUtility(zope.intid.IIntIds) if intids is None else intids
+	if intids is not None:
+		result = []
+		registry = _registry(registry)
+		for docid in search_by(item_iterface, parent_ntiid):
+			utility = intids.queryObject(docid)
+			ntiid = getattr(utility, 'ntiid', None)
+			if ntiid and utility is not None:
+				unindex_item(docid)
 				result.append(utility)
-				registry.unregisterUtility(provided=item_iterface, name=name)
-				removed(utility) # remove from intids
-		except AttributeError:
-			pass
+				registry.unregisterUtility(provided=item_iterface, name=ntiid)
+				removed(utility) # remove fron intids
+			elif not utility:
+				intids.forceUnregister(docid)
+	else:
+		result = ()
 	return result
 
 def _register_utility(item, item_iface, ntiid, registry):
@@ -179,6 +209,13 @@ def _set_data_lastModified(content_package, item_iface, lastModified=0):
 	key = '%s.%s.lastModified' % (item_iface.__module__, item_iface.__name__)
 	annotations[key] = lastModified
 
+def _index_items(registered, item_iface, parents=(), intids=None):
+	intids = component.queryUtility(zope.intid.IIntIds) if intids is None else intids
+	if intids is not None:
+		for item in registered:
+			docid = intids.getId(item)
+			index_item(docid, item_iface, parents=parents)
+		
 def _register_items_when_content_changes(content_package, index_iface, item_iface):
 	namespace = index_iface.getTaggedValue(TAG_NAMESPACE_FILE)
 	sibling_key = content_package.does_sibling_entry_exist(namespace)
@@ -208,8 +245,7 @@ def _register_items_when_content_changes(content_package, index_iface, item_ifac
 	else:
 		registered = _load_and_register_json(item_iface, index_text)
 		
-	for item in registered:
-		item._parent_ntiid_ = content_package.ntiid # save package source
+	_index_items(registered, item_iface, parents=(content_package.ntiid,))
 
 	_set_data_lastModified(content_package, item_iface, sibling_lastModified)
 	
@@ -236,12 +272,6 @@ def _clear_data_when_content_changes(content_package, event):
 	_remove_from_registry_with_interface(content_package.ntiid, INTISlideVideo)
 
 ## Courses
-
-def _iface_of_thing(item):
-	for iface in GROUP_OVERVIEWABLE_INTERFACES:
-		if iface.providedBy(item):
-			return iface
-	return None
 
 def _load_and_register_lesson_overview_json(jtext, registry=None, validate=False):
 	recorded = []
@@ -328,11 +358,13 @@ def _outline_nodes(outline):
 		_recur(outline)
 	return result
 
-def synchronize_course_lesson_overview(course):
+def synchronize_course_lesson_overview(course, intids=None):
 	result = []
 	course_packages = get_course_packages(course)
+	intids = component.queryUtility(zope.intid.IIntIds) if intids is None else intids
 
 	entry = ICourseCatalogEntry(course, None)
+	ntiid = entry.ntiid if entry is not None else course.__name__
 	name = entry.ProviderUniqueID if entry is not None else course.__name__
 	
 	logger.info('Synchronizing lessons overviews for %s', name)
@@ -349,13 +381,15 @@ def synchronize_course_lesson_overview(course):
 			sibling_key = content_package.does_sibling_entry_exist(namespace)
 			if not sibling_key:
 				break
-
+			
 			sibling_lastModified = sibling_key.lastModified
 			root_lastModified = _get_source_lastModified(parent, namespace)
 			if root_lastModified >= sibling_lastModified:
 				break
 			
-			_remove_from_registry_with_interface(namespace, IGroupOverViewable)
+			## remove and unindex
+			for item_iface in GROUP_OVERVIEWABLE_INTERFACES:
+				_remove_from_registry_with_interface(namespace, item_iface)
 			_remove_from_registry_with_interface(namespace, INTICourseOverviewGroup)
 			_remove_from_registry_with_interface(namespace, INTILessonOverview)
 		
@@ -364,8 +398,13 @@ def synchronize_course_lesson_overview(course):
 			items = _load_and_register_lesson_overview_json(index_text, validate=True)
 			result.extend(items)
 			
-			for item in items: #TODO: Use index
-				item._parent_ntiid_ = namespace # save location name 
+			# reindex
+			if intids is not None: # None during tests
+				for item in items:
+					docid = intids.getId(item)
+					item_iface = _iface_of_thing(item)
+					index_item(docid, item_iface, parents=(namespace, ntiid))
+
 			_set_source_lastModified(parent, namespace, sibling_lastModified)
 
 	logger.info('Lessons overviews for %s have been synchronized', name)

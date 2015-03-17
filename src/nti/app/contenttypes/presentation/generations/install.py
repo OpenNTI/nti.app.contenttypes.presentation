@@ -30,7 +30,7 @@ class _SchemaManager(BaseSchemaManager):
             package_name='nti.app.contenttypes.presentation.generations')
 
     def install( self, context ):
-        pass
+        evolve(context)
 
 def evolve(context):
     install_indices(context)
