@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import time
 import simplejson
 
 import zope.intid
@@ -17,8 +18,7 @@ from zope import component
 
 from zope.annotation.interfaces import IAnnotations
 
-from zope.lifecycleevent import added
-from zope.lifecycleevent import removed
+from zope import lifecycleevent
 from zope.lifecycleevent import IObjectRemovedEvent
 
 from ZODB.interfaces import IConnection
@@ -103,7 +103,7 @@ def _remove_from_registry_with_interface(parent_ntiid, item_iterface, registry=N
 				unindex_item(docid)
 				result.append(utility)
 				registry.unregisterUtility(provided=item_iterface, name=ntiid)
-				removed(utility) # remove fron intids
+				lifecycleevent.removed(utility) # remove fron intids
 			elif not utility:
 				intids.forceUnregister(docid)
 	else:
@@ -121,7 +121,7 @@ def _register_utility(item, item_iface, ntiid, registry):
 			connection = IConnection(registry, None)
 			if connection is not None:
 				connection.add(item)
-				added(item) # get an intid
+				lifecycleevent.added(item) # get an intid
 			return (True, item)
 		return (False, registered)
 	return (False, None)
@@ -252,7 +252,7 @@ def _update_data_when_content_changes(content_package, event):
 	synchronize_content_package(content_package)
 
 @component.adapter(IContentPackage, IObjectRemovedEvent)
-def _clear_data_when_content_changes(content_package, event):
+def _clear_data_when_content_removed(content_package, event):
 	for _, item_iface in INTERFACE_PAIRS:
 		_remove_from_registry_with_interface(content_package.ntiid, item_iface)
 	_remove_from_registry_with_interface(content_package.ntiid, INTISlide)
@@ -345,6 +345,13 @@ def _outline_nodes(outline):
 		_recur(outline)
 	return result
 
+def _remove_and_unindex_course_assets(parent_key): 
+	## Order matters
+	for item_iface in GROUP_OVERVIEWABLE_INTERFACES:
+		_remove_from_registry_with_interface(parent_key, item_iface)
+	_remove_from_registry_with_interface(parent_key, INTICourseOverviewGroup)
+	_remove_from_registry_with_interface(parent_key, INTILessonOverview)
+	
 def synchronize_course_lesson_overview(course, intids=None):
 	result = []
 	course_packages = get_course_packages(course)
@@ -354,11 +361,16 @@ def synchronize_course_lesson_overview(course, intids=None):
 	ntiid = entry.ntiid if entry is not None else course.__name__
 	name = entry.ProviderUniqueID if entry is not None else course.__name__
 	
+	now = time.time()
 	logger.info('Synchronizing lessons overviews for %s', name)
 
-	parent = course
+	## CS: 20150317: Use the parent course to store the last modified date of the 
+	## source files. This works b/c currently subinstances  share the same
+	## current content pacakge bundle
 	if ICourseSubInstance.providedBy(course):
 		parent = course.__parent__.__parent__
+	else:
+		parent = course
 	
 	## parse and register
 	nodes = _outline_nodes(course.Outline)
@@ -374,29 +386,34 @@ def synchronize_course_lesson_overview(course, intids=None):
 			if root_lastModified >= sibling_lastModified:
 				break
 			
-			## remove and unindex
-			for item_iface in GROUP_OVERVIEWABLE_INTERFACES:
-				_remove_from_registry_with_interface(namespace, item_iface)
-			_remove_from_registry_with_interface(namespace, INTICourseOverviewGroup)
-			_remove_from_registry_with_interface(namespace, INTILessonOverview)
-		
+			_remove_and_unindex_course_assets(namespace)
+			
 			logger.debug("Synchronizing %s", namespace)
 			index_text = content_package.read_contents_of_sibling_entry(namespace)
 			items = _load_and_register_lesson_overview_json(index_text, validate=True)
 			result.extend(items)
 			
-			# reindex
-			if intids is not None: # None during tests
-				for item in items:
-					docid = intids.getId(item)
-					item_iface = _iface_of_thing(item)
-					index_item(docid, item_iface, parents=(namespace, ntiid))
-
 			_set_source_lastModified(parent, namespace, sibling_lastModified)
+		
+			if intids is None: ## None during tests
+				continue
 
-	logger.info('Lessons overviews for %s have been synchronized', name)
+			## reindex
+			for item in items:
+				docid = intids.getId(item)
+				item_iface = _iface_of_thing(item)
+				index_item(docid, item_iface, parents=(namespace, ntiid))
+
+	logger.info('Lessons overviews for %s have been synchronized %s(s)',
+				 name, time.time()-now)
 	return result
 
 @component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
 def _on_course_instance_available(course, event):
 	synchronize_course_lesson_overview(course)
+
+@component.adapter(ICourseInstance, IObjectRemovedEvent)
+def _clear_data_when_course_removed(course, event):
+	entry = ICourseCatalogEntry(course, None)
+	ntiid = entry.ntiid if entry is not None else course.__name__
+	_remove_and_unindex_course_assets(ntiid)
