@@ -30,7 +30,7 @@ from nti.contenttypes.presentation.utils import create_ntivideo_from_external
 from nti.contenttypes.presentation.utils import create_relatedwork_from_external
 
 from nti.app.contenttypes.presentation.subscribers import index_item
-from nti.app.contenttypes.presentation.subscribers import _iface_of_thing
+from nti.app.contenttypes.presentation.subscribers import iface_of_thing
 from nti.app.contenttypes.presentation.subscribers import _load_and_register_json
 from nti.app.contenttypes.presentation.subscribers import _load_and_register_slidedeck_json
 from nti.app.contenttypes.presentation.subscribers import _remove_from_registry_with_interface
@@ -98,7 +98,7 @@ class TestSubscribers(unittest.TestCase):
 		assert_that(result, has_length(742))
 		
 		for item in result:
-			iface = _iface_of_thing(item)
+			iface = iface_of_thing(item)
 			_index_items(iface, 'xxx', item)
 		
 		result = _remove_from_registry_with_interface('xxx', INTISlideDeck, registry=registry)
@@ -123,7 +123,7 @@ class TestSubscribers(unittest.TestCase):
 		assert_that(result, has_length(11))
 
 		for item in result:
-			iface = _iface_of_thing(item)
+			iface = iface_of_thing(item)
 			_index_items(iface, 'xxx', item)
 		
 		result = _remove_from_registry_with_interface('xxx', INTICourseOverviewGroup, registry=registry)

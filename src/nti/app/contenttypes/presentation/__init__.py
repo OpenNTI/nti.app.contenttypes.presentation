@@ -8,3 +8,11 @@ from __future__ import print_function, unicode_literals, absolute_import, divisi
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
+
+from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
+
+def iface_of_thing(item):
+    for iface in ALL_PRESENTATION_ASSETS_INTERFACES:
+        if iface.providedBy(item):
+            return iface
+    return None

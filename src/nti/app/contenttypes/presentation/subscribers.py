@@ -40,7 +40,6 @@ from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
 from nti.contenttypes.presentation import GROUP_OVERVIEWABLE_INTERFACES
-from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.contenttypes.presentation.interfaces import INTIAudio
 from nti.contenttypes.presentation.interfaces import INTIVideo
@@ -64,6 +63,8 @@ from .index import index_item
 from .index import unindex_item
 from .interfaces import IItemRefValidator
 
+from . import iface_of_thing
+
 ITEMS = StandardExternalFields.ITEMS
 
 INTERFACE_PAIRS = ( (IAudioIndexedDataContainer, INTIAudio),
@@ -84,12 +85,6 @@ def _registry(registry=None):
 		else:
 			registry = component.getSiteManager()
 	return registry
-
-def _iface_of_thing(item):
-	for iface in ALL_PRESENTATION_ASSETS_INTERFACES:
-		if iface.providedBy(item):
-			return iface
-	return None
 
 def _remove_from_registry_with_interface(parent_ntiid, item_iterface, registry=None, intids=None):
 	intids = component.queryUtility(IIntIds) if intids is None else intids
@@ -236,7 +231,7 @@ def _register_items_when_content_changes(content_package,
 		item.__parent__ = content_package
 		if intids is not None: # none in some tests
 			docid = intids.getId(item)
-			item_iface = _iface_of_thing(item)
+			item_iface = iface_of_thing(item)
 			index_item(docid, item_iface, parents=(content_package.ntiid,))
 
 	_set_data_lastModified(content_package, item_iface, sibling_lastModified)
@@ -294,7 +289,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, validate=False
 		items = group.Items
 		while idx < len(items):
 			item = items[idx]
-			item_iface = _iface_of_thing(item)
+			item_iface = iface_of_thing(item)
 			result, registered = _register_utility(	item, 
 													item_iface,
 											   		item.ntiid,
@@ -404,7 +399,7 @@ def synchronize_course_lesson_overview(course, intids=None):
 			for item in items:
 				if intids is not None: # none in some tests
 					docid = intids.getId(item)
-					item_iface = _iface_of_thing(item)
+					item_iface = iface_of_thing(item)
 					index_item(docid, item_iface, parents=(namespace, ntiid))
 				if INTILessonOverview.providedBy(item):
 					item.__parent__ = parent
