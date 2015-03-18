@@ -46,7 +46,7 @@ def install_indices(context):
 						name=PACATALOG_INDEX_NAME)
 
 def get_index():
-	result = component.getUtility(IPresentationAssetsIndex, name=PACATALOG_INDEX_NAME)
+	result = component.queryUtility(IPresentationAssetsIndex, name=PACATALOG_INDEX_NAME)
 	return result
 get_catalog = get_index
 

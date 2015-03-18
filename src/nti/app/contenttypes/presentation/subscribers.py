@@ -184,8 +184,9 @@ def _set_data_lastModified(content_package, namespace, lastModified=0):
 def _register_items_when_content_changes(content_package,
 										 index_iface,
 										 item_iface,
+										 catalog=None,
 										 intids=None):
-
+	catalog = get_catalog() if catalog is None else catalog
 	namespace = index_iface.getTaggedValue(TAG_NAMESPACE_FILE)
 	sibling_key = content_package.does_sibling_entry_exist(namespace)
 	if not sibling_key:
@@ -229,24 +230,29 @@ def _register_items_when_content_changes(content_package,
 	
 	return registered
 	
-def synchronize_content_package(content_package):
+def synchronize_content_package(content_package, catalog=None):
 	result = []
 	for icontainer, item_iface in INTERFACE_PAIRS:
 		items = _register_items_when_content_changes(content_package, 
 													 icontainer, 
-													 item_iface)
+													 item_iface,
+													 catalog=catalog)
 		result.extend(items or ())
 	return result
 
 def _update_data_when_content_changes(content_package, event):
-	synchronize_content_package(content_package)
+	catalog = get_catalog()
+	if catalog is not None: ## empty during some tests
+		synchronize_content_package(content_package, catalog=catalog)
 
 @component.adapter(IContentPackage, IObjectRemovedEvent)
 def _clear_data_when_content_removed(content_package, event):
-	for _, item_iface in INTERFACE_PAIRS:
-		_remove_from_registry_with_interface(content_package.ntiid, item_iface)
-	_remove_from_registry_with_interface(content_package.ntiid, INTISlide)
-	_remove_from_registry_with_interface(content_package.ntiid, INTISlideVideo)
+	catalog = get_catalog()
+	if catalog is not None: ## empty during some tests
+		for _, item_iface in INTERFACE_PAIRS:
+			_remove_from_registry_with_interface(content_package.ntiid, item_iface)
+		_remove_from_registry_with_interface(content_package.ntiid, INTISlide)
+		_remove_from_registry_with_interface(content_package.ntiid, INTISlideVideo)
 
 ## Courses
 
@@ -338,10 +344,10 @@ def _remove_and_unindex_course_assets(main_key):
 	_remove_from_registry_with_interface(main_key, INTICourseOverviewGroup)
 	_remove_from_registry_with_interface(main_key, INTILessonOverview)
 	
-def synchronize_course_lesson_overview(course, intids=None):
+def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 	result = []
-	catalog = get_catalog()
 	course_packages = get_course_packages(course)
+	catalog = get_catalog() if catalog is None else catalog
 	intids = component.queryUtility(IIntIds) if intids is None else intids
 
 	entry = ICourseCatalogEntry(course, None)
@@ -371,6 +377,11 @@ def synchronize_course_lesson_overview(course, intids=None):
 			sibling_lastModified = sibling_key.lastModified
 			root_lastModified = _get_source_lastModified(namespace, catalog)
 			if root_lastModified >= sibling_lastModified:
+				## we want to register the ntiid
+				uids = catalog.get_references(namespace)
+				for uid in uids or ():
+					catalog.index(uid, values=(ntiid,))
+				## done
 				break
 			
 			_remove_and_unindex_course_assets(namespace)
@@ -396,10 +407,14 @@ def synchronize_course_lesson_overview(course, intids=None):
 
 @component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
 def _on_course_instance_available(course, event):
-	synchronize_course_lesson_overview(course)
+	catalog = get_catalog()
+	if catalog is not None: ## empty during some tests
+		synchronize_course_lesson_overview(course, catalog=catalog)
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
 def _clear_data_when_course_removed(course, event):
-	entry = ICourseCatalogEntry(course, None)
-	ntiid = entry.ntiid if entry is not None else course.__name__
-	_remove_and_unindex_course_assets(ntiid)
+	catalog = get_catalog()
+	if catalog is not None: ## empty during some tests
+		entry = ICourseCatalogEntry(course, None)
+		ntiid = entry.ntiid if entry is not None else course.__name__
+		_remove_and_unindex_course_assets(ntiid)
