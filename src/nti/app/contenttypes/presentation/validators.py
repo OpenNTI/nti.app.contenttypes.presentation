@@ -14,20 +14,40 @@ from zope import interface
 
 from nti.assessment.interfaces import IQAssignment
 
+from nti.contenttypes.presentation.interfaces import INTIAudioRef
+from nti.contenttypes.presentation.interfaces import INTIVideoRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 
 from .interfaces import IItemRefValidator
 
-@component.adapter(INTIAssignmentRef)
 @interface.implementer(IItemRefValidator)
-class _AssignmentRefValidator(object):
+class _ItemRefValidator(object):
 	
+	item_type = None
+	field_name = None
+		
 	def __init__(self, item):
 		self.item = item
 
 	def validate(self): 
-		target = self.item.target
-		assignment = component.queryUtility(IQAssignment, name=target)
-		if assignment is None:
-			logger.error("Could not find assignment %s", target)
-		return bool(assignment is None)
+		name = getattr(self.item, self.field_name, None) or u''
+		reference = component.queryUtility(IQAssignment, name=name)
+		if reference is None:
+			logger.error("Could not find %s %s", self.item_type, name)
+		return bool(reference is None)
+	
+@component.adapter(INTIAssignmentRef)
+class _AssignmentRefValidator(_ItemRefValidator):
+	field_name = 'target'
+	item_type = 'Assignment'
+	
+@component.adapter(INTIVideoRef)
+class _VideoRefValidator(_ItemRefValidator):	
+	field_name = 'ntiid'
+	item_type = 'Video'
+	
+@component.adapter(INTIAudioRef)
+class _AudioRefValidator(_ItemRefValidator):	
+	field_name = 'ntiid'
+	item_type = 'Audio'
+	

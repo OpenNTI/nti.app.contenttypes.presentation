@@ -182,8 +182,8 @@ def _load_and_register_slidedeck_json(jtext, registry=None,
 				result.append(internal)
 	return result
 
-def _get_data_lastModified(content_package, item_iface):
-	annotations = IAnnotations(content_package)
+def _get_data_lastModified(context, item_iface):
+	annotations = IAnnotations(context)
 	key = '%s.%s.lastModified' % (item_iface.__module__, item_iface.__name__)
 	try:
 		result = annotations[key]
@@ -191,8 +191,8 @@ def _get_data_lastModified(content_package, item_iface):
 		result = 0
 	return result
 
-def _set_data_lastModified(content_package, item_iface, lastModified=0):
-	annotations = IAnnotations(content_package)
+def _set_data_lastModified(context, item_iface, lastModified=0):
+	annotations = IAnnotations(context)
 	key = '%s.%s.lastModified' % (item_iface.__module__, item_iface.__name__)
 	annotations[key] = lastModified
 
@@ -307,8 +307,8 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, validate=False
 			idx += 1
 	return recorded
 
-def _get_source_lastModified(course, source):
-	annotations = IAnnotations(course)
+def _get_source_lastModified(context, source):
+	annotations = IAnnotations(context)
 	try:
 		key = '%s.lastModified' % source
 		result = annotations[key]
@@ -316,8 +316,8 @@ def _get_source_lastModified(course, source):
 		result = 0
 	return result
 
-def _set_source_lastModified(course, source, lastModified=0):
-	annotations = IAnnotations(course)
+def _set_source_lastModified(context, source, lastModified=0):
+	annotations = IAnnotations(context)
 	key = '%s.lastModified' % source
 	annotations[key] = lastModified
 	
