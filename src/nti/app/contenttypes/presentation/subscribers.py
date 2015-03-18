@@ -12,7 +12,7 @@ logger = __import__('logging').getLogger(__name__)
 import time
 import simplejson
 
-import zope.intid
+from zope.intid import IIntIds
 
 from zope import component
 
@@ -92,7 +92,7 @@ def _iface_of_thing(item):
 	return None
 
 def _remove_from_registry_with_interface(parent_ntiid, item_iterface, registry=None, intids=None):
-	intids = component.queryUtility(zope.intid.IIntIds) if intids is None else intids
+	intids = component.queryUtility(IIntIds) if intids is None else intids
 	if intids is not None:
 		result = []
 		registry = _registry(registry)
@@ -162,13 +162,13 @@ def _canonicalize(items, item_iface, registry):
 ## Library
 
 def _load_and_register_slidedeck_json(jtext, registry=None, 
-									  external_object_creator=create_object_from_external):
+									  object_creator=create_object_from_external):
 	result = []
 	registry = _registry(registry)
 	index = simplejson.loads(prepare_json_text(jtext))
 	items = index.get(ITEMS) or {}
 	for ntiid, data in items.items():
-		internal = external_object_creator(data)
+		internal = object_creator(data)
 		if 	INTISlide.providedBy(internal) and \
 			_was_utility_registered(internal, INTISlide, ntiid, registry):
 			result.append(internal)
@@ -195,15 +195,12 @@ def _set_data_lastModified(context, item_iface, lastModified=0):
 	annotations = IAnnotations(context)
 	key = '%s.%s.lastModified' % (item_iface.__module__, item_iface.__name__)
 	annotations[key] = lastModified
-
-def _index_items(registered, item_iface, parents=(), intids=None):
-	intids = component.queryUtility(zope.intid.IIntIds) if intids is None else intids
-	if intids is not None:
-		for item in registered:
-			docid = intids.getId(item)
-			index_item(docid, item_iface, parents=parents)
 		
-def _register_items_when_content_changes(content_package, index_iface, item_iface):
+def _register_items_when_content_changes(content_package,
+										 index_iface,
+										 item_iface,
+										 intids=None):
+
 	namespace = index_iface.getTaggedValue(TAG_NAMESPACE_FILE)
 	sibling_key = content_package.does_sibling_entry_exist(namespace)
 	if not sibling_key:
@@ -224,15 +221,23 @@ def _register_items_when_content_changes(content_package, index_iface, item_ifac
 		_remove_from_registry_with_interface(content_package.ntiid, INTISlideVideo)
 		registered = _load_and_register_slidedeck_json(index_text)
 	elif item_iface == INTIVideo:
-		registered = _load_and_register_json(item_iface, index_text,
-											 external_object_creator=create_ntivideo_from_external)
+		registered = _load_and_register_json(
+								item_iface, index_text,
+								external_object_creator=create_ntivideo_from_external)
 	elif item_iface == INTIRelatedWork:
-		registered = _load_and_register_json(item_iface, index_text,
-											 external_object_creator=create_relatedwork_from_external)
+		registered = _load_and_register_json(
+								item_iface, index_text,
+								external_object_creator=create_relatedwork_from_external)
 	else:
 		registered = _load_and_register_json(item_iface, index_text)
 		
-	_index_items(registered, item_iface, parents=(content_package.ntiid,))
+	intids = component.queryUtility(IIntIds) if intids is None else intids
+	for item in registered:
+		item.__parent__ = content_package
+		if intids is not None: # none in some tests
+			docid = intids.getId(item)
+			item_iface = _iface_of_thing(item)
+			index_item(docid, item_iface, parents=(content_package.ntiid,))
 
 	_set_data_lastModified(content_package, item_iface, sibling_lastModified)
 	
@@ -243,7 +248,8 @@ def _register_items_when_content_changes(content_package, index_iface, item_ifac
 def synchronize_content_package(content_package):
 	result = []
 	for icontainer, item_iface in INTERFACE_PAIRS:
-		items = _register_items_when_content_changes(content_package, icontainer, 
+		items = _register_items_when_content_changes(content_package, 
+													 icontainer, 
 													 item_iface)
 		result.extend(items or ())
 	return result
@@ -355,7 +361,7 @@ def _remove_and_unindex_course_assets(parent_key):
 def synchronize_course_lesson_overview(course, intids=None):
 	result = []
 	course_packages = get_course_packages(course)
-	intids = component.queryUtility(zope.intid.IIntIds) if intids is None else intids
+	intids = component.queryUtility(IIntIds) if intids is None else intids
 
 	entry = ICourseCatalogEntry(course, None)
 	ntiid = entry.ntiid if entry is not None else course.__name__
@@ -394,15 +400,14 @@ def synchronize_course_lesson_overview(course, intids=None):
 			result.extend(items)
 			
 			_set_source_lastModified(parent, namespace, sibling_lastModified)
-		
-			if intids is None: ## None during tests
-				continue
 
-			## reindex
 			for item in items:
-				docid = intids.getId(item)
-				item_iface = _iface_of_thing(item)
-				index_item(docid, item_iface, parents=(namespace, ntiid))
+				if intids is not None: # none in some tests
+					docid = intids.getId(item)
+					item_iface = _iface_of_thing(item)
+					index_item(docid, item_iface, parents=(namespace, ntiid))
+				if INTILessonOverview.providedBy(item):
+					item.__parent__ = parent
 
 	logger.info('Lessons overviews for %s have been synchronized %s(s)',
 				 name, time.time()-now)

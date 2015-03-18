@@ -13,6 +13,9 @@ from hamcrest import assert_that
 import os
 import unittest
 
+from zope import component
+from zope.intid import IIntIds
+
 from nti.contenttypes.presentation.interfaces import INTISlide
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTITimeline
@@ -26,7 +29,7 @@ from nti.contenttypes.presentation.utils import create_object_from_external
 from nti.contenttypes.presentation.utils import create_ntivideo_from_external
 from nti.contenttypes.presentation.utils import create_relatedwork_from_external
 
-from nti.app.contenttypes.presentation.subscribers import _index_items
+from nti.app.contenttypes.presentation.subscribers import index_item
 from nti.app.contenttypes.presentation.subscribers import _iface_of_thing
 from nti.app.contenttypes.presentation.subscribers import _load_and_register_json
 from nti.app.contenttypes.presentation.subscribers import _load_and_register_slidedeck_json
@@ -38,6 +41,13 @@ from nti.app.contenttypes.presentation.tests import SharedConfiguringTestLayer
 
 from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 import nti.dataserver.tests.mock_dataserver as mock_dataserver
+
+def _index_items(item_iface, parents=(), *registered):
+	intids = component.queryUtility(IIntIds)
+	if intids is not None:
+		for item in registered:
+			docid = intids.getId(item)
+			index_item(docid, item_iface, parents=parents)
 
 class TestSubscribers(unittest.TestCase):
 
@@ -56,7 +66,7 @@ class TestSubscribers(unittest.TestCase):
 		assert_that(result, has_length(count))
 		assert_that(list(registry.registeredUtilities()), has_length(count))
 
-		_index_items(result, iface, 'xxx')
+		_index_items(iface, 'xxx', *result)
 		
 		result = _remove_from_registry_with_interface('xxx', iface, registry=registry)
 		assert_that(result, has_length(count))
@@ -89,7 +99,7 @@ class TestSubscribers(unittest.TestCase):
 		
 		for item in result:
 			iface = _iface_of_thing(item)
-			_index_items((item,), iface, 'xxx')
+			_index_items(iface, 'xxx', item)
 		
 		result = _remove_from_registry_with_interface('xxx', INTISlideDeck, registry=registry)
 		assert_that(result, has_length(57))
@@ -114,7 +124,7 @@ class TestSubscribers(unittest.TestCase):
 
 		for item in result:
 			iface = _iface_of_thing(item)
-			_index_items((item,), iface, 'xxx')
+			_index_items(iface, 'xxx', item)
 		
 		result = _remove_from_registry_with_interface('xxx', INTICourseOverviewGroup, registry=registry)
 		assert_that(result, has_length(4))
