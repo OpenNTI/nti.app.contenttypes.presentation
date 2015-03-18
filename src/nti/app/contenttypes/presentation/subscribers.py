@@ -16,8 +16,6 @@ from zope.intid import IIntIds
 
 from zope import component
 
-from zope.annotation.interfaces import IAnnotations
-
 from zope import lifecycleevent
 from zope.lifecycleevent import IObjectRemovedEvent
 
@@ -172,19 +170,16 @@ def _load_and_register_slidedeck_json(jtext, registry=None,
 				result.append(internal)
 	return result
 
-def _get_data_lastModified(context, item_iface):
-	annotations = IAnnotations(context)
-	key = '%s.%s.lastModified' % (item_iface.__module__, item_iface.__name__)
-	try:
-		result = annotations[key]
-	except KeyError:
-		result = 0
+def _get_data_lastModified(content_package, namespace):
+	catalog = get_catalog()
+	key = '%s.%s.lastModified' % (content_package.ntiid, namespace)
+	result = catalog.get_last_modified(key)
 	return result
 
-def _set_data_lastModified(context, item_iface, lastModified=0):
-	annotations = IAnnotations(context)
-	key = '%s.%s.lastModified' % (item_iface.__module__, item_iface.__name__)
-	annotations[key] = lastModified
+def _set_data_lastModified(content_package, namespace, lastModified=0):
+	catalog = get_catalog()
+	key = '%s.%s.lastModified' % (content_package.ntiid, namespace)
+	catalog.set_last_modified(key, lastModified)
 		
 def _register_items_when_content_changes(content_package,
 										 index_iface,
@@ -197,7 +192,7 @@ def _register_items_when_content_changes(content_package,
 		return ()
 	
 	sibling_lastModified = sibling_key.lastModified
-	root_lastModified = _get_data_lastModified(content_package, item_iface)
+	root_lastModified = _get_data_lastModified(content_package, namespace)
 	if root_lastModified >= sibling_lastModified:
 		return ()
 	
@@ -302,19 +297,16 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, validate=False
 			idx += 1
 	return recorded
 
-def _get_source_lastModified(context, source):
-	annotations = IAnnotations(context)
-	try:
-		key = '%s.lastModified' % source
-		result = annotations[key]
-	except KeyError:
-		result = 0
+def _get_source_lastModified(source, catalog=None):
+	catalog = get_catalog() if catalog is None else catalog
+	key = '%s.lastModified' % source
+	result = catalog.get_last_modified(key)
 	return result
 
-def _set_source_lastModified(context, source, lastModified=0):
-	annotations = IAnnotations(context)
+def _set_source_lastModified(source, lastModified=0, catalog=None):
+	catalog = get_catalog() if catalog is None else catalog
 	key = '%s.lastModified' % source
-	annotations[key] = lastModified
+	catalog.set_last_modified(key, lastModified)
 	
 def get_course_packages(context):
 	packages = ()
@@ -340,16 +332,15 @@ def _outline_nodes(outline):
 		_recur(outline)
 	return result
 
-def _remove_and_unindex_course_assets(parent_key): 
-	## Order matters
+def _remove_and_unindex_course_assets(main_key): 
 	for item_iface in GROUP_OVERVIEWABLE_INTERFACES:
-		_remove_from_registry_with_interface(parent_key, item_iface)
-	_remove_from_registry_with_interface(parent_key, INTICourseOverviewGroup)
-	_remove_from_registry_with_interface(parent_key, INTILessonOverview)
+		_remove_from_registry_with_interface(main_key, item_iface)
+	_remove_from_registry_with_interface(main_key, INTICourseOverviewGroup)
+	_remove_from_registry_with_interface(main_key, INTILessonOverview)
 	
 def synchronize_course_lesson_overview(course, intids=None):
-	from IPython.core.debugger import Tracer; Tracer()()
 	result = []
+	catalog = get_catalog()
 	course_packages = get_course_packages(course)
 	intids = component.queryUtility(IIntIds) if intids is None else intids
 
@@ -367,20 +358,18 @@ def synchronize_course_lesson_overview(course, intids=None):
 		parent = course.__parent__.__parent__
 	else:
 		parent = course
-	
-	catalog = get_catalog()
-	
+
 	## parse and register
 	nodes = _outline_nodes(course.Outline)
 	for node in nodes:
-		namespace = node.src
+		namespace = node.src ## this is ntiid based file (unique)
 		for content_package in course_packages:
 			sibling_key = content_package.does_sibling_entry_exist(namespace)
 			if not sibling_key:
 				break
 			
 			sibling_lastModified = sibling_key.lastModified
-			root_lastModified = _get_source_lastModified(parent, namespace)
+			root_lastModified = _get_source_lastModified(namespace, catalog)
 			if root_lastModified >= sibling_lastModified:
 				break
 			
@@ -391,8 +380,9 @@ def synchronize_course_lesson_overview(course, intids=None):
 			items = _load_and_register_lesson_overview_json(index_text, validate=True)
 			result.extend(items)
 			
-			_set_source_lastModified(parent, namespace, sibling_lastModified)
+			_set_source_lastModified(namespace, sibling_lastModified, catalog)
 
+			## index and parent
 			for item in items:
 				item_iface = iface_of_thing(item)
 				catalog.index(item, intids=intids, 

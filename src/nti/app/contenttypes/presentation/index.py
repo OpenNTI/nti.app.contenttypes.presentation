@@ -5,7 +5,6 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-from nti.zope_catalog.catalog import ResultSet
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -21,6 +20,7 @@ import BTrees
 
 from persistent import Persistent
 
+from nti.zope_catalog.catalog import ResultSet
 from nti.zope_catalog.index import SetIndex as RawSetIndex
 
 from .interfaces import IPresentationAssetsIndex
