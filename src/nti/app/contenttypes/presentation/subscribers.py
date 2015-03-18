@@ -58,9 +58,8 @@ from nti.contenttypes.presentation.utils import create_lessonoverview_from_exter
 
 from nti.externalization.interfaces import StandardExternalFields
 
-from .index import search_by
-from .index import index_item
-from .index import unindex_item
+from .index import get_catalog
+
 from .interfaces import IItemRefValidator
 
 from . import iface_of_thing
@@ -86,31 +85,27 @@ def _registry(registry=None):
 			registry = component.getSiteManager()
 	return registry
 
-def _remove_from_registry_with_interface(parent_ntiid, item_iterface, registry=None, intids=None):
+def _remove_from_registry_with_interface(main_key, provided, registry=None, intids=None):
+	result = []
+	catalog = get_catalog()
+	registry = _registry(registry)
 	intids = component.queryUtility(IIntIds) if intids is None else intids
-	if intids is not None:
-		result = []
-		registry = _registry(registry)
-		for docid in search_by(item_iterface, parent_ntiid):
-			utility = intids.queryObject(docid)
-			ntiid = getattr(utility, 'ntiid', None)
-			if ntiid and utility is not None:
-				unindex_item(docid)
-				result.append(utility)
-				registry.unregisterUtility(provided=item_iterface, name=ntiid)
-				lifecycleevent.removed(utility) # remove fron intids
-			elif not utility:
-				intids.forceUnregister(docid)
-	else:
-		result = ()
+	for utility in catalog.search_objects(intids=intids, keys=(provided, main_key)):
+		ntiid = getattr(utility, 'ntiid', None)
+		if ntiid:
+			result.append(utility)
+			catalog.unindex(utility, intids=intids)
+			registry.unregisterUtility(provided=provided, name=ntiid)
+			lifecycleevent.removed(utility) # remove fron intids
 	return result
 
-def _register_utility(item, item_iface, ntiid, registry):
-	if item_iface.providedBy(item):
-		registered = registry.queryUtility(item_iface, name=ntiid)
+def _register_utility(item, provided, ntiid, registry=None):
+	if provided.providedBy(item):
+		registry = _registry(registry)
+		registered = registry.queryUtility(provided, name=ntiid)
 		if registered is None:
 			registry.registerUtility(item,
-									 provided=item_iface,
+									 provided=provided,
 									 name=ntiid,
 									 event=False)
 			connection = IConnection(registry, None)
@@ -227,12 +222,11 @@ def _register_items_when_content_changes(content_package,
 		registered = _load_and_register_json(item_iface, index_text)
 		
 	intids = component.queryUtility(IIntIds) if intids is None else intids
+	catalog = get_catalog()
 	for item in registered:
 		item.__parent__ = content_package
-		if intids is not None: # none in some tests
-			docid = intids.getId(item)
-			item_iface = iface_of_thing(item)
-			index_item(docid, item_iface, parents=(content_package.ntiid,))
+		item_iface = iface_of_thing(item)
+		catalog.index(item, intids=intids, values=(item_iface, content_package.ntiid,))
 
 	_set_data_lastModified(content_package, item_iface, sibling_lastModified)
 	
@@ -354,6 +348,7 @@ def _remove_and_unindex_course_assets(parent_key):
 	_remove_from_registry_with_interface(parent_key, INTILessonOverview)
 	
 def synchronize_course_lesson_overview(course, intids=None):
+	from IPython.core.debugger import Tracer; Tracer()()
 	result = []
 	course_packages = get_course_packages(course)
 	intids = component.queryUtility(IIntIds) if intids is None else intids
@@ -372,6 +367,8 @@ def synchronize_course_lesson_overview(course, intids=None):
 		parent = course.__parent__.__parent__
 	else:
 		parent = course
+	
+	catalog = get_catalog()
 	
 	## parse and register
 	nodes = _outline_nodes(course.Outline)
@@ -397,10 +394,9 @@ def synchronize_course_lesson_overview(course, intids=None):
 			_set_source_lastModified(parent, namespace, sibling_lastModified)
 
 			for item in items:
-				if intids is not None: # none in some tests
-					docid = intids.getId(item)
-					item_iface = iface_of_thing(item)
-					index_item(docid, item_iface, parents=(namespace, ntiid))
+				item_iface = iface_of_thing(item)
+				catalog.index(item, intids=intids, 
+							  values=(item_iface, namespace, ntiid))
 				if INTILessonOverview.providedBy(item):
 					item.__parent__ = parent
 

@@ -5,46 +5,29 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+from nti.zope_catalog.catalog import ResultSet
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
 import six
+import time
 
-import zope.intid
+from zope.intid import IIntIds
 
 from zope import component
-from zope import interface
-
-from zc.catalog.interfaces import ISetIndex
-from zc.catalog.interfaces import IValueIndex
 
 import BTrees
 
-from nti.zope_catalog.index import SetIndex as RawSetIndex
-from nti.zope_catalog.index import ValueIndex as RawValueIndex
+from persistent import Persistent
 
-PARENT_INDEX_NAME = '++etc++contenttypes.presentation-parent-index'
-INTERFACE_INDEX_NAME = '++etc++contenttypes.presentation-interface-index'
+from nti.zope_catalog.index import SetIndex as RawSetIndex
+
+from .interfaces import IPresentationAssetsIndex
+
+PACATALOG_INDEX_NAME = '++etc++contenttypes.presentation-index'
 
 family = BTrees.family64
-
-class ParentIndex(RawSetIndex):
-	
-	def index_doc(self, doc_id, value):
-		if isinstance(value, six.string_types):
-			value = (value,)
-		return super(ParentIndex, self).index_doc(doc_id, value)
-	
-class InterfaceIndex(RawValueIndex):
-	
-	def index_doc(self, doc_id, value):
-		assert 	value is None or isinstance(value, six.string_types) or \
-				issubclass(value, interface.Interface)
-				
-		if issubclass(value, interface.Interface):
-			value = value.__name__
-		return super(InterfaceIndex, self).index_doc(doc_id, value)
 		
 def install_indices(context):
 	conn = context.connection
@@ -52,51 +35,81 @@ def install_indices(context):
 
 	dataserver_folder = root['nti.dataserver']
 	lsm = dataserver_folder.getSiteManager()
-	intids = lsm.getUtility(zope.intid.IIntIds)
+	intids = lsm.getUtility(IIntIds)
 
-	for name, factory, iface in ((PARENT_INDEX_NAME, ParentIndex, ISetIndex),
-						  		 (INTERFACE_INDEX_NAME, InterfaceIndex, IValueIndex)):
-		index = factory()
-		index.__parent__ = dataserver_folder
-		index.__name__ = name
+	index = PACatalogIndex()
+	index.__parent__ = dataserver_folder
+	index.__name__ = PACATALOG_INDEX_NAME
 
-		intids.register(index)
-		lsm.registerUtility(index, provided=iface, name=name)
+	intids.register(index)
+	lsm.registerUtility(index, provided=IPresentationAssetsIndex,
+						name=PACATALOG_INDEX_NAME)
 
-def index_item(docid, item_iface=None, parents=()):
-	index = component.getUtility(ISetIndex, name=PARENT_INDEX_NAME)
-	index.index_doc(docid, parents)
-		
-	index = component.getUtility(IValueIndex, name=INTERFACE_INDEX_NAME)
-	index.index_doc(docid, item_iface)
-
-def unindex_item(docid):
-	for name, iface in ((PARENT_INDEX_NAME, ISetIndex),
-					  	(INTERFACE_INDEX_NAME, IValueIndex)):
-		index = component.getUtility(iface, name=name)
-		index.unindex_doc(docid)
-
-def search_by(item_iface=None, parents=()):
-	if item_iface is not None:
-		index = component.getUtility(IValueIndex, name=INTERFACE_INDEX_NAME)
-		item_iface = getattr(item_iface, '__name__', item_iface)
-		result_by_iface = index.apply({'any_of': (item_iface,)})
-	else:
-		result_by_iface = None
-
-	if parents:
-		parents = (parents,) if isinstance(parents, six.string_types) else parents
-		index = component.getUtility(ISetIndex, name=PARENT_INDEX_NAME)
-		result_by_parents = index.apply({'any_of': parents})
-	else:
-		result_by_parents = None
-
-	if result_by_iface and result_by_parents:
-		result = family.IF.intersection(result_by_parents, result_by_iface)
-	elif result_by_iface:
-		result = result_by_iface
-	elif result_by_parents:
-		result = result_by_parents
-	else:
-		result = family.IF.Set()
+def get_index():
+	result = component.getUtility(IPresentationAssetsIndex, name=PACATALOG_INDEX_NAME)
 	return result
+get_catalog = get_index
+
+def index(key, *values):
+	index = get_index()
+	index.set_references(key, *values)
+		
+def unindex(item, intids=None):
+	index = get_index()
+	index.unindex(item, intids=intids)
+
+class PACatalogIndex(Persistent):
+	
+	family = BTrees.family64
+	
+	def __init__(self):
+		self.reset()
+	
+	def reset(self):
+		self._last_modified = self.family.OI.BTree()
+		self._references = RawSetIndex(family=self.family)
+		
+	def get_last_modified(self, key):
+		try:
+			return self._last_modified[key]
+		except KeyError:
+			return 0
+
+	def set_last_modified(self, key, t=None):
+		assert isinstance(key, six.string_types)
+		t = time.time() if t is None else t
+		self._last_modified[key] = int(t)
+	
+	def get_references(self, *keys):
+		keys = map(lambda x: getattr(x, '__name__', x), keys)
+		result = self._references.apply({'all_of': keys})
+		return result
+
+	def search_objects(self, keys=(), intids=None):
+		intids = component.queryUtility(IIntIds) if intids is None else intids
+		if intids is not None:
+			refs = self.get_references(*keys)
+			result = ResultSet(refs, intids)
+		else:
+			result = ()
+		return result
+
+	def index(self, item, values=(), intids=None):
+		intids = component.queryUtility(IIntIds) if intids is None else intids
+		if not isinstance(item, int):
+			item = intids.queryId(item) if intids is not None else None
+		if item is None:
+			return False
+		## make sure we keep the old values when updating index
+		values = set(map(lambda x: getattr(x, '__name__', x), values))
+		old = self._references.documents_to_values.get(item)
+		values.update(old or ())
+		self._references.index_doc(item, values)
+		return True
+		
+	def unindex(self, value, intids=None):
+		intids = component.queryUtility(IIntIds) if intids is None else intids
+		if not isinstance(value, int):
+			value = intids.queryId(value) if intids is not None else None
+		if value is not None:
+			self._references.unindex_doc(value)

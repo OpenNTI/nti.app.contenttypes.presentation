@@ -29,7 +29,7 @@ from nti.contenttypes.presentation.utils import create_object_from_external
 from nti.contenttypes.presentation.utils import create_ntivideo_from_external
 from nti.contenttypes.presentation.utils import create_relatedwork_from_external
 
-from nti.app.contenttypes.presentation.subscribers import index_item
+from nti.app.contenttypes.presentation.index import get_catalog
 from nti.app.contenttypes.presentation.subscribers import iface_of_thing
 from nti.app.contenttypes.presentation.subscribers import _load_and_register_json
 from nti.app.contenttypes.presentation.subscribers import _load_and_register_slidedeck_json
@@ -42,12 +42,12 @@ from nti.app.contenttypes.presentation.tests import SharedConfiguringTestLayer
 from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 import nti.dataserver.tests.mock_dataserver as mock_dataserver
 
-def _index_items(item_iface, parents=(), *registered):
+def _index_items(item_iface, parent, *registered):
+	catalog = get_catalog()
+	values = [item_iface, parent]
 	intids = component.queryUtility(IIntIds)
-	if intids is not None:
-		for item in registered:
-			docid = intids.getId(item)
-			index_item(docid, item_iface, parents=parents)
+	for item in registered:
+		catalog.index(item, intids=intids, values=values)
 
 class TestSubscribers(unittest.TestCase):
 
