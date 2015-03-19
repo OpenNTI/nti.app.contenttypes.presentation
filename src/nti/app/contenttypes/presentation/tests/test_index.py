@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from __future__ import print_function, unicode_literals, absolute_import, division
+__docformat__ = "restructuredtext en"
+
+# disable: accessing protected members, too many methods
+# pylint: disable=W0212,R0904
+
+from hamcrest import is_
+from hamcrest import assert_that
+
+import unittest
+
+from nti.app.contenttypes.presentation.index import PACatalogIndex
+
+from nti.app.contenttypes.presentation.tests import SharedConfiguringTestLayer
+
+from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
+
+class TestIndex(unittest.TestCase):
+
+	layer = SharedConfiguringTestLayer
+
+	@WithMockDSTrans
+	def test_last_modified(self):
+		catalog = PACatalogIndex()
+		assert_that(catalog.get_last_modified('key'), is_(0))
+		catalog.set_last_modified('key', 100)
+		assert_that(catalog.get_last_modified('key'), is_(100))
+
+	@WithMockDSTrans
+	def test_index(self):
+		catalog = PACatalogIndex()
+		catalog.index(1, values=('x'))
+		assert_that(list(catalog.get_references('x')), is_([1]))
+		catalog.index(1, values=('y'))
+		assert_that(list(catalog.get_references('x')), is_([1]))
+		assert_that(list(catalog.get_references('y')), is_([1]))
+		assert_that(list(catalog.get_references('y', 'x')), is_([1]))
+		assert_that(list(catalog.get_references('z', 'x')), is_([]))
+
+		catalog.unindex(1)
+		assert_that(list(catalog.get_references('x')), is_([]))
+		assert_that(list(catalog.get_references('y')), is_([]))
+
+		catalog.unindex(10)
+		assert_that(list(catalog.get_references('x')), is_([]))
+
+		catalog.index(10, values=('x'))
+		catalog.index(11, values=('x'))
+		assert_that(list(catalog.get_references('x')), is_([10, 11]))
+		
+		catalog.unindex(10)
+		assert_that(list(catalog.get_references('x')), is_([11]))
