@@ -26,8 +26,6 @@ from nti.zope_catalog.index import SetIndex as RawSetIndex
 from .interfaces import IPresentationAssetsIndex
 
 PACATALOG_INDEX_NAME = '++etc++contenttypes.presentation-index'
-
-family = BTrees.family64
 		
 def install_indices(context):
 	conn = context.connection
@@ -49,14 +47,6 @@ def get_index():
 	result = component.queryUtility(IPresentationAssetsIndex, name=PACATALOG_INDEX_NAME)
 	return result
 get_catalog = get_index
-
-def index(key, *values):
-	index = get_index()
-	index.set_references(key, *values)
-		
-def unindex(item, intids=None):
-	index = get_index()
-	index.unindex(item, intids=intids)
 
 class PACatalogIndex(Persistent):
 	
