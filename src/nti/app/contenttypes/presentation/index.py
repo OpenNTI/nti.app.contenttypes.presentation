@@ -80,6 +80,12 @@ class PACatalogIndex(Persistent):
 		t = time.time() if t is None else t
 		self._last_modified[key] = int(t)
 	
+	def remove_last_modified(self, key):
+		try:
+			del self._last_modified[key]
+		except KeyError:
+			pass
+		
 	def get_references(self, *keys):
 		keys = map(lambda x: getattr(x, '__name__', x), keys)
 		result = self._references.apply({'all_of': keys})

@@ -94,7 +94,7 @@ def _remove_from_registry_with_interface(main_key, provided, registry=None, inti
 			result.append(utility)
 			catalog.unindex(utility, intids=intids)
 			registry.unregisterUtility(provided=provided, name=ntiid)
-			lifecycleevent.removed(utility) # remove fron intids
+			lifecycleevent.removed(utility) # remove from intids
 	return result
 
 def _register_utility(item, provided, ntiid, registry=None):
@@ -181,6 +181,11 @@ def _set_data_lastModified(content_package, namespace, lastModified=0):
 	key = '%s.%s.lastModified' % (content_package.ntiid, namespace)
 	catalog.set_last_modified(key, lastModified)
 		
+def _remove_data_lastModified(content_package, namespace):
+	catalog = get_catalog()
+	key = '%s.%s.lastModified' % (content_package.ntiid, namespace)
+	catalog.remove_last_modified(key)
+	
 def _register_items_when_content_changes(content_package,
 										 index_iface,
 										 item_iface,
@@ -249,7 +254,9 @@ def _update_data_when_content_changes(content_package, event):
 def _clear_data_when_content_removed(content_package, event):
 	catalog = get_catalog()
 	if catalog is not None: ## empty during some tests
-		for _, item_iface in INTERFACE_PAIRS:
+		for index_iface, item_iface in INTERFACE_PAIRS:
+			namespace = index_iface.getTaggedValue(TAG_NAMESPACE_FILE)
+			_remove_data_lastModified(content_package, namespace)
 			_remove_from_registry_with_interface(content_package.ntiid, item_iface)
 		_remove_from_registry_with_interface(content_package.ntiid, INTISlide)
 		_remove_from_registry_with_interface(content_package.ntiid, INTISlideVideo)
