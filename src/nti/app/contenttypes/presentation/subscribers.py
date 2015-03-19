@@ -384,11 +384,10 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 			sibling_lastModified = sibling_key.lastModified
 			root_lastModified = _get_source_lastModified(namespace, catalog)
 			if root_lastModified >= sibling_lastModified:
-				## we want to register the ntiid
+				## we want to register the ntiid for the new course
 				uids = catalog.get_references(namespace)
 				for uid in uids or ():
 					catalog.index(uid, values=(ntiid,))
-				## done
 				break
 			
 			_remove_and_unindex_course_assets(namespace)
