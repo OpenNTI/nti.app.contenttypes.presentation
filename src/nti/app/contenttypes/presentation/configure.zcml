@@ -63,4 +63,8 @@
 				for="nti.contenttypes.courses.interfaces.ICourseInstance
 					 zope.lifecycleevent.IObjectRemovedEvent" />
 	
+	<!-- Decorators -->
+	<subscriber factory=".decorators._CourseOutlineContentNodeLinkDecorator"
+				provides="nti.externalization.interfaces.IExternalMappingDecorator" />
+
 </configure>
