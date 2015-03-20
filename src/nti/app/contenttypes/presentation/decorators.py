@@ -36,7 +36,7 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 	def _predicate(self, context, result):
 		return True
 
-	def _do_decorate_external(self, context, result):
+	def _legacy_decorate_external(self, context, result):
 		if context.src:
 			library = component.queryUtility(IContentPackageLibrary)
 			paths = library.pathToNTIID(context.ContentNTIID) if library else ()
@@ -50,3 +50,8 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 				link.__name__ = ''
 				link.__parent__ = context
 				links.append(link)
+				return True
+		return False
+
+	def _do_decorate_external(self, context, result):
+		self._legacy_decorate_external(context, result)
