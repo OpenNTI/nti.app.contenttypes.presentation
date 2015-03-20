@@ -385,9 +385,12 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 			root_lastModified = _get_source_lastModified(namespace, catalog)
 			if root_lastModified >= sibling_lastModified:
 				## we want to register the ntiid for the new course
-				uids = catalog.get_references(namespace)
-				for uid in uids or ():
-					catalog.index(uid, values=(ntiid,))
+				## and set the lesson overview  ntiid to the node
+				objects = catalog.search_objects(namespace, intids=intids)
+				for obj in objects or ():
+					catalog.index(obj, values=(ntiid,))
+					if INTILessonOverview.providedBy(obj):
+						node.LessonOverviewNTIID = obj.ntiid
 				break
 			
 			_remove_and_unindex_course_assets(namespace)
@@ -406,6 +409,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 							  values=(item_iface, namespace, ntiid))
 				if INTILessonOverview.providedBy(item):
 					item.__parent__ = parent
+					node.LessonOverviewNTIID = item.ntiid
 
 	logger.info('Lessons overviews for %s have been synchronized %s(s)',
 				 name, time.time()-now)
