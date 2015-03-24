@@ -22,9 +22,12 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 
 from nti.dataserver import authorization as nauth
 
+from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.externalization import to_external_object
 
 from . import VIEW_OVERVIEW_CONTENT
+
+LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 
 @view_config( route_name='objects.generic.traversal',
               context=ICourseOutlineContentNode,
@@ -45,6 +48,7 @@ class OutlineLessonOverviewView(AbstractAuthenticatedView):
             if lesson is None:
                 raise hexc.HTTPNotFound("Cannot find lesson overview")
             external = to_external_object(lesson, name="render")
+            external.lastModified = external[LAST_MODIFIED] = lesson.lastModified
             return external
         except AttributeError:
             raise hexc.HTTPServerError("Outline does not have a lesson overview attribute")
