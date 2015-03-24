@@ -27,6 +27,8 @@ from nti.externalization.interfaces import IExternalMappingDecorator
 
 from nti.links.links import Link
 
+from nti.ntiids.ntiids import find_object_with_ntiid
+
 LINKS = StandardExternalFields.LINKS
 
 from . import VIEW_OVERVIEW_CONTENT
@@ -56,11 +58,20 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 				return True
 		return False
 
-	def _do_decorate_external(self, context, result):
+	def _overview_decorate_external(self, context, result):
 		try:
-			if context.LessonOverviewNTIID:
-				pass
+			ntiid = context.LessonOverviewNTIID
+			lesson = find_object_with_ntiid(ntiid) if ntiid else None
+			if lesson is not None:
+				links = result.setdefault(LINKS, [])
+				link = Link(context, rel=VIEW_OVERVIEW_CONTENT,
+							elements=(VIEW_OVERVIEW_CONTENT,), method='GET')
+				links.append(link)
+				return True
 		except AttributeError:
 			pass
-		
-		self._legacy_decorate_external(context, result)
+		return False
+	
+	def _do_decorate_external(self, context, result):		
+		if not self._overview_decorate_external(context, result):
+			self._legacy_decorate_external(context, result)
