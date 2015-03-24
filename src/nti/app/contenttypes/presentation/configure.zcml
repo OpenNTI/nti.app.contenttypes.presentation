@@ -65,6 +65,8 @@
 	
 	<!-- Decorators -->
 	<subscriber factory=".decorators._CourseOutlineContentNodeLinkDecorator"
-				provides="nti.externalization.interfaces.IExternalMappingDecorator" />
+				provides="nti.externalization.interfaces.IExternalMappingDecorator"
+				for="nti.contenttypes.courses.interfaces.ICourseOutlineContentNode
+					 pyramid.interfaces.IRequest" />
 
 </configure>

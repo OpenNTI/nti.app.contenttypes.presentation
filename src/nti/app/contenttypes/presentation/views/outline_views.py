@@ -9,23 +9,25 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from zope import component
+
 from pyramid.view import view_config
 from pyramid import httpexceptions as hexc
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
-from nti.contenttypes.courses.interfaces import ICourseOutline
+from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
+
+from nti.contenttypes.presentation.interfaces import INTILessonOverview
 
 from nti.dataserver import authorization as nauth
 
 from nti.externalization.externalization import to_external_object
 
-from nti.ntiids.ntiids import find_object_with_ntiid
-
 from . import VIEW_OVERVIEW_CONTENT
 
 @view_config( route_name='objects.generic.traversal',
-              context=ICourseOutline,
+              context=ICourseOutlineContentNode,
               request_method='GET',
               permission=nauth.ACT_READ,
               renderer='rest',
@@ -35,13 +37,14 @@ class OutlineLessonOverviewView(AbstractAuthenticatedView):
     def __call__(self):
         context = self.request.context
         try:
-            if not context.LessonOverviewNTIID:
+            ntiid = context.LessonOverviewNTIID
+            if not ntiid:
                 raise hexc.HTTPServerError("Outline does not have a valid lesson overview")
             
-            lesson = find_object_with_ntiid(context.LessonOverviewNTIID)
+            lesson = component.getUtility(INTILessonOverview, name=ntiid) 
             if lesson is None:
                 raise hexc.HTTPNotFound("Cannot find lesson overview")
-            external = to_external_object(context, name="render")
+            external = to_external_object(lesson, name="render")
             return external
         except AttributeError:
             raise hexc.HTTPServerError("Outline does not have a lesson overview attribute")

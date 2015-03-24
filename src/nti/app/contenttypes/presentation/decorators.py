@@ -22,12 +22,12 @@ from nti.contentlibrary.interfaces import IContentUnitHrefMapper
 
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 
+from nti.contenttypes.presentation.interfaces import INTILessonOverview
+
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalMappingDecorator
 
 from nti.links.links import Link
-
-from nti.ntiids.ntiids import find_object_with_ntiid
 
 LINKS = StandardExternalFields.LINKS
 
@@ -61,7 +61,7 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 	def _overview_decorate_external(self, context, result):
 		try:
 			ntiid = context.LessonOverviewNTIID
-			lesson = find_object_with_ntiid(ntiid) if ntiid else None
+			lesson = component.getUtility(INTILessonOverview, name=ntiid) if ntiid else None
 			if lesson is not None:
 				links = result.setdefault(LINKS, [])
 				link = Link(context, rel=VIEW_OVERVIEW_CONTENT,
