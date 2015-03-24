@@ -9,6 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+VIEW_OVERVIEW_CONTENT = "overview-content"
+
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 def iface_of_thing(item):

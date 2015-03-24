@@ -29,6 +29,8 @@ from nti.links.links import Link
 
 LINKS = StandardExternalFields.LINKS
 
+from . import VIEW_OVERVIEW_CONTENT
+
 @component.adapter(ICourseOutlineContentNode)
 @interface.implementer(IExternalMappingDecorator)
 class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
@@ -45,7 +47,8 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 				href = urljoin(href, context.src)
 				# set link for overview
 				links = result.setdefault(LINKS, [])
-				link = Link(href, rel="overview-content", ignore_properties_of_target=True)
+				link = Link(href, rel=VIEW_OVERVIEW_CONTENT,
+							ignore_properties_of_target=True)
 				interface.alsoProvides(link, ILocation)
 				link.__name__ = ''
 				link.__parent__ = context
@@ -54,4 +57,10 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 		return False
 
 	def _do_decorate_external(self, context, result):
+		try:
+			if context.LessonOverviewNTIID:
+				pass
+		except AttributeError:
+			pass
+		
 		self._legacy_decorate_external(context, result)
