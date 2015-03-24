@@ -30,8 +30,8 @@ from ..subscribers import synchronize_content_package
 from ..subscribers import synchronize_course_lesson_overview
 
 def yield_courses(args):
+	catalog = component.getUtility(ICourseCatalog)
 	if args.all:
-		catalog = component.getUtility(ICourseCatalog)
 		for entry in catalog.iterCatalogEntries():
 			course = ICourseInstance(entry, None)
 			if course is not None:
@@ -41,8 +41,7 @@ def yield_courses(args):
 			obj = find_object_with_ntiid(ntiid)
 			course = ICourseInstance(obj, None)
 			if course is None:
-				try:
-					catalog = component.getUtility(ICourseCatalog)
+				try:			
 					entry = catalog.getCatalogEntry(ntiid)
 					course = ICourseInstance(entry, None)
 				except KeyError:
