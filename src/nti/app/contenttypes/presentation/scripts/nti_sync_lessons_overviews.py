@@ -57,13 +57,13 @@ def _process_args(args):
 	result = []
 	for course in yield_courses(args):
 		for content_package in get_course_packages(course):
-			items = synchronize_content_package(content_package)
+			items = synchronize_content_package(content_package, force=args.force)
 			result.extend(items or ())
 	
-		items = synchronize_course_lesson_overview(course)
+		items = synchronize_course_lesson_overview(course, force=args.force)
 		if not args.exclude and not ICourseSubInstance.providedBy(course):
 			for sub_instance in (course.SubInstances or {}).values():
-				synchronize_course_lesson_overview(sub_instance)
+				synchronize_course_lesson_overview(sub_instance, force=args.force)
 		result.extend(items or ())
 	return result
 	
@@ -71,6 +71,8 @@ def main():
 	arg_parser = argparse.ArgumentParser(description="Course lessons overviews synchronizer")
 	arg_parser.add_argument('-v', '--verbose', help="Be Verbose", action='store_true',
 							dest='verbose')
+	arg_parser.add_argument('-f', '--force', help="Force updates", action='store_true',
+							dest='force')
 	site_group = arg_parser.add_mutually_exclusive_group()
 	
 	site_group.add_argument('-n', '--ntiids',

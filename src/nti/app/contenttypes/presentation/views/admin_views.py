@@ -77,20 +77,20 @@ def _get_all_courses():
 			result.append(course)
 	return result
 
-def _synchronize(courses, exclude=False):
+def _synchronize(courses, exclude=False, force=False):
 	result = []
 	for course in courses:
 		for content_package in get_course_packages(course):
-			synchronize_content_package(content_package)
+			synchronize_content_package(content_package, force=force)
 			result.append(content_package.ntiid)
 	
-		synchronize_course_lesson_overview(course)
+		synchronize_course_lesson_overview(course, force=force)
 		entry = ICourseCatalogEntry(course)
 		result.append(entry.ntiid)
 		
 		if not exclude and not ICourseSubInstance.providedBy(course):
 			for sub_instance in (course.SubInstances or {}).values():
-				synchronize_course_lesson_overview(sub_instance)
+				synchronize_course_lesson_overview(sub_instance, force=force)
 				entry = ICourseCatalogEntry(sub_instance)
 				result.append(entry.ntiid)
 	return result
@@ -118,6 +118,9 @@ class SyncLessonOverviewsView(AbstractAuthenticatedView,
 		all_courses = values.get('all') or 'F'
 		all_courses = all_courses.lower() in TRUE_VALUES
 		
+		force_upates = values.get('force') or 'F'
+		force_upates = force_upates.lower() in TRUE_VALUES
+		
 		exclude_sub_instances= values.get('exclude') or 'F'
 		exclude_sub_instances = exclude_sub_instances.lower() in TRUE_VALUES
 		
@@ -130,7 +133,9 @@ class SyncLessonOverviewsView(AbstractAuthenticatedView,
 		endInteraction()
 		try:
 			result = LocatedExternalDict()
-			result[ITEMS] = _synchronize(courses=courses)
+			result[ITEMS] = _synchronize(courses=courses,
+										 force=force_upates,
+										 exclude=exclude_sub_instances)
 			result['Elapsed'] = time.time() - now
 		finally:
 			restoreInteraction()

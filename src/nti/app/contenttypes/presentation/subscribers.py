@@ -190,7 +190,8 @@ def _register_items_when_content_changes(content_package,
 										 index_iface,
 										 item_iface,
 										 catalog=None,
-										 intids=None):
+										 intids=None,
+										 force=False):
 	catalog = get_catalog() if catalog is None else catalog
 	namespace = index_iface.getTaggedValue(TAG_NAMESPACE_FILE)
 	sibling_key = content_package.does_sibling_entry_exist(namespace)
@@ -199,7 +200,7 @@ def _register_items_when_content_changes(content_package,
 	
 	sibling_lastModified = sibling_key.lastModified
 	root_lastModified = _get_data_lastModified(content_package, namespace)
-	if root_lastModified >= sibling_lastModified:
+	if not force and root_lastModified >= sibling_lastModified:
 		return ()
 	
 	logger.info('Synchronizing %s for %s', namespace, content_package.ntiid)
@@ -235,13 +236,14 @@ def _register_items_when_content_changes(content_package,
 	
 	return registered
 	
-def synchronize_content_package(content_package, catalog=None):
+def synchronize_content_package(content_package, catalog=None, force=False):
 	result = []
 	for icontainer, item_iface in INTERFACE_PAIRS:
 		items = _register_items_when_content_changes(content_package, 
 													 icontainer, 
 													 item_iface,
-													 catalog=catalog)
+													 catalog=catalog,
+													 force=force)
 		result.extend(items or ())
 	return result
 
@@ -351,7 +353,7 @@ def _remove_and_unindex_course_assets(main_key):
 	_remove_from_registry_with_interface(main_key, INTICourseOverviewGroup)
 	_remove_from_registry_with_interface(main_key, INTILessonOverview)
 	
-def synchronize_course_lesson_overview(course, intids=None, catalog=None):
+def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=False):
 	result = []
 	course_packages = get_course_packages(course)
 	catalog = get_catalog() if catalog is None else catalog
@@ -383,7 +385,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 			
 			sibling_lastModified = sibling_key.lastModified
 			root_lastModified = _get_source_lastModified(namespace, catalog)
-			if root_lastModified >= sibling_lastModified:
+			if not force and root_lastModified >= sibling_lastModified:
 				## we want to register the ntiid for the new course
 				## and set the lesson overview  ntiid to the node
 				objects = catalog.search_objects(namespace, intids=intids)
