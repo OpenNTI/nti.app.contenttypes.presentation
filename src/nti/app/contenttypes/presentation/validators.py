@@ -56,5 +56,3 @@ class _AudioRefValidator(_ItemRefValidator):
 	field_name = 'ntiid'
 	item_type = 'Audio'
 	provided = INTIAudio
-
-	
