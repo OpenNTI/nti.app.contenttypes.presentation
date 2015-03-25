@@ -28,6 +28,7 @@ from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalMappingDecorator
 
 from nti.links.links import Link
+from nti.links.externalization import render_link
 
 LINKS = StandardExternalFields.LINKS
 
@@ -37,6 +38,25 @@ from . import VIEW_OVERVIEW_CONTENT
 @interface.implementer(IExternalMappingDecorator)
 class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
+	_BAD_UAS = ( "NTIFoundation DataLoader NextThought/1.0",
+				 "NTIFoundation DataLoader NextThought/1.1.0",
+				 "NTIFoundation DataLoader NextThought/1.1.1",
+				 "NTIFoundation DataLoader NextThought/1.2.0" )
+	
+	@property
+	def _is_legacy_iPad(self):
+		if self.request is None:
+			return False
+		
+		ua = self.request.environ.get('HTTP_USER_AGENT', '')
+		if not ua:
+			return False
+
+		for bua in self._BAD_UAS:
+			if ua.startswith(bua):
+				return True
+		return False
+	
 	def _predicate(self, context, result):
 		return True
 
@@ -64,8 +84,21 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 			lesson = component.getUtility(INTILessonOverview, name=ntiid) if ntiid else None
 			if lesson is not None:
 				links = result.setdefault(LINKS, [])
-				link = Link(context, rel=VIEW_OVERVIEW_CONTENT,
-							elements=(VIEW_OVERVIEW_CONTENT,), method='GET')
+				if not self._is_legacy_iPad:
+					link = Link(context, rel=VIEW_OVERVIEW_CONTENT,
+								elements=(VIEW_OVERVIEW_CONTENT,) )
+				else:
+					try:
+						link = Link(context, elements=(VIEW_OVERVIEW_CONTENT,))
+						href = render_link( link )['href']
+						url = urljoin(self.request.host_url, href)
+						link = Link(url, rel=VIEW_OVERVIEW_CONTENT,
+									ignore_properties_of_target=True)
+						interface.alsoProvides(link, ILocation)
+						link.__name__ = ''
+						link.__parent__ = context
+					except (KeyError, ValueError, AssertionError):
+						return False
 				links.append(link)
 				return True
 		except AttributeError:

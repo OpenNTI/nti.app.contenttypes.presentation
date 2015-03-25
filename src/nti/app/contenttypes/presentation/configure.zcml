@@ -64,9 +64,11 @@
 					 zope.lifecycleevent.IObjectRemovedEvent" />
 	
 	<!-- Decorators -->
-	<subscriber factory=".decorators._CourseOutlineContentNodeLinkDecorator"
-				provides="nti.externalization.interfaces.IExternalMappingDecorator"
-				for="nti.contenttypes.courses.interfaces.ICourseOutlineContentNode
-					 pyramid.interfaces.IRequest" />
-
+	<configure zcml:condition="have app_presentation">
+		<subscriber factory=".decorators._CourseOutlineContentNodeLinkDecorator"
+					provides="nti.externalization.interfaces.IExternalMappingDecorator"
+					for="nti.contenttypes.courses.interfaces.ICourseOutlineContentNode
+						 pyramid.interfaces.IRequest" />
+	</configure>
+	
 </configure>
