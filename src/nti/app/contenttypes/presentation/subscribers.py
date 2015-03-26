@@ -252,6 +252,7 @@ def synchronize_content_package(content_package, catalog=None, force=False):
 def _update_data_when_content_changes(content_package, event):
 	catalog = get_catalog()
 	if catalog is not None: ## empty during some tests
+		__traceback_info__ = content_package
 		synchronize_content_package(content_package, catalog=catalog)
 
 @component.adapter(IContentPackage, IObjectRemovedEvent)
