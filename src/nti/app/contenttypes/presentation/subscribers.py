@@ -54,6 +54,7 @@ from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.utils import create_object_from_external
 from nti.contenttypes.presentation.utils import create_ntiaudio_from_external
 from nti.contenttypes.presentation.utils import create_ntivideo_from_external
+from nti.contenttypes.presentation.utils import create_timelime_from_external
 from nti.contenttypes.presentation.utils import create_relatedwork_from_external
 from nti.contenttypes.presentation.utils import create_lessonoverview_from_external
 
@@ -67,11 +68,12 @@ from . import iface_of_thing
 
 ITEMS = StandardExternalFields.ITEMS
 
-INTERFACE_PAIRS = ( (IAudioIndexedDataContainer, INTIAudio),
-					(IVideoIndexedDataContainer, INTIVideo), 
-					(ITimelineIndexedDataContainer, INTITimeline),
-					(ISlideDeckIndexedDataContainer, INTISlideDeck),
-					(IRelatedContentIndexedDataContainer, INTIRelatedWork) )
+INTERFACE_TUPLES = (
+	(IAudioIndexedDataContainer, INTIAudio, create_ntiaudio_from_external),
+	(IVideoIndexedDataContainer, INTIVideo, create_ntivideo_from_external), 
+	(ITimelineIndexedDataContainer, INTITimeline, create_timelime_from_external),
+	(ISlideDeckIndexedDataContainer, INTISlideDeck, create_object_from_external),
+	(IRelatedContentIndexedDataContainer, INTIRelatedWork, create_relatedwork_from_external) )
 
 def prepare_json_text(s):
 	result = unicode(s, 'utf-8') if isinstance(s, bytes) else s
@@ -156,7 +158,7 @@ def _load_and_register_slidedeck_json(jtext, registry=None,
 									  object_creator=create_object_from_external):
 	result = []
 	registry = _registry(registry)
-	index = simplejson.loads(prepare_json_text(jtext))
+	index = simplejson.loads(prepare_json_text(jtext))	
 	items = index.get(ITEMS) or {}
 	for ntiid, data in items.items():
 		internal = object_creator(data)
@@ -192,6 +194,7 @@ def _remove_data_lastModified(content_package, namespace):
 def _register_items_when_content_changes(content_package,
 										 index_iface,
 										 item_iface,
+										 object_creator=None,
 										 catalog=None,
 										 intids=None,
 										 force=False):
@@ -214,21 +217,16 @@ def _register_items_when_content_changes(content_package,
 	if item_iface == INTISlideDeck:
 		_remove_from_registry_with_interface(content_package.ntiid, INTISlide)
 		_remove_from_registry_with_interface(content_package.ntiid, INTISlideVideo)
-		registered = _load_and_register_slidedeck_json(index_text)
-	elif item_iface == INTIVideo:
+		registered = _load_and_register_slidedeck_json(index_text, 
+													   object_creator=object_creator)
+	elif object_creator is not None:
 		registered = _load_and_register_json(
 								item_iface, index_text,
-								external_object_creator=create_ntivideo_from_external)
-	elif item_iface == INTIAudio:
-		registered = _load_and_register_json(
-								item_iface, index_text,
-								external_object_creator=create_ntiaudio_from_external)
-	elif item_iface == INTIRelatedWork:
-		registered = _load_and_register_json(
-								item_iface, index_text,
-								external_object_creator=create_relatedwork_from_external)
+								external_object_creator=object_creator)
 	else:
-		registered = _load_and_register_json(item_iface, index_text)
+		registered = _load_and_register_json(
+								item_iface, index_text,
+								external_object_creator=create_object_from_external)
 		
 	intids = component.queryUtility(IIntIds) if intids is None else intids
 	catalog = get_catalog()
@@ -245,12 +243,13 @@ def _register_items_when_content_changes(content_package,
 	
 def synchronize_content_package(content_package, catalog=None, force=False):
 	result = []
-	for icontainer, item_iface in INTERFACE_PAIRS:
+	for icontainer, item_iface, object_creator in INTERFACE_TUPLES:
 		items = _register_items_when_content_changes(content_package, 
 													 icontainer, 
 													 item_iface,
+													 force=force,
 													 catalog=catalog,
-													 force=force)
+													 object_creator=object_creator)
 		result.extend(items or ())
 	return result
 
@@ -268,7 +267,7 @@ def _update_data_when_content_changes(content_package, event):
 def _clear_data_when_content_removed(content_package, event):
 	catalog = get_catalog()
 	if catalog is not None and not _is_global_library():
-		for index_iface, item_iface in INTERFACE_PAIRS:
+		for index_iface, item_iface, _ in INTERFACE_TUPLES:
 			namespace = index_iface.getTaggedValue(TAG_NAMESPACE_FILE)
 			_remove_data_lastModified(content_package, namespace)
 			_remove_from_registry_with_interface(content_package.ntiid, item_iface)
