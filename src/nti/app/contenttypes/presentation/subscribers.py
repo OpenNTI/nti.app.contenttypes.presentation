@@ -254,17 +254,20 @@ def synchronize_content_package(content_package, catalog=None, force=False):
 		result.extend(items or ())
 	return result
 
+def _is_global_library():
+	library = component.queryUtility(IContentPackageLibrary)
+	result = IGlobalContentPackageLibrary.providedBy(library)
+	return result
+
 def _update_data_when_content_changes(content_package, event):
 	catalog = get_catalog()
-	library = component.queryUtility(IContentPackageLibrary)
-	if 	catalog is not None and library is not None and \
-		not IGlobalContentPackageLibrary.providedBy(library):
+	if catalog is not None and not _is_global_library():
 		synchronize_content_package(content_package, catalog=catalog)
 
 @component.adapter(IContentPackage, IObjectRemovedEvent)
 def _clear_data_when_content_removed(content_package, event):
 	catalog = get_catalog()
-	if catalog is not None: ## empty during some tests
+	if catalog is not None and not _is_global_library():
 		for index_iface, item_iface in INTERFACE_PAIRS:
 			namespace = index_iface.getTaggedValue(TAG_NAMESPACE_FILE)
 			_remove_data_lastModified(content_package, namespace)
