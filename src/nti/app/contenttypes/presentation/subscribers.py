@@ -256,7 +256,9 @@ def synchronize_content_package(content_package, catalog=None, force=False):
 
 def _update_data_when_content_changes(content_package, event):
 	catalog = get_catalog()
-	if catalog is not None: ## empty during some tests
+	library = component.queryUtility(IContentPackageLibrary)
+	if 	catalog is not None and library is not None and \
+		not IGlobalContentPackageLibrary.providedBy(library):
 		synchronize_content_package(content_package, catalog=catalog)
 
 @component.adapter(IContentPackage, IObjectRemovedEvent)
