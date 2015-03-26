@@ -21,6 +21,8 @@ from zope.lifecycleevent import IObjectRemovedEvent
 
 from ZODB.interfaces import IConnection
 
+from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseInstance
+
 from nti.contentlibrary.interfaces import IContentPackage
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IGlobalContentPackageLibrary
@@ -420,13 +422,15 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 @component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
 def _on_course_instance_available(course, event):
 	catalog = get_catalog()
-	if catalog is not None: ## empty during some tests
+	if 	catalog is not None and \
+		not ILegacyCommunityBasedCourseInstance.providedBy(course): 
 		synchronize_course_lesson_overview(course, catalog=catalog)
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
 def _clear_data_when_course_removed(course, event):
 	catalog = get_catalog()
-	if catalog is not None: ## empty during some tests
+	if 	catalog is not None and \
+		not ILegacyCommunityBasedCourseInstance.providedBy(course): 
 		entry = ICourseCatalogEntry(course, None)
 		ntiid = entry.ntiid if entry is not None else course.__name__
 		_remove_and_unindex_course_assets(ntiid)
