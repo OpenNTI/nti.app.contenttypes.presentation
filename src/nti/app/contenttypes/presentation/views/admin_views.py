@@ -24,6 +24,7 @@ from nti.app.externalization.internalization import read_body_as_external_object
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
 from nti.app.products.courseware.views import CourseAdminPathAdapter
+from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseInstance
 
 from nti.common.string import TRUE_VALUES
 from nti.common.maps import CaseInsensitiveDict
@@ -62,7 +63,8 @@ def _parse_courses(values):
 				catalog = component.getUtility(ICourseCatalog)
 				entry = catalog.getCatalogEntry(ntiid)
 				course = ICourseInstance(entry, None)
-				if course is not None:
+				if 	course is not None and \
+					not ILegacyCommunityBasedCourseInstance.providedBy(course):
 					result.append(course)
 			except KeyError:
 				pass
@@ -73,7 +75,8 @@ def _get_all_courses():
 	catalog = component.getUtility(ICourseCatalog)
 	for entry in catalog.iterCatalogEntries():
 		course = ICourseInstance(entry, None)
-		if course is not None:
+		if 	course is not None and \
+			not ILegacyCommunityBasedCourseInstance.providedBy(course):
 			result.append(course)
 	return result
 

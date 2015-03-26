@@ -73,8 +73,15 @@ def main():
 							dest='verbose')
 	arg_parser.add_argument('-f', '--force', help="Force updates", action='store_true',
 							dest='force')
-	site_group = arg_parser.add_mutually_exclusive_group()
-	
+
+	arg_parser.add_argument('-x', '--exclude', help="Exclude course sub-instances", 
+							action='store_true', dest='exclude')
+
+	arg_parser.add_argument('-s', '--site',
+							dest='site',
+							help="Application SITE.")
+
+	site_group = arg_parser.add_mutually_exclusive_group()	
 	site_group.add_argument('-n', '--ntiids',
 							 dest='ntiids',
 							 nargs="+",
@@ -85,19 +92,15 @@ def main():
 							 dest='all',
 							 action='store_true',
 							 help="All courses")
-
-	arg_parser.add_argument('-x', '--exclude', help="Exclude course sub-instances", 
-							action='store_true', dest='exclude')
-
-	arg_parser.add_argument('--site',
-							dest='site',
-							help="Application SITE.")
 	
 	args = arg_parser.parse_args()
 	env_dir = os.getenv('DATASERVER_DIR')
 	if not env_dir or not os.path.exists(env_dir) and not os.path.isdir(env_dir):
 		raise IOError("Invalid dataserver environment root directory")
 	
+	if not args.site:
+		raise ValueError("Application site not specified")
+
 	conf_packages = ('nti.appserver',)
 	context = create_context(env_dir, with_library=True)
 
