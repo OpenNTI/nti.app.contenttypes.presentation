@@ -52,6 +52,7 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.contenttypes.presentation.utils import create_object_from_external
+from nti.contenttypes.presentation.utils import create_ntiaudio_from_external
 from nti.contenttypes.presentation.utils import create_ntivideo_from_external
 from nti.contenttypes.presentation.utils import create_relatedwork_from_external
 from nti.contenttypes.presentation.utils import create_lessonoverview_from_external
@@ -218,6 +219,10 @@ def _register_items_when_content_changes(content_package,
 		registered = _load_and_register_json(
 								item_iface, index_text,
 								external_object_creator=create_ntivideo_from_external)
+	elif item_iface == INTIAudio:
+		registered = _load_and_register_json(
+								item_iface, index_text,
+								external_object_creator=create_ntiaudio_from_external)
 	elif item_iface == INTIRelatedWork:
 		registered = _load_and_register_json(
 								item_iface, index_text,
@@ -252,7 +257,6 @@ def synchronize_content_package(content_package, catalog=None, force=False):
 def _update_data_when_content_changes(content_package, event):
 	catalog = get_catalog()
 	if catalog is not None: ## empty during some tests
-		__traceback_info__ = content_package
 		synchronize_content_package(content_package, catalog=catalog)
 
 @component.adapter(IContentPackage, IObjectRemovedEvent)
