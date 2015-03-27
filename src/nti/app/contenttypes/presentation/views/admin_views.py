@@ -12,7 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 import time
 
 from zope import component
-from zope.security.management import endInteraction, restoreInteraction
+from zope.security.management import endInteraction
+from zope.security.management import restoreInteraction
 
 from pyramid.view import view_config
 from pyramid.view import view_defaults
@@ -45,6 +46,8 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 from ..subscribers import get_course_packages
 from ..subscribers import synchronize_content_package
 from ..subscribers import synchronize_course_lesson_overview
+
+from ..index import get_index
 
 ITEMS = StandardExternalFields.ITEMS
 	
@@ -143,3 +146,19 @@ class SyncLessonOverviewsView(AbstractAuthenticatedView,
 		finally:
 			restoreInteraction()
 		return result
+
+@view_config(context=IDataserverFolder)
+@view_config(context=CourseAdminPathAdapter)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='POST',
+			   permission=nauth.ACT_NTI_ADMIN,
+			   name='ResetPresentationAssetsIndex')
+class ResetPresentationAssetsIndexView(	AbstractAuthenticatedView,
+							  			ModeledContentUploadRequestUtilsMixin):
+
+	
+	def __call__(self):
+		index = get_index()
+		index.reset()
+		return hexc.HTTPNoContent()
