@@ -18,6 +18,7 @@ from zope import component
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.dataserver.utils import run_with_dataserver
 from nti.dataserver.utils.base_script import set_site
@@ -29,9 +30,9 @@ from ..subscribers import get_course_packages
 from ..subscribers import synchronize_content_package
 from ..subscribers import synchronize_course_lesson_overview
 
-def yield_courses(args):
+def yield_courses(args, all_courses=False):
 	catalog = component.getUtility(ICourseCatalog)
-	if args.all:
+	if all_courses or args.all:
 		for entry in catalog.iterCatalogEntries():
 			course = ICourseInstance(entry, None)
 			if course is not None:
@@ -51,21 +52,39 @@ def yield_courses(args):
 			else:
 				yield course
 
-def _process_args(args):
-	set_site(args.site)
+def _sync_course(course, exclude=False, force=False):
+	result = []
+	for content_package in get_course_packages(course):
+		items = synchronize_content_package(content_package, force=force)
+		result.extend(items or ())
+	
+	items = synchronize_course_lesson_overview(course, force=force)
+	if not exclude and not ICourseSubInstance.providedBy(course):
+		for sub_instance in (course.SubInstances or {}).values():
+			synchronize_course_lesson_overview(sub_instance, force=force)
+	return result
 
+def _sync_courses(args):
 	result = []
 	for course in yield_courses(args):
-		for content_package in get_course_packages(course):
-			items = synchronize_content_package(content_package, force=args.force)
-			result.extend(items or ())
-	
-		items = synchronize_course_lesson_overview(course, force=args.force)
-		if not args.exclude and not ICourseSubInstance.providedBy(course):
-			for sub_instance in (course.SubInstances or {}).values():
-				synchronize_course_lesson_overview(sub_instance, force=args.force)
-		result.extend(items or ())
+		result.extend(_sync_course(course,  args.exclude,  args.force))
 	return result
+
+def _process_args(args):
+	set_site(args.site)
+	
+	if not args.list:
+		_sync_courses(args)
+	else:
+		print()
+		for course in yield_courses(args, True):
+			if ICourseSubInstance.providedBy(course):
+				continue
+			entry = ICourseCatalogEntry(course)
+			print(entry.ntiid)
+			for content_package in get_course_packages(course):
+				print('\t', content_package.ntiid)
+		print()
 	
 def main():
 	arg_parser = argparse.ArgumentParser(description="Course lessons overviews synchronizer")
@@ -92,6 +111,11 @@ def main():
 							 dest='all',
 							 action='store_true',
 							 help="All courses")
+	
+	site_group.add_argument('--list',
+							 dest='list',
+							 action='store_true',
+							 help="List sync courses")
 	
 	args = arg_parser.parse_args()
 	env_dir = os.getenv('DATASERVER_DIR')
