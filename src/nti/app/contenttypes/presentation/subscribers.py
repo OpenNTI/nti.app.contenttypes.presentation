@@ -102,7 +102,12 @@ def _remove_from_registry_with_interface(main_key, provided, registry=None, inti
 			lifecycleevent.removed(utility) # remove from intids
 	return result
 
-def _register_utility(item, provided, ntiid, registry=None):
+def _connection(registry=None):
+	registry = _registry(registry)
+	result = IConnection(registry, None)
+	return result
+	
+def _register_utility(item, provided, ntiid, registry=None, connection=None):
 	if provided.providedBy(item):
 		registry = _registry(registry)
 		registered = registry.queryUtility(provided, name=ntiid)
@@ -111,7 +116,7 @@ def _register_utility(item, provided, ntiid, registry=None):
 									 provided=provided,
 									 name=ntiid,
 									 event=False)
-			connection = IConnection(registry, None)
+			connection = _connection(registry) if connection is None else connection
 			if connection is not None:
 				connection.add(item)
 				lifecycleevent.added(item) # get an intid
@@ -119,25 +124,29 @@ def _register_utility(item, provided, ntiid, registry=None):
 		return (False, registered)
 	return (False, None)
 		
-def _was_utility_registered(item, item_iface, ntiid, registry):
-	result, _ = _register_utility(item, item_iface, ntiid, registry)
+def _was_utility_registered(item, item_iface, ntiid, registry=None, connection=None):
+	result, _ = _register_utility(item, item_iface, ntiid, 
+								  registry=registry, connection=connection)
 	return result
 
-def _load_and_register_items(item_iterface, items, registry=None, 
+def _load_and_register_items(item_iterface, items, registry=None, connection=None,
 							 external_object_creator=create_object_from_external):
 	result = []
 	registry = _registry(registry)
 	for ntiid, data in items.items():
 		internal = external_object_creator(data)
-		if _was_utility_registered(internal, item_iterface, ntiid, registry):
+		if _was_utility_registered(internal, item_iterface, ntiid, 
+								  registry=registry, connection=connection):
 			result.append(internal)
 	return result
 
-def _load_and_register_json(item_iterface, jtext, registry=None,
+def _load_and_register_json(item_iterface, jtext, registry=None, connection=None,
 							external_object_creator=create_object_from_external):
 	index = simplejson.loads(prepare_json_text(jtext))
 	items = index.get(ITEMS) or {}
-	result = _load_and_register_items(item_iterface, items, registry,
+	result = _load_and_register_items(item_iterface, items, 
+									  registry=registry,
+									  connection=connection,
 									  external_object_creator=external_object_creator)
 	return result
 
@@ -154,7 +163,7 @@ def _canonicalize(items, item_iface, registry):
 
 ## Library
 
-def _load_and_register_slidedeck_json(jtext, registry=None, 
+def _load_and_register_slidedeck_json(jtext, registry=None, connection=None,
 									  object_creator=create_object_from_external):
 	result = []
 	registry = _registry(registry)
@@ -163,15 +172,15 @@ def _load_and_register_slidedeck_json(jtext, registry=None,
 	for ntiid, data in items.items():
 		internal = object_creator(data)
 		if 	INTISlide.providedBy(internal) and \
-			_was_utility_registered(internal, INTISlide, ntiid, registry):
+			_was_utility_registered(internal, INTISlide, ntiid, registry, connection):
 			result.append(internal)
 		elif INTISlideVideo.providedBy(internal) and \
-			 _was_utility_registered(internal, INTISlideVideo, ntiid, registry):
+			 _was_utility_registered(internal, INTISlideVideo, ntiid, registry, connection):
 			result.append(internal)
 		elif INTISlideDeck.providedBy(internal):
 			result.extend(_canonicalize(internal.Slides, INTISlide, registry))
 			result.extend(_canonicalize(internal.Videos, INTISlideVideo, registry))
-			if _was_utility_registered(internal, INTISlideDeck, ntiid, registry):
+			if _was_utility_registered(internal, INTISlideDeck, ntiid, registry, connection):
 				result.append(internal)
 	return result
 
@@ -194,6 +203,8 @@ def _remove_data_lastModified(content_package, namespace):
 def _register_items_when_content_changes(content_package,
 										 index_iface,
 										 item_iface,
+										 registry=None,
+										 connection=None,
 										 object_creator=None,
 										 catalog=None,
 										 intids=None,
@@ -212,23 +223,40 @@ def _register_items_when_content_changes(content_package,
 	now = time.time()
 	logger.info('Synchronizing %s for %s', namespace, content_package.ntiid)
 	
-	_remove_from_registry_with_interface(content_package.ntiid, item_iface)
+	removed = _remove_from_registry_with_interface(content_package.ntiid, item_iface,
+												   registry=registry)
 
+	logger.debug('%s item(s) removed from registry for %s in %s', len(removed),
+				 item_iface, content_package.ntiid)
+	
 	index_text = content_package.read_contents_of_sibling_entry(namespace)
 	if item_iface == INTISlideDeck:
-		_remove_from_registry_with_interface(content_package.ntiid, INTISlide)
-		_remove_from_registry_with_interface(content_package.ntiid, INTISlideVideo)
+		_remove_from_registry_with_interface(content_package.ntiid, INTISlide, 
+											 registry=registry)
+		
+		_remove_from_registry_with_interface(content_package.ntiid, INTISlideVideo,
+											 registry=registry)
+		
 		registered = _load_and_register_slidedeck_json(index_text, 
+													   registry=registry,
+													   connection=connection,
 													   object_creator=object_creator)
 	elif object_creator is not None:
 		registered = _load_and_register_json(
 								item_iface, index_text,
+								registry=registry,
+								connection=connection,
 								external_object_creator=object_creator)
 	else:
 		registered = _load_and_register_json(
 								item_iface, index_text,
+								registry=registry,
+								connection=connection,
 								external_object_creator=create_object_from_external)
 		
+	logger.debug('Indexing %s registered items for %s in %s', len(registered), 
+				 item_iface, content_package.ntiid)
+
 	intids = component.queryUtility(IIntIds) if intids is None else intids
 	catalog = get_catalog()
 	for item in registered:
@@ -245,12 +273,16 @@ def _register_items_when_content_changes(content_package,
 	
 def synchronize_content_package(content_package, catalog=None, force=False):
 	result = []
+	registry = _registry()
+	connection = _connection(registry)
 	for icontainer, item_iface, object_creator in INTERFACE_TUPLES:
 		items = _register_items_when_content_changes(content_package, 
 													 icontainer, 
 													 item_iface,
 													 force=force,
 													 catalog=catalog,
+													 registry=registry,
+													 connection=connection,
 													 object_creator=object_creator)
 		result.extend(items or ())
 	return result
