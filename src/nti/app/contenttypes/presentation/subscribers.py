@@ -209,6 +209,7 @@ def _register_items_when_content_changes(content_package,
 	if not force and root_lastModified >= sibling_lastModified:
 		return ()
 	
+	now = time.time()
 	logger.info('Synchronizing %s for %s', namespace, content_package.ntiid)
 	
 	_remove_from_registry_with_interface(content_package.ntiid, item_iface)
@@ -237,7 +238,8 @@ def _register_items_when_content_changes(content_package,
 
 	_set_data_lastModified(content_package, item_iface, sibling_lastModified)
 	
-	logger.info('%s for %s has been synchronized', namespace, content_package.ntiid)
+	logger.info('%s for %s has been synchronized in %s(s)', namespace,
+				 content_package.ntiid, time.time() - now)
 	
 	return registered
 	
@@ -424,7 +426,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 					item.__parent__ = parent
 					node.LessonOverviewNTIID = item.ntiid
 
-	logger.info('Lessons overviews for %s have been synchronized %s(s)',
+	logger.info('Lessons overviews for %s have been synchronized in %s(s)',
 				 name, time.time()-now)
 	return result
 
