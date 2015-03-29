@@ -411,9 +411,6 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 	now = time.time()
 	logger.info('Synchronizing lessons overviews for %s', name)
 
-	## CS: 20150317: Use the parent course to store the last modified date of the 
-	## source files. This works b/c currently subinstances  share the same
-	## current content pacakge bundle
 	if ICourseSubInstance.providedBy(course):
 		parent = course.__parent__.__parent__
 	else:
@@ -431,8 +428,8 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 			sibling_lastModified = sibling_key.lastModified
 			root_lastModified = _get_source_lastModified(namespace, catalog)
 			if not force and root_lastModified >= sibling_lastModified:
-				## we want to register the ntiid for the new course
-				## and set the lesson overview  ntiid to the node
+				## we want to associate the ntiid of the new course with the 
+				## assets and set the lesson overview ntiid to the outline node
 				objects = catalog.search_objects(namespace, intids=intids)
 				for obj in objects or ():
 					catalog.index(obj, values=(ntiid,))
