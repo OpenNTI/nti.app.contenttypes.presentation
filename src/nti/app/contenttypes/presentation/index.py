@@ -20,6 +20,9 @@ import BTrees
 
 from persistent import Persistent
 
+from nti.common.time import time_to_64bit_int
+from nti.common.time import bit64_int_to_time
+
 from nti.zope_catalog.catalog import ResultSet
 from nti.zope_catalog.index import SetIndex as RawSetIndex
 
@@ -61,14 +64,14 @@ class PACatalogIndex(Persistent):
 		
 	def get_last_modified(self, key):
 		try:
-			return self._last_modified[key]
+			return bit64_int_to_time(self._last_modified[key])
 		except KeyError:
 			return 0
 
 	def set_last_modified(self, key, t=None):
 		assert isinstance(key, six.string_types)
 		t = time.time() if t is None else t
-		self._last_modified[key] = int(t)
+		self._last_modified[key] = time_to_64bit_int(t)
 	
 	def remove_last_modified(self, key):
 		try:
