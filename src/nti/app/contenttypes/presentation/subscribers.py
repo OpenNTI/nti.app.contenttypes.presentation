@@ -60,6 +60,8 @@ from nti.contenttypes.presentation.utils import create_lessonoverview_from_exter
 
 from nti.externalization.interfaces import StandardExternalFields
 
+from nti.site.interfaces import IHostPolicySiteManager
+
 from .index import get_catalog
 
 from .interfaces import IItemRefValidator
@@ -89,7 +91,7 @@ def _registry(registry=None):
 	return registry
 
 def _unregisterUtility(registry, provided, name):
-	if hasattr(registry, 'subscribedUnregisterUtility'):
+	if IHostPolicySiteManager.providedBy(registry):
 		return registry.subscribedUnregisterUtility(provided=provided, name=name)
 	else:
 		return registry.unregisterUtility(provided=provided, name=name)
@@ -114,7 +116,7 @@ def _connection(registry=None):
 	return result
 	
 def _registerUtility(registry, component, provided, name, event=False):
-	if hasattr(registry, 'subscribedRegisterUtility'):
+	if IHostPolicySiteManager.providedBy(registry):
 		return registry.subscribedRegisterUtility(component,
 									 			  provided=provided,
 									 			  name=name,
