@@ -61,7 +61,7 @@ def _sync_course(course, exclude=False, force=False):
 	items = synchronize_course_lesson_overview(course, force=force)
 	if not exclude and not ICourseSubInstance.providedBy(course):
 		for sub_instance in (course.SubInstances or {}).values():
-			synchronize_course_lesson_overview(sub_instance, force=force)
+			synchronize_course_lesson_overview(sub_instance)
 	return result
 
 def _sync_courses(args):

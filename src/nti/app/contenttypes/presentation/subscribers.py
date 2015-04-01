@@ -88,6 +88,12 @@ def _registry(registry=None):
 			registry = component.getSiteManager()
 	return registry
 
+def _unregisterUtility(registry, provided, name):
+	if hasattr(registry, 'subscribedUnregisterUtility'):
+		return registry.subscribedUnregisterUtility(provided=provided, name=name)
+	else:
+		return registry.unregisterUtility(provided=provided, name=name)
+
 def _remove_from_registry_with_interface(main_key, provided, registry=None, intids=None):
 	result = []
 	catalog = get_catalog()
@@ -98,7 +104,7 @@ def _remove_from_registry_with_interface(main_key, provided, registry=None, inti
 		if ntiid:
 			result.append(utility)
 			catalog.unindex(utility, intids=intids)
-			registry.unregisterUtility(provided=provided, name=ntiid)
+			_unregisterUtility(registry, provided=provided, name=ntiid)
 			lifecycleevent.removed(utility) # remove from intids
 	return result
 
@@ -107,15 +113,24 @@ def _connection(registry=None):
 	result = IConnection(registry, None)
 	return result
 	
+def _registerUtility(registry, component, provided, name, event=False):
+	if hasattr(registry, 'subscribedRegisterUtility'):
+		return registry.subscribedRegisterUtility(component,
+									 			  provided=provided,
+									 			  name=name,
+									 			  event=event)
+	else:
+		return registry.registerUtility(component,
+									 	provided=provided,
+									 	name=name,
+									 	event=event)
+	
 def _register_utility(item, provided, ntiid, registry=None, connection=None):
 	if provided.providedBy(item):
 		registry = _registry(registry)
 		registered = registry.queryUtility(provided, name=ntiid)
 		if registered is None:
-			registry.registerUtility(item,
-									 provided=provided,
-									 name=ntiid,
-									 event=False)
+			_registerUtility(registry, item, provided=provided, name=ntiid)
 			connection = _connection(registry) if connection is None else connection
 			if connection is not None:
 				connection.add(item)
@@ -436,7 +451,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 					if INTILessonOverview.providedBy(obj):
 						node.LessonOverviewNTIID = obj.ntiid
 				break
-			
+
 			_remove_and_unindex_course_assets(namespace)
 			
 			logger.debug("Synchronizing %s", namespace)
