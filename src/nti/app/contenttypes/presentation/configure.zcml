@@ -25,24 +25,26 @@
 	<adapter factory=".validators._AssignmentRefValidator" />		
 	
 	<!-- Traversal-ish stuff -->
-	<utility factory=".ntiids._NTIAudioResolver" name="NTIAudio" />
-	<utility factory=".ntiids._NTIVideoResolver" name="NTIVideo" />
-	
-	<utility factory=".ntiids._NTITimeLineResolver" name="Timeline" />
-	
-	<utility factory=".ntiids._NTISlideResolver" name="NTISlide" />
-	<utility factory=".ntiids._NTISlideDeckResolver" name="NTISlideDeck" />
-	<utility factory=".ntiids._NTISlideVideoResolver" name="NTISlideVideo" />
-	  
-	<utility factory=".ntiids._NTIRelatedWorkResolver" name="RelatedWork" />
-	<utility factory=".ntiids._NTIRelatedWorkResolver" name="RelatedWorkRef" />
-	
-	<utility factory=".ntiids._NTIDiscussionResolver" name="DiscussionRef" />
-	<utility factory=".ntiids._NTIDiscussionResolver" name="DiscussionRef:EnrolledCourseRoot" />
-	<utility factory=".ntiids._NTIDiscussionResolver" name="DiscussionRef:EnrolledCourseSection" />
-	
-	<utility factory=".ntiids._NTILessonOverviewResolver" name="NTILessonOverview" />	
-	<utility factory=".ntiids._NTICourseOverviewGroupResolver" name="NTICourseOverviewGroup" />
+	<configure zcml:condition="have app_presentation">
+		<utility factory=".ntiids._NTIAudioResolver" name="NTIAudio" />
+		<utility factory=".ntiids._NTIVideoResolver" name="NTIVideo" />
+		
+		<utility factory=".ntiids._NTITimeLineResolver" name="Timeline" />
+		
+		<utility factory=".ntiids._NTISlideResolver" name="NTISlide" />
+		<utility factory=".ntiids._NTISlideDeckResolver" name="NTISlideDeck" />
+		<utility factory=".ntiids._NTISlideVideoResolver" name="NTISlideVideo" />
+		  
+		<utility factory=".ntiids._NTIRelatedWorkResolver" name="RelatedWork" />
+		<utility factory=".ntiids._NTIRelatedWorkResolver" name="RelatedWorkRef" />
+		
+		<utility factory=".ntiids._NTIDiscussionResolver" name="DiscussionRef" />
+		<utility factory=".ntiids._NTIDiscussionResolver" name="DiscussionRef:EnrolledCourseRoot" />
+		<utility factory=".ntiids._NTIDiscussionResolver" name="DiscussionRef:EnrolledCourseSection" />
+		
+		<utility factory=".ntiids._NTILessonOverviewResolver" name="NTILessonOverview" />	
+		<utility factory=".ntiids._NTICourseOverviewGroupResolver" name="NTICourseOverviewGroup" />
+	</configure>
 	
 	<!-- Events -->
 	<configure zcml:condition="have app_presentation">
