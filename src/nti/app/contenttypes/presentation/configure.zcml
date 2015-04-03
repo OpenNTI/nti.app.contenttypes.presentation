@@ -28,8 +28,9 @@
 	<adapter factory=".acl.PresentationAssetACLProvider" />
 	<adapter factory=".acl.NTILessonOverviewACLProvider" />
 	
-	<!-- Traversal-ish stuff -->
 	<configure zcml:condition="have app_presentation">
+	
+		<!-- Traversal-ish stuff -->
 		<utility factory=".ntiids._NTIAudioResolver" name="NTIAudio" />
 		<utility factory=".ntiids._NTIVideoResolver" name="NTIVideo" />
 		
@@ -48,10 +49,8 @@
 		
 		<utility factory=".ntiids._NTILessonOverviewResolver" name="NTILessonOverview" />	
 		<utility factory=".ntiids._NTICourseOverviewGroupResolver" name="NTICourseOverviewGroup" />
-	</configure>
-	
-	<!-- Events -->
-	<configure zcml:condition="have app_presentation">
+
+		<!-- Events -->
 		<subscriber handler=".subscribers._update_data_when_content_changes"
 					for="nti.contentlibrary.interfaces.IContentPackage
 						 zope.lifecycleevent.IObjectAddedEvent" />
@@ -69,10 +68,8 @@
 		<subscriber handler=".subscribers._clear_data_when_course_removed"
 					for="nti.contenttypes.courses.interfaces.ICourseInstance
 						 zope.lifecycleevent.IObjectRemovedEvent" />
-	</configure>
 
-	<!-- Decorators -->
-	<configure zcml:condition="have app_presentation">
+		<!-- Decorators -->
 		<subscriber factory=".decorators._CourseOutlineContentNodeLinkDecorator"
 					provides="nti.externalization.interfaces.IExternalMappingDecorator"
 					for="nti.contenttypes.courses.interfaces.ICourseOutlineContentNode
