@@ -24,6 +24,10 @@
 	<adapter factory=".validators._VideoRefValidator" />
 	<adapter factory=".validators._AssignmentRefValidator" />		
 	
+	<!-- ACLs -->
+	<adapter factory=".acl.PresentationAssetACLProvider" />
+	<adapter factory=".acl.NTILessonOverviewACLProvider" />
+	
 	<!-- Traversal-ish stuff -->
 	<configure zcml:condition="have app_presentation">
 		<utility factory=".ntiids._NTIAudioResolver" name="NTIAudio" />
