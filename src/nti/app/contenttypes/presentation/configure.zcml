@@ -28,7 +28,7 @@
 	<adapter factory=".acl.PresentationAssetACLProvider" />
 	<adapter factory=".acl.NTILessonOverviewACLProvider" />
 	
-	<configure zcml:condition="have app_presentation">
+	<configure zcml:condition="have devmode">
 	
 		<!-- Traversal-ish stuff -->
 		<utility factory=".ntiids._NTIAudioResolver" name="NTIAudio" />
