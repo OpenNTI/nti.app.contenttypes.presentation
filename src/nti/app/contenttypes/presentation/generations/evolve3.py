@@ -32,7 +32,7 @@ def do_evolve(context):
 
 	## remove old utility
 	catalog = lsm.getUtility(IPresentationAssetsIndex, name=CATALOG_INDEX_NAME)
-	lsm.unregisterUtility(IPresentationAssetsIndex, name=CATALOG_INDEX_NAME)
+	lsm.unregisterUtility(catalog, provided=IPresentationAssetsIndex, name=CATALOG_INDEX_NAME)
 	intids.unregister(catalog)
 
 	## recreate new one

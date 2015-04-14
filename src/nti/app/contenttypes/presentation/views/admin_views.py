@@ -47,7 +47,7 @@ from ..subscribers import get_course_packages
 from ..subscribers import synchronize_content_package
 from ..subscribers import synchronize_course_lesson_overview
 
-from ..index import get_index
+from .. import get_catalog
 
 ITEMS = StandardExternalFields.ITEMS
 	
@@ -159,6 +159,6 @@ class ResetPresentationAssetsIndexView(	AbstractAuthenticatedView,
 
 	
 	def __call__(self):
-		index = get_index()
+		index = get_catalog()
 		index.reset()
 		return hexc.HTTPNoContent()
