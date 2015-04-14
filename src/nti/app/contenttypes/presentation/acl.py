@@ -55,6 +55,7 @@ class BaseACLProvider(object):
 	def __init__(self, context):
 		self.context = context
 
+	@property
 	def __acl__(self):
 		try:
 			aces = []
