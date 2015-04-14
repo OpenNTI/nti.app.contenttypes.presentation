@@ -469,7 +469,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 
 			## index and parent
 			for item in items:
-				_append_entry(obj, ntiid)
+				_append_entry(item, ntiid)
 				item_iface = iface_of_thing(item)
 				catalog.index(item, 
 							  entry=ntiid,
