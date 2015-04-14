@@ -9,28 +9,29 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-generation = 2
+generation = 3
 
 from zope import interface
 
 from zope.generations.interfaces import IInstallableSchemaManager
 from zope.generations.generations import SchemaManager as BaseSchemaManager
 
-from ..index import install_indices
+from ..index import install_catalog
 
 @interface.implementer(IInstallableSchemaManager)
 class _SchemaManager(BaseSchemaManager):
-    """
-    A schema manager that we can register as a utility in ZCML.
-    """
-    def __init__( self ):
-        super(_SchemaManager, self).__init__(
-            generation=generation,
-            minimum_generation=generation,
-            package_name='nti.app.contenttypes.presentation.generations')
+	"""
+	A schema manager that we can register as a utility in ZCML.
+	"""
 
-    def install( self, context ):
-        evolve(context)
+	def __init__( self ):
+		super(_SchemaManager, self).__init__(
+						generation=generation,
+						minimum_generation=generation,
+						package_name='nti.app.contenttypes.presentation.generations')
+
+	def install( self, context ):
+		evolve(context)
 
 def evolve(context):
-    install_indices(context)
+	install_catalog(context)

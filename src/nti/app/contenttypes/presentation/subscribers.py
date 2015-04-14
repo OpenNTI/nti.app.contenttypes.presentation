@@ -62,10 +62,9 @@ from nti.externalization.interfaces import StandardExternalFields
 
 from nti.site.interfaces import IHostPolicySiteManager
 
-from .index import get_catalog
-
 from .interfaces import IItemRefValidator
 
+from . import get_catalog
 from . import iface_of_thing
 
 ITEMS = StandardExternalFields.ITEMS
@@ -90,7 +89,7 @@ def _registry(registry=None):
 			registry = component.getSiteManager()
 	return registry
 
-def _unregisterUtility(registry, provided, name):
+def unregisterUtility(registry, provided, name):
 	if IHostPolicySiteManager.providedBy(registry):
 		return registry.subscribedUnregisterUtility(provided=provided, name=name)
 	else:
@@ -101,12 +100,12 @@ def _remove_from_registry_with_interface(main_key, provided, registry=None, inti
 	catalog = get_catalog()
 	registry = _registry(registry)
 	intids = component.queryUtility(IIntIds) if intids is None else intids
-	for utility in catalog.search_objects(intids=intids, keys=(provided, main_key)):
+	for utility in catalog.search_objects(intids=intids, kind=provided, entry=main_key):
 		ntiid = getattr(utility, 'ntiid', None)
 		if ntiid:
 			result.append(utility)
 			catalog.unindex(utility, intids=intids)
-			_unregisterUtility(registry, provided=provided, name=ntiid)
+			unregisterUtility(registry, provided=provided, name=ntiid)
 			lifecycleevent.removed(utility) # remove from intids
 	return result
 
@@ -115,7 +114,7 @@ def _connection(registry=None):
 	result = IConnection(registry, None)
 	return result
 	
-def _registerUtility(registry, component, provided, name, event=False):
+def registerUtility(registry, component, provided, name, event=False):
 	if IHostPolicySiteManager.providedBy(registry):
 		return registry.subscribedRegisterUtility(component,
 									 			  provided=provided,
@@ -132,7 +131,7 @@ def _register_utility(item, provided, ntiid, registry=None, connection=None):
 		registry = _registry(registry)
 		registered = registry.queryUtility(provided, name=ntiid)
 		if registered is None:
-			_registerUtility(registry, item, provided=provided, name=ntiid)
+			registerUtility(registry, item, provided=provided, name=ntiid)
 			connection = _connection(registry) if connection is None else connection
 			if connection is not None:
 				connection.add(item)
@@ -415,6 +414,10 @@ def _remove_and_unindex_course_assets(main_key):
 	_remove_from_registry_with_interface(main_key, INTICourseOverviewGroup)
 	_remove_from_registry_with_interface(main_key, INTILessonOverview)
 	
+def _append_entry(item, entry):
+	entries = getattr(item, 'CourseCatalogEntries', None) or ()
+	item.CourseCatalogEntries = entries + (entry,)
+
 def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=False):
 	result = []
 	course_packages = get_course_packages(course)
@@ -447,9 +450,10 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 			if not force and root_lastModified >= sibling_lastModified:
 				## we want to associate the ntiid of the new course with the 
 				## assets and set the lesson overview ntiid to the outline node
-				objects = catalog.search_objects(namespace, intids=intids)
+				objects = catalog.search_objects(namespace=namespace, intids=intids)
 				for obj in objects or ():
-					catalog.index(obj, values=(ntiid,))
+					_append_entry(obj, ntiid)
+					catalog.index(obj, entry=ntiid)
 					if INTILessonOverview.providedBy(obj):
 						node.LessonOverviewNTIID = obj.ntiid
 				break
@@ -465,9 +469,13 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 
 			## index and parent
 			for item in items:
+				_append_entry(obj, ntiid)
 				item_iface = iface_of_thing(item)
-				catalog.index(item, intids=intids, 
-							  values=(item_iface, namespace, ntiid))
+				catalog.index(item, 
+							  entry=ntiid,
+							  intids=intids, 
+							  kind=item_iface,
+							  namespace=namespace)
 				if INTILessonOverview.providedBy(item):
 					item.__parent__ = parent
 					node.LessonOverviewNTIID = item.ntiid

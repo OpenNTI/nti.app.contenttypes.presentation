@@ -12,7 +12,7 @@ from hamcrest import assert_that
 
 import unittest
 
-from nti.app.contenttypes.presentation.index import PACatalogIndex
+from nti.app.contenttypes.presentation.index import PresentationAssetCatalog
 
 from nti.app.contenttypes.presentation.tests import SharedConfiguringTestLayer
 
@@ -24,32 +24,37 @@ class TestIndex(unittest.TestCase):
 
 	@WithMockDSTrans
 	def test_last_modified(self):
-		catalog = PACatalogIndex()
+		catalog = PresentationAssetCatalog()
 		assert_that(catalog.get_last_modified('key'), is_(0))
+
 		catalog.set_last_modified('key', 100)
 		assert_that(catalog.get_last_modified('key'), is_(100))
 
 	@WithMockDSTrans
-	def test_index(self):
-		catalog = PACatalogIndex()
-		catalog.index(1, values=('x'))
-		assert_that(list(catalog.get_references('x')), is_([1]))
-		catalog.index(1, values=('y'))
-		assert_that(list(catalog.get_references('x')), is_([1]))
-		assert_that(list(catalog.get_references('y')), is_([1]))
-		assert_that(list(catalog.get_references('y', 'x')), is_([1]))
-		assert_that(list(catalog.get_references('z', 'x')), is_([]))
+	def test_catalog(self):
+		catalog = PresentationAssetCatalog()
+		catalog.index(1, entry='x')
+		assert_that(list(catalog.get_references(entry='x')), is_([1]))
+		catalog.index(1, entry='y')
+		assert_that(list(catalog.get_references(entry='x')), is_([1]))
+		assert_that(list(catalog.get_references(entry='y')), is_([1]))
 
 		catalog.unindex(1)
-		assert_that(list(catalog.get_references('x')), is_([]))
-		assert_that(list(catalog.get_references('y')), is_([]))
+		assert_that(list(catalog.get_references(entry='x')), is_([]))
+		assert_that(list(catalog.get_references(entry='y')), is_([]))
 
 		catalog.unindex(10)
-		assert_that(list(catalog.get_references('x')), is_([]))
+		assert_that(list(catalog.get_references(entry='x')), is_([]))
 
-		catalog.index(10, values=('x'))
-		catalog.index(11, values=('x'))
-		assert_that(list(catalog.get_references('x')), is_([10, 11]))
+		catalog.index(10, entry='x')
+		catalog.index(11, entry='x')
+		assert_that(list(catalog.get_references(entry='x')), is_([10, 11]))
 		
 		catalog.unindex(10)
-		assert_that(list(catalog.get_references('x')), is_([11]))
+		assert_that(list(catalog.get_references(entry='x')), is_([11]))
+		
+		catalog.index(100, entry='x', kind='p')
+		assert_that(list(catalog.get_references(entry='x', kind='p')), is_([100]))
+		assert_that(list(catalog.get_references(entry='x', kind='x')), is_([]))
+		assert_that(list(catalog.get_references(entry='r', kind='p')), is_([]))
+		assert_that(list(catalog.get_references(kind='p')), is_([100]))

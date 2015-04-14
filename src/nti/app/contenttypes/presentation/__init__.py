@@ -9,12 +9,23 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-VIEW_OVERVIEW_CONTENT = "overview-content"
+from zope import component
 
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
+
+from .interfaces import IPresentationAssetsIndex
+
+VIEW_OVERVIEW_CONTENT = "overview-content"
+
+CATALOG_INDEX_NAME = '++etc++contenttypes.presentation-index'
 
 def iface_of_thing(item):
 	for iface in ALL_PRESENTATION_ASSETS_INTERFACES:
 		if iface.providedBy(item):
 			return iface
 	return None
+
+def get_catalog():
+	result = component.queryUtility(IPresentationAssetsIndex, name=CATALOG_INDEX_NAME)
+	return result
+get_index  = get_catalog
