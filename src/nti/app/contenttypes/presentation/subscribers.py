@@ -278,7 +278,7 @@ def _register_items_when_content_changes(content_package,
 	for item in registered:
 		item.__parent__ = content_package
 		item_iface = iface_of_thing(item)
-		catalog.index(item, intids=intids, values=(item_iface, content_package.ntiid,))
+		catalog.index(item, intids=intids, kind=item_iface, entry=content_package.ntiid)
 
 	_set_data_lastModified(content_package, item_iface, sibling_lastModified)
 	
