@@ -35,6 +35,7 @@
 		<utility factory=".ntiids._NTIVideoResolver" name="NTIVideo" />
 		
 		<utility factory=".ntiids._NTITimeLineResolver" name="Timeline" />
+		<utility factory=".ntiids._NTITimeLineResolver" name="JSON:Timeline" />
 		
 		<utility factory=".ntiids._NTISlideResolver" name="NTISlide" />
 		<utility factory=".ntiids._NTISlideDeckResolver" name="NTISlideDeck" />
