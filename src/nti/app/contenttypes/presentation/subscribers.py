@@ -95,18 +95,32 @@ def unregisterUtility(registry, provided, name):
 	else:
 		return registry.unregisterUtility(provided=provided, name=name)
 
+def _removed_registered(provided, name, intids=None, registry=None, catalog=None):
+	registry = _registry(registry)
+	registered = registry.queryUtility(provided, name=name)
+	if registered is not None:
+		catalog = get_catalog() if catalog is None else catalog
+		catalog.unindex(registered, intids=intids)
+		unregisterUtility(registry, provided=provided, name=name)
+		lifecycleevent.removed(registered) # remove from intids
+		
 def _remove_from_registry_with_interface(main_key, provided, registry=None, intids=None):
 	result = []
 	catalog = get_catalog()
 	registry = _registry(registry)
 	intids = component.queryUtility(IIntIds) if intids is None else intids
-	for utility in catalog.search_objects(intids=intids, kind=provided, entry=main_key):
-		ntiid = getattr(utility, 'ntiid', None)
-		if ntiid:
-			result.append(utility)
-			catalog.unindex(utility, intids=intids)
-			unregisterUtility(registry, provided=provided, name=ntiid)
-			lifecycleevent.removed(utility) # remove from intids
+	for utility in catalog.search_objects(intids=intids, kind=provided, container=main_key):
+		try:
+			ntiid = utility.ntiid
+			if ntiid:
+				result.append(utility)
+				_removed_registered(provided, 
+									name=ntiid, 
+									intids=intids,
+									catalog=catalog,
+									registry=registry)
+		except AttributeError:
+			pass
 	return result
 
 def _connection(registry=None):
@@ -278,7 +292,8 @@ def _register_items_when_content_changes(content_package,
 	for item in registered:
 		item.__parent__ = content_package
 		item_iface = iface_of_thing(item)
-		catalog.index(item, intids=intids, kind=item_iface, entry=content_package.ntiid)
+		catalog.index(item, intids=intids, kind=item_iface,
+					  container=content_package.ntiid)
 
 	_set_data_lastModified(content_package, item_iface, sibling_lastModified)
 	
@@ -327,14 +342,15 @@ def _clear_data_when_content_removed(content_package, event):
 ## Courses
 
 def _load_and_register_lesson_overview_json(jtext, registry=None, validate=False):
-	recorded = []
 	registry = _registry(registry)
 	
 	## read and parse json text
 	data = simplejson.loads(prepare_json_text(jtext))
 	overview = create_lessonoverview_from_external(data)
-	if _was_utility_registered(overview, INTILessonOverview, overview.ntiid, registry):
-		recorded.append(overview)
+	
+	## remove and register
+	_removed_registered(INTILessonOverview, name=overview.ntiid, registry=registry)
+	_register_utility(overview, INTILessonOverview, overview.ntiid, registry)
 
 	## canonicalize group
 	groups = overview.Items
@@ -344,34 +360,32 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, validate=False
 												INTICourseOverviewGroup,
 											   	group.ntiid,
 											   	registry)
-		if result:
-			recorded.append(group)
-		else:
+		if not result: # replace if registered before
 			groups[gdx] = registered
-
-		## canonicalize item refs
+			
 		idx = 0
 		items = group.Items
+		## canonicalize item refs
 		while idx < len(items):
 			item = items[idx]
 			item_iface = iface_of_thing(item)
-			result, registered = _register_utility(	item, 
-													item_iface,
-											   		item.ntiid,
-											   		registry)
-			if result:
-				validator = IItemRefValidator(item, None)
-				is_valid = (not validate or validator is None or \
-							validator.validate())
-				if is_valid:
-					recorded.append(item)
-				else:
-					del items[idx]
-					continue
-			else:
+			result, registered = _register_utility(item, 
+											 	   ntiid=item.ntiid,
+											  	   registry=registry,
+											  	   provided=item_iface)
+			
+			validator = IItemRefValidator(item, None)
+			is_valid = (not validate or validator is None or \
+						validator.validate())
+		
+			if not is_valid: # don't include in the ovewview
+				del items[idx]
+				continue
+			elif not result: # replace if registered before
 				items[idx] = registered
 			idx += 1
-	return recorded
+
+	return overview
 
 def _get_source_lastModified(source, catalog=None):
 	catalog = get_catalog() if catalog is None else catalog
@@ -413,10 +427,36 @@ def _remove_and_unindex_course_assets(main_key):
 		_remove_from_registry_with_interface(main_key, item_iface)
 	_remove_from_registry_with_interface(main_key, INTICourseOverviewGroup)
 	_remove_from_registry_with_interface(main_key, INTILessonOverview)
-	
-def _append_entry(item, entry):
-	entries = getattr(item, 'CourseCatalogEntries', None) or ()
-	item.CourseCatalogEntries = entries + (entry,)
+
+def _index_overview_items(items, container=None, namespace=None, 
+						  intids=None, catalog=None, node=None):
+	catalog = get_catalog() if catalog is None else catalog
+	for item in items or ():
+		# set lesson overview NTIID on the outline node
+		if INTILessonOverview.providedBy(item) and node is not None:
+			node.LessonOverviewNTIID = item.ntiid
+			
+		item_iface = iface_of_thing(item)
+
+		## for lesson and groups overviews index all fields
+		if 	INTILessonOverview.providedBy(item) or \
+			INTICourseOverviewGroup.providedBy(item):
+			catalog.index(item, 
+						  intids=intids, 
+						  kind=item_iface,
+						  container=container,
+						  namespace=namespace)
+			_index_overview_items(item.Items, 
+								  container=container, 
+								  namespace=namespace,
+								  intids=intids,
+								  catalog=catalog,
+								  node=node)
+		else:
+			catalog.index(item, 
+						  intids=intids, 
+						  kind=item_iface,
+						  container=container)
 
 def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=False):
 	result = []
@@ -451,34 +491,33 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 				## we want to associate the ntiid of the new course with the 
 				## assets and set the lesson overview ntiid to the outline node
 				objects = catalog.search_objects(namespace=namespace, intids=intids)
-				for obj in objects or ():
-					_append_entry(obj, ntiid)
-					catalog.index(obj, entry=ntiid)
-					if INTILessonOverview.providedBy(obj):
-						node.LessonOverviewNTIID = obj.ntiid
+				_index_overview_items(objects or (),
+									  container=ntiid,
+									  namespace=namespace,
+									  intids=intids,
+									  catalog=catalog,
+									  node=node)
 				break
-
+			
 			_remove_and_unindex_course_assets(namespace)
 			
 			logger.debug("Synchronizing %s", namespace)
 			index_text = content_package.read_contents_of_sibling_entry(namespace)
-			items = _load_and_register_lesson_overview_json(index_text, validate=True)
-			result.extend(items)
+			overview = _load_and_register_lesson_overview_json(index_text, validate=True)
+			result.append(overview)
 			
-			_set_source_lastModified(namespace, sibling_lastModified, catalog)
+			## set lineage
+			overview.__parent__ = parent
+						
+			## index
+			_index_overview_items((overview,),
+								  container=ntiid,
+								  namespace=namespace,
+								  intids=intids,
+								  catalog=catalog,
+								  node=node)
 
-			## index and parent
-			for item in items:
-				_append_entry(item, ntiid)
-				item_iface = iface_of_thing(item)
-				catalog.index(item, 
-							  entry=ntiid,
-							  intids=intids, 
-							  kind=item_iface,
-							  namespace=namespace)
-				if INTILessonOverview.providedBy(item):
-					item.__parent__ = parent
-					node.LessonOverviewNTIID = item.ntiid
+			_set_source_lastModified(namespace, sibling_lastModified, catalog)
 
 	logger.info('Lessons overviews for %s have been synchronized in %s(s)',
 				 name, time.time()-now)

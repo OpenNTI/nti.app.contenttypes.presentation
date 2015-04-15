@@ -7,6 +7,8 @@ __docformat__ = "restructuredtext en"
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
 
+from hamcrest import none
+from hamcrest import is_not
 from hamcrest import has_length
 from hamcrest import assert_that
 
@@ -31,6 +33,7 @@ from nti.contenttypes.presentation.utils import create_relatedwork_from_external
 
 from nti.app.contenttypes.presentation import get_catalog
 from nti.app.contenttypes.presentation.subscribers import iface_of_thing
+from nti.app.contenttypes.presentation.subscribers import _index_overview_items
 from nti.app.contenttypes.presentation.subscribers import _load_and_register_json
 from nti.app.contenttypes.presentation.subscribers import _load_and_register_slidedeck_json
 from nti.app.contenttypes.presentation.subscribers import _remove_from_registry_with_interface
@@ -46,7 +49,7 @@ def _index_items(item_iface, parent, *registered):
 	catalog = get_catalog()
 	intids = component.queryUtility(IIntIds)
 	for item in registered:
-		catalog.index(item, intids=intids, entry=parent, kind=item_iface)
+		catalog.index(item, intids=intids, container=parent, kind=item_iface)
 
 class TestSubscribers(unittest.TestCase):
 
@@ -119,11 +122,9 @@ class TestSubscribers(unittest.TestCase):
 		mock_dataserver.current_transaction.add(registry)
 
 		result = _load_and_register_lesson_overview_json(source, registry=registry)
-		assert_that(result, has_length(11))
-
-		for item in result:
-			iface = iface_of_thing(item)
-			_index_items(iface, 'xxx', item)
+		assert_that(result, is_not(none()))
+		
+		_index_overview_items((result,), container='xxx')
 		
 		result = _remove_from_registry_with_interface('xxx', INTICourseOverviewGroup, registry=registry)
 		assert_that(result, has_length(4))

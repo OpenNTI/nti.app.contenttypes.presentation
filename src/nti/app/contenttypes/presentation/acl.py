@@ -18,6 +18,7 @@ from nti.common.property import Lazy
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -35,18 +36,26 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.traversal.traversal import find_interface
 
-def get_courses(ntiids):
+from . import get_catalog
+
+def get_courses(ntiids=()):
 	result = []
+	catalog = component.getUtility(ICourseCatalog)
 	for ntiid in ntiids or ():
+		course = None
 		context = find_object_with_ntiid(ntiid)
-		if context is None:
+		if ICourseCatalogEntry.providedBy(context):
+			course = ICourseInstance(context, None)
+		elif ICourseInstance.providedBy(context):
+			course = context
+		elif context is None:
 			try:
-				catalog = component.getUtility(ICourseCatalog)
 				entry = catalog.getCatalogEntry(ntiid)
 				course = ICourseInstance(entry, None)
-				result.append(course)
 			except KeyError:
 				pass
+		if course is not None:
+			result.append(course)
 	return result
 
 @interface.implementer(IACLProvider)
@@ -57,16 +66,15 @@ class BaseACLProvider(object):
 
 	@property
 	def __acl__(self):
-		try:
+		catalog = get_catalog()
+		entries = catalog.get_containers(self.context)
+		if entries:
 			aces = []
-			entries = self.context.CourseCatalogEntries
 			for course in get_courses(entries):
 				acl = IACLProvider(course).__acl__
 				aces.extend(acl or ())
 			result = acl_from_aces( aces )
 			return result
-		except (AttributeError):
-			pass
 		return None
 	
 @component.adapter(IPresentationAsset)
@@ -75,8 +83,8 @@ class PresentationAssetACLProvider(BaseACLProvider):
 
 	@Lazy
 	def __acl__(self):
-		result = super(BaseACLProvider, self).__acl__
-		if result is None:
+		result = super(PresentationAssetACLProvider, self).__acl__
+		if not result:
 			ace = ace_allowing( IPrincipal(AUTHENTICATED_GROUP_NAME),
 						 		(ACT_READ),
 						   		PresentationAssetACLProvider )
@@ -89,8 +97,8 @@ class NTILessonOverviewACLProvider(BaseACLProvider):
 
 	@Lazy
 	def __acl__(self):
-		result = super(BaseACLProvider, self).__acl__
-		if result is None:
+		result = super(NTILessonOverviewACLProvider, self).__acl__
+		if not result:
 			course = find_interface(self.context, ICourseInstance, strict=False)
 			if course is not None:
 				result = IACLProvider(course).__acl__
