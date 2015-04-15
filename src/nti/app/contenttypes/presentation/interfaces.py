@@ -10,7 +10,9 @@ __docformat__ = "restructuredtext en"
 from zope import interface
 
 class IPresentationAssetsIndex(interface.Interface):
-    pass
+    
+    def reset():
+        pass
 
 class IItemRefValidator(interface.Interface):
     
