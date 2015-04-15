@@ -60,6 +60,18 @@ class KeepSetIndex(RawSetIndex):
 		value.update(old or ())
 		result = super(KeepSetIndex, self).index_doc(doc_id, value)
 		return result
+	
+	def remove(self, doc_id, value):
+		old = set(self.documents_to_values.get(doc_id) or ())
+		if not old:
+			return
+		value = (value,) if isinstance(value, six.string_types) else value
+		for v in value:
+			old.discard(v)
+		if old:
+			super(KeepSetIndex, self).index_doc(doc_id, value)
+		else:
+			super(KeepSetIndex, self).unindex_doc(doc_id)
 		
 class NamespaceIndex(RawValueIndex):
 	pass
@@ -71,6 +83,7 @@ class PresentationAssetCatalog(Persistent):
 	
 	family = BTrees.family64
 	
+	_provided_index = alias('_type_index')
 	_container_index = alias('_entry_index')
 	
 	def __init__(self):
@@ -120,9 +133,23 @@ class PresentationAssetCatalog(Persistent):
 			result = set(result or ())
 		return result
 
-	def get_references(self, container=None, kind=None, namespace=None):
+	def remove_container(self, item, container, intids=None):
+		doc_id = self._doc_id(item, intids)
+		if doc_id is not None:
+			self._container_index.remove(doc_id, container)
+			return True
+		return False
+	
+	def remove_containers(self, item, intids=None):
+		doc_id = self._doc_id(item, intids)
+		if doc_id is not None:
+			self._container_index.unindex_doc(doc_id)
+			return True
+		return False
+	
+	def get_references(self, container=None, provided=None, namespace=None):
 		result = None
-		for index, value, query in ( (self._type_index, kind, 'any_of'),
+		for index, value, query in ( (self._type_index, provided, 'any_of'),
 							  		 (self._container_index, container, 'all_of'), 
 							  		 (self._namespace_index, namespace, 'any_of')):
 			if value is not None:
@@ -134,21 +161,21 @@ class PresentationAssetCatalog(Persistent):
 					result = self.family.IF.intersection(result, ids)
 		return result or ()
 
-	def search_objects(self, container=None, kind=None, namespace=None, intids=None):
+	def search_objects(self, container=None, provided=None, namespace=None, intids=None):
 		intids = component.queryUtility(IIntIds) if intids is None else intids
 		if intids is not None:
-			refs = self.get_references(container, kind, namespace)
+			refs = self.get_references(container, provided, namespace)
 			result = ResultSet(refs, intids)
 		else:
 			result = ()
 		return result
 
-	def index(self, item, container=None, kind=None, namespace=None, intids=None):
+	def index(self, item, container=None, provided=None, namespace=None, intids=None):
 		doc_id = self._doc_id(item, intids)
 		if doc_id is None:
 			return False
 
-		for index, value in ( (self._type_index, kind),
+		for index, value in ( (self._type_index, provided),
 							  (self._container_index, container), 
 							  (self._namespace_index, namespace)):
 			if value is not None:

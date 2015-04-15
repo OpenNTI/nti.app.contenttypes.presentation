@@ -53,8 +53,8 @@ class TestIndex(unittest.TestCase):
 		catalog.unindex(10)
 		assert_that(list(catalog.get_references(container='x')), is_([11]))
 		
-		catalog.index(100, container='x', kind='p')
-		assert_that(list(catalog.get_references(container='x', kind='p')), is_([100]))
-		assert_that(list(catalog.get_references(container='x', kind='x')), is_([]))
-		assert_that(list(catalog.get_references(container='r', kind='p')), is_([]))
-		assert_that(list(catalog.get_references(kind='p')), is_([100]))
+		catalog.index(100, container='x', provided='p')
+		assert_that(list(catalog.get_references(container='x', provided='p')), is_([100]))
+		assert_that(list(catalog.get_references(container='x', provided='x')), is_([]))
+		assert_that(list(catalog.get_references(container='r', provided='p')), is_([]))
+		assert_that(list(catalog.get_references(provided='p')), is_([100]))

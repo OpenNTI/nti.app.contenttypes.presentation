@@ -33,10 +33,10 @@ from nti.contenttypes.presentation.utils import create_relatedwork_from_external
 
 from nti.app.contenttypes.presentation import get_catalog
 from nti.app.contenttypes.presentation.subscribers import iface_of_thing
+from nti.app.contenttypes.presentation.subscribers import _remove_from_registry
 from nti.app.contenttypes.presentation.subscribers import _index_overview_items
 from nti.app.contenttypes.presentation.subscribers import _load_and_register_json
 from nti.app.contenttypes.presentation.subscribers import _load_and_register_slidedeck_json
-from nti.app.contenttypes.presentation.subscribers import _remove_from_registry_with_interface
 from nti.app.contenttypes.presentation.subscribers import _load_and_register_lesson_overview_json
 
 from nti.app.contenttypes.presentation.tests import PersistentComponents
@@ -45,11 +45,11 @@ from nti.app.contenttypes.presentation.tests import SharedConfiguringTestLayer
 from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 import nti.dataserver.tests.mock_dataserver as mock_dataserver
 
-def _index_items(item_iface, parent, *registered):
+def _index_items(item_iface, namespace, *registered):
 	catalog = get_catalog()
 	intids = component.queryUtility(IIntIds)
 	for item in registered:
-		catalog.index(item, intids=intids, container=parent, kind=item_iface)
+		catalog.index(item, intids=intids, namespace=namespace, provided=item_iface)
 
 class TestSubscribers(unittest.TestCase):
 
@@ -70,7 +70,7 @@ class TestSubscribers(unittest.TestCase):
 
 		_index_items(iface, 'xxx', *result)
 		
-		result = _remove_from_registry_with_interface('xxx', iface, registry=registry)
+		result = _remove_from_registry(namespace='xxx', provided=iface, registry=registry)
 		assert_that(result, has_length(count))
 
 	@WithMockDSTrans
@@ -103,13 +103,13 @@ class TestSubscribers(unittest.TestCase):
 			iface = iface_of_thing(item)
 			_index_items(iface, 'xxx', item)
 		
-		result = _remove_from_registry_with_interface('xxx', INTISlideDeck, registry=registry)
+		result = _remove_from_registry(namespace='xxx', provided=INTISlideDeck, registry=registry)
 		assert_that(result, has_length(57))
 		
-		result = _remove_from_registry_with_interface('xxx', INTISlideVideo, registry=registry)
+		result = _remove_from_registry(namespace='xxx', provided=INTISlideVideo, registry=registry)
 		assert_that(result, has_length(57))
 		
-		result = _remove_from_registry_with_interface('xxx', INTISlide, registry=registry)
+		result = _remove_from_registry(namespace='xxx', provided=INTISlide, registry=registry)
 		assert_that(result, has_length(628))
 
 	@WithMockDSTrans
@@ -126,8 +126,8 @@ class TestSubscribers(unittest.TestCase):
 		
 		_index_overview_items((result,), container='xxx')
 		
-		result = _remove_from_registry_with_interface('xxx', INTICourseOverviewGroup, registry=registry)
+		result = _remove_from_registry(container='xxx', provided=INTICourseOverviewGroup, registry=registry)
 		assert_that(result, has_length(4))
 		
-		result = _remove_from_registry_with_interface('xxx', INTILessonOverview, registry=registry)
+		result = _remove_from_registry(container='xxx', provided=INTILessonOverview, registry=registry)
 		assert_that(result, has_length(1))

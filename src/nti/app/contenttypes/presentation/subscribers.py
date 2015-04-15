@@ -39,8 +39,6 @@ from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
-from nti.contenttypes.presentation import GROUP_OVERVIEWABLE_INTERFACES
-
 from nti.contenttypes.presentation.interfaces import INTIAudio
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTISlide
@@ -104,12 +102,14 @@ def _removed_registered(provided, name, intids=None, registry=None, catalog=None
 		unregisterUtility(registry, provided=provided, name=name)
 		lifecycleevent.removed(registered) # remove from intids
 		
-def _remove_from_registry_with_interface(main_key, provided, registry=None, intids=None):
+def _remove_from_registry(container=None, namespace=None, provided=None, 
+						  registry=None, intids=None, catalog=None):
 	result = []
-	catalog = get_catalog()
 	registry = _registry(registry)
+	catalog = get_catalog() if catalog is None else catalog
 	intids = component.queryUtility(IIntIds) if intids is None else intids
-	for utility in catalog.search_objects(intids=intids, kind=provided, container=main_key):
+	for utility in catalog.search_objects(intids=intids, provided=provided, 
+										  container=container, namespace=namespace):
 		try:
 			ntiid = utility.ntiid
 			if ntiid:
@@ -253,19 +253,29 @@ def _register_items_when_content_changes(content_package,
 	now = time.time()
 	logger.info('Synchronizing %s for %s', namespace, content_package.ntiid)
 	
-	removed = _remove_from_registry_with_interface(content_package.ntiid, item_iface,
-												   registry=registry)
+	intids = component.queryUtility(IIntIds) if intids is None else intids
+	removed = _remove_from_registry(namespace=content_package.ntiid, 
+									provided=item_iface,
+									registry=registry,
+									catalog=catalog,
+									intids=intids)
 
 	logger.debug('%s item(s) removed from registry for %s in %s', len(removed),
 				 item_iface, content_package.ntiid)
 	
 	index_text = content_package.read_contents_of_sibling_entry(namespace)
 	if item_iface == INTISlideDeck:
-		_remove_from_registry_with_interface(content_package.ntiid, INTISlide, 
-											 registry=registry)
+		_remove_from_registry(namespace=content_package.ntiid, 
+							  provided=INTISlide, 
+							  registry=registry,
+							  catalog=catalog,
+							  intids=intids)
 		
-		_remove_from_registry_with_interface(content_package.ntiid, INTISlideVideo,
-											 registry=registry)
+		_remove_from_registry(namespace=content_package.ntiid, 
+							  provided=INTISlideVideo,
+							  registry=registry,
+							  catalog=catalog,
+							  intids=intids)
 		
 		registered = _load_and_register_slidedeck_json(index_text, 
 													   registry=registry,
@@ -287,13 +297,11 @@ def _register_items_when_content_changes(content_package,
 	logger.debug('Indexing %s registered items for %s in %s', len(registered), 
 				 item_iface, content_package.ntiid)
 
-	intids = component.queryUtility(IIntIds) if intids is None else intids
-	catalog = get_catalog()
 	for item in registered:
 		item.__parent__ = content_package
 		item_iface = iface_of_thing(item)
-		catalog.index(item, intids=intids, kind=item_iface,
-					  container=content_package.ntiid)
+		catalog.index(item, intids=intids, provided=item_iface,
+					  namespace=content_package.ntiid)
 
 	_set_data_lastModified(content_package, item_iface, sibling_lastModified)
 	
@@ -335,9 +343,15 @@ def _clear_data_when_content_removed(content_package, event):
 		for index_iface, item_iface, _ in INTERFACE_TUPLES:
 			namespace = index_iface.getTaggedValue(TAG_NAMESPACE_FILE)
 			_remove_data_lastModified(content_package, namespace)
-			_remove_from_registry_with_interface(content_package.ntiid, item_iface)
-		_remove_from_registry_with_interface(content_package.ntiid, INTISlide)
-		_remove_from_registry_with_interface(content_package.ntiid, INTISlideVideo)
+			_remove_from_registry(namespace=content_package.ntiid, 
+								  provided=item_iface,
+								  catalog=catalog)
+		_remove_from_registry(namespace=content_package.ntiid, 
+							  provided=INTISlide,
+							  catalog=catalog)
+		_remove_from_registry(namespace=content_package.ntiid,
+							  provided=INTISlideVideo,
+							  catalog=catalog)
 
 ## Courses
 
@@ -422,11 +436,24 @@ def _outline_nodes(outline):
 		_recur(outline)
 	return result
 
-def _remove_and_unindex_course_assets(main_key): 
-	for item_iface in GROUP_OVERVIEWABLE_INTERFACES:
-		_remove_from_registry_with_interface(main_key, item_iface)
-	_remove_from_registry_with_interface(main_key, INTICourseOverviewGroup)
-	_remove_from_registry_with_interface(main_key, INTILessonOverview)
+def _remove_and_unindex_course_assets(container=None, namespace=None, 
+									  catalog=None, intids=None):
+	
+	catalog = get_catalog() if catalog is None else catalog
+	intids = component.queryUtility(IIntIds) if intids is None else intids
+	
+	## unregister and unindex lesson overview obects
+	for item_iface in (INTILessonOverview, INTICourseOverviewGroup):
+		_remove_from_registry(container=container, 
+							  namespace=namespace, 
+							  provided=item_iface,
+							  catalog=catalog,
+							  intids=intids)
+
+	if container: ## unindex all other objects
+		ids = catalog.get_references(container=container)
+		for doc_id in list(ids or ()): # we are mutating
+			catalog.remove_container(doc_id, container)
 
 def _index_overview_items(items, container=None, namespace=None, 
 						  intids=None, catalog=None, node=None):
@@ -443,7 +470,7 @@ def _index_overview_items(items, container=None, namespace=None,
 			INTICourseOverviewGroup.providedBy(item):
 			catalog.index(item, 
 						  intids=intids, 
-						  kind=item_iface,
+						  provided=item_iface,
 						  container=container,
 						  namespace=namespace)
 			_index_overview_items(item.Items, 
@@ -455,7 +482,7 @@ def _index_overview_items(items, container=None, namespace=None,
 		else:
 			catalog.index(item, 
 						  intids=intids, 
-						  kind=item_iface,
+						  provided=item_iface,
 						  container=container)
 
 def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=False):
@@ -492,14 +519,17 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 				## assets and set the lesson overview ntiid to the outline node
 				objects = catalog.search_objects(namespace=namespace, intids=intids)
 				_index_overview_items(objects or (),
-									  container=ntiid,
 									  namespace=namespace,
-									  intids=intids,
+									  container=ntiid,
 									  catalog=catalog,
+									  intids=intids,
 									  node=node)
 				break
-			
-			_remove_and_unindex_course_assets(namespace)
+
+			_remove_and_unindex_course_assets(namespace=namespace,
+											  container=ntiid,
+											  catalog=catalog,
+											  intids=intids)
 			
 			logger.debug("Synchronizing %s", namespace)
 			index_text = content_package.read_contents_of_sibling_entry(namespace)
@@ -511,10 +541,10 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 						
 			## index
 			_index_overview_items((overview,),
-								  container=ntiid,
 								  namespace=namespace,
-								  intids=intids,
+								  container=ntiid,
 								  catalog=catalog,
+								  intids=intids,
 								  node=node)
 
 			_set_source_lastModified(namespace, sibling_lastModified, catalog)
@@ -537,4 +567,4 @@ def _clear_data_when_course_removed(course, event):
 		not ILegacyCommunityBasedCourseInstance.providedBy(course): 
 		entry = ICourseCatalogEntry(course, None)
 		ntiid = entry.ntiid if entry is not None else course.__name__
-		_remove_and_unindex_course_assets(ntiid)
+		_remove_and_unindex_course_assets(container=ntiid, catalog=catalog)
