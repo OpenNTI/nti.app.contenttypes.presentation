@@ -23,6 +23,7 @@ from persistent import Persistent
 from nti.common.property import alias
 from nti.common.time import bit64_int_to_time
 from nti.common.time import time_to_64bit_int
+from nti.common.iterables import is_nonstr_iter
 
 from nti.zope_catalog.catalog import ResultSet
 from nti.zope_catalog.index import SetIndex as RawSetIndex
@@ -48,14 +49,21 @@ def install_catalog(context):
 	lsm.registerUtility(index, provided=IPresentationAssetsIndex,
 						name=CATALOG_INDEX_NAME)
 
+def _to_iter(value):
+	value = getattr(value, '__name__', value)
+	if is_nonstr_iter(value):
+		result = value
+	else:
+		result = (value,)
+	return result
+	
 class KeepSetIndex(RawSetIndex):
 	"""
 	An set index that keeps the old values
 	"""
 
 	def index_doc(self, doc_id, value):
-		value = (value,) if isinstance(value, six.string_types) else value
-		value = {v for v in value if v is not None}
+		value = {v for v in _to_iter(value) if v is not None}
 		old = self.documents_to_values.get(doc_id)
 		value.update(old or ())
 		result = super(KeepSetIndex, self).index_doc(doc_id, value)
@@ -65,11 +73,10 @@ class KeepSetIndex(RawSetIndex):
 		old = set(self.documents_to_values.get(doc_id) or ())
 		if not old:
 			return
-		value = (value,) if isinstance(value, six.string_types) else value
-		for v in value:
+		for v in _to_iter(value):
 			old.discard(v)
 		if old:
-			super(KeepSetIndex, self).index_doc(doc_id, value)
+			super(KeepSetIndex, self).index_doc(doc_id, old)
 		else:
 			super(KeepSetIndex, self).unindex_doc(doc_id)
 		
@@ -105,7 +112,7 @@ class PresentationAssetCatalog(Persistent):
 		else:
 			doc_id = item
 		return doc_id
-	
+
 	def get_last_modified(self, namespace):
 		try:
 			return bit64_int_to_time(self._last_modified[namespace])
@@ -133,51 +140,51 @@ class PresentationAssetCatalog(Persistent):
 			result = set(result or ())
 		return result
 
-	def remove_container(self, item, container, intids=None):
+	def remove_containers(self, item, containers, intids=None):
 		doc_id = self._doc_id(item, intids)
 		if doc_id is not None:
-			self._container_index.remove(doc_id, container)
+			self._container_index.remove(doc_id, containers)
 			return True
 		return False
 	
-	def remove_containers(self, item, intids=None):
+	def remove_all_containers(self, item, intids=None):
 		doc_id = self._doc_id(item, intids)
 		if doc_id is not None:
 			self._container_index.unindex_doc(doc_id)
 			return True
 		return False
 	
-	def get_references(self, container=None, provided=None, namespace=None):
+	def get_references(self, containers=None, provided=None, namespace=None):
 		result = None
 		for index, value, query in ( (self._type_index, provided, 'any_of'),
-							  		 (self._container_index, container, 'all_of'), 
-							  		 (self._namespace_index, namespace, 'any_of')):
+							  		 (self._namespace_index, namespace, 'any_of'),
+							  		 (self._container_index, containers, 'all_of') ):
 			if value is not None:
-				value = getattr(value, '__name__', value)
-				ids = index.apply({query: (value,)}) or self.family.IF.LFSet()
+				value = _to_iter(value)
+				ids = index.apply({query: value}) or self.family.IF.LFSet()
 				if result is None:
 					result = ids
 				else:
 					result = self.family.IF.intersection(result, ids)
 		return result or ()
 
-	def search_objects(self, container=None, provided=None, namespace=None, intids=None):
+	def search_objects(self, containers=None, provided=None, namespace=None, intids=None):
 		intids = component.queryUtility(IIntIds) if intids is None else intids
 		if intids is not None:
-			refs = self.get_references(container, provided, namespace)
+			refs = self.get_references(containers, provided, namespace)
 			result = ResultSet(refs, intids)
 		else:
 			result = ()
 		return result
 
-	def index(self, item, container=None, provided=None, namespace=None, intids=None):
+	def index(self, item, containers=None, provided=None, namespace=None, intids=None):
 		doc_id = self._doc_id(item, intids)
 		if doc_id is None:
 			return False
 
 		for index, value in ( (self._type_index, provided),
-							  (self._container_index, container), 
-							  (self._namespace_index, namespace)):
+							  (self._namespace_index, namespace),
+							  (self._container_index, containers) ):
 			if value is not None:
 				value = getattr(value, '__name__', value)
 				index.index_doc(doc_id, value)

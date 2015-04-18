@@ -124,10 +124,10 @@ class TestSubscribers(unittest.TestCase):
 		result = _load_and_register_lesson_overview_json(source, registry=registry)
 		assert_that(result, is_not(none()))
 		
-		_index_overview_items((result,), container='xxx')
+		_index_overview_items((result,), containers='xxx')
 		
-		result = _remove_from_registry(container='xxx', provided=INTICourseOverviewGroup, registry=registry)
+		result = _remove_from_registry(containers='xxx', provided=INTICourseOverviewGroup, registry=registry)
 		assert_that(result, has_length(4))
 		
-		result = _remove_from_registry(container='xxx', provided=INTILessonOverview, registry=registry)
+		result = _remove_from_registry(containers='xxx', provided=INTILessonOverview, registry=registry)
 		assert_that(result, has_length(1))

@@ -102,14 +102,14 @@ def _removed_registered(provided, name, intids=None, registry=None, catalog=None
 		unregisterUtility(registry, provided=provided, name=name)
 		lifecycleevent.removed(registered) # remove from intids
 		
-def _remove_from_registry(container=None, namespace=None, provided=None, 
+def _remove_from_registry(containers=None, namespace=None, provided=None, 
 						  registry=None, intids=None, catalog=None):
 	result = []
 	registry = _registry(registry)
 	catalog = get_catalog() if catalog is None else catalog
 	intids = component.queryUtility(IIntIds) if intids is None else intids
 	for utility in catalog.search_objects(intids=intids, provided=provided, 
-										  container=container, namespace=namespace):
+										  containers=containers, namespace=namespace):
 		try:
 			ntiid = utility.ntiid
 			if ntiid:
@@ -436,7 +436,7 @@ def _outline_nodes(outline):
 		_recur(outline)
 	return result
 
-def _remove_and_unindex_course_assets(container=None, namespace=None, 
+def _remove_and_unindex_course_assets(containers=None, namespace=None, 
 									  catalog=None, intids=None):
 	
 	catalog = get_catalog() if catalog is None else catalog
@@ -444,18 +444,18 @@ def _remove_and_unindex_course_assets(container=None, namespace=None,
 	
 	## unregister and unindex lesson overview obects
 	for item_iface in (INTILessonOverview, INTICourseOverviewGroup):
-		_remove_from_registry(container=container, 
+		_remove_from_registry(containers=containers, 
 							  namespace=namespace, 
 							  provided=item_iface,
 							  catalog=catalog,
 							  intids=intids)
 
-	if container: ## unindex all other objects
-		ids = catalog.get_references(container=container)
+	if containers: ## unindex all other objects
+		ids = catalog.get_references(containers=containers)
 		for doc_id in list(ids or ()): # we are mutating
-			catalog.remove_container(doc_id, container)
+			catalog.remove_container(doc_id, containers)
 
-def _index_overview_items(items, container=None, namespace=None, 
+def _index_overview_items(items, containers=None, namespace=None, 
 						  intids=None, catalog=None, node=None):
 	catalog = get_catalog() if catalog is None else catalog
 	for item in items or ():
@@ -471,11 +471,11 @@ def _index_overview_items(items, container=None, namespace=None,
 			catalog.index(item, 
 						  intids=intids, 
 						  provided=item_iface,
-						  container=container,
-						  namespace=namespace)
-			_index_overview_items(item.Items, 
-								  container=container, 
+						  namespace=namespace,
+						  containers=containers)
+			_index_overview_items(item.Items,  
 								  namespace=namespace,
+								  containers=containers,
 								  intids=intids,
 								  catalog=catalog,
 								  node=node)
@@ -483,7 +483,7 @@ def _index_overview_items(items, container=None, namespace=None,
 			catalog.index(item, 
 						  intids=intids, 
 						  provided=item_iface,
-						  container=container)
+						  containers=containers)
 
 def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=False):
 	result = []
@@ -520,14 +520,14 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 				objects = catalog.search_objects(namespace=namespace, intids=intids)
 				_index_overview_items(objects or (),
 									  namespace=namespace,
-									  container=ntiid,
+									  containers=ntiid,
 									  catalog=catalog,
 									  intids=intids,
 									  node=node)
 				break
 
 			_remove_and_unindex_course_assets(namespace=namespace,
-											  container=ntiid,
+											  containers=ntiid,
 											  catalog=catalog,
 											  intids=intids)
 			
@@ -542,7 +542,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 			## index
 			_index_overview_items((overview,),
 								  namespace=namespace,
-								  container=ntiid,
+								  containers=ntiid,
 								  catalog=catalog,
 								  intids=intids,
 								  node=node)
@@ -567,4 +567,4 @@ def _clear_data_when_course_removed(course, event):
 		not ILegacyCommunityBasedCourseInstance.providedBy(course): 
 		entry = ICourseCatalogEntry(course, None)
 		ntiid = entry.ntiid if entry is not None else course.__name__
-		_remove_and_unindex_course_assets(container=ntiid, catalog=catalog)
+		_remove_and_unindex_course_assets(containers=ntiid, catalog=catalog)
