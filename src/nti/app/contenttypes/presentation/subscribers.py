@@ -23,6 +23,8 @@ from ZODB.interfaces import IConnection
 
 from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseInstance
 
+from nti.common.iterables import to_list
+
 from nti.contentlibrary.interfaces import IContentPackage
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IGlobalContentPackageLibrary
@@ -473,6 +475,9 @@ def _index_overview_items(items, containers=None, namespace=None,
 						  provided=item_iface,
 						  namespace=namespace,
 						  containers=containers)
+			
+			containers = to_list(containers)
+			containers.append(item.ntiid)
 			_index_overview_items(item.Items,  
 								  namespace=namespace,
 								  containers=containers,
