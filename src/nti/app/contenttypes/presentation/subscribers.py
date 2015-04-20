@@ -455,7 +455,7 @@ def _remove_and_unindex_course_assets(containers=None, namespace=None,
 	if containers: ## unindex all other objects
 		ids = catalog.get_references(containers=containers)
 		for doc_id in list(ids or ()): # we are mutating
-			catalog.remove_container(doc_id, containers)
+			catalog.remove_containers(doc_id, containers)
 
 def _index_overview_items(items, containers=None, namespace=None, 
 						  intids=None, catalog=None, node=None):

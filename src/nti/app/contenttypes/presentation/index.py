@@ -146,6 +146,7 @@ class PresentationAssetCatalog(Persistent):
 			self._container_index.remove(doc_id, containers)
 			return True
 		return False
+	remove_container = remove_containers 
 	
 	def remove_all_containers(self, item, intids=None):
 		doc_id = self._doc_id(item, intids)
