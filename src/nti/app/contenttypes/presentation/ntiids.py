@@ -17,9 +17,9 @@ from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTISlide
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
-from nti.contenttypes.presentation.interfaces import INTIDiscussion
 from nti.contenttypes.presentation.interfaces import INTISlideVideo
 from nti.contenttypes.presentation.interfaces import INTIRelatedWork
+from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import IGroupOverViewable
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
@@ -56,8 +56,8 @@ class _NTISlideDeckResolver(_PresentationResolver):
 class _NTIRelatedWorkResolver(_PresentationResolver):
     _ext_iface = INTIRelatedWork
 
-class _NTIDiscussionResolver(_PresentationResolver):
-    _ext_iface = INTIDiscussion
+class _NTIDiscussionRefResolver(_PresentationResolver):
+    _ext_iface = INTIDiscussionRef
     
 class _GroupOverViewableResolver(_PresentationResolver):
     _ext_iface = IGroupOverViewable

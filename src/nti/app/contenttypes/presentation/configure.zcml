@@ -44,9 +44,9 @@
 		<utility factory=".ntiids._NTIRelatedWorkResolver" name="RelatedWork" />
 		<utility factory=".ntiids._NTIRelatedWorkResolver" name="RelatedWorkRef" />
 		
-		<utility factory=".ntiids._NTIDiscussionResolver" name="DiscussionRef" />
-		<utility factory=".ntiids._NTIDiscussionResolver" name="DiscussionRef:EnrolledCourseRoot" />
-		<utility factory=".ntiids._NTIDiscussionResolver" name="DiscussionRef:EnrolledCourseSection" />
+		<utility factory=".ntiids._NTIDiscussionRefResolver" name="DiscussionRef" />
+		<utility factory=".ntiids._NTIDiscussionRefResolver" name="DiscussionRef:EnrolledCourseRoot" />
+		<utility factory=".ntiids._NTIDiscussionRefResolver" name="DiscussionRef:EnrolledCourseSection" />
 		
 		<utility factory=".ntiids._NTILessonOverviewResolver" name="NTILessonOverview" />	
 		<utility factory=".ntiids._NTICourseOverviewGroupResolver" name="NTICourseOverviewGroup" />
