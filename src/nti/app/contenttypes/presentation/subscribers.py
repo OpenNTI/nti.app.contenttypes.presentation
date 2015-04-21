@@ -376,8 +376,11 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, validate=False
 												INTICourseOverviewGroup,
 											   	group.ntiid,
 											   	registry)
-		if not result: # replace if registered before
+		if not result: ## replace if registered before
 			groups[gdx] = registered
+		
+		## set lineage
+		registered.__parent__ = overview
 			
 		idx = 0
 		items = group.Items
@@ -531,6 +534,8 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 									  node=node)
 				break
 
+			## this remove all lesson overviews and overview groups
+			## for specified namespace file 
 			_remove_and_unindex_course_assets(namespace=namespace,
 											  containers=ntiid,
 											  catalog=catalog,
