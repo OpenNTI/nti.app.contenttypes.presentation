@@ -357,7 +357,7 @@ def _clear_data_when_content_removed(content_package, event):
 
 ## Courses
 
-def _load_and_register_lesson_overview_json(jtext, registry=None, validate=False):
+def _load_and_register_lesson_overview_json(jtext, registry=None, validate=False, course=None):
 	registry = _registry(registry)
 	
 	## read and parse json text
@@ -543,7 +543,9 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 			
 			logger.debug("Synchronizing %s", namespace)
 			index_text = content_package.read_contents_of_sibling_entry(namespace)
-			overview = _load_and_register_lesson_overview_json(index_text, validate=True)
+			overview = _load_and_register_lesson_overview_json(	index_text, 
+																validate=True,
+																course=course)
 			result.append(overview)
 			
 			## set lineage
