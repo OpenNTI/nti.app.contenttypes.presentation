@@ -70,7 +70,7 @@ class KeepSetIndex(RawSetIndex):
 		if value.difference(old):
 			value.update(old or ())
 			result = super(KeepSetIndex, self).index_doc(doc_id, value)
-		return result
+			return result
 	
 	def remove(self, doc_id, value):
 		old = set(self.documents_to_values.get(doc_id) or ())
