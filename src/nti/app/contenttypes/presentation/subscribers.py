@@ -463,7 +463,7 @@ def _remove_and_unindex_course_assets(containers=None, namespace=None,
 def _index_overview_items(items, containers=None, namespace=None, 
 						  intids=None, catalog=None, node=None):
 	catalog = get_catalog() if catalog is None else catalog
-	for item in items or ():
+	for item in items:
 		# set lesson overview NTIID on the outline node
 		if INTILessonOverview.providedBy(item) and node is not None:
 			node.LessonOverviewNTIID = item.ntiid
@@ -479,8 +479,8 @@ def _index_overview_items(items, containers=None, namespace=None,
 						  namespace=namespace,
 						  containers=containers)
 			
-			containers = to_list(containers)
-			containers.append(item.ntiid)
+			#containers = to_list(containers)
+			#containers.append(item.ntiid)
 			_index_overview_items(item.Items,  
 								  namespace=namespace,
 								  containers=containers,
@@ -526,13 +526,13 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 				## we want to associate the ntiid of the new course with the 
 				## assets and set the lesson overview ntiid to the outline node
 				objects = catalog.search_objects(namespace=namespace, intids=intids)
-				_index_overview_items(objects or (),
+				_index_overview_items(objects,
 									  namespace=namespace,
 									  containers=ntiid,
 									  catalog=catalog,
 									  intids=intids,
 									  node=node)
-				break
+				continue
 
 			## this remove all lesson overviews and overview groups
 			## for specified namespace file 
