@@ -23,7 +23,7 @@ from ZODB.interfaces import IConnection
 
 from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseInstance
 
-from nti.common.iterables import to_list
+#from nti.common.iterables import to_list
 
 from nti.contentlibrary.interfaces import IContentPackage
 from nti.contentlibrary.interfaces import IContentPackageLibrary
@@ -456,7 +456,7 @@ def _remove_and_unindex_course_assets(containers=None, namespace=None,
 							  intids=intids)
 
 	if containers: ## unindex all other objects
-		ids = catalog.get_references(containers=containers)
+		ids = catalog.get_references(containers=containers, namespace=namespace)
 		for doc_id in list(ids or ()): # we are mutating
 			catalog.remove_containers(doc_id, containers)
 
@@ -525,7 +525,9 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 			if not force and root_lastModified >= sibling_lastModified:
 				## we want to associate the ntiid of the new course with the 
 				## assets and set the lesson overview ntiid to the outline node
-				objects = catalog.search_objects(namespace=namespace, intids=intids)
+				objects = catalog.search_objects(namespace=namespace,
+												 provided=INTILessonOverview,
+												 intids=intids)
 				_index_overview_items(objects,
 									  namespace=namespace,
 									  containers=ntiid,
