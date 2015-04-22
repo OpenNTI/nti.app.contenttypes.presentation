@@ -62,11 +62,14 @@ class KeepSetIndex(RawSetIndex):
 	An set index that keeps the old values
 	"""
 
+	empty_set = set()
+	
 	def index_doc(self, doc_id, value):
 		value = {v for v in _to_iter(value) if v is not None}
-		old = self.documents_to_values.get(doc_id)
-		value.update(old or ())
-		result = super(KeepSetIndex, self).index_doc(doc_id, value)
+		old = self.documents_to_values.get(doc_id) or self.empty_set
+		if value.difference(old):
+			value.update(old or ())
+			result = super(KeepSetIndex, self).index_doc(doc_id, value)
 		return result
 	
 	def remove(self, doc_id, value):
