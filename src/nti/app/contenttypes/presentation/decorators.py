@@ -23,6 +23,7 @@ from nti.contentlibrary.interfaces import IContentUnitHrefMapper
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalMappingDecorator
@@ -75,3 +76,11 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 	def _do_decorate_external(self, context, result):		
 		if not self._overview_decorate_external(context, result):
 			self._legacy_decorate_external(context, result)
+
+
+@component.adapter(INTICourseOverviewGroup)
+@interface.implementer(IExternalMappingDecorator)
+class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorator):
+	
+	def _do_decorate_external(self, context, result):		
+		pass
