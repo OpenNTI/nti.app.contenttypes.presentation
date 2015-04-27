@@ -16,17 +16,21 @@ from zope import interface
 from zope.location.interfaces import ILocation
 
 from nti.app.products.courseware.utils import get_any_enrollment
+from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_TOPIC
+from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_SECTION_TOPIC
 
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentUnitHrefMapper
 
+from nti.contenttypes.courses.interfaces import IN_CLASS
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 
 from nti.contenttypes.presentation.interfaces import EVERYONE
 from nti.contenttypes.presentation.interfaces import IVisible
+from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationVisibility
@@ -36,12 +40,16 @@ from nti.externalization.interfaces import IExternalMappingDecorator
 
 from nti.links.links import Link
 
+from nti.ntiids.ntiids import get_parts
+from nti.ntiids.ntiids import make_provider_safe
+
 from .utils import get_visibility_for_scope
 
 from . import VIEW_OVERVIEW_CONTENT
 
 LINKS = StandardExternalFields.LINKS
 ITEMS = StandardExternalFields.ITEMS
+IN_CLASS_PROVIDER = make_provider_safe(IN_CLASS)
 
 @component.adapter(ICourseOutlineContentNode)
 @interface.implementer(IExternalMappingDecorator)
@@ -90,14 +98,14 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 @interface.implementer(IExternalMappingDecorator)
 class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorator):
 	
-	_scope = None
+	_record = None
 	
-	def scope(self, context):
-		if self._scope is None:
+	def record(self, context):
+		if self._record is None:
 			course = ICourseInstance(context)
 			record = get_any_enrollment(course, self.remoteUser)
-			self._scope = record.Scope
-		return self._scope
+			self._record = record
+		return self._record
 
 	def _do_decorate_external(self, context, result):		
 		idx = 0
@@ -108,8 +116,18 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 			## filter items that cannot be visible for the user
 			if 	IVisible.providedBy(item) and item.visibility != EVERYONE and \
 				user_visibility != item.visibility:
-				scope = self.scope(context)
+				record = self.record(context)
+				scope = record.Scope if record is not None else None
 				if get_visibility_for_scope(scope) != item.visibility:
 					del items[idx]
 					continue
+			elif INTIDiscussionRef.providedBy(item): 
+				parts = get_parts(item.target)
+				nttype = parts.nttype
+				## check legacy discussions ref
+				if nttype in (NTIID_TYPE_COURSE_TOPIC, NTIID_TYPE_COURSE_SECTION_TOPIC):
+					record = self.record(context)
+					scope = record.Scope if record is not None else None
+					
+					
 			idx += 1
