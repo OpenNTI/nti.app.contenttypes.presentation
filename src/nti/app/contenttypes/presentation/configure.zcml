@@ -63,6 +63,12 @@
 					for="nti.contentlibrary.interfaces.IContentPackage
 						 zope.lifecycleevent.IObjectModifiedEvent" />
 						 
+		<configure zcml:condition="have devmode">
+			<subscriber handler=".subscribers._update_data_when_content_changes"
+					for="nti.contentlibrary.interfaces.IContentPackage
+						 nti.contentlibrary.interfaces.IContentPackageUnmodifiedEvent" />
+		</configure>
+		
 		<subscriber handler=".subscribers._clear_data_when_content_removed"
 					for="nti.contentlibrary.interfaces.IContentPackage
 						 zope.lifecycleevent.IObjectRemovedEvent" />

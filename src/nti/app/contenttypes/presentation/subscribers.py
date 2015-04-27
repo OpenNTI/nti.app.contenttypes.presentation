@@ -249,7 +249,7 @@ def _register_items_when_content_changes(content_package,
 	root_lastModified = _get_data_lastModified(content_package, namespace)
 	if not force and root_lastModified >= sibling_lastModified:
 		return ()
-	
+
 	now = time.time()
 	logger.info('Synchronizing %s for %s', namespace, content_package.ntiid)
 	
@@ -303,7 +303,7 @@ def _register_items_when_content_changes(content_package,
 		catalog.index(item, intids=intids, provided=item_iface,
 					  namespace=content_package.ntiid)
 
-	_set_data_lastModified(content_package, item_iface, sibling_lastModified)
+	_set_data_lastModified(content_package, namespace, sibling_lastModified)
 	
 	logger.info('%s for %s has been synchronized in %s(s)', namespace,
 				 content_package.ntiid, time.time() - now)
