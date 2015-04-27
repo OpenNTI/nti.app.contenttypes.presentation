@@ -37,7 +37,7 @@ class _ItemRefValidator(object):
 		reference = component.queryUtility(self.provided, name=name)
 		if reference is None:
 			logger.error("Could not find %s %s", self.item_type, name)
-		return bool(reference is None)
+		return bool(reference is not None)
 	
 @component.adapter(INTIAssignmentRef)
 class _AssignmentRefValidator(_ItemRefValidator):
