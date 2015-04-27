@@ -15,24 +15,33 @@ from zope import component
 from zope import interface
 from zope.location.interfaces import ILocation
 
+from nti.app.products.courseware.utils import get_any_enrollment
+
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentUnitHrefMapper
 
+from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 
+from nti.contenttypes.presentation.interfaces import EVERYONE
+from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+from nti.contenttypes.presentation.interfaces import IPresentationVisibility
 
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalMappingDecorator
 
 from nti.links.links import Link
 
-LINKS = StandardExternalFields.LINKS
+from .utils import get_visibility_for_scope
 
 from . import VIEW_OVERVIEW_CONTENT
+
+LINKS = StandardExternalFields.LINKS
+ITEMS = StandardExternalFields.ITEMS
 
 @component.adapter(ICourseOutlineContentNode)
 @interface.implementer(IExternalMappingDecorator)
@@ -77,10 +86,30 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 		if not self._overview_decorate_external(context, result):
 			self._legacy_decorate_external(context, result)
 
-
 @component.adapter(INTICourseOverviewGroup)
 @interface.implementer(IExternalMappingDecorator)
 class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorator):
 	
+	_scope = None
+	
+	def scope(self, context):
+		if self._scope is None:
+			course = ICourseInstance(context)
+			record = get_any_enrollment(course, self.remoteUser)
+			self._scope = record.Scope
+		return self._scope
+
 	def _do_decorate_external(self, context, result):		
-		pass
+		idx = 0
+		items = result[ITEMS]
+		adapted = IPresentationVisibility(self.remoteUser, None)
+		user_visibility = adapted.visibility() if adapted is not None else None
+		for item in context.Items:
+			## filter items that cannot be visible for the user
+			if 	IVisible.providedBy(item) and item.visibility != EVERYONE and \
+				user_visibility != item.visibility:
+				scope = self.scope(context)
+				if get_visibility_for_scope(scope) != item.visibility:
+					del items[idx]
+					continue
+			idx += 1
