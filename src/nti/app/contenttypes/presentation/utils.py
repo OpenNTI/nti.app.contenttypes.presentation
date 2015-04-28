@@ -34,4 +34,4 @@ VISIBILITY_SCOPE_MAP = {
 VISIBILITY_SCOPE_MAP = CaseInsensitiveDict(VISIBILITY_SCOPE_MAP)
 
 def get_visibility_for_scope(scope):
-	return VISIBILITY_SCOPE_MAP(scope)
+	return VISIBILITY_SCOPE_MAP.get(scope)
