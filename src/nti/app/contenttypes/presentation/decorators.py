@@ -85,7 +85,7 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 	def _overview_decorate_external(self, context, result):
 		try:
 			ntiid = context.LessonOverviewNTIID
-			lesson = component.getUtility(INTILessonOverview, name=ntiid) if ntiid else None
+			lesson = component.queryUtility(INTILessonOverview, name=ntiid) if ntiid else None
 			if lesson is not None:
 				links = result.setdefault(LINKS, [])
 				link = Link(context, rel=VIEW_OVERVIEW_CONTENT,
