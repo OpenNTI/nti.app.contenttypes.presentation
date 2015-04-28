@@ -24,7 +24,12 @@ from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecora
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentUnitHrefMapper
 
+from nti.contenttypes.courses.interfaces import OPEN
 from nti.contenttypes.courses.interfaces import IN_CLASS
+from nti.contenttypes.courses.interfaces import ES_CREDIT
+from nti.contenttypes.courses.interfaces import ES_PUBLIC
+from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
+
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 
@@ -36,6 +41,7 @@ from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationVisibility
 
 from nti.externalization.interfaces import StandardExternalFields
+from nti.externalization.interfaces import IExternalObjectDecorator
 from nti.externalization.interfaces import IExternalMappingDecorator
 
 from nti.links.links import Link
@@ -49,7 +55,7 @@ from . import VIEW_OVERVIEW_CONTENT
 
 LINKS = StandardExternalFields.LINKS
 ITEMS = StandardExternalFields.ITEMS
-IN_CLASS_PROVIDER = make_provider_safe(IN_CLASS)
+IN_CLASS_SAFE = make_provider_safe(IN_CLASS)
 
 @component.adapter(ICourseOutlineContentNode)
 @interface.implementer(IExternalMappingDecorator)
@@ -95,7 +101,7 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 			self._legacy_decorate_external(context, result)
 
 @component.adapter(INTICourseOverviewGroup)
-@interface.implementer(IExternalMappingDecorator)
+@interface.implementer(IExternalObjectDecorator)
 class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorator):
 	
 	_record = None
@@ -110,6 +116,7 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 	def _do_decorate_external(self, context, result):		
 		idx = 0
 		items = result[ITEMS]
+		assert len(items) == context.Items
 		adapted = IPresentationVisibility(self.remoteUser, None)
 		user_visibility = adapted.visibility() if adapted is not None else None
 		for item in context.Items:
@@ -124,10 +131,19 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 			elif INTIDiscussionRef.providedBy(item): 
 				parts = get_parts(item.target)
 				nttype = parts.nttype
-				## check legacy discussions ref
+				specific = parts.specific
+				## Check if [legacy] discussion NTIID is of either
+				## Topic:EnrolledCourseRoot or Topic:EnrolledCourseSection type.
+				## If so only return the reference if [mapped] enrollment scope 
+				## is in the specific NTIID string
 				if nttype in (NTIID_TYPE_COURSE_TOPIC, NTIID_TYPE_COURSE_SECTION_TOPIC):
 					record = self.record(context)
 					scope = record.Scope if record is not None else None
-					
-					
+					m_scope = ENROLLMENT_LINEAGE_MAP.get(scope or u'')
+					m_scope = m_scope[0] if m_scope else None # pick first
+					if	(not m_scope) or \
+						(m_scope == ES_PUBLIC and OPEN not in specific) or \
+						(m_scope == ES_CREDIT and IN_CLASS_SAFE not in specific):
+						del items[idx]
+						continue
 			idx += 1

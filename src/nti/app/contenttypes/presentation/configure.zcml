@@ -84,7 +84,7 @@
 						 pyramid.interfaces.IRequest" />
 						 
 		<subscriber factory=".decorators._NTICourseOverviewGroupDecorator"
-					provides="nti.externalization.interfaces.IExternalMappingDecorator"
+					provides="nti.externalization.interfaces.IExternalObjectDecorator"
 					for="nti.contenttypes.presentation.interfaces.INTICourseOverviewGroup
 						 pyramid.interfaces.IRequest" />
 
