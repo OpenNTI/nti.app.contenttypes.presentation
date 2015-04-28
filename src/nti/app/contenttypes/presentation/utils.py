@@ -21,8 +21,6 @@ from nti.contenttypes.presentation.interfaces import CREDIT
 from nti.contenttypes.presentation.interfaces import EVERYONE
 from nti.contenttypes.presentation.interfaces import PURCHASED
 
-from nti.common.maps import CaseInsensitiveDict
-
 VISIBILITY_SCOPE_MAP = {
 	ES_ALL: EVERYONE,
 	ES_PUBLIC: PUBLIC,
@@ -31,7 +29,6 @@ VISIBILITY_SCOPE_MAP = {
 	ES_CREDIT_DEGREE: CREDIT,
 	ES_CREDIT_NONDEGREE: CREDIT,
 }
-VISIBILITY_SCOPE_MAP = CaseInsensitiveDict(VISIBILITY_SCOPE_MAP)
 
 def get_visibility_for_scope(scope):
 	return VISIBILITY_SCOPE_MAP.get(scope)
