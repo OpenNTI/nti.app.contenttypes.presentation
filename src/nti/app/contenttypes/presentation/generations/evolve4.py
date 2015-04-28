@@ -32,6 +32,7 @@ def reset_catalog(dataserver_folder):
 	catalog.reset()
 
 def remove_utilities(dataserver_folder, interfaces=ALL_PRESENTATION_ASSETS_INTERFACES):
+	count = 0
 	lsm = dataserver_folder.getSiteManager()
 	intids = lsm.getUtility(zope.intid.IIntIds)
 	sites = lsm.getUtility(IEtcNamespace, name='hostsites')
@@ -50,6 +51,8 @@ def remove_utilities(dataserver_folder, interfaces=ALL_PRESENTATION_ASSETS_INTER
 						intids.unregister(comp)
 					except KeyError:
 						pass
+					count +=1 
+	return count
 
 def do_evolve(context):
 	setHooks()
