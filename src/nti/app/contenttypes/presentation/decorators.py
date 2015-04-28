@@ -116,7 +116,7 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 	def _do_decorate_external(self, context, result):		
 		idx = 0
 		items = result[ITEMS]
-		assert len(items) == context.Items
+		assert len(items) == len(context.Items)
 		adapted = IPresentationVisibility(self.remoteUser, None)
 		user_visibility = adapted.visibility() if adapted is not None else None
 		for item in context.Items:
