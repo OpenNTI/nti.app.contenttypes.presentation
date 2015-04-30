@@ -20,11 +20,18 @@ from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.site.interfaces import IHostPolicySiteManager
 
-def remove_utilities(interfaces=ALL_PRESENTATION_ASSETS_INTERFACES, registry=component):
+def remove_utilities(interfaces=ALL_PRESENTATION_ASSETS_INTERFACES,
+					 site_names=(),
+					 registry=component):
 	count = 0
 	intids = registry.getUtility(zope.intid.IIntIds)
-	sites = registry.getUtility(IEtcNamespace, name='hostsites')
-	for site in sites.values():
+	hostsites = registry.getUtility(IEtcNamespace, name='hostsites')
+	if not site_names:
+		sites = hostsites.values()
+	else:
+		sites = [hostsites[k] for k in site_names if k in hostsites]
+	
+	for site in sites:
 		with current_site(site):
 			site_manager = site.getSiteManager()
 			if IHostPolicySiteManager.providedBy(site_manager):
