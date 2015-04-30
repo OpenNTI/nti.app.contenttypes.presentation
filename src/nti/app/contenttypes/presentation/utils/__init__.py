@@ -21,6 +21,8 @@ from nti.contenttypes.presentation.interfaces import CREDIT
 from nti.contenttypes.presentation.interfaces import EVERYONE
 from nti.contenttypes.presentation.interfaces import PURCHASED
 
+from .registry import remove_utilities
+
 VISIBILITY_SCOPE_MAP = {
 	ES_ALL: EVERYONE,
 	ES_PUBLIC: PUBLIC,
