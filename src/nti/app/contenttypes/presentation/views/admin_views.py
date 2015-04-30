@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import six
 import time
 
 from zope import component
@@ -58,6 +59,9 @@ def _parse_courses(values):
 	if not ntiids:
 		raise hexc.HTTPUnprocessableEntity(detail='No course entry identifier')
 	
+	if isinstance(ntiids, six.string_types):
+		ntiids = ntiids.split()
+
 	result = []
 	for ntiid in ntiids:
 		context = find_object_with_ntiid(ntiid)
@@ -135,7 +139,7 @@ class SyncLessonOverviewsView(AbstractAuthenticatedView,
 		else:
 			courses = _parse_courses(values)
 		
-		# Make sure we don't have any interaction.
+		## Make sure we don't have any interaction.
 		endInteraction()
 		try:
 			result = LocatedExternalDict()
