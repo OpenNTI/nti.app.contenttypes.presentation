@@ -19,6 +19,9 @@ from nti.common.property import Lazy
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+
+from nti.contenttypes.presentation.interfaces import INTIAudio
+from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 
@@ -74,20 +77,31 @@ class BaseACLProvider(object):
 			result = acl_from_aces( aces )
 			return result
 		return None
-	
-@component.adapter(IPresentationAsset)
+
 @interface.implementer(IACLProvider)
-class PresentationAssetACLProvider(BaseACLProvider):
+class BasePresentationAssetACLProvider(BaseACLProvider):
 
 	@Lazy
 	def __acl__(self):
-		result = super(PresentationAssetACLProvider, self).__acl__
+		result = super(BasePresentationAssetACLProvider, self).__acl__
 		if not result:
 			ace = ace_allowing( IPrincipal(AUTHENTICATED_GROUP_NAME),
 						 		(ACT_READ),
-						   		PresentationAssetACLProvider )
+						   		BasePresentationAssetACLProvider )
 			result = acl_from_aces( ace ) 
 		return result
+	
+@component.adapter(IPresentationAsset)
+class PresentationAssetACLProvider(BasePresentationAssetACLProvider):
+	pass
+	
+@component.adapter(INTIAudio)
+class NTIAudioACLProvider(BasePresentationAssetACLProvider):
+	pass
+
+@component.adapter(INTIVideo)
+class NTIVideoACLProvider(BasePresentationAssetACLProvider):
+	pass
 
 @component.adapter(INTILessonOverview)
 @interface.implementer(IACLProvider)

@@ -28,6 +28,9 @@
 	<adapter factory=".adapters._course_overview_group_to_course" />	
 	
 	<!-- ACLs -->
+	
+	<adapter factory=".acl.NTIAudioACLProvider" />
+	<adapter factory=".acl.NTIVideoACLProvider" />
 	<adapter factory=".acl.PresentationAssetACLProvider" />
 	<adapter factory=".acl.NTILessonOverviewACLProvider" />
 	
