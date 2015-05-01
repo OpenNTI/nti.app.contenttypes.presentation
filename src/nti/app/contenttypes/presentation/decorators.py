@@ -13,6 +13,7 @@ from urlparse import urljoin
 
 from zope import component
 from zope import interface
+
 from zope.location.interfaces import ILocation
 
 from nti.app.products.courseware.utils import get_any_enrollment

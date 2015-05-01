@@ -15,8 +15,8 @@ import simplejson
 from zope.intid import IIntIds
 
 from zope import component
-
 from zope import lifecycleevent
+
 from zope.lifecycleevent import IObjectRemovedEvent
 
 from ZODB.interfaces import IConnection
