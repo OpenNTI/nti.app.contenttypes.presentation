@@ -12,8 +12,15 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from nti.assessment.interfaces import IQAssignment
+
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
+from nti.contenttypes.presentation.interfaces import INTIAudio
+from nti.contenttypes.presentation.interfaces import INTIVideo
+from nti.contenttypes.presentation.interfaces import INTIAudioRef
+from nti.contenttypes.presentation.interfaces import INTIVideoRef
+from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
@@ -28,3 +35,21 @@ def _course_overview_group_to_course(group):
 @component.adapter(INTICourseOverviewGroup)
 def _lesson_overview_to_course(group):
 	return find_interface(group, ICourseInstance, strict=False)
+
+@component.adapter(INTIAudioRef)
+@interface.implementer(INTIAudio)
+def _audioref_to_audio(context):
+	result = component.queryUtility(INTIAudio, name=context.ntiid)
+	return result
+
+@component.adapter(INTIVideoRef)
+@interface.implementer(INTIVideo)
+def _videoref_to_video(context):
+	result = component.queryUtility(INTIVideo, name=context.ntiid)
+	return result
+
+@interface.implementer(IQAssignment)
+@component.adapter(INTIAssignmentRef)
+def _assignmentref_to_assignment(context):
+	result = component.queryUtility(IQAssignment, name=context.target)
+	return result

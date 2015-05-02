@@ -33,8 +33,8 @@ class _ItemRefValidator(object):
 		self.item = item
 
 	def validate(self): 
+		reference = self.provided(self.item, None)
 		name = getattr(self.item, self.field_name, None) or u''
-		reference = component.queryUtility(self.provided, name=name)
 		if reference is None:
 			logger.error("Could not find %s %s", self.item_type, name)
 		return bool(reference is not None)

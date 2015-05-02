@@ -28,6 +28,7 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.contenttypes.presentation.utils import create_object_from_external
+from nti.contenttypes.presentation.utils import create_timelime_from_external
 from nti.contenttypes.presentation.utils import create_ntivideo_from_external
 from nti.contenttypes.presentation.utils import create_relatedwork_from_external
 
@@ -80,7 +81,8 @@ class TestSubscribers(unittest.TestCase):
 
 	@WithMockDSTrans
 	def test_timeline_index(self):
-		self._test_feed('timeline_index.json', INTITimeline, 11)
+		self._test_feed('timeline_index.json', INTITimeline, 11,
+						create_timelime_from_external)
 
 	@WithMockDSTrans
 	def test_related_content_index(self):
