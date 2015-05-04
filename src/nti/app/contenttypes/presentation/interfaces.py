@@ -9,6 +9,15 @@ __docformat__ = "restructuredtext en"
 
 from zope import interface
 
+from zope.container.interfaces import IContainer
+
+from zope.container.constraints import contains
+
+from nti.contenttypes.presentation.interfaces import IPresentationAsset
+
+class IPresentationAssetContainter(IContainer):
+    contains(IPresentationAsset)
+    
 class IPresentationAssetsIndex(interface.Interface):
     
     def reset():
