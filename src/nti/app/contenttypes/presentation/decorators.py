@@ -5,6 +5,7 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+from nti.externalization.externalization import to_external_object
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -36,6 +37,8 @@ from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 
 from nti.contenttypes.presentation.interfaces import EVERYONE
 from nti.contenttypes.presentation.interfaces import IVisible
+from nti.contenttypes.presentation.interfaces import IMediaRef
+from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
@@ -147,4 +150,8 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 						(m_scope == ES_CREDIT and IN_CLASS_SAFE not in specific):
 						del items[idx]
 						continue
+			elif IMediaRef.providedBy(item):
+				source = INTIMedia(item, None)
+				if source is not None:
+					items[idx]=to_external_object(source, name="render")
 			idx += 1
