@@ -5,7 +5,6 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-from nti.externalization.externalization import to_external_object
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -47,6 +46,8 @@ from nti.contenttypes.presentation.interfaces import IPresentationVisibility
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalObjectDecorator
 from nti.externalization.interfaces import IExternalMappingDecorator
+
+from nti.externalization.externalization import to_external_object
 
 from nti.links.links import Link
 
