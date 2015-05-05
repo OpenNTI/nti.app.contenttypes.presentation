@@ -12,6 +12,7 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from nti.assessment.interfaces import IQuestion
 from nti.assessment.interfaces import IQuestionSet
 from nti.assessment.interfaces import IQAssignment
 
@@ -23,6 +24,7 @@ from nti.contenttypes.presentation.interfaces import INTIAudioRef
 from nti.contenttypes.presentation.interfaces import INTIVideoRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
+from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
@@ -50,8 +52,14 @@ def _videoref_to_video(context):
 	result = component.queryUtility(INTIVideo, name=context.ntiid)
 	return result
 
+@interface.implementer(IQuestion)
 @component.adapter(INTIQuestionRef)
+def _questionref_to_question(context):
+	result = component.queryUtility(IQuestion, name=context.target)
+	return result
+
 @interface.implementer(IQuestionSet)
+@component.adapter(INTIQuestionSetRef)
 def _questionsetref_to_questionset(context):
 	result = component.queryUtility(IQuestionSet, name=context.target)
 	return result
