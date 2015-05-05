@@ -45,8 +45,8 @@ from nti.contenttypes.presentation.interfaces import INTISlide
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTISlideVideo
-from nti.contenttypes.presentation.interfaces import INTIRelatedWork
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.contenttypes.presentation.utils import create_object_from_external
@@ -72,7 +72,9 @@ INTERFACE_TUPLES = (
 	(IVideoIndexedDataContainer, INTIVideo, create_ntivideo_from_external), 
 	(ITimelineIndexedDataContainer, INTITimeline, create_timelime_from_external),
 	(ISlideDeckIndexedDataContainer, INTISlideDeck, create_object_from_external),
-	(IRelatedContentIndexedDataContainer, INTIRelatedWork, create_relatedwork_from_external) )
+	(IRelatedContentIndexedDataContainer, INTIRelatedWorkRef, create_relatedwork_from_external) )
+
+PACKAGE_CONTAINER_INTERFACES = tuple(t[1] for t in INTERFACE_TUPLES)
 
 def prepare_json_text(s):
 	result = unicode(s, 'utf-8') if isinstance(s, bytes) else s
@@ -101,7 +103,8 @@ def _removed_registered(provided, name, intids=None, registry=None, catalog=None
 		catalog.unindex(registered, intids=intids)
 		unregisterUtility(registry, provided=provided, name=name)
 		lifecycleevent.removed(registered) # remove from intids
-		
+	return registered
+
 def _remove_from_registry(containers=None, namespace=None, provided=None, 
 						  registry=None, intids=None, catalog=None):
 	result = []
@@ -355,6 +358,23 @@ def _clear_data_when_content_removed(content_package, event):
 
 ## Courses
 
+def _remove_registered_lesson_overview(name, registry=None):
+	## remove lesson overviews
+	overview = _removed_registered(INTILessonOverview, name=name, registry=registry)
+	if overview is None:
+		return
+	## remove all groups
+	groups = overview.Items
+	for group in groups:
+		_removed_registered(INTICourseOverviewGroup, name=group.ntiid, registry=registry)
+		## For each group remove anything that is not synced in the content pacakge.
+		## As of 20150404 we don't have a way to edit and register common group 
+		## overview items so we need to remove the old and re-register the new
+		for item in group.Items:
+			iface = iface_of_thing(item)
+			if iface not in PACKAGE_CONTAINER_INTERFACES:
+				_removed_registered(iface, name=item.ntiid, registry=registry)
+				
 def _load_and_register_lesson_overview_json(jtext, registry=None, validate=False, course=None):
 	registry = _registry(registry)
 	
@@ -363,7 +383,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, validate=False
 	overview = create_lessonoverview_from_external(data)
 	
 	## remove and register
-	_removed_registered(INTILessonOverview, name=overview.ntiid, registry=registry)
+	_remove_registered_lesson_overview(name=overview.ntiid, registry=registry)
 	_register_utility(overview, INTILessonOverview, overview.ntiid, registry)
 
 	## canonicalize group
@@ -440,18 +460,15 @@ def _outline_nodes(outline):
 	return result
 
 def _remove_and_unindex_course_assets(containers=None, namespace=None, 
-									  catalog=None, intids=None):
+									  catalog=None, intids=None, registry=None):
 	
 	catalog = get_catalog() if catalog is None else catalog
 	intids = component.queryUtility(IIntIds) if intids is None else intids
 	
 	## unregister and unindex lesson overview obects
-	for item_iface in (INTILessonOverview, INTICourseOverviewGroup):
-		_remove_from_registry(containers=containers, 
-							  namespace=namespace, 
-							  provided=item_iface,
-							  catalog=catalog,
-							  intids=intids)
+	for item in catalog.search_objects(intids=intids, provided=INTILessonOverview, 
+									   containers=containers, namespace=namespace):
+		_remove_registered_lesson_overview(name=item.ntiid, registry=registry)
 
 	if containers: ## unindex all other objects
 		ids = catalog.get_references(containers=containers, namespace=namespace)
