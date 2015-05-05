@@ -375,7 +375,8 @@ def _remove_registered_lesson_overview(name, registry=None):
 			if iface not in PACKAGE_CONTAINER_INTERFACES:
 				_removed_registered(iface, name=item.ntiid, registry=registry)
 				
-def _load_and_register_lesson_overview_json(jtext, registry=None, validate=False, course=None):
+def _load_and_register_lesson_overview_json(jtext, registry=None, 
+											validate=False, course=None):
 	registry = _registry(registry)
 	
 	## read and parse json text
@@ -512,6 +513,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 	catalog = get_catalog() if catalog is None else catalog
 	intids = component.queryUtility(IIntIds) if intids is None else intids
 
+	registry = _registry()
 	entry = ICourseCatalogEntry(course, None)
 	ntiid = entry.ntiid if entry is not None else course.__name__
 	name = entry.ProviderUniqueID if entry is not None else course.__name__
@@ -553,6 +555,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 			## for specified namespace file 
 			_remove_and_unindex_course_assets(namespace=namespace,
 											  containers=ntiid,
+											  registry=registry,
 											  catalog=catalog,
 											  intids=intids)
 			
@@ -560,7 +563,8 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 			index_text = content_package.read_contents_of_sibling_entry(namespace)
 			overview = _load_and_register_lesson_overview_json(	index_text, 
 																validate=True,
-																course=course)
+																course=course,
+																registry=registry)
 			result.append(overview)
 			
 			## set lineage
