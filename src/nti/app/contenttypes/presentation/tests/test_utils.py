@@ -17,8 +17,6 @@ import unittest
 from nti.app.contenttypes.presentation.utils import VISIBILITY_SCOPE_MAP
 from nti.app.contenttypes.presentation.utils import get_visibility_for_scope
 
-from nti.app.contenttypes.presentation.tests import SharedConfiguringTestLayer
-
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import ES_CREDIT
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
@@ -32,8 +30,6 @@ from nti.contenttypes.presentation.interfaces import EVERYONE
 from nti.contenttypes.presentation.interfaces import PURCHASED
 
 class TestUtils(unittest.TestCase):
-
-	layer = SharedConfiguringTestLayer
 
 	def test_visibility_map(self):
 		assert_that(VISIBILITY_SCOPE_MAP, has_length(6))

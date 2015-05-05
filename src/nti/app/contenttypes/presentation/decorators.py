@@ -118,13 +118,16 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 			self._record = record
 		return self._record
 
-	def _do_decorate_external(self, context, result):		
+	def _decorate_external_impl(self, context, result):
 		idx = 0
 		items = result[ITEMS]
-		assert len(items) == len(context.Items)
+
+		## get user presentation visibility
 		adapted = IPresentationVisibility(self.remoteUser, None)
 		user_visibility = adapted.visibility() if adapted is not None else None
-		for item in context.Items:
+		
+		## loop through sources
+		for item in context: # should resolve weak refs
 			## filter items that cannot be visible for the user
 			if 	IVisible.providedBy(item) and item.visibility != EVERYONE and \
 				user_visibility != item.visibility:
@@ -154,5 +157,12 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 			elif IMediaRef.providedBy(item):
 				source = INTIMedia(item, None)
 				if source is not None:
-					items[idx]=to_external_object(source, name="render")
+					items[idx] = to_external_object(source, name="render")
 			idx += 1
+
+	def _do_decorate_external(self, context, result):
+		try:
+			__traceback_info__ = context
+			self._decorate_external_impl(context, result)
+		except Exception:
+			logger.exception("Error while decorating course overview group")

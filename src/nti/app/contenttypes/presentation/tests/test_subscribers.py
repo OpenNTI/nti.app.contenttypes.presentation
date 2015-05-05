@@ -13,7 +13,6 @@ from hamcrest import has_length
 from hamcrest import assert_that
 
 import os
-import unittest
 
 from zope import component
 from zope.intid import IIntIds
@@ -41,7 +40,8 @@ from nti.app.contenttypes.presentation.subscribers import _load_and_register_sli
 from nti.app.contenttypes.presentation.subscribers import _load_and_register_lesson_overview_json
 
 from nti.app.contenttypes.presentation.tests import PersistentComponents
-from nti.app.contenttypes.presentation.tests import SharedConfiguringTestLayer
+
+from nti.app.testing.application_webtest import ApplicationLayerTest
 
 from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 import nti.dataserver.tests.mock_dataserver as mock_dataserver
@@ -52,9 +52,7 @@ def _index_items(item_iface, namespace, *registered):
 	for item in registered:
 		catalog.index(item, intids=intids, namespace=namespace, provided=item_iface)
 
-class TestSubscribers(unittest.TestCase):
-
-	layer = SharedConfiguringTestLayer
+class TestSubscribers(ApplicationLayerTest):
 
 	def _test_feed(self, source, iface, count, object_creator=create_object_from_external):
 		path = os.path.join(os.path.dirname(__file__), source)

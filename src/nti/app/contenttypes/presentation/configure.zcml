@@ -106,4 +106,7 @@
 						 pyramid.interfaces.IRequest" />		
 	</configure>
 	
+	<!-- Weak refs -->
+	<adapter factory=".wref.GroupOverViewableWeakRef" />
+	
 </configure>

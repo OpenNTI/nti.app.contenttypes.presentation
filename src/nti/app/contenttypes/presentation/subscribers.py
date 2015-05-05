@@ -60,6 +60,8 @@ from nti.externalization.interfaces import StandardExternalFields
 
 from nti.site.interfaces import IHostPolicySiteManager
 
+from nti.wref.interfaces import IWeakRef
+
 from .interfaces import IItemRefValidator
 
 from . import get_catalog
@@ -364,13 +366,12 @@ def _remove_registered_lesson_overview(name, registry=None):
 	if overview is None:
 		return
 	## remove all groups
-	groups = overview.Items
-	for group in groups:
+	for group in overview:
 		_removed_registered(INTICourseOverviewGroup, name=group.ntiid, registry=registry)
 		## For each group remove anything that is not synced in the content pacakge.
 		## As of 20150404 we don't have a way to edit and register common group 
 		## overview items so we need to remove the old and re-register the new
-		for item in group.Items:
+		for item in group: # this shoud resolve weak refs
 			iface = iface_of_thing(item)
 			if iface not in PACKAGE_CONTAINER_INTERFACES:
 				_removed_registered(iface, name=item.ntiid, registry=registry)
@@ -406,6 +407,12 @@ def _load_and_register_lesson_overview_json(jtext, registry=None,
 		## canonicalize item refs
 		while idx < len(items):
 			item = items[idx]
+			## check for weak refs in case has been canonicalized
+			item = item() if IWeakRef.providedBy(item) else item
+			if item is None:
+				del items[idx]
+				continue
+			
 			item_iface = iface_of_thing(item)
 			result, registered = _register_utility(item, 
 											 	   ntiid=item.ntiid,
@@ -480,7 +487,11 @@ def _index_overview_items(items, containers=None, namespace=None,
 						  intids=None, catalog=None, node=None):
 	catalog = get_catalog() if catalog is None else catalog
 	for item in items:
-		# set lesson overview NTIID on the outline node
+		item = item() if IWeakRef.providedBy(item) else item
+		if item is None:
+			continue
+
+		## set lesson overview NTIID on the outline node
 		if INTILessonOverview.providedBy(item) and node is not None:
 			node.LessonOverviewNTIID = item.ntiid
 			

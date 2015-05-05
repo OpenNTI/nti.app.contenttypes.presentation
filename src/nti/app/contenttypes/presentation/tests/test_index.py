@@ -10,17 +10,13 @@ __docformat__ = "restructuredtext en"
 from hamcrest import is_
 from hamcrest import assert_that
 
-import unittest
-
 from nti.app.contenttypes.presentation.index import PresentationAssetCatalog
 
-from nti.app.contenttypes.presentation.tests import SharedConfiguringTestLayer
+from nti.app.testing.application_webtest import ApplicationLayerTest
 
 from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 
-class TestIndex(unittest.TestCase):
-
-	layer = SharedConfiguringTestLayer
+class TestIndex(ApplicationLayerTest):
 
 	@WithMockDSTrans
 	def test_last_modified(self):
