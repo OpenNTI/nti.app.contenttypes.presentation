@@ -133,28 +133,31 @@ def _connection(registry=None):
 	result = IConnection(registry, None)
 	return result
 	
-def registerUtility(registry, component, provided, name, event=False):
+def registerUtility(registry, component, provided, name):
 	if IHostPolicySiteManager.providedBy(registry):
 		return registry.subscribedRegisterUtility(component,
 									 			  provided=provided,
-									 			  name=name,
-									 			  event=event)
+									 			  name=name)
 	else:
 		return registry.registerUtility(component,
 									 	provided=provided,
-									 	name=name,
-									 	event=event)
+									 	name=name)
 	
+def notify_object_added(item, registry, connection=None):
+	connection = _connection(registry) if connection is None else connection
+	if connection is not None:
+		connection.add(item)
+		lifecycleevent.added(item)
+		return True
+	return False
+
 def _register_utility(item, provided, ntiid, registry=None, connection=None):
 	if provided.providedBy(item):
 		registry = _registry(registry)
 		registered = registry.queryUtility(provided, name=ntiid)
 		if registered is None:
 			registerUtility(registry, item, provided=provided, name=ntiid)
-			connection = _connection(registry) if connection is None else connection
-			if connection is not None:
-				connection.add(item)
-				lifecycleevent.added(item) # get an intid
+			notify_object_added(item, registry, connection) # get an intid
 			return (True, item)
 		return (False, registered)
 	return (False, None)
