@@ -33,8 +33,7 @@ setup(
 	package_dir={'': 'src'},
 	namespace_packages=['nti', 'nti.app', 'nti.app.contenttypes'],
 	install_requires=[
-		'setuptools',
-		'nti.contenttypes.presentation'
+		'setuptools'
 	],
 	entry_points=entry_points
 )
