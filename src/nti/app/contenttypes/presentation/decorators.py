@@ -26,6 +26,7 @@ from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentUnitHrefMapper
 
 from nti.contenttypes.courses.interfaces import OPEN
+from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import IN_CLASS
 from nti.contenttypes.courses.interfaces import ES_CREDIT
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
@@ -33,6 +34,8 @@ from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
+from nti.contenttypes.courses.discussions.utils import get_discussion_key
+from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
 
 from nti.contenttypes.presentation.interfaces import EVERYONE
 from nti.contenttypes.presentation.interfaces import IVisible
@@ -118,6 +121,60 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 			self._record = record
 		return self._record
 
+	def _handle_media_ref(self, items, item, idx):
+		source = INTIMedia(item, None)
+		if source is not None:
+			items[idx] = to_external_object(source, name="render")
+			return True
+		return False
+		
+	def _allow_visible(self, context, user_visibility, item):
+		if item.visibility != EVERYONE and user_visibility != item.visibility:
+			record = self.record(context)
+			scope = record.Scope if record is not None else None
+			if get_visibility_for_scope(scope) != item.visibility:
+				return False
+		return True
+	
+	def _allow_legacy_discussion(self, context, item):
+		parts = get_parts(item.target)
+		nttype = parts.nttype
+		specific = parts.specific
+		## Check if [legacy] discussion NTIID is of either
+		## Topic:EnrolledCourseRoot or Topic:EnrolledCourseSection type.
+		## If so only return the reference if [mapped] enrollment scope 
+		## is in the specific NTIID string
+		if nttype in (NTIID_TYPE_COURSE_TOPIC, NTIID_TYPE_COURSE_SECTION_TOPIC):
+			record = self.record(context)
+			scope = record.Scope if record is not None else None
+			m_scope = ENROLLMENT_LINEAGE_MAP.get(scope or u'')
+			m_scope = m_scope[0] if m_scope else None # pick first
+			if	(not m_scope) or \
+				(m_scope == ES_PUBLIC and OPEN not in specific) or \
+				(m_scope == ES_CREDIT and IN_CLASS_SAFE not in specific):
+				return False
+		return True
+	
+	def _allow_discussion_course_bundle(self, context, item):
+		## get enrollment record
+		record = self.record(context)
+		scope = record.Scope if record is not None else None
+		
+		## get course discussion
+		key = get_discussion_key(item)
+		course = record.CourseInstance if record is not None else None
+		discussions = ICourseDiscussions(course, None)
+		discussion = discussions.get(key) if discussions else  None
+		scopes = discussion.scopes if discussion is None else ()
+		
+		if	(not scope) or \
+			(not scopes) or \
+			(ES_ALL not in scopes and scope not in scopes):
+			return False
+		else:
+			pass
+		return True
+	
 	def _decorate_external_impl(self, context, result):
 		idx = 0
 		items = result[ITEMS]
@@ -129,35 +186,21 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 		## loop through sources
 		for item in context: # should resolve weak refs
 			## filter items that cannot be visible for the user
-			if 	IVisible.providedBy(item) and item.visibility != EVERYONE and \
-				user_visibility != item.visibility:
-				record = self.record(context)
-				scope = record.Scope if record is not None else None
-				if get_visibility_for_scope(scope) != item.visibility:
-					del items[idx]
-					continue
+			if 	IVisible.providedBy(item) and \
+				not self._allow_visible(context, user_visibility, item):
+				del items[idx]
+				continue
 			elif INTIDiscussionRef.providedBy(item): 
-				parts = get_parts(item.target)
-				nttype = parts.nttype
-				specific = parts.specific
-				## Check if [legacy] discussion NTIID is of either
-				## Topic:EnrolledCourseRoot or Topic:EnrolledCourseSection type.
-				## If so only return the reference if [mapped] enrollment scope 
-				## is in the specific NTIID string
-				if nttype in (NTIID_TYPE_COURSE_TOPIC, NTIID_TYPE_COURSE_SECTION_TOPIC):
-					record = self.record(context)
-					scope = record.Scope if record is not None else None
-					m_scope = ENROLLMENT_LINEAGE_MAP.get(scope or u'')
-					m_scope = m_scope[0] if m_scope else None # pick first
-					if	(not m_scope) or \
-						(m_scope == ES_PUBLIC and OPEN not in specific) or \
-						(m_scope == ES_CREDIT and IN_CLASS_SAFE not in specific):
+				if item.isCourseBundle():
+					if not self._allow_discussion_course_bundle(context, item):
 						del items[idx]
 						continue
+				elif not self._allow_legacy_discussion(context, item):
+					del items[idx]
+					continue
 			elif IMediaRef.providedBy(item):
-				source = INTIMedia(item, None)
-				if source is not None:
-					items[idx] = to_external_object(source, name="render")
+				self._handle_media_ref(items, item, idx)
+	
 			idx += 1
 
 	def _do_decorate_external(self, context, result):
