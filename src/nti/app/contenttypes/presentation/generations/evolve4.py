@@ -17,7 +17,7 @@ from ..interfaces import IPresentationAssetsIndex
 
 from .. import CATALOG_INDEX_NAME
 
-from ..utils import remove_utilities
+from ..utils import remove_all_utilities as unregister_all_utilities
 
 def reset_catalog(dataserver_folder):
 	lsm = dataserver_folder.getSiteManager()
@@ -26,7 +26,7 @@ def reset_catalog(dataserver_folder):
 
 def remove_all_utilities(dataserver_folder):
 	lsm = dataserver_folder.getSiteManager()
-	result = remove_utilities(registry=lsm)
+	result = unregister_all_utilities(registry=lsm)
 	return result
 
 def do_evolve(context):

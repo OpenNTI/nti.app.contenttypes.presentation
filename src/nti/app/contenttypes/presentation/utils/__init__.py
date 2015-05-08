@@ -22,6 +22,7 @@ from nti.contenttypes.presentation.interfaces import EVERYONE
 from nti.contenttypes.presentation.interfaces import PURCHASED
 
 from .registry import remove_utilities
+from .registry import remove_all_utilities
 
 VISIBILITY_SCOPE_MAP = {
 	ES_ALL: EVERYONE,

@@ -5,6 +5,7 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -13,6 +14,7 @@ import six
 import time
 
 from zope import component
+
 from zope.security.management import endInteraction
 from zope.security.management import restoreInteraction
 
@@ -47,6 +49,8 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 from ..subscribers import get_course_packages
 from ..subscribers import synchronize_content_package
 from ..subscribers import synchronize_course_lesson_overview
+
+from ..utils import remove_all_utilities
 
 from .. import get_catalog
 
@@ -157,12 +161,19 @@ class SyncLessonOverviewsView(AbstractAuthenticatedView,
 			   renderer='rest',
 			   request_method='POST',
 			   permission=nauth.ACT_NTI_ADMIN,
-			   name='ResetPresentationAssetsIndex')
-class ResetPresentationAssetsIndexView(	AbstractAuthenticatedView,
-							  			ModeledContentUploadRequestUtilsMixin):
+			   name='ResetPresentationAssets')
+class ResetPresentationAssetsView(AbstractAuthenticatedView,
+							  	  ModeledContentUploadRequestUtilsMixin):
 
 	
-	def __call__(self):
+	def __call__(self):	
+		now = time.time()
+		result = LocatedExternalDict()
+		
+		count = remove_all_utilities()
+		result[ITEMS] = count
+			
 		index = get_catalog()
 		index.reset()
-		return hexc.HTTPNoContent()
+		result['Elapsed'] = time.time() - now
+		return result
