@@ -58,7 +58,8 @@ from nti.contenttypes.presentation.utils import create_lessonoverview_from_exter
 
 from nti.externalization.interfaces import StandardExternalFields
 
-from nti.site.interfaces import IHostPolicySiteManager
+from nti.site.utils import registerUtility
+from nti.site.utils import unregisterUtility
 
 from nti.wref.interfaces import IWeakRef
 
@@ -90,12 +91,6 @@ def _registry(registry=None):
 		else:
 			registry = component.getSiteManager()
 	return registry
-
-def unregisterUtility(registry, provided, name):
-	if IHostPolicySiteManager.providedBy(registry):
-		return registry.subscribedUnregisterUtility(provided=provided, name=name)
-	else:
-		return registry.unregisterUtility(provided=provided, name=name)
 
 def _removed_registered(provided, name, intids=None, registry=None, catalog=None):
 	registry = _registry(registry)
@@ -132,17 +127,7 @@ def _connection(registry=None):
 	registry = _registry(registry)
 	result = IConnection(registry, None)
 	return result
-	
-def registerUtility(registry, component, provided, name):
-	if IHostPolicySiteManager.providedBy(registry):
-		return registry.subscribedRegisterUtility(component,
-									 			  provided=provided,
-									 			  name=name)
-	else:
-		return registry.registerUtility(component,
-									 	provided=provided,
-									 	name=name)
-	
+
 def notify_object_added(item, registry, connection=None):
 	connection = _connection(registry) if connection is None else connection
 	if connection is not None:
