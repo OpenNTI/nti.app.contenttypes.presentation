@@ -16,9 +16,7 @@ from zope.security.interfaces import IPrincipal
 
 from nti.common.property import Lazy
 
-from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
-from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.presentation.interfaces import INTIAudio
 from nti.contenttypes.presentation.interfaces import INTIVideo
@@ -35,31 +33,11 @@ from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
 
-from nti.ntiids.ntiids import find_object_with_ntiid
-
 from nti.traversal.traversal import find_interface
 
-from . import get_catalog
+from .utils import get_courses
 
-def get_courses(ntiids=()):
-	result = []
-	catalog = component.getUtility(ICourseCatalog)
-	for ntiid in ntiids or ():
-		course = None
-		context = find_object_with_ntiid(ntiid)
-		if ICourseCatalogEntry.providedBy(context):
-			course = ICourseInstance(context, None)
-		elif ICourseInstance.providedBy(context):
-			course = context
-		elif context is None:
-			try:
-				entry = catalog.getCatalogEntry(ntiid)
-				course = ICourseInstance(entry, None)
-			except KeyError:
-				pass
-		if course is not None:
-			result.append(course)
-	return result
+from . import get_catalog
 
 @interface.implementer(IACLProvider)
 class BaseACLProvider(object):
