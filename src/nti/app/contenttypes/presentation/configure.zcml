@@ -45,6 +45,7 @@
 	<adapter factory=".acl.NTIAudioACLProvider" />
 	<adapter factory=".acl.NTIVideoACLProvider" />
 	<adapter factory=".acl.NTISlideDeckACLProvider" />
+	<adapter factory=".acl.NTIRelatedWorkRefACLProvider" />
 	<adapter factory=".acl.PresentationAssetACLProvider" />
 	<adapter factory=".acl.NTILessonOverviewACLProvider" />
 	

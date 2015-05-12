@@ -23,6 +23,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.presentation.interfaces import INTIAudio
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 
@@ -106,6 +107,10 @@ class NTIVideoACLProvider(BasePresentationAssetACLProvider):
 
 @component.adapter(INTISlideDeck)
 class NTISlideDeckACLProvider(BasePresentationAssetACLProvider):
+	pass
+
+@component.adapter(INTIRelatedWorkRef)
+class NTIRelatedWorkRefACLProvider(BasePresentationAssetACLProvider):
 	pass
 
 @component.adapter(INTILessonOverview)
