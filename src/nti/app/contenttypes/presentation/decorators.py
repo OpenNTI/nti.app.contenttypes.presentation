@@ -243,4 +243,5 @@ class _NoHrefInResponseDecorator(object):
 	__metaclass__ = SingletonDecorator
 
 	def decorateExternalObject(self, original, external):
+		interface.alsoProvides(original, INoHrefInResponse)
 		interface.alsoProvides(external, INoHrefInResponse)
