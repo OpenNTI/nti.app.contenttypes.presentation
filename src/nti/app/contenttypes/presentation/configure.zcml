@@ -104,7 +104,16 @@
 		<subscriber factory=".decorators._NTICourseOverviewGroupDecorator"
 					provides="nti.externalization.interfaces.IExternalObjectDecorator"
 					for="nti.contenttypes.presentation.interfaces.INTICourseOverviewGroup
-						 pyramid.interfaces.IRequest" />		
+						 pyramid.interfaces.IRequest" />
+						 
+		<subscriber factory=".decorators._NoHrefInResponseDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTITimeline"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
+				
+		<subscriber factory=".decorators._NoHrefInResponseDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
+
 	</configure>
 	
 	<!-- Weak refs -->
