@@ -21,7 +21,8 @@ from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 from nti.site.interfaces import IHostPolicySiteManager
 
 def remove_utilities(interfaces=ALL_PRESENTATION_ASSETS_INTERFACES,
-					 registry=component):
+					 registry=component,
+					 event=True):
 	count = 0
 	intids = registry.getUtility(zope.intid.IIntIds)
 
@@ -35,7 +36,7 @@ def remove_utilities(interfaces=ALL_PRESENTATION_ASSETS_INTERFACES,
 		for name, comp in list(site_manager.getUtilitiesFor(provided)):
 			unregister(provided=provided, name=name)
 			try:
-				intids.unregister(comp)
+				intids.unregister(comp, event=event)
 			except KeyError:
 				pass
 			count +=1 
@@ -43,7 +44,8 @@ def remove_utilities(interfaces=ALL_PRESENTATION_ASSETS_INTERFACES,
 
 def remove_all_utilities(interfaces=ALL_PRESENTATION_ASSETS_INTERFACES,
 						 site_names=(),
-						 registry=component):
+						 registry=component,
+						 event=True):
 	count = 0
 	hostsites = registry.getUtility(IEtcNamespace, name='hostsites')
 	if not site_names:
@@ -53,5 +55,7 @@ def remove_all_utilities(interfaces=ALL_PRESENTATION_ASSETS_INTERFACES,
 	
 	for site in sites:
 		with current_site(site):
-			count += remove_utilities(interfaces=interfaces)
+			count += remove_utilities(interfaces=interfaces,
+									  registry=registry,
+									  event=event)
 	return count
