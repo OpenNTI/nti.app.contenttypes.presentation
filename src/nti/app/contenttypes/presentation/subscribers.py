@@ -128,7 +128,7 @@ def _connection(registry=None):
 	result = IConnection(registry, None)
 	return result
 
-def intids_register(item, registry, intids=None, connection=None):
+def intid_register(item, registry, intids=None, connection=None):
 	intids = component.queryUtility(IIntIds) if intids is None else intids
 	connection = _connection(registry) if connection is None else connection
 	if connection is not None:
@@ -143,7 +143,7 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 		registered = registry.queryUtility(provided, name=ntiid)
 		if registered is None:
 			registerUtility(registry, item, provided=provided, name=ntiid)
-			intids_register(item, registry, intids, connection)
+			intid_register(item, registry, intids, connection)
 			return (True, item)
 		return (False, registered)
 	return (False, None)
