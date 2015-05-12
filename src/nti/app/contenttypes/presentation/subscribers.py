@@ -149,7 +149,7 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 	return (False, None)
 		
 def _was_utility_registered(item, item_iface, ntiid, registry=None, 
-							intids=None, connection=None):
+							connection=None, intids=None,):
 	result, _ = _register_utility(item, item_iface, ntiid, 
 								  registry=registry, 
 								  intids=intids,
