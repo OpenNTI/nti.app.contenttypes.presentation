@@ -24,7 +24,6 @@ from nti.app.products.courseware.discussions import get_forum_scopes
 
 from nti.app.products.courseware.utils import get_any_enrollment
 
-from nti.app.renderers.interfaces import INoHrefInResponse
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
 from nti.contentlibrary.interfaces import IContentPackageLibrary
@@ -54,7 +53,6 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationVisibility
 
-from nti.externalization.singleton import SingletonDecorator
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalObjectDecorator
 from nti.externalization.interfaces import IExternalMappingDecorator
@@ -236,12 +234,3 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 			self._decorate_external_impl(context, result)
 		except Exception:
 			logger.exception("Error while decorating course overview group")
-
-@interface.implementer(IExternalObjectDecorator)
-class _NoHrefInResponseDecorator(object):
-
-	__metaclass__ = SingletonDecorator
-
-	def decorateExternalObject(self, original, external):
-		interface.alsoProvides(original, INoHrefInResponse)
-		interface.alsoProvides(external, INoHrefInResponse)
