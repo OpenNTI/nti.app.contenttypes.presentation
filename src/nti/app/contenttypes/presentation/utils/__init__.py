@@ -34,8 +34,12 @@ from nti.contenttypes.presentation.interfaces import PURCHASED
 
 from nti.contenttypes.presentation.interfaces import IPresentationVisibility
 
+## re-export
 from .registry import remove_utilities
 from .registry import remove_all_utilities
+
+from .course import get_courses
+from .course import get_enrollment_record
 
 VISIBILITY_SCOPE_MAP = {
 	ES_ALL: EVERYONE,
@@ -48,11 +52,6 @@ VISIBILITY_SCOPE_MAP = {
 
 def get_visibility_for_scope(scope):
 	return VISIBILITY_SCOPE_MAP.get(scope)
-
-def get_enrollment_record(context, user):
-	course = ICourseInstance(context, None)
-	result = get_any_enrollment(course, user) if course is not None else None
-	return result
 
 def get_user_visibility(user):
 	adapted = IPresentationVisibility(user, None)
