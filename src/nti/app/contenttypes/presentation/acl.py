@@ -35,9 +35,7 @@ from nti.dataserver.authorization_acl import acl_from_aces
 
 from nti.traversal.traversal import find_interface
 
-from .utils import get_courses
-
-from . import get_catalog
+from .utils import get_presentation_asset_courses
 
 @interface.implementer(IACLProvider)
 class BaseACLProvider(object):
@@ -47,11 +45,10 @@ class BaseACLProvider(object):
 
 	@property
 	def __acl__(self):
-		catalog = get_catalog()
-		entries = catalog.get_containers(self.context)
-		if entries:
+		courses = get_presentation_asset_courses(self.context)
+		if courses:
 			aces = []
-			for course in get_courses(entries):
+			for course in courses:
 				acl = IACLProvider(course).__acl__
 				aces.extend(acl or ())
 			result = acl_from_aces( aces )

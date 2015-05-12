@@ -19,6 +19,8 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
+from .. import get_catalog
+
 def get_enrollment_record(context, user):
 	course = ICourseInstance(context, None)
 	result = get_any_enrollment(course, user) if course is not None else None
@@ -42,4 +44,10 @@ def get_courses(ntiids=()):
 				pass
 		if course is not None:
 			result.append(course)
+	return result
+
+def get_presentation_asset_courses(item, sort=False):
+	catalog = get_catalog()
+	entries = catalog.get_containers(item)
+	result = get_courses(entries) if entries else ()
 	return result
