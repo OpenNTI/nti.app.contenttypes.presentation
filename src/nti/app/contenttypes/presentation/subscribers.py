@@ -15,7 +15,6 @@ import simplejson
 from zope.intid import IIntIds
 
 from zope import component
-from zope import lifecycleevent
 
 from zope.lifecycleevent import IObjectRemovedEvent
 
@@ -95,11 +94,12 @@ def _registry(registry=None):
 def _removed_registered(provided, name, intids=None, registry=None, catalog=None):
 	registry = _registry(registry)
 	registered = registry.queryUtility(provided, name=name)
+	intids = component.queryUtility(IIntIds) if intids is None else intids
 	if registered is not None:
 		catalog = get_catalog() if catalog is None else catalog
 		catalog.unindex(registered, intids=intids)
 		unregisterUtility(registry, provided=provided, name=name)
-		lifecycleevent.removed(registered) # remove from intids
+		intids.unregister(registered, event=False)
 	return registered
 
 def _remove_from_registry(containers=None, namespace=None, provided=None, 
@@ -128,28 +128,32 @@ def _connection(registry=None):
 	result = IConnection(registry, None)
 	return result
 
-def notify_object_added(item, registry, connection=None):
+def intids_register(item, registry, intids=None, connection=None):
+	intids = component.queryUtility(IIntIds) if intids is None else intids
 	connection = _connection(registry) if connection is None else connection
 	if connection is not None:
 		connection.add(item)
-		lifecycleevent.added(item)
+		intids.register(item, event=False)
 		return True
 	return False
 
-def _register_utility(item, provided, ntiid, registry=None, connection=None):
+def _register_utility(item, provided, ntiid, registry=None, intids=None, connection=None):
 	if provided.providedBy(item):
 		registry = _registry(registry)
 		registered = registry.queryUtility(provided, name=ntiid)
 		if registered is None:
 			registerUtility(registry, item, provided=provided, name=ntiid)
-			notify_object_added(item, registry, connection) # get an intid
+			intids_register(item, registry, intids, connection)
 			return (True, item)
 		return (False, registered)
 	return (False, None)
 		
-def _was_utility_registered(item, item_iface, ntiid, registry=None, connection=None):
+def _was_utility_registered(item, item_iface, ntiid, registry=None, 
+							intids=None, connection=None):
 	result, _ = _register_utility(item, item_iface, ntiid, 
-								  registry=registry, connection=connection)
+								  registry=registry, 
+								  intids=intids,
+								  connection=connection)
 	return result
 
 def _load_and_register_items(item_iterface, items, registry=None, connection=None,
@@ -157,7 +161,7 @@ def _load_and_register_items(item_iterface, items, registry=None, connection=Non
 	result = []
 	registry = _registry(registry)
 	for ntiid, data in items.items():
-		internal = external_object_creator(data)
+		internal = external_object_creator(data, notify=False)
 		if _was_utility_registered(internal, item_iterface, ntiid, 
 								  registry=registry, connection=connection):
 			result.append(internal)
@@ -193,7 +197,7 @@ def _load_and_register_slidedeck_json(jtext, registry=None, connection=None,
 	index = simplejson.loads(prepare_json_text(jtext))	
 	items = index.get(ITEMS) or {}
 	for ntiid, data in items.items():
-		internal = object_creator(data)
+		internal = object_creator(data, notify=False)
 		if 	INTISlide.providedBy(internal) and \
 			_was_utility_registered(internal, INTISlide, ntiid, registry, connection):
 			result.append(internal)
@@ -258,17 +262,17 @@ def _register_items_when_content_changes(content_package,
 	
 	index_text = content_package.read_contents_of_sibling_entry(namespace)
 	if item_iface == INTISlideDeck:
-		_remove_from_registry(namespace=content_package.ntiid, 
-							  provided=INTISlide, 
-							  registry=registry,
-							  catalog=catalog,
-							  intids=intids)
+		removed.extend(_remove_from_registry(namespace=content_package.ntiid,
+							  				 provided=INTISlide, 
+							  				 registry=registry,
+							 				 catalog=catalog,
+							  			 	 intids=intids) )
 		
-		_remove_from_registry(namespace=content_package.ntiid, 
-							  provided=INTISlideVideo,
-							  registry=registry,
-							  catalog=catalog,
-							  intids=intids)
+		removed.extend(_remove_from_registry(namespace=content_package.ntiid, 
+							  				 provided=INTISlideVideo,
+							 				 registry=registry,
+							  				 catalog=catalog,
+							  				 intids=intids))
 		
 		registered = _load_and_register_slidedeck_json(index_text, 
 													   registry=registry,
@@ -370,7 +374,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None,
 	
 	## read and parse json text
 	data = simplejson.loads(prepare_json_text(jtext))
-	overview = create_lessonoverview_from_external(data)
+	overview = create_lessonoverview_from_external(data, notify=False)
 	
 	## remove and register
 	_remove_registered_lesson_overview(name=overview.ntiid, registry=registry)
