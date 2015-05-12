@@ -19,39 +19,25 @@ from zope.location.interfaces import ILocation
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_TOPIC
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_SECTION_TOPIC
 
-from nti.app.products.courseware.discussions import get_topic_key
-from nti.app.products.courseware.discussions import get_forum_scopes
-
-from nti.app.products.courseware.utils import get_any_enrollment
-
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentUnitHrefMapper
 
 from nti.contenttypes.courses.interfaces import OPEN
-from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import IN_CLASS
 from nti.contenttypes.courses.interfaces import ES_CREDIT
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
 
-from nti.contenttypes.courses.interfaces import ICourseInstance
-from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 
-from nti.contenttypes.courses.discussions.utils import get_discussion_key
-from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
-from nti.contenttypes.courses.discussions.utils import get_course_for_discussion
-
-from nti.contenttypes.presentation.interfaces import EVERYONE
 from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
-from nti.contenttypes.presentation.interfaces import IPresentationVisibility
 
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalObjectDecorator
@@ -64,7 +50,9 @@ from nti.links.links import Link
 from nti.ntiids.ntiids import get_parts
 from nti.ntiids.ntiids import make_provider_safe
 
-from .utils import get_visibility_for_scope
+from .utils import is_item_visible
+from .utils import get_enrollment_record
+from .utils import resolve_discussion_course_bundle
 
 from . import VIEW_OVERVIEW_CONTENT
 
@@ -123,9 +111,7 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 	
 	def record(self, context):
 		if self._record is None:
-			course = ICourseInstance(context)
-			record = get_any_enrollment(course, self.remoteUser)
-			self._record = record
+			self._record = get_enrollment_record(context, self.remoteUser)
 		return self._record
 
 	def _handle_media_ref(self, items, item, idx):
@@ -135,13 +121,11 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 			return True
 		return False
 		
-	def _allow_visible(self, context, user_visibility, item):
-		if item.visibility != EVERYONE and user_visibility != item.visibility:
-			record = self.record(context)
-			scope = record.Scope if record is not None else None
-			if get_visibility_for_scope(scope) != item.visibility:
-				return False
-		return True
+	def _allow_visible(self, context, item):
+		record = self.record(context)
+		result = is_item_visible(item, user=self.remoteUser,
+								 context=context, record=record)
+		return result
 	
 	def _allow_legacy_discussion(self, context, item):
 		parts = get_parts(item.target)
@@ -163,55 +147,23 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 		return True
 	
 	def _allow_discussion_course_bundle(self, context, item, ext_item):
-		## get enrollment record
 		record = self.record(context)
-		if record is None:
+		topic = resolve_discussion_course_bundle(user=self.remoteUser,
+												 item=item,
+												 context=context,
+												 record=record)
+		if topic is None:
 			return False
-		scope = record.Scope
-		
-		## get course pointed by the discussion ref
-		course = get_course_for_discussion(item, context=record.CourseInstance)
-		
-		## if course is a subinstance, make sure we are enrolled in it
-		if ICourseSubInstance.providedBy(course) and course != record.CourseInstance:
-			return False
-
-		## get course discussion
-		key = get_discussion_key(item)
-		discussion = ICourseDiscussions(course).get(key) if key else None
-		scopes = discussion.scopes if discussion is None else ()
-		
-		if	(not scope) or \
-			(not scopes) or \
-			(ES_ALL not in scopes and scope not in scopes):
-			return False
-		else:
-			topic = None
-			topic_key = get_topic_key(discussion)
-			m_scope = ENROLLMENT_LINEAGE_MAP.get(scope)[0]
-			for v in course.Discussions.values():
-				## check the forum scopes against the mapped enrollment scope
-				forum_scopes = get_forum_scopes(v)
-				if m_scope in forum_scopes and topic_key in v:
-					topic = v[topic_key] ## found the topic
-					break
-			if topic is None:
-				return False
-			ext_item['target'] = topic.NTIID # replace the target to the topic NTIID
+		ext_item['target'] = topic.NTIID # replace the target to the topic NTIID
 		return True
 	
 	def _decorate_external_impl(self, context, result):
 		idx = 0
 		items = result[ITEMS]
-
-		## get user presentation visibility
-		adapted = IPresentationVisibility(self.remoteUser, None)
-		user_visibility = adapted.visibility() if adapted is not None else None
 		
 		## loop through sources
 		for item in context: # should resolve weak refs
-			if 	IVisible.providedBy(item) and \
-				not self._allow_visible(context, user_visibility, item):
+			if IVisible.providedBy(item) and not self._allow_visible(context, item):
 				del items[idx]
 				continue
 			elif INTIDiscussionRef.providedBy(item): 
