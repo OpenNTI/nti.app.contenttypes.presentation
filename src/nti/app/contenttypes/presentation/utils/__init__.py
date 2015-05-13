@@ -94,7 +94,7 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 	## get course discussion
 	key = get_discussion_key(item)
 	discussion = ICourseDiscussions(course).get(key) if key else None
-	scopes = discussion.scopes if discussion is None else ()
+	scopes = discussion.scopes if discussion is not None else ()
 		
 	if	(not scope) or \
 		(not scopes) or \
