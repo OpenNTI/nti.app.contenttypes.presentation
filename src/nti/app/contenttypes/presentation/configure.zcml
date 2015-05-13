@@ -44,10 +44,13 @@
 	<!-- ACLs -->
 	<adapter factory=".acl.NTIAudioACLProvider" />
 	<adapter factory=".acl.NTIVideoACLProvider" />
+	<adapter factory=".acl.NTITimelineACLProvider" />
 	<adapter factory=".acl.NTISlideDeckACLProvider" />
+	<adapter factory=".acl.NTISlideVideoACLProvider" />
 	<adapter factory=".acl.NTIRelatedWorkRefACLProvider" />
 	<adapter factory=".acl.PresentationAssetACLProvider" />
 	<adapter factory=".acl.NTILessonOverviewACLProvider" />
+	<adapter factory=".acl.NTICourseOverviewGroupACLProvider" />
 	
 	<configure zcml:condition="have persistent_overview">
 	

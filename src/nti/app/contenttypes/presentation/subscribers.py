@@ -5,7 +5,6 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-from nti.ntiids.ntiids import is_valid_ntiid_string
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -57,6 +56,8 @@ from nti.contenttypes.presentation.utils import create_relatedwork_from_external
 from nti.contenttypes.presentation.utils import create_lessonoverview_from_external
 
 from nti.externalization.interfaces import StandardExternalFields
+
+from nti.ntiids.ntiids import is_valid_ntiid_string
 
 from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility

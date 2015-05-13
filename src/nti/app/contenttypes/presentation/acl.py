@@ -20,10 +20,13 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.presentation.interfaces import INTIAudio
 from nti.contenttypes.presentation.interfaces import INTIVideo
+from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
+from nti.contenttypes.presentation.interfaces import INTISlideVideo
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.dataserver.interfaces import IACLProvider
 from nti.dataserver.interfaces import ACE_DENY_ALL
@@ -86,6 +89,18 @@ class NTISlideDeckACLProvider(BasePresentationAssetACLProvider):
 
 @component.adapter(INTIRelatedWorkRef)
 class NTIRelatedWorkRefACLProvider(BasePresentationAssetACLProvider):
+	pass
+
+@component.adapter(INTITimeline)
+class NTITimelineACLProvider(BasePresentationAssetACLProvider):
+	pass
+
+@component.adapter(INTISlideVideo)
+class NTISlideVideoACLProvider(BasePresentationAssetACLProvider):
+	pass
+
+@component.adapter(INTICourseOverviewGroup)
+class NTICourseOverviewGroupACLProvider(BasePresentationAssetACLProvider):
 	pass
 
 @component.adapter(INTILessonOverview)
