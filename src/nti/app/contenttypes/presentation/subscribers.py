@@ -57,7 +57,7 @@ from nti.contenttypes.presentation.utils import create_lessonoverview_from_exter
 
 from nti.externalization.interfaces import StandardExternalFields
 
-from nti.ntiids.ntiids import is_valid_ntiid_string
+# from nti.ntiids.ntiids import is_valid_ntiid_string
 
 from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
@@ -144,7 +144,7 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 		registry = _registry(registry)
 		registered = registry.queryUtility(provided, name=ntiid)
 		if registered is None:
-			assert is_valid_ntiid_string(ntiid), "invalid NTIID %s" % ntiid
+			# assert is_valid_ntiid_string(ntiid), "invalid NTIID %s" % ntiid
 			registerUtility(registry, item, provided=provided, name=ntiid)
 			intid_register(item, registry, intids, connection)
 			return (True, item)
