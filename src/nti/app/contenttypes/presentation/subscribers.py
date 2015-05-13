@@ -5,6 +5,7 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+from nti.ntiids.ntiids import is_valid_ntiid_string
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -142,6 +143,7 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 		registry = _registry(registry)
 		registered = registry.queryUtility(provided, name=ntiid)
 		if registered is None:
+			assert is_valid_ntiid_string(ntiid), "invalid NTIID %s" % ntiid
 			registerUtility(registry, item, provided=provided, name=ntiid)
 			intid_register(item, registry, intids, connection)
 			return (True, item)
