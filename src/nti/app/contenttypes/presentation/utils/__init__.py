@@ -63,7 +63,7 @@ def is_item_visible(item, user, context=None, record=None):
 	context = item if context is None else item
 	user_visibility = get_user_visibility(user)
 	if item.visibility != EVERYONE and user_visibility != item.visibility:
-		record = get_enrollment_record(context) if record is None else record
+		record = get_enrollment_record(context, user) if record is None else record
 		scope = record.Scope if record is not None else None
 		if get_visibility_for_scope(scope) != item.visibility:
 			return False
@@ -79,7 +79,7 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 	""" 
 
 	context = item if context is None else item
-	record = get_enrollment_record(context) if record is None else record
+	record = get_enrollment_record(context, user) if record is None else record
 	if record is None:
 		return None
 	scope = record.Scope
