@@ -63,7 +63,7 @@ IN_CLASS_SAFE = make_provider_safe(IN_CLASS)
 @component.adapter(ICourseOutlineContentNode)
 @interface.implementer(IExternalMappingDecorator)
 class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
-	
+
 	def _predicate(self, context, result):
 		return True
 
@@ -72,7 +72,7 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 			library = component.queryUtility(IContentPackageLibrary)
 			paths = library.pathToNTIID(context.ContentNTIID) if library else ()
 			if paths:
-				href = IContentUnitHrefMapper( paths[-1].key ).href
+				href = IContentUnitHrefMapper(paths[-1].key).href
 				href = urljoin(href, context.src)
 				# set link for overview
 				links = result.setdefault(LINKS, [])
@@ -92,23 +92,23 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 			if lesson is not None:
 				links = result.setdefault(LINKS, [])
 				link = Link(context, rel=VIEW_OVERVIEW_CONTENT,
-							elements=(VIEW_OVERVIEW_CONTENT,) )
+							elements=(VIEW_OVERVIEW_CONTENT,))
 				links.append(link)
 				return True
 		except AttributeError:
 			pass
 		return False
-	
-	def _do_decorate_external(self, context, result):		
+
+	def _do_decorate_external(self, context, result):
 		if not self._overview_decorate_external(context, result):
 			self._legacy_decorate_external(context, result)
 
 @component.adapter(INTICourseOverviewGroup)
 @interface.implementer(IExternalObjectDecorator)
 class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorator):
-	
+
 	_record = None
-	
+
 	def record(self, context):
 		if self._record is None:
 			self._record = get_enrollment_record(context, self.remoteUser)
@@ -120,32 +120,32 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 			items[idx] = to_external_object(source, name="render")
 			return True
 		return False
-		
+
 	def _allow_visible(self, context, item):
 		record = self.record(context)
 		result = is_item_visible(item, user=self.remoteUser,
 								 context=context, record=record)
 		return result
-	
+
 	def _allow_legacy_discussion(self, context, item):
 		parts = get_parts(item.target)
 		nttype = parts.nttype
 		specific = parts.specific
-		## Check if [legacy] discussion NTIID is of either
-		## Topic:EnrolledCourseRoot or Topic:EnrolledCourseSection type.
-		## If so only return the reference if [mapped] enrollment scope 
-		## is in the specific NTIID string
+		# Check if [legacy] discussion NTIID is of either
+		# Topic:EnrolledCourseRoot or Topic:EnrolledCourseSection type.
+		# If so only return the reference if [mapped] enrollment scope
+		# is in the specific NTIID string
 		if nttype in (NTIID_TYPE_COURSE_TOPIC, NTIID_TYPE_COURSE_SECTION_TOPIC):
 			record = self.record(context)
 			scope = record.Scope if record is not None else None
 			m_scope = ENROLLMENT_LINEAGE_MAP.get(scope or u'')
-			m_scope = m_scope[0] if m_scope else None # pick first
+			m_scope = m_scope[0] if m_scope else None  # pick first
 			if	(not m_scope) or \
 				(m_scope == ES_PUBLIC and OPEN not in specific) or \
 				(m_scope == ES_CREDIT and IN_CLASS_SAFE not in specific):
 				return False
 		return True
-	
+
 	def _allow_discussion_course_bundle(self, context, item, ext_item):
 		record = self.record(context)
 		topic = resolve_discussion_course_bundle(user=self.remoteUser,
@@ -154,19 +154,18 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 												 record=record)
 		if topic is None:
 			return False
-		ext_item['target'] = topic.NTIID # replace the target to the topic NTIID
+		ext_item['target'] = topic.NTIID  # replace the target to the topic NTIID
 		return True
-	
+
 	def _decorate_external_impl(self, context, result):
 		idx = 0
 		items = result[ITEMS]
-		
-		## loop through sources
-		for item in context: # should resolve weak refs
+		# loop through sources
+		for item in context:  # should resolve weak refs
 			if IVisible.providedBy(item) and not self._allow_visible(context, item):
 				del items[idx]
 				continue
-			elif INTIDiscussionRef.providedBy(item): 
+			elif INTIDiscussionRef.providedBy(item):
 				if item.isCourseBundle():
 					ext_item = items[idx]
 					if not self._allow_discussion_course_bundle(context, item, ext_item):
@@ -177,7 +176,7 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 					continue
 			elif IMediaRef.providedBy(item):
 				self._handle_media_ref(items, item, idx)
-	
+
 			idx += 1
 
 	def _do_decorate_external(self, context, result):

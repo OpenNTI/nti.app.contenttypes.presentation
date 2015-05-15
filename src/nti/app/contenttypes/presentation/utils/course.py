@@ -10,20 +10,41 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 from zope import component
+from zope import interface
+
+from zope.security.interfaces import IPrincipal
 
 from nti.app.products.courseware.utils import get_any_enrollment
+from nti.app.products.courseware.utils import is_course_instructor
 
+from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from .. import get_catalog
 
+@interface.implementer(ICourseInstanceEnrollmentRecord)
+class ProxyEnrollmentRecord(object):
+	Scope = None
+	Principal = None
+	CourseInstance = None
+
+	def __init__(self, course, principal, scope):
+		self.Scope = scope
+		self.Principal = principal
+		self.CourseInstance = course
+
 def get_enrollment_record(context, user):
 	course = ICourseInstance(context, None)
-	result = get_any_enrollment(course, user) if course is not None else None
+	if is_course_instructor(course, user):
+		# create a fake enrollment record w/ all scopes to to signal an instructor
+		result = ProxyEnrollmentRecord(course, IPrincipal(user), ES_ALL)
+	else:
+		result = get_any_enrollment(course, user) if course is not None else None
 	return result
 
 def get_courses(ntiids=()):

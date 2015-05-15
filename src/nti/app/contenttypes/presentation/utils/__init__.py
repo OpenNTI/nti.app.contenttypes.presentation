@@ -34,7 +34,7 @@ from nti.contenttypes.presentation.interfaces import PURCHASED
 
 from nti.contenttypes.presentation.interfaces import IPresentationVisibility
 
-## re-export
+# re-export
 from .registry import remove_utilities
 from .registry import remove_all_utilities
 
@@ -58,7 +58,7 @@ def get_user_visibility(user):
 	adapted = IPresentationVisibility(user, None)
 	result = adapted.visibility() if adapted is not None else None
 	return result
-		
+
 def is_item_visible(item, user, context=None, record=None):
 	context = item if context is None else item
 	user_visibility = get_user_visibility(user)
@@ -71,43 +71,43 @@ def is_item_visible(item, user, context=None, record=None):
 
 def resolve_discussion_course_bundle(user, item, context=None, record=None):
 	"""
-	return the approproate topic according  the discussion ref and user enrollment 
-	
-	:param item: A discussion ref object 
+	return the approproate topic according  the discussion ref and user enrollment
+
+	:param item: A discussion ref object
 	:param context: An object that can be adpated to a course
-	:param record: Enrollment record if avaiable 
-	""" 
+	:param record: Enrollment record if avaiable
+	"""
 
 	context = item if context is None else item
 	record = get_enrollment_record(context, user) if record is None else record
 	if record is None:
 		return None
-	scope = record.Scope
-		
-	## get course pointed by the discussion ref
+	scope = record.Scope  # enrollment scope
+
+	# get course pointed by the discussion ref
 	course = get_course_for_discussion(item, context=record.CourseInstance)
-		
-	## if course is a subinstance, make sure we are enrolled in it
+
+	# if course is a subinstance, make sure we are enrolled in it
 	if ICourseSubInstance.providedBy(course) and course != record.CourseInstance:
 		return None
 
-	## get course discussion
+	# get course discussion
 	key = get_discussion_key(item)
 	discussion = ICourseDiscussions(course).get(key) if key else None
 	scopes = discussion.scopes if discussion is not None else ()
-		
+
 	if	(not scope) or \
 		(not scopes) or \
-		(ES_ALL not in scopes and scope not in scopes):
+		(scope != ES_ALL and ES_ALL not in scopes and scope not in scopes):
 		return None
 	else:
 		topic = None
 		topic_key = get_topic_key(discussion)
-		m_scope = ENROLLMENT_LINEAGE_MAP.get(scope)[0]
+		m_scope = ES_ALL if scope == ES_ALL else ENROLLMENT_LINEAGE_MAP.get(scope)[0]
 		for v in course.Discussions.values():
-			## check the forum scopes against the mapped enrollment scope
+			# check the forum scopes against the mapped enrollment scope
 			forum_scopes = get_forum_scopes(v)
-			if m_scope in forum_scopes and topic_key in v:
-				topic = v[topic_key] ## found the topic
+			if (m_scope == ES_ALL or m_scope in forum_scopes) and topic_key in v:
+				topic = v[topic_key]  # # found the topic
 				break
 		return topic
