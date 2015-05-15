@@ -45,7 +45,7 @@ class ProxyEnrollmentRecord(CreatedAndModifiedTimeMixin, Contained):
 def get_enrollment_record(context, user):
 	course = ICourseInstance(context, None)
 	if is_course_instructor(course, user):
-		# create a fake enrollment record w/ all scopes to to signal an instructor
+		# create a fake enrollment record w/ all scopes to signal an instructor
 		result = ProxyEnrollmentRecord(course, IPrincipal(user), ES_ALL)
 	else:
 		result = get_any_enrollment(course, user) if course is not None else None

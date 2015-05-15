@@ -107,8 +107,8 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 		m_scope = ES_ALL if scope == ES_ALL else ENROLLMENT_LINEAGE_MAP.get(scope)[0]
 		for v in course.Discussions.values():
 			# check the forum scopes against the mapped enrollment scope
-			forum_scopes = get_forum_scopes(v)
+			forum_scopes = get_forum_scopes(v) if m_scope != ES_ALL else ()
 			if (m_scope == ES_ALL or m_scope in forum_scopes) and topic_key in v:
-				topic = v[topic_key]  # # found the topic
+				topic = v[topic_key]  # found the topic
 				break
 		return topic
