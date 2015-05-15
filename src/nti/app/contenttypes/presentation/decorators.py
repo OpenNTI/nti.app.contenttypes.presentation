@@ -56,6 +56,7 @@ from .utils import resolve_discussion_course_bundle
 
 from . import VIEW_OVERVIEW_CONTENT
 
+NTIID = StandardExternalFields.NTIID
 LINKS = StandardExternalFields.LINKS
 ITEMS = StandardExternalFields.ITEMS
 IN_CLASS_SAFE = make_provider_safe(IN_CLASS)
@@ -154,7 +155,7 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 												 record=record)
 		if topic is None:
 			return False
-		ext_item['target'] = topic.NTIID  # replace the target to the topic NTIID
+		ext_item[NTIID] = ext_item['target'] = topic.NTIID  # replace the target to the topic NTIID
 		return True
 
 	def _decorate_external_impl(self, context, result):
