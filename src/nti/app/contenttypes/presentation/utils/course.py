@@ -12,6 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from zope.container.contained import Contained
+
 from zope.security.interfaces import IPrincipal
 
 from nti.app.products.courseware.utils import get_any_enrollment
@@ -23,17 +25,19 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
+from nti.coremetadata.mixins import CreatedAndModifiedTimeMixin
+
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from .. import get_catalog
 
 @interface.implementer(ICourseInstanceEnrollmentRecord)
-class ProxyEnrollmentRecord(object):
+class ProxyEnrollmentRecord(CreatedAndModifiedTimeMixin, Contained):
 	Scope = None
 	Principal = None
 	CourseInstance = None
 
-	def __init__(self, course, principal, scope):
+	def __init__(self, course=None, principal=None, scope=None):
 		self.Scope = scope
 		self.Principal = principal
 		self.CourseInstance = course

@@ -6,10 +6,3 @@ __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
-
-from persistent import Persistent
-
-from zope.component.persistentregistry import PersistentComponents as Components
-
-class PersistentComponents(Components, Persistent):
-    pass
