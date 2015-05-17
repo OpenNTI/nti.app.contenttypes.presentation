@@ -29,26 +29,26 @@ from . import VIEW_OVERVIEW_CONTENT
 
 LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 
-@view_config( route_name='objects.generic.traversal',
-              context=ICourseOutlineContentNode,
-              request_method='GET',
-              permission=nauth.ACT_READ,
-              renderer='rest',
-              name=VIEW_OVERVIEW_CONTENT)
+@view_config(route_name='objects.generic.traversal',
+			  context=ICourseOutlineContentNode,
+			  request_method='GET',
+			  permission=nauth.ACT_READ,
+			  renderer='rest',
+			  name=VIEW_OVERVIEW_CONTENT)
 class OutlineLessonOverviewView(AbstractAuthenticatedView):
-    
-    def __call__(self):
-        context = self.request.context
-        try:
-            ntiid = context.LessonOverviewNTIID
-            if not ntiid:
-                raise hexc.HTTPServerError("Outline does not have a valid lesson overview")
-            
-            lesson = component.getUtility(INTILessonOverview, name=ntiid) 
-            if lesson is None:
-                raise hexc.HTTPNotFound("Cannot find lesson overview")
-            external = to_external_object(lesson, name="render")
-            external.lastModified = external[LAST_MODIFIED] = lesson.lastModified
-            return external
-        except AttributeError:
-            raise hexc.HTTPServerError("Outline does not have a lesson overview attribute")
+
+	def __call__(self):
+		context = self.request.context
+		try:
+			ntiid = context.LessonOverviewNTIID
+			if not ntiid:
+				raise hexc.HTTPServerError("Outline does not have a valid lesson overview")
+
+			lesson = component.getUtility(INTILessonOverview, name=ntiid)
+			if lesson is None:
+				raise hexc.HTTPNotFound("Cannot find lesson overview")
+			external = to_external_object(lesson, name="render")
+			external.lastModified = external[LAST_MODIFIED] = lesson.lastModified
+			return external
+		except AttributeError:
+			raise hexc.HTTPServerError("Outline does not have a lesson overview attribute")

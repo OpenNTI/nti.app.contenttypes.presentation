@@ -26,12 +26,12 @@ from nti.externalization.externalization import to_external_object
 @view_config(context=INTITimeline)
 @view_config(context=INTIRelatedWorkRef)
 @view_defaults(route_name='objects.generic.traversal',
-               renderer='rest',
-               request_method='GET')
+			   renderer='rest',
+			   request_method='GET')
 class AssetGetView(GenericGetView):
 
-    def __call__(self):
-        result = GenericGetView.__call__(self)
-        result = to_external_object(result)
-        interface.alsoProvides(result, INoHrefInResponse)
-        return result
+	def __call__(self):
+		result = GenericGetView.__call__(self)
+		result = to_external_object(result)
+		interface.alsoProvides(result, INoHrefInResponse)
+		return result

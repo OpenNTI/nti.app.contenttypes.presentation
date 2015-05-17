@@ -42,7 +42,7 @@ from nti.dataserver import authorization as nauth
 from nti.dataserver.interfaces import IDataserverFolder
 
 from nti.externalization.interfaces import LocatedExternalDict
-from nti.externalization.interfaces import StandardExternalFields 
+from nti.externalization.interfaces import StandardExternalFields
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -55,14 +55,14 @@ from ..utils import remove_all_utilities
 from .. import get_catalog
 
 ITEMS = StandardExternalFields.ITEMS
-	
+
 def _parse_courses(values):
 	ntiids = values.get('ntiid') or values.get('ntiids') or \
 			 values.get('entry') or values.get('entries') or \
 			 values.get('course') or values.get('courses')
 	if not ntiids:
 		raise hexc.HTTPUnprocessableEntity(detail='No course entry identifier')
-	
+
 	if isinstance(ntiids, six.string_types):
 		ntiids = ntiids.split()
 
@@ -97,11 +97,11 @@ def _synchronize(courses, exclude=False, force=False):
 		for content_package in get_course_packages(course):
 			synchronize_content_package(content_package, force=force)
 			result.append(content_package.ntiid)
-	
+
 		synchronize_course_lesson_overview(course, force=force)
 		entry = ICourseCatalogEntry(course)
 		result.append(entry.ntiid)
-		
+
 		if not exclude and not ICourseSubInstance.providedBy(course):
 			for sub_instance in (course.SubInstances or {}).values():
 				synchronize_course_lesson_overview(sub_instance, force=force)
@@ -125,25 +125,25 @@ class SyncLessonOverviewsView(AbstractAuthenticatedView,
 			values = self.request.params
 		result = CaseInsensitiveDict(values)
 		return result
-	
+
 	def __call__(self):
 		now = time.time()
 		values = self.readInput()
 		all_courses = values.get('all') or 'F'
 		all_courses = all_courses.lower() in TRUE_VALUES
-		
+
 		force_upates = values.get('force') or 'F'
 		force_upates = force_upates.lower() in TRUE_VALUES
-		
-		exclude_sub_instances= values.get('exclude') or 'F'
+
+		exclude_sub_instances = values.get('exclude') or 'F'
 		exclude_sub_instances = exclude_sub_instances.lower() in TRUE_VALUES
-		
+
 		if all_courses:
 			courses = _get_all_courses()
 		else:
 			courses = _parse_courses(values)
-		
-		## Make sure we don't have any interaction.
+
+		# Make sure we don't have any interaction.
 		endInteraction()
 		try:
 			result = LocatedExternalDict()
@@ -165,14 +165,14 @@ class SyncLessonOverviewsView(AbstractAuthenticatedView,
 class ResetPresentationAssetsView(AbstractAuthenticatedView,
 							  	  ModeledContentUploadRequestUtilsMixin):
 
-	
-	def __call__(self):	
+
+	def __call__(self):
 		now = time.time()
 		result = LocatedExternalDict()
-		
+
 		count = remove_all_utilities()
 		result[ITEMS] = count
-			
+
 		index = get_catalog()
 		index.reset()
 		result['Elapsed'] = time.time() - now
