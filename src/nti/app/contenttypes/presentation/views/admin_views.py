@@ -163,16 +163,22 @@ class SyncLessonOverviewsView(AbstractAuthenticatedView,
 			   renderer='rest',
 			   request_method='GET',
 			   permission=nauth.ACT_NTI_ADMIN,
-			   name='PresentationAssetsInfo')
-class PresentationAssetsInfoView(AbstractAuthenticatedView,
-							  	 ModeledContentUploadRequestUtilsMixin):
+			   name='GetPresentationAssets')
+class GetPresentationAssetsView(AbstractAuthenticatedView,
+							  	ModeledContentUploadRequestUtilsMixin):
 
 
 	def __call__(self):
+		params = self.request.params
 		result = LocatedExternalDict()
+		result[ITEMS] = items = {}
+		extended = (params.get('all') or u'').lower() in ('true', '1', 'yes', 'y', 't')
 		for provided in ALL_PRESENTATION_ASSETS_INTERFACES:
 			comps = list(component.getUtilitiesFor(provided))
-			result[provided.__name__] = len(comps)
+			if extended:
+				items[provided.__name__] = sorted(n for n, _ in comps)
+			else:
+				items[provided.__name__] = len(comps)
 		return result
 
 @view_config(context=IDataserverFolder)
