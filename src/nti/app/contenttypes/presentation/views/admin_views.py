@@ -38,6 +38,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
+from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
+
 from nti.dataserver import authorization as nauth
 from nti.dataserver.interfaces import IDataserverFolder
 
@@ -153,6 +155,24 @@ class SyncLessonOverviewsView(AbstractAuthenticatedView,
 			result['Elapsed'] = time.time() - now
 		finally:
 			restoreInteraction()
+		return result
+
+@view_config(context=IDataserverFolder)
+@view_config(context=CourseAdminPathAdapter)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='GET',
+			   permission=nauth.ACT_NTI_ADMIN,
+			   name='PresentationAssetsInfo')
+class PresentationAssetsInfoView(AbstractAuthenticatedView,
+							  	 ModeledContentUploadRequestUtilsMixin):
+
+
+	def __call__(self):
+		result = LocatedExternalDict()
+		for provided in ALL_PRESENTATION_ASSETS_INTERFACES:
+			comps = list(component.getUtilitiesFor(provided))
+			result[provided.__name__] = len(comps)
 		return result
 
 @view_config(context=IDataserverFolder)
