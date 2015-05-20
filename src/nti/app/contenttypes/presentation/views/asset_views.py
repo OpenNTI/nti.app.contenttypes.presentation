@@ -13,6 +13,7 @@ from zope import interface
 
 from pyramid.view import view_config
 from pyramid.view import view_defaults
+from pyramid import httpexceptions as hexc
 
 from nti.app.renderers.interfaces import INoHrefInResponse
 
@@ -20,18 +21,33 @@ from nti.appserver.dataserver_pyramid_views import _GenericGetView as GenericGet
 
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
+from nti.contenttypes.presentation.interfaces import IPresentationAsset
 
 from nti.externalization.externalization import to_external_object
 
+@view_config(context=IPresentationAsset)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='GET')
+class PresentationAssetGetView(GenericGetView):
+
+	def __call__(self):
+		accept = self.request.headers.get(b'Accept') or u''
+		if accept == 'application/vnd.nextthought.pageinfo+json':
+			raise hexc.HTTPNotFound()
+		result = GenericGetView.__call__(self)
+		return result
+	
 @view_config(context=INTITimeline)
 @view_config(context=INTIRelatedWorkRef)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   request_method='GET')
-class AssetGetView(GenericGetView):
+class NoHrefAssetGetView(PresentationAssetGetView):
 
 	def __call__(self):
-		result = GenericGetView.__call__(self)
-		result = to_external_object(result)
-		interface.alsoProvides(result, INoHrefInResponse)
+		result = PresentationAssetGetView.__call__(self)
+		if result is not None:
+			result = to_external_object(result)
+			interface.alsoProvides(result, INoHrefInResponse)
 		return result
