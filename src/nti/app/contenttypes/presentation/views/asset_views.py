@@ -47,7 +47,6 @@ class NoHrefAssetGetView(PresentationAssetGetView):
 
 	def __call__(self):
 		result = PresentationAssetGetView.__call__(self)
-		if result is not None:
-			result = to_external_object(result)
-			interface.alsoProvides(result, INoHrefInResponse)
+		result = to_external_object(result)
+		interface.alsoProvides(result, INoHrefInResponse)
 		return result
