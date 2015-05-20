@@ -25,6 +25,7 @@ from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentUnitHrefMapper
 
 from nti.contenttypes.courses.interfaces import OPEN
+from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import IN_CLASS
 from nti.contenttypes.courses.interfaces import ES_CREDIT
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
@@ -139,12 +140,14 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 		if nttype in (NTIID_TYPE_COURSE_TOPIC, NTIID_TYPE_COURSE_SECTION_TOPIC):
 			record = self.record(context)
 			scope = record.Scope if record is not None else None
-			m_scope = ENROLLMENT_LINEAGE_MAP.get(scope or u'')
-			m_scope = m_scope[0] if m_scope else None  # pick first
-			if	(not m_scope) or \
-				(m_scope == ES_PUBLIC and OPEN not in specific) or \
-				(m_scope == ES_CREDIT and IN_CLASS_SAFE not in specific):
-				return False
+			if scope != ES_ALL:
+				m_scope = ENROLLMENT_LINEAGE_MAP.get(scope or u'')
+				m_scope = m_scope[0] if m_scope else None  # pick first
+				if	(not m_scope) or \
+					(m_scope == ES_PUBLIC and OPEN not in specific) or \
+					(m_scope == ES_CREDIT and \
+					 (IN_CLASS_SAFE not in specific and OPEN not in specific)):
+					return False
 		return True
 
 	def _allow_discussion_course_bundle(self, context, item, ext_item):
