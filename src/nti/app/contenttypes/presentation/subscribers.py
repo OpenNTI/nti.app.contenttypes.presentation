@@ -355,6 +355,16 @@ def _clear_data_when_content_removed(content_package, event):
 
 ## Courses
 
+def _remove_registered_course_overview(name=None, registry=None):
+	group = _removed_registered(INTICourseOverviewGroup, name=name, registry=registry)
+	## For each group remove anything that is not synced in the content pacakge.
+	## As of 20150404 we don't have a way to edit and register common group 
+	## overview items so we need to remove the old and re-register the new
+	for item in group: # this shoud resolve weak refs
+		iface = iface_of_thing(item)
+		if iface not in PACKAGE_CONTAINER_INTERFACES:
+			_removed_registered(iface, name=item.ntiid, registry=registry)
+				
 def _remove_registered_lesson_overview(name, registry=None):
 	## remove lesson overviews
 	overview = _removed_registered(INTILessonOverview, name=name, registry=registry)
@@ -362,14 +372,7 @@ def _remove_registered_lesson_overview(name, registry=None):
 		return
 	## remove all groups
 	for group in overview:
-		_removed_registered(INTICourseOverviewGroup, name=group.ntiid, registry=registry)
-		## For each group remove anything that is not synced in the content pacakge.
-		## As of 20150404 we don't have a way to edit and register common group 
-		## overview items so we need to remove the old and re-register the new
-		for item in group: # this shoud resolve weak refs
-			iface = iface_of_thing(item)
-			if iface not in PACKAGE_CONTAINER_INTERFACES:
-				_removed_registered(iface, name=item.ntiid, registry=registry)
+		_remove_registered_course_overview(name=group.ntiid, registry=registry)
 				
 def _load_and_register_lesson_overview_json(jtext, registry=None, 
 											validate=False, course=None):
