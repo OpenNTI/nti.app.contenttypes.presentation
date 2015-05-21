@@ -169,16 +169,19 @@ class GetPresentationAssetsView(AbstractAuthenticatedView,
 
 
 	def __call__(self):
+		count = 0
 		params = self.request.params
 		result = LocatedExternalDict()
 		result[ITEMS] = items = {}
 		extended = (params.get('all') or u'').lower() in ('true', '1', 'yes', 'y', 't')
 		for provided in ALL_PRESENTATION_ASSETS_INTERFACES:
 			comps = list(component.getUtilitiesFor(provided))
+			count += len(comps)
 			if extended:
 				items[provided.__name__] = sorted(n for n, _ in comps)
 			else:
 				items[provided.__name__] = len(comps)
+		result['Total'] = count
 		return result
 
 @view_config(context=IDataserverFolder)
