@@ -34,7 +34,6 @@ from nti.contentlibrary.indexed_data.interfaces import ISlideDeckIndexedDataCont
 from nti.contentlibrary.indexed_data.interfaces import IRelatedContentIndexedDataContainer
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
-from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
@@ -530,11 +529,6 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 	now = time.time()
 	logger.info('Synchronizing lessons overviews for %s', name)
 
-	if ICourseSubInstance.providedBy(course):
-		parent = course.__parent__.__parent__
-	else:
-		parent = course
-
 	## parse and register
 	nodes = _outline_nodes(course.Outline)
 	for node in nodes:
@@ -577,7 +571,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 			result.append(overview)
 			
 			## set lineage
-			overview.__parent__ = parent
+			overview.__parent__ = node
 						
 			## index
 			_index_overview_items((overview,),
