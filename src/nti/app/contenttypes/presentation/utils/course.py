@@ -9,6 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from itertools import chain
+
 from zope import component
 from zope import interface
 
@@ -22,6 +24,7 @@ from nti.app.products.courseware.utils import is_course_instructor
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
@@ -43,12 +46,22 @@ class ProxyEnrollmentRecord(CreatedAndModifiedTimeMixin, Contained):
 		self.CourseInstance = course
 
 def get_enrollment_record(context, user):
-	course = ICourseInstance(context, None)
-	if is_course_instructor(course, user):
-		# create a fake enrollment record w/ all scopes to signal an instructor
-		result = ProxyEnrollmentRecord(course, IPrincipal(user), ES_ALL)
+	course = ICourseInstance(context, None) # e.g. course in lineage
+	if course is None:
+		return None
+	
+	if ICourseSubInstance.providedBy(course):
+		main_course = course.__parent__.__parent__
 	else:
-		result = get_any_enrollment(course, user) if course is not None else None
+		main_course = course
+	
+	# give priority to course in lineage before checking the rest
+	for instance in chain( (course, main_course), main_course.SubInstances.values() ):
+		if is_course_instructor(instance, user):
+			# create a fake enrollment record w/ all scopes to signal an instructor
+			return ProxyEnrollmentRecord(course, IPrincipal(user), ES_ALL)
+	
+	result = get_any_enrollment(course, user) if course is not None else None
 	return result
 
 def get_courses(ntiids=()):
