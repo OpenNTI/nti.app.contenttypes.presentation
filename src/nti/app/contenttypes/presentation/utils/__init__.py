@@ -65,7 +65,7 @@ def is_item_visible(item, user, context=None, record=None):
 	if item.visibility != EVERYONE and user_visibility != item.visibility:
 		record = get_enrollment_record(context, user) if record is None else record
 		scope = record.Scope if record is not None else None
-		if get_visibility_for_scope(scope) != item.visibility:
+		if scope != ES_ALL and get_visibility_for_scope(scope) != item.visibility:
 			return False
 	return True
 
