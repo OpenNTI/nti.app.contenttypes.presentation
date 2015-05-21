@@ -52,7 +52,7 @@ from ..subscribers import get_course_packages
 from ..subscribers import synchronize_content_package
 from ..subscribers import synchronize_course_lesson_overview
 
-from ..utils import remove_utilities
+from ..utils import remove_all_utilities
 
 from .. import get_catalog
 
@@ -198,10 +198,7 @@ class ResetPresentationAssetsView(AbstractAuthenticatedView,
 	def __call__(self):
 		now = time.time()
 		result = LocatedExternalDict()
-
-		count = remove_utilities()
-		result[ITEMS] = count
-
+		result[ITEMS] = remove_all_utilities()
 		index = get_catalog()
 		index.reset()
 		result['Elapsed'] = time.time() - now
