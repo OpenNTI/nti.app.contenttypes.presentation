@@ -25,7 +25,7 @@ from nti.dataserver.utils.base_script import set_site
 from nti.dataserver.utils.base_script import create_context
 
 from nti.ntiids.ntiids import find_object_with_ntiid
-	
+
 from ..subscribers import get_course_packages
 from ..subscribers import synchronize_content_package
 from ..subscribers import synchronize_course_lesson_overview
@@ -42,7 +42,7 @@ def yield_courses(args, all_courses=False):
 			obj = find_object_with_ntiid(ntiid)
 			course = ICourseInstance(obj, None)
 			if course is None:
-				try:			
+				try:
 					entry = catalog.getCatalogEntry(ntiid)
 					course = ICourseInstance(entry, None)
 				except KeyError:
@@ -52,13 +52,13 @@ def yield_courses(args, all_courses=False):
 			else:
 				yield course
 
-def _sync_course(course, exclude=False, force=False):
+def _sync_course(course, exclude=False):
 	result = []
 	for content_package in get_course_packages(course):
-		items = synchronize_content_package(content_package, force=force)
+		items = synchronize_content_package(content_package)
 		result.extend(items or ())
-	
-	items = synchronize_course_lesson_overview(course, force=force)
+
+	items = synchronize_course_lesson_overview(course)
 	if not exclude and not ICourseSubInstance.providedBy(course):
 		for sub_instance in (course.SubInstances or {}).values():
 			synchronize_course_lesson_overview(sub_instance)
@@ -67,12 +67,12 @@ def _sync_course(course, exclude=False, force=False):
 def _sync_courses(args):
 	result = []
 	for course in yield_courses(args):
-		result.extend(_sync_course(course,  args.exclude,  args.force))
+		result.extend(_sync_course(course, args.exclude))
 	return result
 
 def _process_args(args):
 	set_site(args.site)
-	
+
 	if not args.list:
 		_sync_courses(args)
 	else:
@@ -85,43 +85,41 @@ def _process_args(args):
 			for content_package in get_course_packages(course):
 				print('\t', content_package.ntiid)
 		print()
-	
+
 def main():
 	arg_parser = argparse.ArgumentParser(description="Course lessons overviews synchronizer")
 	arg_parser.add_argument('-v', '--verbose', help="Be Verbose", action='store_true',
 							dest='verbose')
-	arg_parser.add_argument('-f', '--force', help="Force updates", action='store_true',
-							dest='force')
 
-	arg_parser.add_argument('-x', '--exclude', help="Exclude course sub-instances", 
+	arg_parser.add_argument('-x', '--exclude', help="Exclude course sub-instances",
 							action='store_true', dest='exclude')
 
 	arg_parser.add_argument('-s', '--site',
 							dest='site',
 							help="Application SITE.")
 
-	site_group = arg_parser.add_mutually_exclusive_group()	
+	site_group = arg_parser.add_mutually_exclusive_group()
 	site_group.add_argument('-n', '--ntiids',
 							 dest='ntiids',
 							 nargs="+",
 							 default=(),
 							 help="The courses [entries] NTIIDs")
-	
+
 	site_group.add_argument('--all',
 							 dest='all',
 							 action='store_true',
 							 help="All courses")
-	
+
 	site_group.add_argument('--list',
 							 dest='list',
 							 action='store_true',
 							 help="List sync courses")
-	
+
 	args = arg_parser.parse_args()
 	env_dir = os.getenv('DATASERVER_DIR')
 	if not env_dir or not os.path.exists(env_dir) and not os.path.isdir(env_dir):
 		raise IOError("Invalid dataserver environment root directory")
-	
+
 	if not args.site:
 		raise ValueError("Application site not specified")
 

@@ -236,8 +236,7 @@ def _register_items_when_content_changes(content_package,
 										 connection=None,
 										 object_creator=None,
 										 catalog=None,
-										 intids=None,
-										 force=False):
+										 intids=None):
 	catalog = get_catalog() if catalog is None else catalog
 	namespace = index_iface.getTaggedValue(TAG_NAMESPACE_FILE)
 	sibling_key = content_package.does_sibling_entry_exist(namespace)
@@ -246,7 +245,7 @@ def _register_items_when_content_changes(content_package,
 	
 	sibling_lastModified = sibling_key.lastModified
 	root_lastModified = _get_data_lastModified(content_package, namespace)
-	if not force and root_lastModified >= sibling_lastModified:
+	if root_lastModified >= sibling_lastModified:
 		return ()
 
 	now = time.time()
@@ -309,7 +308,7 @@ def _register_items_when_content_changes(content_package,
 	
 	return registered
 	
-def synchronize_content_package(content_package, catalog=None, force=False):
+def synchronize_content_package(content_package, catalog=None):
 	result = []
 	registry = _registry()
 	connection = _connection(registry)
@@ -317,7 +316,6 @@ def synchronize_content_package(content_package, catalog=None, force=False):
 		items = _register_items_when_content_changes(content_package, 
 													 icontainer, 
 													 item_iface,
-													 force=force,
 													 catalog=catalog,
 													 registry=registry,
 													 connection=connection,
@@ -515,7 +513,7 @@ def _index_overview_items(items, containers=None, namespace=None,
 						  provided=item_iface,
 						  containers=containers)
 
-def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=False):
+def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 	result = []
 	course_packages = get_course_packages(course)
 	catalog = get_catalog() if catalog is None else catalog
@@ -529,7 +527,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 	now = time.time()
 	logger.info('Synchronizing lessons overviews for %s', name)
 
-	## parse and register
+	# parse and register
 	nodes = _outline_nodes(course.Outline)
 	for node in nodes:
 		namespace = node.src ## this is ntiid based file (unique)
@@ -540,9 +538,9 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 			
 			sibling_lastModified = sibling_key.lastModified
 			root_lastModified = _get_source_lastModified(namespace, catalog)
-			if not force and root_lastModified >= sibling_lastModified:
-				## we want to associate the ntiid of the new course with the 
-				## assets and set the lesson overview ntiid to the outline node
+			if root_lastModified >= sibling_lastModified:
+				# we want to associate the ntiid of the new course with the 
+				# assets and set the lesson overview ntiid to the outline node
 				objects = catalog.search_objects(namespace=namespace,
 												 provided=INTILessonOverview,
 												 intids=intids)
@@ -554,11 +552,11 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 									  node=node)
 				continue
 
-			## this remove all lesson overviews and overview groups
-			## for specified namespace file. As of 20150521 we 
-			## don't allow shaing of lesson amogst different courses
-			## (not in hierarchy).. and overview groups are unique to
-			## its own lesson
+			# this remove all lesson overviews and overview groups
+			# for specified namespace file. As of 20150521 we 
+			# don't allow shaing of lesson amogst different courses
+			# (not in hierarchy).. and overview groups are unique to
+			# its own lesson
 			_remove_and_unindex_course_assets(namespace=namespace,
 											  containers=ntiid,
 											  registry=registry,
@@ -573,10 +571,10 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 																registry=registry)
 			result.append(overview)
 			
-			## set lineage
+			# set lineage
 			overview.__parent__ = node
 						
-			## index
+			# index
 			_index_overview_items((overview,),
 								  namespace=namespace,
 								  containers=ntiid,
