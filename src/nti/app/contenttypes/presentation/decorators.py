@@ -48,7 +48,8 @@ from nti.externalization.externalization import to_external_object
 
 from nti.links.links import Link
 
-from nti.ntiids.ntiids import get_parts
+from nti.ntiids.ntiids import get_type
+from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_provider_safe
 
 from .utils import is_item_visible
@@ -129,27 +130,39 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 								 context=context, record=record)
 		return result
 
-	def _allow_legacy_discussion(self, context, item):
-		parts = get_parts(item.target)
-		nttype = parts.nttype
-		specific = parts.specific
-		# Check if [legacy] discussion NTIID is of either
-		# Topic:EnrolledCourseRoot or Topic:EnrolledCourseSection type.
-		# If so only return the reference if [mapped] enrollment scope
-		# is in the specific NTIID string
-		if nttype in (NTIID_TYPE_COURSE_TOPIC, NTIID_TYPE_COURSE_SECTION_TOPIC):
-			record = self.record(context)
-			scope = record.Scope if record is not None else None
-			if scope != ES_ALL:
-				m_scope = ENROLLMENT_LINEAGE_MAP.get(scope or u'')
-				m_scope = m_scope[0] if m_scope else None  # pick first
-				if	(not m_scope) or \
-					(m_scope == ES_PUBLIC and OPEN not in specific) or \
-					(m_scope == ES_CREDIT and \
-					 (IN_CLASS_SAFE not in specific and OPEN not in specific)):
-					return False
-		return True
-
+	def _is_legacy_discussion(self, item):
+		nttype = get_type(item.target)
+		return nttype in (NTIID_TYPE_COURSE_TOPIC, NTIID_TYPE_COURSE_SECTION_TOPIC)
+	
+	def _filter_legacy_discussions(self, context, indexes, removal):
+		items = context.Items
+		record = self.record(context)
+		scope = record.Scope if record is not None else None
+		scope = ES_CREDIT if scope == ES_ALL else scope # map to credit
+		m_scope = ENROLLMENT_LINEAGE_MAP.get(scope or u'')
+		if not m_scope:
+			removal.update(indexes)
+		else:
+			scopes = {}
+			has_credit = False
+			for idx in indexes:
+				item = items[idx]
+				specific = get_specific(item.target)
+				scopes[idx] = ES_PUBLIC if OPEN in specific else None
+				scopes[idx] = ES_CREDIT if IN_CLASS_SAFE in specific else scopes[idx]
+				has_credit = has_credit or scopes[idx] == ES_CREDIT
+			
+			m_scope = m_scope[0] # pick first
+			for idx in indexes:
+				item = items[idx]
+				scope = scopes[idx]
+				if not scope:
+					removal.add(idx)
+				elif m_scope == ES_PUBLIC and scope != ES_PUBLIC:
+					removal.add(idx)
+				elif m_scope == ES_CREDIT and scope == ES_PUBLIC and has_credit:
+					removal.add(idx)
+				
 	def _allow_discussion_course_bundle(self, context, item, ext_item):
 		record = self.record(context)
 		topic = resolve_discussion_course_bundle(user=self.remoteUser,
@@ -163,26 +176,29 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 
 	def _decorate_external_impl(self, context, result):
 		idx = 0
+		removal = set()
+		discussions = []
 		items = result[ITEMS]
 		# loop through sources
-		for item in context:  # should resolve weak refs
+		for idx, item in enumerate(context):
 			if IVisible.providedBy(item) and not self._allow_visible(context, item):
-				del items[idx]
-				continue
+				removal.add(idx)
 			elif INTIDiscussionRef.providedBy(item):
 				if item.isCourseBundle():
 					ext_item = items[idx]
 					if not self._allow_discussion_course_bundle(context, item, ext_item):
-						del items[idx]
-						continue
-				elif not self._allow_legacy_discussion(context, item):
-					del items[idx]
-					continue
+						removal.add(idx)
+				elif self._is_legacy_discussion(item):
+					discussions.append(idx)
 			elif IMediaRef.providedBy(item):
 				self._handle_media_ref(items, item, idx)
-
-			idx += 1
-
+		# filter legacy discussions
+		if discussions:
+			self._filter_legacy_discussions(context, discussions, removal)
+		# remove disallowed items
+		if removal:
+			result[ITEMS] = [x for idx, x in enumerate(items) if idx not in removal]
+			
 	def _do_decorate_external(self, context, result):
 		try:
 			__traceback_info__ = context
