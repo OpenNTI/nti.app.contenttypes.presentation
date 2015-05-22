@@ -555,7 +555,10 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 				continue
 
 			## this remove all lesson overviews and overview groups
-			## for specified namespace file 
+			## for specified namespace file. As of 20150521 we 
+			## don't allow shaing of lesson amogst different courses
+			## (not in hierarchy).. and overview groups are unique to
+			## its own lesson
 			_remove_and_unindex_course_assets(namespace=namespace,
 											  containers=ntiid,
 											  registry=registry,
