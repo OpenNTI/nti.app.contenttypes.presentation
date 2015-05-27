@@ -34,10 +34,10 @@ class PresentationAssetGetView(GenericGetView):
 	def __call__(self):
 		accept = self.request.headers.get(b'Accept') or u''
 		if accept == 'application/vnd.nextthought.pageinfo+json':
-			raise hexc.HTTPNotFound()
+			raise hexc.HTTPNotAcceptable()
 		result = GenericGetView.__call__(self)
 		return result
-	
+
 @view_config(context=INTITimeline)
 @view_config(context=INTIRelatedWorkRef)
 @view_defaults(route_name='objects.generic.traversal',
