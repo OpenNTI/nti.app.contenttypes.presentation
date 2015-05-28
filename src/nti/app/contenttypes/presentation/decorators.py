@@ -214,8 +214,7 @@ class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwar
 	LEGACY_UAS = ("NTIFoundation DataLoader NextThought/1.0",
 				  "NTIFoundation DataLoader NextThought/1.1.0",
 				  "NTIFoundation DataLoader NextThought/1.1.1",
-				  "NTIFoundation DataLoader NextThought/1.2.0",
-				  "NTIFoundation DataLoader NextThought/1.2.7")
+				  "NTIFoundation DataLoader NextThought/1.2.")
 		
 	def _predicate(self, context, result):
 		ua = self.request.environ.get('HTTP_USER_AGENT', '')
