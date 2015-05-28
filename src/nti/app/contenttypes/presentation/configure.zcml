@@ -103,7 +103,12 @@
 					provides="nti.externalization.interfaces.IExternalMappingDecorator"
 					for="nti.contenttypes.courses.interfaces.ICourseOutlineContentNode
 						 pyramid.interfaces.IRequest" />
-						 
+		
+		<subscriber factory=".decorators._IpadCourseOutlineContentNodeSrcDecorator"
+					provides="nti.externalization.interfaces.IExternalMappingDecorator"
+					for="nti.contenttypes.courses.interfaces.ICourseOutlineContentNode
+						 pyramid.interfaces.IRequest" />
+
 		<subscriber factory=".decorators._NTICourseOverviewGroupDecorator"
 					provides="nti.externalization.interfaces.IExternalObjectDecorator"
 					for="nti.contenttypes.presentation.interfaces.INTICourseOverviewGroup

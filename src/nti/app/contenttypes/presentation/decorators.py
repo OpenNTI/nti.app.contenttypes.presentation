@@ -47,6 +47,7 @@ from nti.externalization.interfaces import IExternalMappingDecorator
 from nti.externalization.externalization import to_external_object
 
 from nti.links.links import Link
+from nti.links.externalization import render_link
 
 from nti.ntiids.ntiids import get_type
 from nti.ntiids.ntiids import get_specific
@@ -205,3 +206,43 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 			self._decorate_external_impl(context, result)
 		except Exception:
 			logger.exception("Error while decorating course overview group")
+
+@component.adapter(ICourseOutlineContentNode)
+@interface.implementer(IExternalMappingDecorator)
+class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwareDecorator):
+
+	LEGACY_UAS = ("NTIFoundation DataLoader NextThought/1.0",
+				  "NTIFoundation DataLoader NextThought/1.1.0",
+				  "NTIFoundation DataLoader NextThought/1.1.1",
+				  "NTIFoundation DataLoader NextThought/1.2.0",
+				  "NTIFoundation DataLoader NextThought/1.2.7")
+		
+	def _predicate(self, context, result):
+		ua = self.request.environ.get('HTTP_USER_AGENT', '')
+		if not ua:
+			return False
+
+		for lua in self.LEGACY_UAS:
+			if ua.startswith(lua):
+				return True
+
+		return False
+
+	def _overview_decorate_external(self, context, result):
+		try:
+			request = self.request
+			ntiid = context.LessonOverviewNTIID
+			lesson = component.queryUtility(INTILessonOverview, name=ntiid) if ntiid else None
+			if lesson is not None:
+				link = Link(context, rel=VIEW_OVERVIEW_CONTENT,
+							elements=(VIEW_OVERVIEW_CONTENT,))
+				href = render_link( link )['href']
+				url = urljoin(request.host_url, href)
+				result['src'] = url
+				return True
+		except (KeyError, ValueError, AssertionError, AttributeError):
+			pass
+		return False
+
+	def _do_decorate_external(self, context, result):
+		self._overview_decorate_external(context, result)
