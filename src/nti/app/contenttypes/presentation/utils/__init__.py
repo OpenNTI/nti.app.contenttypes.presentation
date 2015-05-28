@@ -20,6 +20,7 @@ from nti.contenttypes.courses.interfaces import ES_PURCHASED
 from nti.contenttypes.courses.interfaces import ES_CREDIT_DEGREE
 from nti.contenttypes.courses.interfaces import ES_CREDIT_NONDEGREE
 from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
+from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
@@ -69,6 +70,12 @@ def is_item_visible(item, user, context=None, record=None):
 			return False
 	return True
 
+def get_scope_term(name):
+	for scope in ENROLLMENT_SCOPE_VOCABULARY:
+		if scope.value == name:
+			return scope
+	return None
+
 def resolve_discussion_course_bundle(user, item, context=None, record=None):
 	"""
 	return the approproate topic according  the discussion ref and user enrollment
@@ -105,10 +112,13 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 		topic = None
 		topic_key = get_topic_key(discussion)
 		m_scope = ES_ALL if scope == ES_ALL else ENROLLMENT_LINEAGE_MAP.get(scope)[0]
+		scope_term = get_scope_term(m_scope) if m_scope != ES_ALL else None
+		implies = set(getattr(scope_term, 'implies', None) or ())
 		for v in course.Discussions.values():
 			# check the forum scopes against the mapped enrollment scope
 			forum_scopes = get_forum_scopes(v) if m_scope != ES_ALL else ()
-			if (m_scope == ES_ALL or m_scope in forum_scopes) and topic_key in v:
+			if 	(m_scope == ES_ALL or m_scope in forum_scopes or implies.intersection(forum_scopes)) and \
+				topic_key in v:
 				topic = v[topic_key]  # found the topic
 				break
 		return topic
