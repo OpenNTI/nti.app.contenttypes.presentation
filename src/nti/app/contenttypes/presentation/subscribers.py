@@ -5,7 +5,6 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-from nti.contenttypes.courses.discussions.utils import get_parent_course
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -37,6 +36,8 @@ from nti.contentlibrary.indexed_data.interfaces import IRelatedContentIndexedDat
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
+
+from nti.contenttypes.courses.discussions.utils import get_parent_course
 
 from nti.contenttypes.presentation.interfaces import INTIAudio
 from nti.contenttypes.presentation.interfaces import INTIVideo
