@@ -112,12 +112,14 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 		topic = None
 		topic_key = get_topic_key(discussion)
 		m_scope = ES_ALL if scope == ES_ALL else ENROLLMENT_LINEAGE_MAP.get(scope)[0]
-		scope_term = get_scope_term(m_scope) if m_scope != ES_ALL else None
-		implies = set(getattr(scope_term, 'implies', None) or ())
+		m_scope_term = get_scope_term(m_scope) if m_scope != ES_ALL else None
+		m_scope_implies = set(getattr(m_scope_term, 'implies', None) or ())
 		for v in course.Discussions.values():
 			# check the forum scopes against the mapped enrollment scope
 			forum_scopes = get_forum_scopes(v) if m_scope != ES_ALL else ()
-			if 	(m_scope == ES_ALL or m_scope in forum_scopes or implies.intersection(forum_scopes)) and \
+			if 	(m_scope == ES_ALL or
+				 m_scope in forum_scopes or
+				 m_scope_implies.intersection(forum_scopes)) and \
 				topic_key in v:
 				topic = v[topic_key]  # found the topic
 				break
