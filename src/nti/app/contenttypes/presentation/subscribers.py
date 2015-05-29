@@ -389,9 +389,9 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 	for gdx, group in enumerate(groups):
 		# register course overview roup
 		result, registered = _register_utility(group,
-												INTICourseOverviewGroup,
-											   	group.ntiid,
-											   	registry)
+											   INTICourseOverviewGroup,
+											   group.ntiid,
+											   registry)
 		if not result:  # replace if registered before
 			groups[gdx] = registered
 
@@ -408,6 +408,9 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 			if item is None:
 				del items[idx]
 				continue
+
+			if INTIDiscussionRef.providedBy(item) and item.isCourseBundle() and ntiid:
+				pass
 
 			item_iface = iface_of_thing(item)
 			result, registered = _register_utility(item,
@@ -486,9 +489,6 @@ def _index_overview_items(items, containers=None, namespace=None,
 		item = item() if IWeakRef.providedBy(item) else item
 		if item is None:
 			continue
-
-		if INTIDiscussionRef.providedBy(item) and item.isCourseBundle():
-			pass
 
 		# set lesson overview NTIID on the outline node
 		if INTILessonOverview.providedBy(item) and node is not None:
