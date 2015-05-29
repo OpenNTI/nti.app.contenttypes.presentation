@@ -20,6 +20,7 @@ from zope.lifecycleevent import IObjectRemovedEvent
 
 from ZODB.interfaces import IConnection
 
+from nti.app.products.courseware.utils import get_parent_course
 from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseInstance
 
 from nti.contentlibrary.interfaces import IContentPackage
@@ -36,8 +37,6 @@ from nti.contentlibrary.indexed_data.interfaces import IRelatedContentIndexedDat
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
-
-from nti.contenttypes.courses.discussions.utils import get_parent_course
 
 from nti.contenttypes.presentation.interfaces import INTIAudio
 from nti.contenttypes.presentation.interfaces import INTIVideo
