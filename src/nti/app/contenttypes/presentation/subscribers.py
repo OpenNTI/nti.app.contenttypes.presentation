@@ -5,6 +5,7 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+from nti.contenttypes.courses.discussions.utils import get_parent_course
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -57,6 +58,9 @@ from nti.contenttypes.presentation.utils import create_lessonoverview_from_exter
 
 from nti.externalization.interfaces import StandardExternalFields
 
+from nti.ntiids.ntiids import make_ntiid
+from nti.ntiids.ntiids import get_specific
+from nti.ntiids.ntiids import make_provider_safe
 from nti.ntiids.ntiids import is_valid_ntiid_string
 
 from nti.site.utils import registerUtility
@@ -410,7 +414,11 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 				continue
 
 			if INTIDiscussionRef.providedBy(item) and item.isCourseBundle() and ntiid:
-				pass
+				specific = get_specific(ntiid)
+				provider = make_provider_safe(specific) if specific else None
+				if provider: # check for safety
+					new_ntiid = make_ntiid(provider=provider, base=item.ntiid)
+					item.ntiid = new_ntiid
 
 			item_iface = iface_of_thing(item)
 			result, registered = _register_utility(item,
@@ -528,6 +536,10 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 	ntiid = entry.ntiid if entry is not None else course.__name__
 	name = entry.ProviderUniqueID if entry is not None else course.__name__
 
+	parent = get_parent_course(course)
+	parent = ICourseCatalogEntry(parent, None)
+	ref_ntiid = parent.ntiid if parent is not None else ntiid
+	
 	now = time.time()
 	logger.info('Synchronizing lessons overviews for %s', name)
 
@@ -571,8 +583,8 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 			index_text = content_package.read_contents_of_sibling_entry(namespace)
 			overview = _load_and_register_lesson_overview_json(index_text,
 																validate=True,
-																ntiid=ntiid,
 																course=course,
+																ntiid=ref_ntiid,
 																registry=registry)
 			result.append(overview)
 
