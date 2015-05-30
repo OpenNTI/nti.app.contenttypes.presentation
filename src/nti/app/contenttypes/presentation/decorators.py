@@ -64,6 +64,18 @@ LINKS = StandardExternalFields.LINKS
 ITEMS = StandardExternalFields.ITEMS
 IN_CLASS_SAFE = make_provider_safe(IN_CLASS)
 
+def _lesson_overview_link(context):
+	try:
+		name = context.LessonOverviewNTIID
+		lesson = component.queryUtility(INTILessonOverview, name=name) if name else None
+		if lesson is not None:
+			link = Link(context, rel=VIEW_OVERVIEW_CONTENT,
+						elements=(VIEW_OVERVIEW_CONTENT,))
+			return link
+	except AttributeError:
+		pass
+	return None
+
 @component.adapter(ICourseOutlineContentNode)
 @interface.implementer(IExternalMappingDecorator)
 class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
@@ -90,17 +102,11 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 		return False
 
 	def _overview_decorate_external(self, context, result):
-		try:
-			ntiid = context.LessonOverviewNTIID
-			lesson = component.queryUtility(INTILessonOverview, name=ntiid) if ntiid else None
-			if lesson is not None:
-				links = result.setdefault(LINKS, [])
-				link = Link(context, rel=VIEW_OVERVIEW_CONTENT,
-							elements=(VIEW_OVERVIEW_CONTENT,))
-				links.append(link)
-				return True
-		except AttributeError:
-			pass
+		link = _lesson_overview_link(context)
+		if link is not None:
+			links = result.setdefault(LINKS, [])
+			links.append(link)
+			return True
 		return False
 
 	def _do_decorate_external(self, context, result):
@@ -134,12 +140,12 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 	def _is_legacy_discussion(self, item):
 		nttype = get_type(item.target)
 		return nttype in (NTIID_TYPE_COURSE_TOPIC, NTIID_TYPE_COURSE_SECTION_TOPIC)
-	
+
 	def _filter_legacy_discussions(self, context, indexes, removal):
 		items = context.Items
 		record = self.record(context)
 		scope = record.Scope if record is not None else None
-		scope = ES_CREDIT if scope == ES_ALL else scope # map to credit
+		scope = ES_CREDIT if scope == ES_ALL else scope  # map to credit
 		m_scope = ENROLLMENT_LINEAGE_MAP.get(scope or u'')
 		if not m_scope:
 			removal.update(indexes)
@@ -152,8 +158,8 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 				scopes[idx] = ES_PUBLIC if OPEN in specific else None
 				scopes[idx] = ES_CREDIT if IN_CLASS_SAFE in specific else scopes[idx]
 				has_credit = has_credit or scopes[idx] == ES_CREDIT
-			
-			m_scope = m_scope[0] # pick first
+
+			m_scope = m_scope[0]  # pick first
 			for idx in indexes:
 				item = items[idx]
 				scope = scopes[idx]
@@ -163,7 +169,7 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 					removal.add(idx)
 				elif m_scope == ES_CREDIT and scope == ES_PUBLIC and has_credit:
 					removal.add(idx)
-				
+
 	def _allow_discussion_course_bundle(self, context, item, ext_item):
 		record = self.record(context)
 		topic = resolve_discussion_course_bundle(user=self.remoteUser,
@@ -199,7 +205,7 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 		# remove disallowed items
 		if removal:
 			result[ITEMS] = [x for idx, x in enumerate(items) if idx not in removal]
-			
+
 	def _do_decorate_external(self, context, result):
 		try:
 			__traceback_info__ = context
@@ -215,7 +221,7 @@ class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwar
 				  "NTIFoundation DataLoader NextThought/1.1.0",
 				  "NTIFoundation DataLoader NextThought/1.1.1",
 				  "NTIFoundation DataLoader NextThought/1.2.")
-		
+
 	def _predicate(self, context, result):
 		ua = self.request.environ.get('HTTP_USER_AGENT', '')
 		if not ua:
@@ -229,17 +235,13 @@ class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwar
 
 	def _overview_decorate_external(self, context, result):
 		try:
-			request = self.request
-			ntiid = context.LessonOverviewNTIID
-			lesson = component.queryUtility(INTILessonOverview, name=ntiid) if ntiid else None
-			if lesson is not None:
-				link = Link(context, rel=VIEW_OVERVIEW_CONTENT,
-							elements=(VIEW_OVERVIEW_CONTENT,))
-				href = render_link( link )['href']
-				url = urljoin(request.host_url, href)
+			link = _lesson_overview_link(context)
+			if link is not None:
+				href = render_link(link)['href']
+				url = urljoin(self.request.host_url, href)
 				result['src'] = url
 				return True
-		except (KeyError, ValueError, AssertionError, AttributeError):
+		except (KeyError, ValueError, AssertionError):
 			pass
 		return False
 
