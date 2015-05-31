@@ -24,13 +24,13 @@ class _SchemaManager(BaseSchemaManager):
 	A schema manager that we can register as a utility in ZCML.
 	"""
 
-	def __init__( self ):
+	def __init__(self):
 		super(_SchemaManager, self).__init__(
 						generation=generation,
 						minimum_generation=generation,
 						package_name='nti.app.contenttypes.presentation.generations')
 
-	def install( self, context ):
+	def install(self, context):
 		evolve(context)
 
 def evolve(context):

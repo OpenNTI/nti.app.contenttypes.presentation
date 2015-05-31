@@ -30,14 +30,14 @@ def do_evolve(context):
 	lsm = dataserver_folder.getSiteManager()
 	intids = lsm.getUtility(IIntIds)
 
-	## remove old utility
+	# remove old utility
 	catalog = lsm.getUtility(IPresentationAssetsIndex, name=CATALOG_INDEX_NAME)
 	lsm.unregisterUtility(catalog, provided=IPresentationAssetsIndex, name=CATALOG_INDEX_NAME)
 	intids.unregister(catalog)
 
-	## recreate new one
+	# recreate new one
 	install_catalog(context)
-		
+
 def evolve(context):
 	"""
 	Evolve to generation 3 by recreating catalog

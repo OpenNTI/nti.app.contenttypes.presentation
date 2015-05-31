@@ -101,11 +101,11 @@ class PresentationAssetCatalog(Persistent):
 	
 	def reset(self):
 		self._last_modified = self.family.OI.BTree()
-		## track the object type (interface name)
+		# track the object type (interface name)
 		self._type_index = TypeIndex(family=self.family)
-		## track the containers the object belongs to
+		# track the containers the object belongs to
 		self._entry_index = KeepSetIndex(family=self.family)
-		## track the source/file name an object was read from
+		# track the source/file name an object was read from
 		self._namespace_index = NamespaceIndex(family=self.family)
 			
 	def _doc_id(self, item, intids=None):

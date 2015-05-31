@@ -90,7 +90,7 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 	if record is None:
 		return None
 	# enrollment scope. When scope is equals to 'All' it means user is an instructor
-	scope = record.Scope 
+	scope = record.Scope
 
 	# get course pointed by the discussion ref
 	course = get_course_for_discussion(item, context=record.CourseInstance)

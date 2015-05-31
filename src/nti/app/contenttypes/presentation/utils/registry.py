@@ -31,7 +31,7 @@ def remove_utilities(interfaces=ALL_PRESENTATION_ASSETS_INTERFACES,
 		unregister = site_manager.subscribedUnregisterUtility
 	else:
 		unregister = site_manager.unregisterUtility
-			
+
 	for provided in interfaces or ():
 		for name, comp in list(site_manager.getUtilitiesFor(provided)):
 			unregister(provided=provided, name=name)
@@ -39,7 +39,7 @@ def remove_utilities(interfaces=ALL_PRESENTATION_ASSETS_INTERFACES,
 				intids.unregister(comp, event=event)
 			except KeyError:
 				pass
-			count +=1 
+			count += 1
 	return count
 
 def remove_all_utilities(interfaces=ALL_PRESENTATION_ASSETS_INTERFACES,
@@ -52,7 +52,7 @@ def remove_all_utilities(interfaces=ALL_PRESENTATION_ASSETS_INTERFACES,
 		sites = hostsites.values()
 	else:
 		sites = [hostsites[k] for k in site_names if k in hostsites]
-	
+
 	for site in sites:
 		with current_site(site):
 			count += remove_utilities(interfaces=interfaces,

@@ -29,7 +29,7 @@ def do_evolve(context):
 	index = lsm.getUtility(IPresentationAssetsIndex, name=CATALOG_INDEX_NAME)
 	for k, v in list(index._last_modified.items()):
 		index._last_modified[k] = time_to_64bit_int(v)
-	
+
 def evolve(context):
 	"""
 	Evolve to generation 2 by adjusting the last mod valued
