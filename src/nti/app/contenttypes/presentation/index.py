@@ -82,11 +82,22 @@ class KeepSetIndex(RawSetIndex):
 			super(KeepSetIndex, self).index_doc(doc_id, old)
 		else:
 			super(KeepSetIndex, self).unindex_doc(doc_id)
-		
-class NamespaceIndex(RawValueIndex):
+
+class CheckRawValueIndex(RawValueIndex):
+	
+	def index_doc(self, doc_id, value):
+		if value is None:
+			self.unindex_doc(doc_id)
+		else:
+			documents_to_values = self.documents_to_values
+			old = documents_to_values.get(doc_id)
+			if old is None or old != value:
+				super(CheckRawValueIndex, self).index_doc(doc_id, value) 
+
+class NamespaceIndex(CheckRawValueIndex):
 	pass
 		
-class TypeIndex(RawValueIndex):
+class TypeIndex(CheckRawValueIndex):
 	pass
 
 class PresentationAssetCatalog(Persistent):
