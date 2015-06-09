@@ -362,7 +362,7 @@ def _remove_registered_course_overview(name=None, registry=None):
 	# For each group remove anything that is not synced in the content pacakge.
 	# As of 20150404 we don't have a way to edit and register common group
 	# overview items so we need to remove the old and re-register the new
-	for item in group:  # this shoud resolve weak refs
+	for item in group or ():  # this shoud resolve weak refs
 		iface = iface_of_thing(item)
 		if iface not in PACKAGE_CONTAINER_INTERFACES:
 			_removed_registered(iface, name=item.ntiid, registry=registry)
