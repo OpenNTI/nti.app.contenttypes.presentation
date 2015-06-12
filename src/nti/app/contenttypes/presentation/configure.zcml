@@ -74,21 +74,23 @@
 	<utility factory=".ntiids._NTICourseOverviewGroupResolver" name="NTICourseOverviewGroup" />
 
 	<!-- Events -->
-	<subscriber handler=".subscribers._update_data_when_content_changes"
-				for="nti.contentlibrary.interfaces.IContentPackage
-					 zope.lifecycleevent.IObjectAddedEvent" />
+	<configure zcml:condition="not-have devmode">
+		<subscriber handler=".subscribers._update_data_when_content_changes"
+					for="nti.contentlibrary.interfaces.IContentPackage
+						 zope.lifecycleevent.IObjectAddedEvent" />
+		
+		<subscriber handler=".subscribers._update_data_when_content_changes"
+					for="nti.contentlibrary.interfaces.IContentPackage
+						 zope.lifecycleevent.IObjectModifiedEvent" />
 	
-	<subscriber handler=".subscribers._update_data_when_content_changes"
-				for="nti.contentlibrary.interfaces.IContentPackage
-					 zope.lifecycleevent.IObjectModifiedEvent" />
-
-	<subscriber handler=".subscribers._update_data_when_content_changes"
-				for="nti.contentlibrary.interfaces.IContentPackage
-					 nti.contentlibrary.interfaces.IContentPackageUnmodifiedEvent" />
-	
-	<subscriber handler=".subscribers._clear_data_when_content_removed"
-				for="nti.contentlibrary.interfaces.IContentPackage
-					 zope.lifecycleevent.IObjectRemovedEvent" />
+		<subscriber handler=".subscribers._update_data_when_content_changes"
+					for="nti.contentlibrary.interfaces.IContentPackage
+						 nti.contentlibrary.interfaces.IContentPackageUnmodifiedEvent" />
+		
+		<subscriber handler=".subscribers._clear_data_when_content_removed"
+					for="nti.contentlibrary.interfaces.IContentPackage
+						 zope.lifecycleevent.IObjectRemovedEvent" />
+	</configure>
 
 	<subscriber handler=".subscribers._on_course_instance_available" />
 	
