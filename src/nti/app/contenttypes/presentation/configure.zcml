@@ -20,14 +20,18 @@
 			 provides="zope.generations.interfaces.IInstallableSchemaManager" />
 			 
 	<!-- Adapters -->
+	<adapter factory=".validators._PollRefValidator" />
 	<adapter factory=".validators._AudioRefValidator" />
 	<adapter factory=".validators._VideoRefValidator" />
+	<adapter factory=".validators._SurveyRefValidator" />
 	<adapter factory=".validators._AssignmentRefValidator" />	
 	
 	<adapter factory=".adapters._lesson_overview_to_course" />
 	
+	<adapter factory=".adapters._pollref_to_poll" />
 	<adapter factory=".adapters._audioref_to_audio" />
 	<adapter factory=".adapters._videoref_to_video" />
+	<adapter factory=".adapters._surveyref_to_survey" />
 	<adapter factory=".adapters._questionref_to_question" />
 	<adapter factory=".adapters._assignmentref_to_assignment" />
 	<adapter factory=".adapters._questionsetref_to_questionset" />

@@ -12,6 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from nti.assessment.interfaces import IQPoll
+from nti.assessment.interfaces import IQSurvey
 from nti.assessment.interfaces import IQuestion
 from nti.assessment.interfaces import IQuestionSet
 from nti.assessment.interfaces import IQAssignment
@@ -20,8 +22,10 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.presentation.interfaces import INTIAudio
 from nti.contenttypes.presentation.interfaces import INTIVideo
+from nti.contenttypes.presentation.interfaces import INTIPollRef
 from nti.contenttypes.presentation.interfaces import INTIAudioRef
 from nti.contenttypes.presentation.interfaces import INTIVideoRef
+from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
@@ -68,4 +72,16 @@ def _questionsetref_to_questionset(context):
 @component.adapter(INTIAssignmentRef)
 def _assignmentref_to_assignment(context):
 	result = component.queryUtility(IQAssignment, name=context.target)
+	return result
+
+@interface.implementer(IQSurvey)
+@component.adapter(INTISurveyRef)
+def _surveyref_to_survey(context):
+	result = component.queryUtility(IQSurvey, name=context.target)
+	return result
+
+@interface.implementer(IQPoll)
+@component.adapter(INTIPollRef)
+def _pollref_to_poll(context):
+	result = component.queryUtility(IQPoll, name=context.target)
 	return result
