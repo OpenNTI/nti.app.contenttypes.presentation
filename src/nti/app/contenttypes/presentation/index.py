@@ -32,7 +32,7 @@ from nti.zope_catalog.index import ValueIndex as RawValueIndex
 from .interfaces import IPresentationAssetsIndex
 
 from . import CATALOG_INDEX_NAME
-		
+
 def install_catalog(context):
 	conn = context.connection
 	root = conn.root()
@@ -56,14 +56,14 @@ def _to_iter(value):
 	else:
 		result = (value,)
 	return result
-	
+
 class KeepSetIndex(RawSetIndex):
 	"""
 	An set index that keeps the old values
 	"""
 
 	empty_set = set()
-	
+
 	def index_doc(self, doc_id, value):
 		value = {v for v in _to_iter(value) if v is not None}
 		old = self.documents_to_values.get(doc_id) or self.empty_set
@@ -71,7 +71,7 @@ class KeepSetIndex(RawSetIndex):
 			value.update(old or ())
 			result = super(KeepSetIndex, self).index_doc(doc_id, value)
 			return result
-	
+
 	def remove(self, doc_id, value):
 		old = set(self.documents_to_values.get(doc_id) or ())
 		if not old:
@@ -84,7 +84,7 @@ class KeepSetIndex(RawSetIndex):
 			super(KeepSetIndex, self).unindex_doc(doc_id)
 
 class CheckRawValueIndex(RawValueIndex):
-	
+
 	def index_doc(self, doc_id, value):
 		if value is None:
 			self.unindex_doc(doc_id)
@@ -92,24 +92,24 @@ class CheckRawValueIndex(RawValueIndex):
 			documents_to_values = self.documents_to_values
 			old = documents_to_values.get(doc_id)
 			if old is None or old != value:
-				super(CheckRawValueIndex, self).index_doc(doc_id, value) 
+				super(CheckRawValueIndex, self).index_doc(doc_id, value)
 
 class NamespaceIndex(CheckRawValueIndex):
 	pass
-		
+
 class TypeIndex(CheckRawValueIndex):
 	pass
 
 class PresentationAssetCatalog(Persistent):
-	
+
 	family = BTrees.family64
-	
+
 	_provided_index = alias('_type_index')
 	_container_index = alias('_entry_index')
-	
+
 	def __init__(self):
 		self.reset()
-	
+
 	def reset(self):
 		self._last_modified = self.family.OI.BTree()
 		# track the object type (interface name)
@@ -118,7 +118,7 @@ class PresentationAssetCatalog(Persistent):
 		self._entry_index = KeepSetIndex(family=self.family)
 		# track the source/file name an object was read from
 		self._namespace_index = NamespaceIndex(family=self.family)
-			
+
 	def _doc_id(self, item, intids=None):
 		intids = component.queryUtility(IIntIds) if intids is None else intids
 		if not isinstance(item, int):
@@ -137,13 +137,13 @@ class PresentationAssetCatalog(Persistent):
 		assert isinstance(namespace, six.string_types)
 		t = time.time() if t is None else t
 		self._last_modified[namespace] = time_to_64bit_int(t)
-	
+
 	def remove_last_modified(self, namespace):
 		try:
 			del self._last_modified[namespace]
 		except KeyError:
 			pass
-		
+
 	def get_containers(self, item, intids=None):
 		intids = component.queryUtility(IIntIds) if intids is None else intids
 		doc_id = self._doc_id(item, intids)
@@ -160,15 +160,15 @@ class PresentationAssetCatalog(Persistent):
 			self._container_index.remove(doc_id, containers)
 			return True
 		return False
-	remove_container = remove_containers 
-	
+	remove_container = remove_containers
+
 	def remove_all_containers(self, item, intids=None):
 		doc_id = self._doc_id(item, intids)
 		if doc_id is not None:
 			self._container_index.unindex_doc(doc_id)
 			return True
 		return False
-	
+
 	def get_references(self, containers=None, provided=None, namespace=None):
 		result = None
 		for index, value, query in ( (self._type_index, provided, 'any_of'),
@@ -204,7 +204,7 @@ class PresentationAssetCatalog(Persistent):
 				value = getattr(value, '__name__', value)
 				index.index_doc(doc_id, value)
 		return True
-		
+
 	def unindex(self, item, intids=None):
 		doc_id = self._doc_id(item, intids)
 		if doc_id is None:

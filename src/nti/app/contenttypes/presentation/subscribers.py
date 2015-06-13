@@ -23,37 +23,17 @@ from ZODB.interfaces import IConnection
 from nti.app.products.courseware.utils import get_parent_course
 from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseInstance
 
-from nti.contentlibrary.interfaces import IContentPackage
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IGlobalContentPackageLibrary
-
-from nti.contentlibrary.indexed_data.interfaces import TAG_NAMESPACE_FILE
-from nti.contentlibrary.indexed_data.interfaces import IAudioIndexedDataContainer
-from nti.contentlibrary.indexed_data.interfaces import IVideoIndexedDataContainer
-from nti.contentlibrary.indexed_data.interfaces import ITimelineIndexedDataContainer
-from nti.contentlibrary.indexed_data.interfaces import ISlideDeckIndexedDataContainer
-from nti.contentlibrary.indexed_data.interfaces import IRelatedContentIndexedDataContainer
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
-from nti.contenttypes.presentation.interfaces import INTIAudio
-from nti.contenttypes.presentation.interfaces import INTIVideo
-from nti.contenttypes.presentation.interfaces import INTISlide
-from nti.contenttypes.presentation.interfaces import INTITimeline
-from nti.contenttypes.presentation.interfaces import INTISlideDeck
-from nti.contenttypes.presentation.interfaces import INTISlideVideo
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
-from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
-from nti.contenttypes.presentation.utils import create_object_from_external
-from nti.contenttypes.presentation.utils import create_ntiaudio_from_external
-from nti.contenttypes.presentation.utils import create_ntivideo_from_external
-from nti.contenttypes.presentation.utils import create_timelime_from_external
-from nti.contenttypes.presentation.utils import create_relatedwork_from_external
 from nti.contenttypes.presentation.utils import create_lessonoverview_from_external
 
 from nti.externalization.interfaces import StandardExternalFields
@@ -74,15 +54,6 @@ from . import get_catalog
 from . import iface_of_thing
 
 ITEMS = StandardExternalFields.ITEMS
-
-INTERFACE_TUPLES = (
-	(IAudioIndexedDataContainer, INTIAudio, create_ntiaudio_from_external),
-	(IVideoIndexedDataContainer, INTIVideo, create_ntivideo_from_external),
-	(ITimelineIndexedDataContainer, INTITimeline, create_timelime_from_external),
-	(ISlideDeckIndexedDataContainer, INTISlideDeck, create_object_from_external),
-	(IRelatedContentIndexedDataContainer, INTIRelatedWorkRef, create_relatedwork_from_external))
-
-PACKAGE_CONTAINER_INTERFACES = tuple(t[1] for t in INTERFACE_TUPLES)
 
 def prepare_json_text(s):
 	result = unicode(s, 'utf-8') if isinstance(s, bytes) else s
@@ -107,27 +78,6 @@ def _removed_registered(provided, name, intids=None, registry=None, catalog=None
 		unregisterUtility(registry, provided=provided, name=name)
 		intids.unregister(registered, event=False)
 	return registered
-
-def _remove_from_registry(containers=None, namespace=None, provided=None,
-						  registry=None, intids=None, catalog=None):
-	result = []
-	registry = _registry(registry)
-	catalog = get_catalog() if catalog is None else catalog
-	intids = component.queryUtility(IIntIds) if intids is None else intids
-	for utility in catalog.search_objects(intids=intids, provided=provided,
-										  containers=containers, namespace=namespace):
-		try:
-			ntiid = utility.ntiid
-			if ntiid:
-				result.append(utility)
-				_removed_registered(provided,
-									name=ntiid,
-									intids=intids,
-									catalog=catalog,
-									registry=registry)
-		except AttributeError:
-			pass
-	return result
 
 def _connection(registry=None):
 	registry = _registry(registry)
@@ -155,218 +105,7 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 		return (False, registered)
 	return (False, None)
 
-def _was_utility_registered(item, item_iface, ntiid, registry=None,
-							connection=None, intids=None,):
-	result, _ = _register_utility(item, item_iface, ntiid,
-								  registry=registry,
-								  intids=intids,
-								  connection=connection)
-	return result
-
-def _load_and_register_items(item_iterface, items, registry=None, connection=None,
-							 external_object_creator=create_object_from_external):
-	result = []
-	registry = _registry(registry)
-	for ntiid, data in items.items():
-		internal = external_object_creator(data, notify=False)
-		if _was_utility_registered(internal, item_iterface, ntiid,
-								  registry=registry, connection=connection):
-			result.append(internal)
-	return result
-
-def _load_and_register_json(item_iterface, jtext, registry=None, connection=None,
-							external_object_creator=create_object_from_external):
-	index = simplejson.loads(prepare_json_text(jtext))
-	items = index.get(ITEMS) or {}
-	result = _load_and_register_items(item_iterface, items,
-									  registry=registry,
-									  connection=connection,
-									  external_object_creator=external_object_creator)
-	return result
-
-def _canonicalize(items, item_iface, registry):
-	recorded = []
-	for idx, item in enumerate(items or ()):
-		ntiid = item.ntiid
-		result, registered = _register_utility(item, item_iface, ntiid, registry)
-		if result:
-			recorded.append(item)
-		else:
-			items[idx] = registered  # replaced w/ registered
-	return recorded
-
-# Library
-
-def _load_and_register_slidedeck_json(jtext, registry=None, connection=None,
-									  object_creator=create_object_from_external):
-	result = []
-	registry = _registry(registry)
-	index = simplejson.loads(prepare_json_text(jtext))
-	items = index.get(ITEMS) or {}
-	for ntiid, data in items.items():
-		internal = object_creator(data, notify=False)
-		if 	INTISlide.providedBy(internal) and \
-			_was_utility_registered(internal, INTISlide, ntiid, registry, connection):
-			result.append(internal)
-		elif INTISlideVideo.providedBy(internal) and \
-			 _was_utility_registered(internal, INTISlideVideo, ntiid, registry, connection):
-			result.append(internal)
-		elif INTISlideDeck.providedBy(internal):
-			result.extend(_canonicalize(internal.Slides, INTISlide, registry))
-			result.extend(_canonicalize(internal.Videos, INTISlideVideo, registry))
-			if _was_utility_registered(internal, INTISlideDeck, ntiid, registry, connection):
-				result.append(internal)
-	return result
-
-def _get_data_lastModified(content_package, namespace):
-	catalog = get_catalog()
-	key = '%s.%s.lastModified' % (content_package.ntiid, namespace)
-	result = catalog.get_last_modified(key)
-	return result
-
-def _set_data_lastModified(content_package, namespace, lastModified=0):
-	catalog = get_catalog()
-	key = '%s.%s.lastModified' % (content_package.ntiid, namespace)
-	catalog.set_last_modified(key, lastModified)
-
-def _remove_data_lastModified(content_package, namespace):
-	catalog = get_catalog()
-	key = '%s.%s.lastModified' % (content_package.ntiid, namespace)
-	catalog.remove_last_modified(key)
-
-def _register_items_when_content_changes(content_package,
-										 index_iface,
-										 item_iface,
-										 registry=None,
-										 connection=None,
-										 object_creator=None,
-										 catalog=None,
-										 intids=None):
-	catalog = get_catalog() if catalog is None else catalog
-	namespace = index_iface.getTaggedValue(TAG_NAMESPACE_FILE)
-	sibling_key = content_package.does_sibling_entry_exist(namespace)
-	if not sibling_key:
-		return ()
-
-	sibling_lastModified = sibling_key.lastModified
-	root_lastModified = _get_data_lastModified(content_package, namespace)
-	if root_lastModified >= sibling_lastModified:
-		return ()
-
-	now = time.time()
-	logger.info('Synchronizing %s for %s', namespace, content_package.ntiid)
-
-	intids = component.queryUtility(IIntIds) if intids is None else intids
-	removed = _remove_from_registry(namespace=content_package.ntiid,
-									provided=item_iface,
-									registry=registry,
-									catalog=catalog,
-									intids=intids)
-
-	logger.debug('%s item(s) removed from registry for %s in %s', len(removed),
-				 item_iface, content_package.ntiid)
-
-	index_text = content_package.read_contents_of_sibling_entry(namespace)
-	if item_iface == INTISlideDeck:
-		removed.extend(_remove_from_registry(namespace=content_package.ntiid,
-							  				 provided=INTISlide,
-							  				 registry=registry,
-							 				 catalog=catalog,
-							  			 	 intids=intids))
-
-		removed.extend(_remove_from_registry(namespace=content_package.ntiid,
-							  				 provided=INTISlideVideo,
-							 				 registry=registry,
-							  				 catalog=catalog,
-							  				 intids=intids))
-
-		registered = _load_and_register_slidedeck_json(index_text,
-													   registry=registry,
-													   connection=connection,
-													   object_creator=object_creator)
-	elif object_creator is not None:
-		registered = _load_and_register_json(
-								item_iface, index_text,
-								registry=registry,
-								connection=connection,
-								external_object_creator=object_creator)
-	else:
-		registered = _load_and_register_json(
-								item_iface, index_text,
-								registry=registry,
-								connection=connection,
-								external_object_creator=create_object_from_external)
-
-	logger.debug('Indexing %s registered items for %s in %s', len(registered),
-				 item_iface, content_package.ntiid)
-
-	for item in registered:
-		item.__parent__ = content_package
-		item_iface = iface_of_thing(item)
-		catalog.index(item, intids=intids, provided=item_iface,
-					  namespace=content_package.ntiid)
-
-	_set_data_lastModified(content_package, namespace, sibling_lastModified)
-
-	logger.info('%s for %s has been synchronized in %s(s)', namespace,
-				 content_package.ntiid, time.time() - now)
-
-	return registered
-
-def synchronize_content_package(content_package, catalog=None):
-	result = []
-	registry = _registry()
-	connection = _connection(registry)
-	for icontainer, item_iface, object_creator in INTERFACE_TUPLES:
-		items = _register_items_when_content_changes(content_package,
-													 icontainer,
-													 item_iface,
-													 catalog=catalog,
-													 registry=registry,
-													 connection=connection,
-													 object_creator=object_creator)
-		result.extend(items or ())
-	return result
-
-def _is_global_library():
-	library = component.queryUtility(IContentPackageLibrary)
-	result = IGlobalContentPackageLibrary.providedBy(library)
-	return result
-
-def _update_data_when_content_changes(content_package, event):
-	catalog = get_catalog()
-	if catalog is not None and not _is_global_library():
-		synchronize_content_package(content_package, catalog=catalog)
-
-@component.adapter(IContentPackage, IObjectRemovedEvent)
-def _clear_data_when_content_removed(content_package, event):
-	catalog = get_catalog()
-	if catalog is not None and not _is_global_library():
-		for index_iface, item_iface, _ in INTERFACE_TUPLES:
-			namespace = index_iface.getTaggedValue(TAG_NAMESPACE_FILE)
-			_remove_data_lastModified(content_package, namespace)
-			_remove_from_registry(namespace=content_package.ntiid,
-								  provided=item_iface,
-								  catalog=catalog)
-		_remove_from_registry(namespace=content_package.ntiid,
-							  provided=INTISlide,
-							  catalog=catalog)
-		_remove_from_registry(namespace=content_package.ntiid,
-							  provided=INTISlideVideo,
-							  catalog=catalog)
-
 # Courses
-
-def _remove_registered_course_overview(name=None, registry=None):
-	group = _removed_registered(INTICourseOverviewGroup, name=name, registry=registry)
-	# For each group remove anything that is not synced in the content pacakge.
-	# As of 20150404 we don't have a way to edit and register common group
-	# overview items so we need to remove the old and re-register the new
-	for item in group or ():  # this shoud resolve weak refs
-		iface = iface_of_thing(item)
-		if iface not in PACKAGE_CONTAINER_INTERFACES:
-			_removed_registered(iface, name=item.ntiid, registry=registry)
-
 def _remove_registered_lesson_overview(name, registry=None):
 	# remove lesson overviews
 	overview = _removed_registered(INTILessonOverview, name=name, registry=registry)
@@ -374,7 +113,10 @@ def _remove_registered_lesson_overview(name, registry=None):
 		return
 	# remove all groups
 	for group in overview:
-		_remove_registered_course_overview(name=group.ntiid, registry=registry)
+		_removed_registered(INTICourseOverviewGroup, name=group.ntiid, registry=registry)
+		# For each group remove anything that is not synced in the content pacakge.
+		# As of 20150404 we don't have a way to edit and register common group
+		# overview items so we need to remove the old and re-register the new
 
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 											validate=False, course=None):
@@ -539,7 +281,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 	parent = get_parent_course(course)
 	parent = ICourseCatalogEntry(parent, None)
 	ref_ntiid = parent.ntiid if parent is not None else ntiid
-	
+
 	now = time.time()
 	logger.info('Synchronizing lessons overviews for %s', name)
 

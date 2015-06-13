@@ -8,7 +8,7 @@
 	<include package="zope.security" file="meta.zcml" />
 	<include package="zope.component" />
 	<include package="zope.security" />
-	
+
 	<include package="nti.contenttypes.presentation" />
 
 	<!-- Database creation and migration -->
@@ -18,16 +18,16 @@
 	<utility factory=".generations.install._SchemaManager"
 			 name="nti.dataserver-app-contenttypes-presentation"
 			 provides="zope.generations.interfaces.IInstallableSchemaManager" />
-			 
+
 	<!-- Adapters -->
 	<adapter factory=".validators._PollRefValidator" />
 	<adapter factory=".validators._AudioRefValidator" />
 	<adapter factory=".validators._VideoRefValidator" />
 	<adapter factory=".validators._SurveyRefValidator" />
-	<adapter factory=".validators._AssignmentRefValidator" />	
-	
+	<adapter factory=".validators._AssignmentRefValidator" />
+
 	<adapter factory=".adapters._lesson_overview_to_course" />
-	
+
 	<adapter factory=".adapters._pollref_to_poll" />
 	<adapter factory=".adapters._audioref_to_audio" />
 	<adapter factory=".adapters._videoref_to_video" />
@@ -35,8 +35,8 @@
 	<adapter factory=".adapters._questionref_to_question" />
 	<adapter factory=".adapters._assignmentref_to_assignment" />
 	<adapter factory=".adapters._questionsetref_to_questionset" />
-	<adapter factory=".adapters._course_overview_group_to_course" />	
-		 
+	<adapter factory=".adapters._course_overview_group_to_course" />
+
 	<adapter factory=".model._presentation_asset_container_factory"
 			 for="nti.contentlibrary.interfaces.IContentPackage"
 			 provides=".interfaces.IPresentationAssetContainter" />
@@ -55,49 +55,31 @@
 	<adapter factory=".acl.PresentationAssetACLProvider" />
 	<adapter factory=".acl.NTILessonOverviewACLProvider" />
 	<adapter factory=".acl.NTICourseOverviewGroupACLProvider" />
-	
+
 	<!-- Traversal-ish stuff -->
 	<utility factory=".ntiids._NTIAudioResolver" name="NTIAudio" />
 	<utility factory=".ntiids._NTIVideoResolver" name="NTIVideo" />
-	
+
 	<utility factory=".ntiids._NTITimeLineResolver" name="Timeline" />
 	<utility factory=".ntiids._NTITimeLineResolver" name="JSON:Timeline" />
-	
+
 	<utility factory=".ntiids._NTISlideResolver" name="NTISlide" />
 	<utility factory=".ntiids._NTISlideDeckResolver" name="NTISlideDeck" />
 	<utility factory=".ntiids._NTISlideVideoResolver" name="NTISlideVideo" />
-	  
+
 	<utility factory=".ntiids._NTIRelatedWorkResolver" name="RelatedWork" />
 	<utility factory=".ntiids._NTIRelatedWorkResolver" name="RelatedWorkRef" />
-	
+
 	<utility factory=".ntiids._NTIDiscussionRefResolver" name="DiscussionRef" />
 	<utility factory=".ntiids._NTIDiscussionRefResolver" name="DiscussionRef:EnrolledCourseRoot" />
 	<utility factory=".ntiids._NTIDiscussionRefResolver" name="DiscussionRef:EnrolledCourseSection" />
-	
-	<utility factory=".ntiids._NTILessonOverviewResolver" name="NTILessonOverview" />	
+
+	<utility factory=".ntiids._NTILessonOverviewResolver" name="NTILessonOverview" />
 	<utility factory=".ntiids._NTICourseOverviewGroupResolver" name="NTICourseOverviewGroup" />
 
 	<!-- Events -->
-	<configure zcml:condition="not-have devmode">
-		<subscriber handler=".subscribers._update_data_when_content_changes"
-					for="nti.contentlibrary.interfaces.IContentPackage
-						 zope.lifecycleevent.IObjectAddedEvent" />
-		
-		<subscriber handler=".subscribers._update_data_when_content_changes"
-					for="nti.contentlibrary.interfaces.IContentPackage
-						 zope.lifecycleevent.IObjectModifiedEvent" />
-	
-		<subscriber handler=".subscribers._update_data_when_content_changes"
-					for="nti.contentlibrary.interfaces.IContentPackage
-						 nti.contentlibrary.interfaces.IContentPackageUnmodifiedEvent" />
-		
-		<subscriber handler=".subscribers._clear_data_when_content_removed"
-					for="nti.contentlibrary.interfaces.IContentPackage
-						 zope.lifecycleevent.IObjectRemovedEvent" />
-	</configure>
-
 	<subscriber handler=".subscribers._on_course_instance_available" />
-	
+
 	<subscriber handler=".subscribers._clear_data_when_course_removed"
 				for="nti.contenttypes.courses.interfaces.ICourseInstance
 					 zope.lifecycleevent.IObjectRemovedEvent" />
@@ -107,7 +89,7 @@
 				provides="nti.externalization.interfaces.IExternalMappingDecorator"
 				for="nti.contenttypes.courses.interfaces.ICourseOutlineContentNode
 					 pyramid.interfaces.IRequest" />
-	
+
 	<subscriber factory=".decorators._IpadCourseOutlineContentNodeSrcDecorator"
 				provides="nti.externalization.interfaces.IExternalMappingDecorator"
 				for="nti.contenttypes.courses.interfaces.ICourseOutlineContentNode
@@ -120,5 +102,5 @@
 
 	<!-- Weak refs -->
 	<adapter factory=".wref.GroupOverViewableWeakRef" />
-	
+
 </configure>
