@@ -25,7 +25,7 @@ def do_evolve(context):
 	conn = context.connection
 	root = conn.root()
 	dataserver_folder = root['nti.dataserver']
-	from IPython.core.debugger import Tracer; Tracer()()
+
 	lsm = dataserver_folder.getSiteManager()
 	pa_catalog = lsm.getUtility(IPresentationAssetsIndex, name=PA_INDEX_NAME)
 	lib_catalog = lsm.getUtility(IContainedObjectCatalog, name=LIB_INDEX_NAME)
