@@ -25,23 +25,23 @@ def do_evolve(context):
 	conn = context.connection
 	root = conn.root()
 	dataserver_folder = root['nti.dataserver']
-
+	from IPython.core.debugger import Tracer; Tracer()()
 	lsm = dataserver_folder.getSiteManager()
 	pa_catalog = lsm.getUtility(IPresentationAssetsIndex, name=PA_INDEX_NAME)
 	lib_catalog = lsm.getUtility(IContainedObjectCatalog, name=LIB_INDEX_NAME)
-	
-	# move data 
+
+	# move data
 	for name in ('_type_index', '_namespace_index'):
 		src_index = getattr(pa_catalog, name)
 		tgt_index = getattr(lib_catalog, name)
-		for doc_id, value in src_index.documents_to_values.values():
+		for doc_id, value in src_index.documents_to_values.items():
 			tgt_index.index_doc(doc_id, value)
-			
+
 	src_index = pa_catalog._entry_index
 	tgt_index = lib_catalog._container_index
-	for doc_id, value in src_index.documents_to_values.values():
+	for doc_id, value in src_index.documents_to_values.items():
 		tgt_index.index_doc(doc_id, value)
-	
+
 	# remove old indexes
 	for name in ('_type_index', '_entry_index', '_namespace_index'):
 		if hasattr(pa_catalog, name):
