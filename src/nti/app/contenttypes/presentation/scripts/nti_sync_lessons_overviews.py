@@ -27,7 +27,6 @@ from nti.dataserver.utils.base_script import create_context
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from ..subscribers import get_course_packages
-from ..subscribers import synchronize_content_package
 from ..subscribers import synchronize_course_lesson_overview
 
 def yield_courses(args, all_courses=False):
@@ -54,14 +53,10 @@ def yield_courses(args, all_courses=False):
 
 def _sync_course(course, exclude=False):
 	result = []
-	for content_package in get_course_packages(course):
-		items = synchronize_content_package(content_package)
-		result.extend(items or ())
-
-	items = synchronize_course_lesson_overview(course)
+	result.extend(synchronize_course_lesson_overview(course))
 	if not exclude and not ICourseSubInstance.providedBy(course):
 		for sub_instance in (course.SubInstances or {}).values():
-			synchronize_course_lesson_overview(sub_instance)
+			result.extend(synchronize_course_lesson_overview(sub_instance))
 	return result
 
 def _sync_courses(args):
