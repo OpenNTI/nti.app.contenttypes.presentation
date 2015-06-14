@@ -90,7 +90,7 @@ class PresentationAssetCatalog(Persistent):
 		result = get_catalog().search_objects(containers, provided, namespace, intids)
 		return result
 
-	def index(self, item, containers=None, provided=None, namespace=None, intids=None):
+	def index(self, item, containers=None, namespace=None, intids=None):
 		result = get_catalog().index(item, containers, namespace, intids)
 		return result
 
