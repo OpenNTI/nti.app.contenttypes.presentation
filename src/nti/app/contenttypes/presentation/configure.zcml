@@ -67,8 +67,8 @@
 	<utility factory=".ntiids._NTISlideDeckResolver" name="NTISlideDeck" />
 	<utility factory=".ntiids._NTISlideVideoResolver" name="NTISlideVideo" />
 
-	<utility factory=".ntiids._NTIRelatedWorkResolver" name="RelatedWork" />
-	<utility factory=".ntiids._NTIRelatedWorkResolver" name="RelatedWorkRef" />
+	<utility factory=".ntiids._NTIRelatedWorkRefResolver" name="RelatedWork" />
+	<utility factory=".ntiids._NTIRelatedWorkRefResolver" name="RelatedWorkRef" />
 
 	<utility factory=".ntiids._NTIDiscussionRefResolver" name="DiscussionRef" />
 	<utility factory=".ntiids._NTIDiscussionRefResolver" name="DiscussionRef:EnrolledCourseRoot" />
