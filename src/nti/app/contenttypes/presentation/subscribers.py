@@ -23,8 +23,7 @@ from ZODB.interfaces import IConnection
 from nti.app.products.courseware.utils import get_parent_course
 from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseInstance
 
-from nti.contentlibrary.interfaces import IContentPackageLibrary
-from nti.contentlibrary.interfaces import IGlobalContentPackageLibrary
+from nti.contentlibrary.indexed_data import get_registry
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
@@ -59,17 +58,8 @@ def prepare_json_text(s):
 	result = unicode(s, 'utf-8') if isinstance(s, bytes) else s
 	return result
 
-def _registry(registry=None):
-	if registry is None:
-		library = component.queryUtility(IContentPackageLibrary)
-		if IGlobalContentPackageLibrary.providedBy(library):
-			registry = component.getGlobalSiteManager()
-		else:
-			registry = component.getSiteManager()
-	return registry
-
 def _removed_registered(provided, name, intids=None, registry=None, catalog=None):
-	registry = _registry(registry)
+	registry = get_registry(registry)
 	registered = registry.queryUtility(provided, name=name)
 	intids = component.queryUtility(IIntIds) if intids is None else intids
 	if registered is not None:
@@ -79,14 +69,14 @@ def _removed_registered(provided, name, intids=None, registry=None, catalog=None
 		intids.unregister(registered, event=False)
 	return registered
 
-def _connection(registry=None):
-	registry = _registry(registry)
+def _db_connection(registry=None):
+	registry = get_registry(registry)
 	result = IConnection(registry, None)
 	return result
 
 def intid_register(item, registry, intids=None, connection=None):
 	intids = component.queryUtility(IIntIds) if intids is None else intids
-	connection = _connection(registry) if connection is None else connection
+	connection = _db_connection(registry) if connection is None else connection
 	if connection is not None:
 		connection.add(item)
 		intids.register(item, event=False)
@@ -95,7 +85,7 @@ def intid_register(item, registry, intids=None, connection=None):
 
 def _register_utility(item, provided, ntiid, registry=None, intids=None, connection=None):
 	if provided.providedBy(item):
-		registry = _registry(registry)
+		registry = get_registry(registry)
 		registered = registry.queryUtility(provided, name=ntiid)
 		if registered is None:
 			assert is_valid_ntiid_string(ntiid), "invalid NTIID %s" % ntiid
@@ -120,7 +110,7 @@ def _remove_registered_lesson_overview(name, registry=None):
 
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 											validate=False, course=None):
-	registry = _registry(registry)
+	registry = get_registry(registry)
 
 	# read and parse json text
 	data = simplejson.loads(prepare_json_text(jtext))
@@ -244,14 +234,11 @@ def _index_overview_items(items, containers=None, namespace=None,
 		if INTILessonOverview.providedBy(item) and node is not None:
 			node.LessonOverviewNTIID = item.ntiid
 
-		item_iface = iface_of_thing(item)
-
 		# for lesson and groups overviews index all fields
 		if 	INTILessonOverview.providedBy(item) or \
 			INTICourseOverviewGroup.providedBy(item):
 			catalog.index(item,
 						  intids=intids,
-						  provided=item_iface,
 						  namespace=namespace,
 						  containers=containers)
 
@@ -264,7 +251,6 @@ def _index_overview_items(items, containers=None, namespace=None,
 		else:
 			catalog.index(item,
 						  intids=intids,
-						  provided=item_iface,
 						  containers=containers)
 
 def synchronize_course_lesson_overview(course, intids=None, catalog=None):
@@ -273,7 +259,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 	catalog = get_catalog() if catalog is None else catalog
 	intids = component.queryUtility(IIntIds) if intids is None else intids
 
-	registry = _registry()
+	registry = get_registry()
 	entry = ICourseCatalogEntry(course, None)
 	ntiid = entry.ntiid if entry is not None else course.__name__
 	name = entry.ProviderUniqueID if entry is not None else course.__name__

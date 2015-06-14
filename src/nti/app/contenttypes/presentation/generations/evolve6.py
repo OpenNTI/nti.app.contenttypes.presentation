@@ -14,7 +14,7 @@ generation = 6
 from zope.component.hooks import setHooks
 
 from nti.contentlibrary.indexed_data.interfaces import IContainedObjectCatalog
-from nti.contentlibrary.indexed_data import CATALOG_INDEX_NAME as  LIB_INDEX_NAME
+from nti.contentlibrary.indexed_data import CATALOG_INDEX_NAME as LIB_INDEX_NAME
 
 from .. import CATALOG_INDEX_NAME as PA_INDEX_NAME
 

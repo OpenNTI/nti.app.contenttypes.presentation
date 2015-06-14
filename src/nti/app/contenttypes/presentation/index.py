@@ -14,118 +14,43 @@ import time
 
 from zope.intid import IIntIds
 
-from zope import component
-
 import BTrees
 
 from persistent import Persistent
 
-from nti.common.property import alias
 from nti.common.time import bit64_int_to_time
 from nti.common.time import time_to_64bit_int
-from nti.common.iterables import is_nonstr_iter
 
-from nti.zope_catalog.catalog import ResultSet
-from nti.zope_catalog.index import SetIndex as RawSetIndex
-from nti.zope_catalog.index import ValueIndex as RawValueIndex
+from nti.contentlibrary.indexed_data import get_catalog
 
 from .interfaces import IPresentationAssetsIndex
 
 from . import CATALOG_INDEX_NAME
 
-def install_catalog(context):
-	conn = context.connection
-	root = conn.root()
+import zope.deferredimport
+zope.deferredimport.initialize()
 
-	dataserver_folder = root['nti.dataserver']
-	lsm = dataserver_folder.getSiteManager()
-	intids = lsm.getUtility(IIntIds)
+zope.deferredimport.deprecated(
+	"Import from KeepSetIndex instead",
+	KeepSetIndex='nti.contentlibrary.indexed_data.index:KeepSetIndex')
 
-	index = PresentationAssetCatalog()
-	index.__parent__ = dataserver_folder
-	index.__name__ = CATALOG_INDEX_NAME
+zope.deferredimport.deprecated(
+	"Import from NamespaceIndex instead",
+	NamespaceIndex='nti.contentlibrary.indexed_data.index:NamespaceIndex')
 
-	intids.register(index)
-	lsm.registerUtility(index, provided=IPresentationAssetsIndex,
-						name=CATALOG_INDEX_NAME)
-
-def _to_iter(value):
-	value = getattr(value, '__name__', value)
-	if is_nonstr_iter(value):
-		result = value
-	else:
-		result = (value,)
-	return result
-
-class KeepSetIndex(RawSetIndex):
-	"""
-	An set index that keeps the old values
-	"""
-
-	empty_set = set()
-
-	def index_doc(self, doc_id, value):
-		value = {v for v in _to_iter(value) if v is not None}
-		old = self.documents_to_values.get(doc_id) or self.empty_set
-		if value.difference(old):
-			value.update(old or ())
-			result = super(KeepSetIndex, self).index_doc(doc_id, value)
-			return result
-
-	def remove(self, doc_id, value):
-		old = set(self.documents_to_values.get(doc_id) or ())
-		if not old:
-			return
-		for v in _to_iter(value):
-			old.discard(v)
-		if old:
-			super(KeepSetIndex, self).index_doc(doc_id, old)
-		else:
-			super(KeepSetIndex, self).unindex_doc(doc_id)
-
-class CheckRawValueIndex(RawValueIndex):
-
-	def index_doc(self, doc_id, value):
-		if value is None:
-			self.unindex_doc(doc_id)
-		else:
-			documents_to_values = self.documents_to_values
-			old = documents_to_values.get(doc_id)
-			if old is None or old != value:
-				super(CheckRawValueIndex, self).index_doc(doc_id, value)
-
-class NamespaceIndex(CheckRawValueIndex):
-	pass
-
-class TypeIndex(CheckRawValueIndex):
-	pass
+zope.deferredimport.deprecated(
+	"Import from TypeIndex instead",
+	TypeIndex='nti.contentlibrary.indexed_data.index:TypeIndex')
 
 class PresentationAssetCatalog(Persistent):
 
 	family = BTrees.family64
-
-	_provided_index = alias('_type_index')
-	_container_index = alias('_entry_index')
 
 	def __init__(self):
 		self.reset()
 
 	def reset(self):
 		self._last_modified = self.family.OI.BTree()
-		# track the object type (interface name)
-		self._type_index = TypeIndex(family=self.family)
-		# track the containers the object belongs to
-		self._entry_index = KeepSetIndex(family=self.family)
-		# track the source/file name an object was read from
-		self._namespace_index = NamespaceIndex(family=self.family)
-
-	def _doc_id(self, item, intids=None):
-		intids = component.queryUtility(IIntIds) if intids is None else intids
-		if not isinstance(item, int):
-			doc_id = intids.queryId(item) if intids is not None else None
-		else:
-			doc_id = item
-		return doc_id
 
 	def get_last_modified(self, namespace):
 		try:
@@ -145,70 +70,46 @@ class PresentationAssetCatalog(Persistent):
 			pass
 
 	def get_containers(self, item, intids=None):
-		intids = component.queryUtility(IIntIds) if intids is None else intids
-		doc_id = self._doc_id(item, intids)
-		if doc_id is None:
-			result = ()
-		else:
-			result = self._container_index.documents_to_values.get(doc_id)
-			result = set(result or ())
+		result = get_catalog().get_containers(item, intids)
 		return result
 
 	def remove_containers(self, item, containers, intids=None):
-		doc_id = self._doc_id(item, intids)
-		if doc_id is not None:
-			self._container_index.remove(doc_id, containers)
-			return True
-		return False
+		result = get_catalog().remove_containers(item, containers, intids)
+		return result
 	remove_container = remove_containers
 
 	def remove_all_containers(self, item, intids=None):
-		doc_id = self._doc_id(item, intids)
-		if doc_id is not None:
-			self._container_index.unindex_doc(doc_id)
-			return True
-		return False
+		result = get_catalog().remove_all_containers(item, intids)
+		return result
 
 	def get_references(self, containers=None, provided=None, namespace=None):
-		result = None
-		for index, value, query in ( (self._type_index, provided, 'any_of'),
-							  		 (self._namespace_index, namespace, 'any_of'),
-							  		 (self._container_index, containers, 'all_of') ):
-			if value is not None:
-				value = _to_iter(value)
-				ids = index.apply({query: value}) or self.family.IF.LFSet()
-				if result is None:
-					result = ids
-				else:
-					result = self.family.IF.intersection(result, ids)
-		return result or ()
+		result = get_catalog().get_references(containers, provided, namespace)
+		return result
 
 	def search_objects(self, containers=None, provided=None, namespace=None, intids=None):
-		intids = component.queryUtility(IIntIds) if intids is None else intids
-		if intids is not None:
-			refs = self.get_references(containers, provided, namespace)
-			result = ResultSet(refs, intids)
-		else:
-			result = ()
+		result = get_catalog().search_objects(containers, provided, namespace, intids)
 		return result
 
 	def index(self, item, containers=None, provided=None, namespace=None, intids=None):
-		doc_id = self._doc_id(item, intids)
-		if doc_id is None:
-			return False
-
-		for index, value in ( (self._type_index, provided),
-							  (self._namespace_index, namespace),
-							  (self._container_index, containers) ):
-			if value is not None:
-				value = getattr(value, '__name__', value)
-				index.index_doc(doc_id, value)
-		return True
+		result = get_catalog().index(item, containers, namespace, intids)
+		return result
 
 	def unindex(self, item, intids=None):
-		doc_id = self._doc_id(item, intids)
-		if doc_id is None:
-			return False
-		for index in (self._container_index, self._type_index, self._namespace_index):
-			index.unindex_doc(doc_id)
-		return True
+		result = get_catalog().unindex(item, intids)
+		return result
+
+def install_catalog(context):
+	conn = context.connection
+	root = conn.root()
+
+	dataserver_folder = root['nti.dataserver']
+	lsm = dataserver_folder.getSiteManager()
+	intids = lsm.getUtility(IIntIds)
+
+	index = PresentationAssetCatalog()
+	index.__parent__ = dataserver_folder
+	index.__name__ = CATALOG_INDEX_NAME
+
+	intids.register(index)
+	lsm.registerUtility(index, provided=IPresentationAssetsIndex,
+						name=CATALOG_INDEX_NAME)
