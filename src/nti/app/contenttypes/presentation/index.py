@@ -82,12 +82,16 @@ class PresentationAssetCatalog(Persistent):
 		result = get_catalog().remove_all_containers(item, intids)
 		return result
 
-	def get_references(self, containers=None, provided=None, namespace=None):
-		result = get_catalog().get_references(containers, provided, namespace)
+	def get_references(self, containers=None, provided=None, namespace=None, ntiid=None):
+		result = get_catalog().get_references(containers, provided=provided, 
+											  namespace=namespace, ntiid=ntiid)
 		return result
 
-	def search_objects(self, containers=None, provided=None, namespace=None, intids=None):
-		result = get_catalog().search_objects(containers, provided, namespace, intids)
+	def search_objects(self, containers=None, provided=None, namespace=None,
+					   ntiid=None, intids=None):
+		result = get_catalog().search_objects(containers, provided=provided,
+											  namespace=namespace, 
+											  ntiid=ntiid, intids=intids)
 		return result
 
 	def index(self, item, containers=None, namespace=None, intids=None):
