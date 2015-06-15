@@ -13,8 +13,6 @@ from zope import component
 
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
-from .interfaces import IPresentationAssetsIndex
-
 VIEW_OVERVIEW_CONTENT = "overview-content"
 
 CATALOG_INDEX_NAME = '++etc++contenttypes.presentation-index'
