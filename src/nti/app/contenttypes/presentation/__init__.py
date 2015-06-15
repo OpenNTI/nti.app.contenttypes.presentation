@@ -24,8 +24,3 @@ def iface_of_thing(item):
 		if iface.providedBy(item):
 			return iface
 	return None
-
-def get_catalog():
-	result = component.queryUtility(IPresentationAssetsIndex, name=CATALOG_INDEX_NAME)
-	return result
-get_index  = get_catalog

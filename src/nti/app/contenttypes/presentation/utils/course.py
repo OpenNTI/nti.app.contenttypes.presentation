@@ -21,6 +21,8 @@ from zope.security.interfaces import IPrincipal
 from nti.app.products.courseware.utils import get_any_enrollment
 from nti.app.products.courseware.utils import is_course_instructor
 
+from nti.contentlibrary.indexed_data import get_catalog
+
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -31,8 +33,6 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 from nti.coremetadata.mixins import CreatedAndModifiedTimeMixin
 
 from nti.ntiids.ntiids import find_object_with_ntiid
-
-from .. import get_catalog
 
 @interface.implementer(ICourseInstanceEnrollmentRecord)
 class ProxyEnrollmentRecord(CreatedAndModifiedTimeMixin, Contained):

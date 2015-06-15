@@ -17,17 +17,11 @@ from ..interfaces import IPresentationAssetsIndex
 
 from .. import CATALOG_INDEX_NAME
 
-from ..utils import remove_all_utilities as unregister_all_utilities
-
 def reset_catalog(dataserver_folder):
 	lsm = dataserver_folder.getSiteManager()
-	catalog = lsm.getUtility(IPresentationAssetsIndex, name=CATALOG_INDEX_NAME)
-	catalog.reset()
-
-def remove_all_utilities(dataserver_folder):
-	lsm = dataserver_folder.getSiteManager()
-	result = unregister_all_utilities(registry=lsm)
-	return result
+	catalog = lsm.queryUtility(IPresentationAssetsIndex, name=CATALOG_INDEX_NAME)
+	if catalog is not None:
+		catalog.reset()
 
 def do_evolve(context):
 	setHooks()
@@ -35,7 +29,6 @@ def do_evolve(context):
 	root = conn.root()
 	dataserver_folder = root['nti.dataserver']
 	reset_catalog(dataserver_folder)
-	remove_all_utilities(dataserver_folder)
 
 def evolve(context):
 	"""

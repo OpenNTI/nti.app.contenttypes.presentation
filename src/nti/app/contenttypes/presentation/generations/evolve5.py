@@ -11,10 +11,5 @@ logger = __import__('logging').getLogger(__name__)
 
 generation = 5
 
-from .evolve4 import do_evolve
-
 def evolve(context):
-	"""
-	Evolve to generation 5 by resetting catalog
-	"""
-	do_evolve(context)
+	pass

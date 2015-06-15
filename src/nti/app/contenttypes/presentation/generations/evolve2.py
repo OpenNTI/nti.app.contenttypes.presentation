@@ -26,7 +26,10 @@ def do_evolve(context):
 
 	dataserver_folder = root['nti.dataserver']
 	lsm = dataserver_folder.getSiteManager()
-	index = lsm.getUtility(IPresentationAssetsIndex, name=CATALOG_INDEX_NAME)
+	index = lsm.queryUtility(IPresentationAssetsIndex, name=CATALOG_INDEX_NAME)
+	if index is None:
+		return # pragma no cover
+
 	for k, v in list(index._last_modified.items()):
 		index._last_modified[k] = time_to_64bit_int(v)
 

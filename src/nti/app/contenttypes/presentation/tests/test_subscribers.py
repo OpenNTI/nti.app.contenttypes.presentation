@@ -17,10 +17,11 @@ import os
 from zope import component
 from zope.intid import IIntIds
 
+from nti.contentlibrary.indexed_data import get_catalog
+
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
-from nti.app.contenttypes.presentation import get_catalog
 from nti.app.contenttypes.presentation.subscribers import _removed_registered
 from nti.app.contenttypes.presentation.subscribers import _index_overview_items
 from nti.app.contenttypes.presentation.subscribers import _load_and_register_lesson_overview_json
@@ -32,12 +33,12 @@ from nti.app.testing.application_webtest import ApplicationLayerTest
 from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 import nti.dataserver.tests.mock_dataserver as mock_dataserver
 
-def _remove_from_registry(containers=None, provided=None, registry=None):
+def _remove_from_registry(container_ntiids=None, provided=None, registry=None):
 	result = []
 	catalog = get_catalog()
 	intids = component.queryUtility(IIntIds)
 	for utility in catalog.search_objects(intids=intids, provided=provided,
-										  containers=containers ):
+										  container_ntiids=container_ntiids ):
 		try:
 			ntiid = utility.ntiid
 			if ntiid:
@@ -65,10 +66,14 @@ class TestSubscribers(ApplicationLayerTest):
 		result = _load_and_register_lesson_overview_json(source, registry=registry)
 		assert_that(result, is_not(none()))
 
-		_index_overview_items((result,), containers='xxx')
+		_index_overview_items((result,), container_ntiids='xxx')
 
-		result = _remove_from_registry(containers='xxx', provided=INTICourseOverviewGroup, registry=registry)
+		result = _remove_from_registry(container_ntiids='xxx', 
+									   provided=INTICourseOverviewGroup,
+									   registry=registry)
 		assert_that(result, has_length(4))
 
-		result = _remove_from_registry(containers='xxx', provided=INTILessonOverview, registry=registry)
+		result = _remove_from_registry(container_ntiids='xxx', 
+									   provided=INTILessonOverview,
+									   registry=registry)
 		assert_that(result, has_length(1))

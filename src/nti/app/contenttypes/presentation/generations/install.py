@@ -9,14 +9,12 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-generation = 6
+generation = 7
 
 from zope import interface
 
 from zope.generations.interfaces import IInstallableSchemaManager
 from zope.generations.generations import SchemaManager as BaseSchemaManager
-
-from ..index import install_catalog
 
 @interface.implementer(IInstallableSchemaManager)
 class _SchemaManager(BaseSchemaManager):
@@ -34,4 +32,4 @@ class _SchemaManager(BaseSchemaManager):
 		evolve(context)
 
 def evolve(context):
-	install_catalog(context)
+	pass

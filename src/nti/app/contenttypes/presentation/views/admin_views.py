@@ -26,6 +26,8 @@ from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtils
 from nti.app.products.courseware.views import CourseAdminPathAdapter
 from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseInstance
 
+from nti.contentlibrary.indexed_data import get_catalog
+
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
@@ -40,8 +42,6 @@ from nti.externalization.interfaces import StandardExternalFields
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from ..utils import remove_all_utilities
-
-from .. import get_catalog
 
 ITEMS = StandardExternalFields.ITEMS
 
