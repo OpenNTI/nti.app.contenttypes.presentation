@@ -30,7 +30,12 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
+from nti.contenttypes.presentation.interfaces import INTIAudio
+from nti.contenttypes.presentation.interfaces import INTIVideo
+from nti.contenttypes.presentation.interfaces import INTITimeline
+from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
@@ -96,6 +101,19 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 	return (False, None)
 
 # Courses
+
+PACKAGE_CONTAINER_INTERFACES = (INTIAudio, INTIVideo, INTITimeline, INTISlideDeck, INTIRelatedWorkRef),
+
+def _remove_registered_course_overview(name=None, registry=None):
+	group = _removed_registered(INTICourseOverviewGroup, name=name, registry=registry)
+	# For each group remove anything that is not synced in the content pacakge.
+	# As of 20150404 we don't have a way to edit and register common group
+	# overview items so we need to remove the old and re-register the new
+	for item in group or ():  # this shoud resolve weak refs
+		iface = iface_of_thing(item)
+		if iface not in PACKAGE_CONTAINER_INTERFACES:
+			_removed_registered(iface, name=item.ntiid, registry=registry)
+
 def _remove_registered_lesson_overview(name, registry=None):
 	# remove lesson overviews
 	overview = _removed_registered(INTILessonOverview, name=name, registry=registry)
@@ -103,10 +121,7 @@ def _remove_registered_lesson_overview(name, registry=None):
 		return
 	# remove all groups
 	for group in overview:
-		_removed_registered(INTICourseOverviewGroup, name=group.ntiid, registry=registry)
-		# For each group remove anything that is not synced in the content pacakge.
-		# As of 20150404 we don't have a way to edit and register common group
-		# overview items so we need to remove the old and re-register the new
+		_remove_registered_course_overview(name=group.ntiid, registry=registry)
 
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 											validate=False, course=None):
