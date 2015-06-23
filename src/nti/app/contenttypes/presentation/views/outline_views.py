@@ -16,6 +16,8 @@ from pyramid import httpexceptions as hexc
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
+from nti.appserver.ugd_query_views import _UGDView as UGDQueryView
+
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -24,9 +26,12 @@ from nti.dataserver import authorization as nauth
 
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.externalization import to_external_object
+from nti.externalization.interfaces import LocatedExternalDict
 
 from . import VIEW_OVERVIEW_CONTENT
+from . import VIEW_OVERVIEW_SUMMARY
 
+CLASS = StandardExternalFields.CLASS
 LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 
 @view_config(route_name='objects.generic.traversal',
@@ -52,3 +57,45 @@ class OutlineLessonOverviewView(AbstractAuthenticatedView):
 			return external
 		except AttributeError:
 			raise hexc.HTTPServerError("Outline does not have a lesson overview attribute")
+
+@view_config(route_name='objects.generic.traversal',
+			  context=ICourseOutlineContentNode,
+			  request_method='GET',
+			  permission=nauth.ACT_READ,
+			  renderer='rest',
+			  name=VIEW_OVERVIEW_SUMMARY )
+class OutlineLessonOverviewSummaryView( UGDQueryView ):
+
+	_DEFAULT_BATCH_SIZE = None
+	_DEFAULT_BATCH_START = 0
+
+	def __call__(self):
+		context = self.request.context
+		try:
+			ntiid = context.LessonOverviewNTIID
+			if not ntiid:
+				raise hexc.HTTPServerError("Outline does not have a valid lesson overview")
+
+			lesson = component.getUtility(INTILessonOverview, name=ntiid)
+			if lesson is None:
+				raise hexc.HTTPNotFound("Cannot find lesson overview")
+		except AttributeError:
+			raise hexc.HTTPServerError("Outline does not have a lesson overview attribute")
+
+		result = LocatedExternalDict()
+		result[ CLASS ] = 'OverviewGroupSummary'
+		self.user = self.remoteUser
+
+		for lesson_group in lesson.items:
+			for item in lesson_group.items:
+				self.ntiid = item.ntiid
+				container_ntiids = ()
+				try:
+					ugd_results = super( OutlineLessonOverviewSummaryView, self ).__call__()
+					container_ntiids = ugd_results.get( 'Items', () )
+				except hexc.HTTPNotFound:
+					pass # Empty
+				result[ item.ntiid ] = item_results = {}
+				item_results[ CLASS ] = 'OverviewItemSummary'
+				item_results['ItemCount'] = len( container_ntiids )
+		return result

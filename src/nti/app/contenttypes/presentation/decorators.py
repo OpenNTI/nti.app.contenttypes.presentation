@@ -58,20 +58,23 @@ from .utils import get_enrollment_record
 from .utils import resolve_discussion_course_bundle
 
 from . import VIEW_OVERVIEW_CONTENT
+from . import VIEW_OVERVIEW_SUMMARY
 
 NTIID = StandardExternalFields.NTIID
 LINKS = StandardExternalFields.LINKS
 ITEMS = StandardExternalFields.ITEMS
 IN_CLASS_SAFE = make_provider_safe(IN_CLASS)
 
-def _lesson_overview_link(context):
+def _lesson_overview_links(context):
 	try:
 		name = context.LessonOverviewNTIID
 		lesson = component.queryUtility(INTILessonOverview, name=name) if name else None
 		if lesson is not None:
-			link = Link(context, rel=VIEW_OVERVIEW_CONTENT,
+			overview_link = Link(context, rel=VIEW_OVERVIEW_CONTENT,
 						elements=(VIEW_OVERVIEW_CONTENT,))
-			return link
+			summary_link = Link(context, rel=VIEW_OVERVIEW_SUMMARY,
+						elements=(VIEW_OVERVIEW_SUMMARY,))
+			return ( overview_link, summary_link )
 	except AttributeError:
 		pass
 	return None
@@ -102,10 +105,10 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 		return False
 
 	def _overview_decorate_external(self, context, result):
-		link = _lesson_overview_link(context)
-		if link is not None:
+		overview_links = _lesson_overview_links(context)
+		if overview_links:
 			links = result.setdefault(LINKS, [])
-			links.append(link)
+			links.extend( overview_links )
 			return True
 		return False
 
@@ -235,7 +238,8 @@ class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwar
 
 	def _overview_decorate_external(self, context, result):
 		try:
-			link = _lesson_overview_link(context)
+			overview_links = _lesson_overview_links(context)
+			link = overview_links[0] if overview_links else None
 			if link is not None:
 				href = render_link(link)['href']
 				url = urljoin(self.request.host_url, href)
