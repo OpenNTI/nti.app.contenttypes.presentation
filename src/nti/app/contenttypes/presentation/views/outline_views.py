@@ -24,9 +24,9 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 
 from nti.dataserver import authorization as nauth
 
+from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.externalization import to_external_object
-from nti.externalization.interfaces import LocatedExternalDict
 
 from . import VIEW_OVERVIEW_CONTENT
 from . import VIEW_OVERVIEW_SUMMARY
@@ -34,15 +34,9 @@ from . import VIEW_OVERVIEW_SUMMARY
 CLASS = StandardExternalFields.CLASS
 LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 
-@view_config(route_name='objects.generic.traversal',
-			  context=ICourseOutlineContentNode,
-			  request_method='GET',
-			  permission=nauth.ACT_READ,
-			  renderer='rest',
-			  name=VIEW_OVERVIEW_CONTENT)
-class OutlineLessonOverviewView(AbstractAuthenticatedView):
+class OutlineLessonOverviewMixin(object):
 
-	def __call__(self):
+	def _get_lesson(self):
 		context = self.request.context
 		try:
 			ntiid = context.LessonOverviewNTIID
@@ -52,36 +46,39 @@ class OutlineLessonOverviewView(AbstractAuthenticatedView):
 			lesson = component.getUtility(INTILessonOverview, name=ntiid)
 			if lesson is None:
 				raise hexc.HTTPNotFound("Cannot find lesson overview")
-			external = to_external_object(lesson, name="render")
-			external.lastModified = external[LAST_MODIFIED] = lesson.lastModified
-			return external
+			return lesson
 		except AttributeError:
 			raise hexc.HTTPServerError("Outline does not have a lesson overview attribute")
 
 @view_config(route_name='objects.generic.traversal',
-			  context=ICourseOutlineContentNode,
-			  request_method='GET',
-			  permission=nauth.ACT_READ,
-			  renderer='rest',
-			  name=VIEW_OVERVIEW_SUMMARY )
-class OutlineLessonOverviewSummaryView( UGDQueryView ):
+			 context=ICourseOutlineContentNode,
+			 request_method='GET',
+			 permission=nauth.ACT_READ,
+			 renderer='rest',
+			 name=VIEW_OVERVIEW_CONTENT)
+class OutlineLessonOverviewView(AbstractAuthenticatedView,
+								OutlineLessonOverviewMixin):
+
+	def __call__(self):
+		lesson = self._get_lesson()
+		external = to_external_object(lesson, name="render")
+		external.lastModified = external[LAST_MODIFIED] = lesson.lastModified
+		return external
+
+@view_config(route_name='objects.generic.traversal',
+			 context=ICourseOutlineContentNode,
+			 request_method='GET',
+			 permission=nauth.ACT_READ,
+			 renderer='rest',
+			 name=VIEW_OVERVIEW_SUMMARY)
+class OutlineLessonOverviewSummaryView(UGDQueryView,
+									   OutlineLessonOverviewMixin):
 
 	_DEFAULT_BATCH_SIZE = None
 	_DEFAULT_BATCH_START = 0
 
 	def __call__(self):
-		context = self.request.context
-		try:
-			ntiid = context.LessonOverviewNTIID
-			if not ntiid:
-				raise hexc.HTTPServerError("Outline does not have a valid lesson overview")
-
-			lesson = component.getUtility(INTILessonOverview, name=ntiid)
-			if lesson is None:
-				raise hexc.HTTPNotFound("Cannot find lesson overview")
-		except AttributeError:
-			raise hexc.HTTPServerError("Outline does not have a lesson overview attribute")
-
+		lesson = self._get_lesson()
 		result = LocatedExternalDict()
 		result[ CLASS ] = 'OverviewGroupSummary'
 		self.user = self.remoteUser
@@ -91,11 +88,11 @@ class OutlineLessonOverviewSummaryView( UGDQueryView ):
 				self.ntiid = item.ntiid
 				container_ntiids = ()
 				try:
-					ugd_results = super( OutlineLessonOverviewSummaryView, self ).__call__()
-					container_ntiids = ugd_results.get( 'Items', () )
+					ugd_results = super(OutlineLessonOverviewSummaryView, self).__call__()
+					container_ntiids = ugd_results.get('Items', ())
 				except hexc.HTTPNotFound:
-					pass # Empty
+					pass  # Empty
 				result[ item.ntiid ] = item_results = {}
 				item_results[ CLASS ] = 'OverviewItemSummary'
-				item_results['ItemCount'] = len( container_ntiids )
+				item_results['ItemCount'] = len(container_ntiids)
 		return result
