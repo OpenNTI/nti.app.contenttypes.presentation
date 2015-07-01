@@ -85,14 +85,20 @@ class OutlineLessonOverviewSummaryView(UGDQueryView,
 
 		for lesson_group in lesson.items:
 			for item in lesson_group.items:
-				self.ntiid = item.ntiid
-				container_ntiids = ()
-				try:
-					ugd_results = super(OutlineLessonOverviewSummaryView, self).__call__()
-					container_ntiids = ugd_results.get('Items', ())
-				except hexc.HTTPNotFound:
-					pass  # Empty
+				ugd_count = 0
+				# With older content, we're not sure where the UGD
+				# may hang; so summarize per item.
+				for ntiid_field in ('ntiid', 'target_ntiid'):
+					self.ntiid = getattr( item, ntiid_field, None )
+					if self.ntiid:
+						container_ntiids = ()
+						try:
+							ugd_results = super(OutlineLessonOverviewSummaryView, self).__call__()
+							container_ntiids = ugd_results.get('Items', ())
+							ugd_count += len(container_ntiids)
+						except hexc.HTTPNotFound:
+							pass  # Empty
 				result[ item.ntiid ] = item_results = {}
 				item_results[ CLASS ] = 'OverviewItemSummary'
-				item_results['ItemCount'] = len(container_ntiids)
+				item_results['ItemCount'] = ugd_count
 		return result
