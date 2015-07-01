@@ -102,7 +102,8 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 
 # Courses
 
-PACKAGE_CONTAINER_INTERFACES = (INTIAudio, INTIVideo, INTITimeline, INTISlideDeck, INTIRelatedWorkRef),
+PACKAGE_CONTAINER_INTERFACES = (INTIAudio, INTIVideo, INTITimeline, 
+								INTISlideDeck, INTIRelatedWorkRef)
 
 def _remove_registered_course_overview(name=None, registry=None):
 	group = _removed_registered(INTICourseOverviewGroup, name=name, registry=registry)
