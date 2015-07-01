@@ -99,6 +99,11 @@
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"
 				for="nti.contenttypes.presentation.interfaces.INTICourseOverviewGroup
 					 pyramid.interfaces.IRequest" />
+	
+	<subscriber factory=".decorators._NTITimelineDecorator"
+				provides="nti.externalization.interfaces.IExternalMappingDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTITimeline
+					 pyramid.interfaces.IRequest" />
 
 	<!-- Weak refs -->
 	<adapter factory=".wref.GroupOverViewableWeakRef" />

@@ -16,6 +16,10 @@ from zope import interface
 
 from zope.location.interfaces import ILocation
 
+from pyramid.interfaces import IRequest
+
+from nti.app.contentlibrary.utils import get_item_content_units 
+
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_TOPIC
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_SECTION_TOPIC
 
@@ -36,6 +40,7 @@ from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
+from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
@@ -251,3 +256,23 @@ class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwar
 
 	def _do_decorate_external(self, context, result):
 		self._overview_decorate_external(context, result)
+
+@interface.implementer(IExternalMappingDecorator)
+@component.adapter(INTITimeline, IRequest)
+class _NTITimelineDecorator(AbstractAuthenticatedRequestAwareDecorator):
+	
+	def _predicate(self, context, result):
+		result = bool(self._is_authenticated)
+		return result
+
+	def _do_decorate_external(self, context, result):
+		package = None
+		library = component.queryUtility(IContentPackageLibrary)
+		if library is not None:
+			units = get_item_content_units(context)
+			paths = library.pathToNTIID(units[0].ntiid) if units else None # pick first
+			package = paths[0] if paths else None
+		if package is not None:
+			contentLocation=IContentUnitHrefMapper(package).href
+			print(contentLocation)
+
