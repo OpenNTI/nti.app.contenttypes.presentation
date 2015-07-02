@@ -18,7 +18,7 @@ from zope.location.interfaces import ILocation
 
 from pyramid.interfaces import IRequest
 
-from nti.app.contentlibrary.utils import get_item_content_units 
+from nti.app.contentlibrary.utils import get_item_content_units
 
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_TOPIC
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_SECTION_TOPIC
@@ -79,7 +79,7 @@ def _lesson_overview_links(context):
 								 elements=(VIEW_OVERVIEW_CONTENT,))
 			summary_link = Link(context, rel=VIEW_OVERVIEW_SUMMARY,
 								elements=(VIEW_OVERVIEW_SUMMARY,))
-			return ( overview_link, summary_link )
+			return (overview_link, summary_link)
 	except AttributeError:
 		pass
 	return None
@@ -113,7 +113,7 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 		overview_links = _lesson_overview_links(context)
 		if overview_links:
 			links = result.setdefault(LINKS, [])
-			links.extend( overview_links )
+			links.extend(overview_links)
 			return True
 		return False
 
@@ -260,7 +260,7 @@ class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwar
 @interface.implementer(IExternalMappingDecorator)
 @component.adapter(INTITimeline, IRequest)
 class _NTITimelineDecorator(AbstractAuthenticatedRequestAwareDecorator):
-	
+
 	def _predicate(self, context, result):
 		result = bool(self._is_authenticated)
 		return result
@@ -270,13 +270,14 @@ class _NTITimelineDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		library = component.queryUtility(IContentPackageLibrary)
 		if library is not None:
 			units = get_item_content_units(context)
-			paths = library.pathToNTIID(units[0].ntiid) if units else None # pick first
+			# pick first content unit avaiable; clients
+			# should try to give us context
+			paths = library.pathToNTIID(units[0].ntiid) if units else None  
 			package = paths[0] if paths else None
 		if package is not None:
-			location = IContentUnitHrefMapper(package.key.bucket).href # parent
+			location = IContentUnitHrefMapper(package.key.bucket).href  # parent
 			for name in ('href', 'icon'):
 				value = getattr(context, name, None)
 				if value and not value.startswith('/') and '://' not in value:
 					value = urljoin(location, value)
-					value = urljoin(self.request.host_url, value)
 					result[name] = value
