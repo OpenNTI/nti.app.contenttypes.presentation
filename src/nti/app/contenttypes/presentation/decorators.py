@@ -76,9 +76,9 @@ def _lesson_overview_links(context):
 		lesson = component.queryUtility(INTILessonOverview, name=name) if name else None
 		if lesson is not None:
 			overview_link = Link(context, rel=VIEW_OVERVIEW_CONTENT,
-						elements=(VIEW_OVERVIEW_CONTENT,))
+								 elements=(VIEW_OVERVIEW_CONTENT,))
 			summary_link = Link(context, rel=VIEW_OVERVIEW_SUMMARY,
-						elements=(VIEW_OVERVIEW_SUMMARY,))
+								elements=(VIEW_OVERVIEW_SUMMARY,))
 			return ( overview_link, summary_link )
 	except AttributeError:
 		pass
@@ -273,6 +273,10 @@ class _NTITimelineDecorator(AbstractAuthenticatedRequestAwareDecorator):
 			paths = library.pathToNTIID(units[0].ntiid) if units else None # pick first
 			package = paths[0] if paths else None
 		if package is not None:
-			contentLocation=IContentUnitHrefMapper(package).href
-			print(contentLocation)
-
+			location = IContentUnitHrefMapper(package.key.bucket).href # parent
+			for name in ('href', 'icon'):
+				value = getattr(context, name, None)
+				if value and not value.startswith('/') and '://' not in value:
+					value = urljoin(location, value)
+					value = urljoin(self.request.host_url, value)
+					result[name] = value
