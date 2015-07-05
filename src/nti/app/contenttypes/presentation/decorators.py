@@ -25,6 +25,8 @@ from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_SECTION_TOP
 
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
+from nti.common.property import Lazy
+
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentUnitHrefMapper
 
@@ -221,25 +223,29 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 		except Exception:
 			logger.exception("Error while decorating course overview group")
 
+LEGACY_UAS = ("NTIFoundation DataLoader NextThought/1.0",
+			  "NTIFoundation DataLoader NextThought/1.1.0",
+			  "NTIFoundation DataLoader NextThought/1.1.1",
+			  "NTIFoundation DataLoader NextThought/1.2.")
+
+
+def is_legacy_uas(request):
+	ua = request.environ.get('HTTP_USER_AGENT', '')
+	if not ua:
+		return False
+
+	for lua in LEGACY_UAS:
+		if ua.startswith(lua):
+			return True
+	return False
+
 @component.adapter(ICourseOutlineContentNode)
 @interface.implementer(IExternalMappingDecorator)
 class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
-	LEGACY_UAS = ("NTIFoundation DataLoader NextThought/1.0",
-				  "NTIFoundation DataLoader NextThought/1.1.0",
-				  "NTIFoundation DataLoader NextThought/1.1.1",
-				  "NTIFoundation DataLoader NextThought/1.2.")
-
 	def _predicate(self, context, result):
-		ua = self.request.environ.get('HTTP_USER_AGENT', '')
-		if not ua:
-			return False
-
-		for lua in self.LEGACY_UAS:
-			if ua.startswith(lua):
-				return True
-
-		return False
+		result = is_legacy_uas(self.request)
+		return result
 
 	def _overview_decorate_external(self, context, result):
 		try:
@@ -261,6 +267,11 @@ class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwar
 @component.adapter(INTITimeline, IRequest)
 class _NTITimelineDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
+	@Lazy
+	def is_legacy_ipad(self):
+		result = is_legacy_uas(self.request)
+		return result
+	
 	def _predicate(self, context, result):
 		result = bool(self._is_authenticated)
 		return result
@@ -280,4 +291,6 @@ class _NTITimelineDecorator(AbstractAuthenticatedRequestAwareDecorator):
 				value = getattr(context, name, None)
 				if value and not value.startswith('/') and '://' not in value:
 					value = urljoin(location, value)
+					if self.is_legacy_ipad: # for legacy ipad
+						value = urljoin(self.request.host_url, value)
 					result[name] = value
