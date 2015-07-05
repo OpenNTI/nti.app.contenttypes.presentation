@@ -228,7 +228,6 @@ LEGACY_UAS = ("NTIFoundation DataLoader NextThought/1.0",
 			  "NTIFoundation DataLoader NextThought/1.1.1",
 			  "NTIFoundation DataLoader NextThought/1.2.")
 
-
 def is_legacy_uas(request):
 	ua = request.environ.get('HTTP_USER_AGENT', '')
 	if not ua:
@@ -271,7 +270,7 @@ class _NTITimelineDecorator(AbstractAuthenticatedRequestAwareDecorator):
 	def is_legacy_ipad(self):
 		result = is_legacy_uas(self.request)
 		return result
-	
+
 	def _predicate(self, context, result):
 		result = bool(self._is_authenticated)
 		return result
@@ -283,7 +282,7 @@ class _NTITimelineDecorator(AbstractAuthenticatedRequestAwareDecorator):
 			units = get_item_content_units(context)
 			# pick first content unit avaiable; clients
 			# should try to give us context
-			paths = library.pathToNTIID(units[0].ntiid) if units else None  
+			paths = library.pathToNTIID(units[0].ntiid) if units else None
 			package = paths[0] if paths else None
 		if package is not None:
 			location = IContentUnitHrefMapper(package.key.bucket).href  # parent
@@ -291,6 +290,6 @@ class _NTITimelineDecorator(AbstractAuthenticatedRequestAwareDecorator):
 				value = getattr(context, name, None)
 				if value and not value.startswith('/') and '://' not in value:
 					value = urljoin(location, value)
-					if self.is_legacy_ipad: # for legacy ipad
+					if self.is_legacy_ipad:  # for legacy ipad
 						value = urljoin(self.request.host_url, value)
 					result[name] = value
