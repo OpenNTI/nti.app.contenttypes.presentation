@@ -223,17 +223,12 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 		except Exception:
 			logger.exception("Error while decorating course overview group")
 
-LEGACY_UAS = ("NTIFoundation DataLoader NextThought/1.0",
-			  "NTIFoundation DataLoader NextThought/1.1.0",
-			  "NTIFoundation DataLoader NextThought/1.1.1",
-			  "NTIFoundation DataLoader NextThought/1.2.")
-
-def is_legacy_uas(request):
+def is_legacy_uas(request, legacy_uas):
 	ua = request.environ.get('HTTP_USER_AGENT', '')
 	if not ua:
 		return False
 
-	for lua in LEGACY_UAS:
+	for lua in legacy_uas:
 		if ua.startswith(lua):
 			return True
 	return False
@@ -242,8 +237,13 @@ def is_legacy_uas(request):
 @interface.implementer(IExternalMappingDecorator)
 class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
+	LEGACY_UAS = ("NTIFoundation DataLoader NextThought/1.0",
+			  "NTIFoundation DataLoader NextThought/1.1.0",
+			  "NTIFoundation DataLoader NextThought/1.1.1",
+			  "NTIFoundation DataLoader NextThought/1.2.")
+
 	def _predicate(self, context, result):
-		result = is_legacy_uas(self.request)
+		result = is_legacy_uas(self.request, self.LEGACY_UAS)
 		return result
 
 	def _overview_decorate_external(self, context, result):
@@ -266,9 +266,16 @@ class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwar
 @component.adapter(INTITimeline, IRequest)
 class _NTITimelineDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
+	LEGACY_UAS = ("NTIFoundation DataLoader NextThought/1.0",
+			  "NTIFoundation DataLoader NextThought/1.1.0",
+			  "NTIFoundation DataLoader NextThought/1.1.1",
+			  "NTIFoundation DataLoader NextThought/1.2.",
+			  "NTIFoundation DataLoader NextThought/1.3.0",
+			  "NTIFoundation DataLoader NextThought/1.3.1")
+
 	@Lazy
 	def is_legacy_ipad(self):
-		result = is_legacy_uas(self.request)
+		result = is_legacy_uas(self.request, self.LEGACY_UAS)
 		return result
 
 	def _predicate(self, context, result):
