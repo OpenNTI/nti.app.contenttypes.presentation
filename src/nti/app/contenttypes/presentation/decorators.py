@@ -43,6 +43,7 @@ from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTITimeline
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
@@ -263,8 +264,9 @@ class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwar
 		self._overview_decorate_external(context, result)
 
 @interface.implementer(IExternalMappingDecorator)
+@component.adapter(INTIRelatedWorkRef, IRequest)
 @component.adapter(INTITimeline, IRequest)
-class _NTITimelineDecorator(AbstractAuthenticatedRequestAwareDecorator):
+class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	LEGACY_UAS = ("NTIFoundation DataLoader NextThought/1.0",
 			  "NTIFoundation DataLoader NextThought/1.1.0",

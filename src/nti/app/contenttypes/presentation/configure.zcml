@@ -99,10 +99,15 @@
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"
 				for="nti.contenttypes.presentation.interfaces.INTICourseOverviewGroup
 					 pyramid.interfaces.IRequest" />
-	
-	<subscriber factory=".decorators._NTITimelineDecorator"
+
+	<subscriber factory=".decorators._NTIAbsoluteURLDecorator"
 				provides="nti.externalization.interfaces.IExternalMappingDecorator"
 				for="nti.contenttypes.presentation.interfaces.INTITimeline
+					 pyramid.interfaces.IRequest" />
+
+	<subscriber factory=".decorators._NTIAbsoluteURLDecorator"
+				provides="nti.externalization.interfaces.IExternalMappingDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef
 					 pyramid.interfaces.IRequest" />
 
 	<!-- Weak refs -->
