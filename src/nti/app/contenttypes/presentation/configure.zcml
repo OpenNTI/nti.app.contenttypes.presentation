@@ -77,6 +77,8 @@
 	<utility factory=".ntiids._NTILessonOverviewResolver" name="NTILessonOverview" />
 	<utility factory=".ntiids._NTICourseOverviewGroupResolver" name="NTICourseOverviewGroup" />
 
+	<utility factory=".ntiids._NTICourseBundleResolver" name="NTICourseBundle" />
+	
 	<!-- Events -->
 	<subscriber handler=".subscribers._on_course_instance_available" />
 

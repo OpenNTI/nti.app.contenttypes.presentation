@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import os
 from itertools import chain
 
 from zope import component
@@ -88,4 +89,18 @@ def get_presentation_asset_courses(item, sort=False):
 	catalog = get_catalog()
 	entries = catalog.get_containers(item)
 	result = get_courses(entries) if entries else ()
+	return result
+
+def get_entry_by_relative_path_parts(*parts):
+	original = os.path.sep.join(parts)
+	transformed = os.path.sep.join([x.replace('_',' ') for x in parts])
+	catalog = component.getUtility(ICourseCatalog)
+	for entry in catalog.iterCatalogEntries():
+		relative_path = getattr(entry, 'relative_path', None)
+		if relative_path == original or relative_path == transformed:
+			return entry
+	return None
+
+def get_course_by_relative_path_parts(*parts):
+	result = ICourseInstance(get_entry_by_relative_path_parts(*parts), None)
 	return result
