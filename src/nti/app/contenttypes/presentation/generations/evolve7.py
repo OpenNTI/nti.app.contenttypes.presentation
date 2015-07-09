@@ -47,6 +47,10 @@ def do_evolve(context):
 	lsm.unregisterUtility(pa_catalog, provided=IPresentationAssetsIndex,
 						  name=PA_INDEX_NAME)
 	
+	for name, index in list(pa_catalog.items()):
+		del pa_catalog[name]
+		intids.unregister(index)
+		
 def evolve(context):
 	"""
 	Evolve to generation 7 by removing index
