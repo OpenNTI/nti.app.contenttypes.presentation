@@ -9,29 +9,34 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import time
+
 from zope import interface
+from zope.interface.common.mapping import IMapping
 
-from zope.annotation.interfaces import IAnnotations
+from persistent.mapping import PersistentMapping
 
-from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
+from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
-from .interfaces import IPresentationAssetContainter
+from nti.dataserver.interfaces import IZContained
 
-@interface.implementer(IPresentationAssetContainter)
-class PresentationAssetContainter(CaseInsensitiveCheckingLastModifiedBTreeContainer):
-	pass
+from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 
-@interface.implementer(IPresentationAssetContainter)
-def _presentation_asset_container_factory(context, create=True):
-	result = None
-	annotations = IAnnotations(context)
+@interface.implementer(IPresentationAssetContainer, IZContained, IMapping)
+class _PresentationAssetContainer(PersistentMapping,
+							   	  PersistentCreatedAndModifiedTimeObject):
+	__name__ = None
+	__parent__ = None
+	_SET_CREATED_MODTIME_ON_INIT = False
+
+@interface.implementer(IPresentationAssetContainer)
+def _presentation_asset_items_factory(context):
 	try:
-		KEY = 'PresentationAssetContainter'
-		result = annotations[KEY]
-	except KeyError:
-		if create:
-			result = PresentationAssetContainter()
-			annotations[KEY] = result
-			result.__name__ = KEY
-			result.__parent__ = context
-	return result
+		result = context._presentation_asset_item_container
+		return result
+	except AttributeError:
+		result = context._question_map_assessment_item_container = _PresentationAssetContainer()
+		result.createdTime = time.time()
+		result.__parent__ = context
+		result.__name__ = '_presentation_asset_item_container'
+		return result

@@ -37,13 +37,13 @@
 	<adapter factory=".adapters._questionsetref_to_questionset" />
 	<adapter factory=".adapters._course_overview_group_to_course" />
 
-	<adapter factory=".model._presentation_asset_container_factory"
-			 for="nti.contentlibrary.interfaces.IContentPackage"
-			 provides=".interfaces.IPresentationAssetContainter" />
+	<adapter factory=".model._presentation_asset_items_factory"
+			 for="nti.contentlibrary.interfaces.IContentUnit"
+			 provides="nti.contenttypes.presentation.interfaces.IPresentationAssetContainer" />
 
-	<adapter factory=".model._presentation_asset_container_factory"
+	<adapter factory=".model._presentation_asset_items_factory"
 			 for="nti.contenttypes.courses.interfaces.ICourseInstance"
-			 provides=".interfaces.IPresentationAssetContainter" />
+			 provides="nti.contenttypes.presentation.interfaces.IPresentationAssetContainer" />
 
 	<!-- ACLs -->
 	<adapter factory=".acl.NTIAudioACLProvider" />
