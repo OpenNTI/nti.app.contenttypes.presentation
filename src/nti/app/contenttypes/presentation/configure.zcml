@@ -37,11 +37,7 @@
 	<adapter factory=".adapters._questionsetref_to_questionset" />
 	<adapter factory=".adapters._course_overview_group_to_course" />
 
-	<adapter factory=".model._presentation_asset_items_factory"
-			 for="nti.contentlibrary.interfaces.IContentUnit"
-			 provides="nti.contenttypes.presentation.interfaces.IPresentationAssetContainer" />
-
-	<adapter factory=".model._presentation_asset_items_factory"
+	<adapter factory="nti.app.contentlibrary.adapters.presentation_asset_items_factory"
 			 for="nti.contenttypes.courses.interfaces.ICourseInstance"
 			 provides="nti.contenttypes.presentation.interfaces.IPresentationAssetContainer" />
 
