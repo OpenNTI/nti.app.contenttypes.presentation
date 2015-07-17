@@ -49,19 +49,18 @@ class MockDataserver(object):
 		return None
 
 def _reindex_items(catalog, intids):
-	catalog = component.queryUtility(ICourseCatalog)
-	if catalog is None:
+	course_catalog = component.queryUtility(ICourseCatalog)
+	if course_catalog is None:
 		return
 
-	for entry in catalog.iterCatalogEntries():
+	for entry in course_catalog.iterCatalogEntries():
 		course = ICourseInstance(entry, None)
 		if course is None or ILegacyCommunityBasedCourseInstance.providedBy(course):
 			continue
 		container = IPresentationAssetContainer(course, None)
 		if container is None:
 			continue
-		ntiid = entry.ntiid
-		assets = catalog.search_objects(container_ntiids=ntiid, intids=intids)
+		assets = catalog.search_objects(container_ntiids=entry.ntiid, intids=intids)
 		for asset in assets:
 			container[asset.ntiid] = asset
 
