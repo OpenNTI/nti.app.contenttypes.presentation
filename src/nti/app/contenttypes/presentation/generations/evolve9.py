@@ -20,10 +20,12 @@ from zope.component.hooks import site, setHooks
 
 from zope.intid.interfaces import IIntIds
 
+from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseInstance
+
 from nti.contentlibrary.indexed_data import CATALOG_INDEX_NAME
 from nti.contentlibrary.indexed_data.interfaces import IContainedObjectCatalog
 
-from nti.contenttypes.courses.interfaces import ICourseCatalog 
+from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
@@ -47,13 +49,13 @@ class MockDataserver(object):
 		return None
 
 def _reindex_items(catalog, intids):
-	catalog = component.queryUtility( ICourseCatalog )
+	catalog = component.queryUtility(ICourseCatalog)
 	if catalog is None:
 		return
 
 	for entry in catalog.iterCatalogEntries():
 		course = ICourseInstance(entry, None)
-		if course is None:
+		if course is None or ILegacyCommunityBasedCourseInstance.providedBy(course):
 			continue
 		container = IPresentationAssetContainer(course, None)
 		if container is None:
@@ -72,7 +74,7 @@ def do_evolve(context):
 	mock_ds = MockDataserver()
 	mock_ds.root = dataserver_folder
 	component.provideUtility(mock_ds, IDataserver)
-	
+
 	with site(dataserver_folder):
 		assert	component.getSiteManager() == dataserver_folder.getSiteManager(), \
 				"Hooks not installed?"
