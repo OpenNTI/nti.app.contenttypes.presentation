@@ -38,6 +38,7 @@ from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.contenttypes.presentation.utils import create_lessonoverview_from_external
 
@@ -239,7 +240,7 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 			catalog.remove_containers(doc_id, container_ntiids)
 
 def _index_overview_items(items, container_ntiids=None, namespace=None,
-						  intids=None, catalog=None, node=None):
+						  intids=None, catalog=None, node=None, course=None):
 	catalog = get_catalog() if catalog is None else catalog
 	for item in items:
 		item = item() if IWeakRef.providedBy(item) else item
@@ -263,7 +264,8 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 								  container_ntiids=container_ntiids,
 								  intids=intids,
 								  catalog=catalog,
-								  node=node)
+								  node=node,
+								  course=course)
 		else:
 			catalog.index(item,
 						  intids=intids,
@@ -309,7 +311,8 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 									  container_ntiids=ntiid,
 									  catalog=catalog,
 									  intids=intids,
-									  node=node)
+									  node=node,
+									  course=course)
 				continue
 
 			# this remove all lesson overviews and overview groups
@@ -341,13 +344,19 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 								  container_ntiids=ntiid,
 								  catalog=catalog,
 								  intids=intids,
-								  node=node)
+								  node=node,
+								  course=course)
 
 			_set_source_lastModified(namespace, sibling_lastModified, catalog)
 
 	logger.info('Lessons overviews for %s have been synchronized in %s(s)',
 				 name, time.time() - now)
 	return result
+
+def _clear_assets(course):
+	container = IPresentationAssetContainer(course, None)
+	if container is not None:
+		container.clear()
 
 @component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
 def _on_course_instance_available(course, event):
