@@ -242,10 +242,14 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 def _index_overview_items(items, container_ntiids=None, namespace=None,
 						  intids=None, catalog=None, node=None, course=None):
 	catalog = get_catalog() if catalog is None else catalog
+	container = IPresentationAssetContainer(course, None)
 	for item in items:
 		item = item() if IWeakRef.providedBy(item) else item
 		if item is None:
 			continue
+	
+		if container is not None:
+			container[item.ntiid] = item
 
 		# set lesson overview NTIID on the outline node
 		if INTILessonOverview.providedBy(item) and node is not None:
@@ -353,7 +357,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 				 name, time.time() - now)
 	return result
 
-def _clear_assets(course):
+def _clear_course_assets(course):
 	container = IPresentationAssetContainer(course, None)
 	if container is not None:
 		container.clear()
@@ -361,15 +365,15 @@ def _clear_assets(course):
 @component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
 def _on_course_instance_available(course, event):
 	catalog = get_catalog()
-	if 	catalog is not None and \
-		not ILegacyCommunityBasedCourseInstance.providedBy(course):
+	if catalog is not None and not ILegacyCommunityBasedCourseInstance.providedBy(course):
+		_clear_course_assets(course)
 		synchronize_course_lesson_overview(course, catalog=catalog)
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
 def _clear_data_when_course_removed(course, event):
 	catalog = get_catalog()
-	if 	catalog is not None and \
-		not ILegacyCommunityBasedCourseInstance.providedBy(course):
+	if catalog is not None and not ILegacyCommunityBasedCourseInstance.providedBy(course):
+		_clear_course_assets(course)
 		entry = ICourseCatalogEntry(course, None)
 		ntiid = entry.ntiid if entry is not None else course.__name__
 		_remove_and_unindex_course_assets(container_ntiids=ntiid, catalog=catalog)
