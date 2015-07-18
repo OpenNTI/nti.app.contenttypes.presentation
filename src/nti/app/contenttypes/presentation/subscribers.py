@@ -103,12 +103,12 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 
 # Courses
 
-PACKAGE_CONTAINER_INTERFACES = (INTIAudio, INTIVideo, INTITimeline, 
+PACKAGE_CONTAINER_INTERFACES = (INTIAudio, INTIVideo, INTITimeline,
 								INTISlideDeck, INTIRelatedWorkRef)
 
 def _remove_registered_course_overview(name=None, registry=None, course=None):
 	group = _removed_registered(INTICourseOverviewGroup, name=name, registry=registry)
-	
+
 	container = IPresentationAssetContainer(course, None) or {}
 	container.pop(name, None)
 
@@ -132,8 +132,8 @@ def _remove_registered_lesson_overview(name, registry=None, course=None):
 
 	# remove all groups
 	for group in overview:
-		_remove_registered_course_overview(name=group.ntiid, 
-										   registry=registry, 
+		_remove_registered_course_overview(name=group.ntiid,
+										   registry=registry,
 										   course=course)
 
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
@@ -145,7 +145,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 	overview = create_lessonoverview_from_external(data, notify=False)
 
 	# remove and register
-	_remove_registered_lesson_overview(name=overview.ntiid, 
+	_remove_registered_lesson_overview(name=overview.ntiid,
 									   registry=registry,
 									   course=course)
 
@@ -179,7 +179,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 			if INTIDiscussionRef.providedBy(item) and item.isCourseBundle() and ntiid:
 				specific = get_specific(ntiid)
 				provider = make_provider_safe(specific) if specific else None
-				if provider: # check for safety
+				if provider:  # check for safety
 					new_ntiid = make_ntiid(provider=provider, base=item.ntiid)
 					item.ntiid = new_ntiid
 
@@ -238,7 +238,7 @@ def _outline_nodes(outline):
 	return result
 
 def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
-									  catalog=None, intids=None, 
+									  catalog=None, intids=None,
 									  registry=None, course=None):
 
 	catalog = get_catalog() if catalog is None else catalog
@@ -247,7 +247,7 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 	for item in catalog.search_objects(intids=intids, provided=INTILessonOverview,
 									   container_ntiids=container_ntiids,
 									   namespace=namespace):
-		_remove_registered_lesson_overview(name=item.ntiid, 
+		_remove_registered_lesson_overview(name=item.ntiid,
 										   registry=registry,
 										   course=course)
 
@@ -269,7 +269,7 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 		item = item() if IWeakRef.providedBy(item) else item
 		if item is None:
 			continue
-	
+
 		if container is not None:
 			container[item.ntiid] = item
 
@@ -356,10 +356,10 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 			logger.debug("Synchronizing %s", namespace)
 			index_text = content_package.read_contents_of_sibling_entry(namespace)
 			overview = _load_and_register_lesson_overview_json(index_text,
-																validate=True,
-																course=course,
-																ntiid=ref_ntiid,
-																registry=registry)
+															   validate=True,
+															   course=course,
+															   ntiid=ref_ntiid,
+															   registry=registry)
 			result.append(overview)
 
 			# set lineage
