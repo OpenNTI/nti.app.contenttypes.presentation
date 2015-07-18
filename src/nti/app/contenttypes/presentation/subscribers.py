@@ -106,8 +106,12 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 PACKAGE_CONTAINER_INTERFACES = (INTIAudio, INTIVideo, INTITimeline, 
 								INTISlideDeck, INTIRelatedWorkRef)
 
-def _remove_registered_course_overview(name=None, registry=None):
+def _remove_registered_course_overview(name=None, registry=None, course=None):
 	group = _removed_registered(INTICourseOverviewGroup, name=name, registry=registry)
+	
+	container = IPresentationAssetContainer(course, None) or {}
+	container.pop(name, None)
+
 	# For each group remove anything that is not synced in the content pacakge.
 	# As of 20150404 we don't have a way to edit and register common group
 	# overview items so we need to remove the old and re-register the new
@@ -115,15 +119,22 @@ def _remove_registered_course_overview(name=None, registry=None):
 		iface = iface_of_thing(item)
 		if iface not in PACKAGE_CONTAINER_INTERFACES:
 			_removed_registered(iface, name=item.ntiid, registry=registry)
+			container.pop(item.ntiid, None)
 
-def _remove_registered_lesson_overview(name, registry=None):
+def _remove_registered_lesson_overview(name, registry=None, course=None):
+	container = IPresentationAssetContainer(course, None) or {}
+	container.pop(name, None)
+
 	# remove lesson overviews
 	overview = _removed_registered(INTILessonOverview, name=name, registry=registry)
 	if overview is None:
 		return
+
 	# remove all groups
 	for group in overview:
-		_remove_registered_course_overview(name=group.ntiid, registry=registry)
+		_remove_registered_course_overview(name=group.ntiid, 
+										   registry=registry, 
+										   course=course)
 
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 											validate=False, course=None):
@@ -134,7 +145,10 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 	overview = create_lessonoverview_from_external(data, notify=False)
 
 	# remove and register
-	_remove_registered_lesson_overview(name=overview.ntiid, registry=registry)
+	_remove_registered_lesson_overview(name=overview.ntiid, 
+									   registry=registry,
+									   course=course)
+
 	_register_utility(overview, INTILessonOverview, overview.ntiid, registry)
 
 	# canonicalize group
@@ -224,20 +238,28 @@ def _outline_nodes(outline):
 	return result
 
 def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
-									  catalog=None, intids=None, registry=None):
+									  catalog=None, intids=None, 
+									  registry=None, course=None):
 
 	catalog = get_catalog() if catalog is None else catalog
 	intids = component.queryUtility(IIntIds) if intids is None else intids
-
 	# unregister and unindex lesson overview obects
 	for item in catalog.search_objects(intids=intids, provided=INTILessonOverview,
-									   container_ntiids=container_ntiids, namespace=namespace):
-		_remove_registered_lesson_overview(name=item.ntiid, registry=registry)
+									   container_ntiids=container_ntiids,
+									   namespace=namespace):
+		_remove_registered_lesson_overview(name=item.ntiid, 
+										   registry=registry,
+										   course=course)
 
 	if container_ntiids:  # unindex all other objects
-		ids = catalog.get_references(container_ntiids=container_ntiids, namespace=namespace)
-		for doc_id in list(ids or ()):  # we are mutating
-			catalog.remove_containers(doc_id, container_ntiids)
+		container = IPresentationAssetContainer(course, None) or {}
+		objs = catalog.search_objects(container_ntiids=container_ntiids,
+									  namespace=namespace, intids=intids)
+		for obj in list(objs):  # we are mutating
+			doc_id = intids.queryId(obj)
+			if doc_id is not None:
+				catalog.remove_containers(doc_id, container_ntiids)
+			container.pop(obj.ntiid, None)
 
 def _index_overview_items(items, container_ntiids=None, namespace=None,
 						  intids=None, catalog=None, node=None, course=None):
@@ -328,7 +350,8 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 											  container_ntiids=ntiid,
 											  registry=registry,
 											  catalog=catalog,
-											  intids=intids)
+											  intids=intids,
+											  course=course)
 
 			logger.debug("Synchronizing %s", namespace)
 			index_text = content_package.read_contents_of_sibling_entry(namespace)
@@ -357,17 +380,16 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 				 name, time.time() - now)
 	return result
 
-def _clear_course_assets(course):
-	container = IPresentationAssetContainer(course, None)
-	if container is not None:
-		container.clear()
-
 @component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
 def _on_course_instance_available(course, event):
 	catalog = get_catalog()
 	if catalog is not None and not ILegacyCommunityBasedCourseInstance.providedBy(course):
-		_clear_course_assets(course)
 		synchronize_course_lesson_overview(course, catalog=catalog)
+
+def _clear_course_assets(course):
+	container = IPresentationAssetContainer(course, None)
+	if container is not None:
+		container.clear()
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
 def _clear_data_when_course_removed(course, event):

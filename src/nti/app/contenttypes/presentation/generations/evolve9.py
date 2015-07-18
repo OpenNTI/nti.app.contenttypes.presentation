@@ -60,11 +60,12 @@ def _reindex_items(catalog, intids):
 		container = IPresentationAssetContainer(course, None)
 		if container is None:
 			continue
+		container.clear()
 		assets = catalog.search_objects(container_ntiids=entry.ntiid, intids=intids)
 		for asset in assets:
 			container[asset.ntiid] = asset
 
-def do_evolve(context):
+def do_evolve(context, generation=generation):
 	setHooks()
 	conn = context.connection
 	root = conn.root()
@@ -86,7 +87,4 @@ def do_evolve(context):
 		logger.info('Evolution %s done.', generation)
 
 def evolve(context):
-	"""
-	Evolve to gen 9 by registering assets with course
-	"""
-	do_evolve(context)
+	pass
