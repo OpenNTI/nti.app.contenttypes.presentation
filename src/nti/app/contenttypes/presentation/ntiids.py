@@ -81,6 +81,8 @@ class _NTICourseOverviewGroupResolver(_PresentationResolver):
 @interface.implementer(INTIIDResolver)
 class _NTICourseBundleResolver(object):
 	
+	separator = ':'
+
 	@property
 	def remoteUser(self):
 		return get_remote_user()
@@ -104,7 +106,7 @@ class _NTICourseBundleResolver(object):
 		if user is not None:
 			parts = get_parts(key) if key else None
 			specific = parts.specific if parts else None
-			splits = specific.split(':') if specific else ()
+			splits = specific.split(self.separator) if specific else ()
 			course = self.get_course(splits)
 			discussion = self.get_discussion(splits, course)
 			if discussion is not None:
