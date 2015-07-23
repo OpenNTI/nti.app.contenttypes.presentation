@@ -16,7 +16,7 @@ from pyramid import httpexceptions as hexc
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
-from nti.appserver.ugd_query_views import _UGDView as UGDQueryView
+from nti.appserver.ugd_query_views import _RecursiveUGDView
 
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 
@@ -71,7 +71,7 @@ class OutlineLessonOverviewView(AbstractAuthenticatedView,
 			 permission=nauth.ACT_READ,
 			 renderer='rest',
 			 name=VIEW_OVERVIEW_SUMMARY)
-class OutlineLessonOverviewSummaryView(UGDQueryView,
+class OutlineLessonOverviewSummaryView(_RecursiveUGDView,
 									   OutlineLessonOverviewMixin):
 
 	_DEFAULT_BATCH_SIZE = None
