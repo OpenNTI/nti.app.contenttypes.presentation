@@ -14,6 +14,7 @@ from zope import interface
 
 from nti.assessment.interfaces import IQPoll
 from nti.assessment.interfaces import IQSurvey
+from nti.assessment.interfaces import IQInquiry
 from nti.assessment.interfaces import IQuestion
 from nti.assessment.interfaces import IQuestionSet
 from nti.assessment.interfaces import IQAssignment
@@ -26,6 +27,7 @@ from nti.contenttypes.presentation.interfaces import INTIPollRef
 from nti.contenttypes.presentation.interfaces import INTIAudioRef
 from nti.contenttypes.presentation.interfaces import INTIVideoRef
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
+from nti.contenttypes.presentation.interfaces import INTIInquiryRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
@@ -84,4 +86,10 @@ def _surveyref_to_survey(context):
 @component.adapter(INTIPollRef)
 def _pollref_to_poll(context):
 	result = component.queryUtility(IQPoll, name=context.target)
+	return result
+
+@interface.implementer(IQInquiry)
+@component.adapter(INTIInquiryRef)
+def _inquiryref_to_inquiry(context):
+	result = component.queryUtility(IQInquiry, name=context.target)
 	return result
