@@ -68,13 +68,13 @@ class BasePresentationAssetACLProvider(BaseACLProvider):
 			ace = ace_allowing( IPrincipal(AUTHENTICATED_GROUP_NAME),
 						 		(ACT_READ),
 						   		BasePresentationAssetACLProvider )
-			result = acl_from_aces( ace ) 
+			result = acl_from_aces( ace )
 		return result
-	
+
 @component.adapter(IPresentationAsset)
 class PresentationAssetACLProvider(BasePresentationAssetACLProvider):
 	pass
-	
+
 @component.adapter(INTIAudio)
 class NTIAudioACLProvider(BasePresentationAssetACLProvider):
 	pass

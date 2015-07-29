@@ -50,23 +50,23 @@ def get_enrollment_record(context, user):
 	course = ICourseInstance(context, None) # e.g. course in lineage
 	if course is None:
 		return None
-	
+
 	if ICourseSubInstance.providedBy(course):
 		main_course = course.__parent__.__parent__
 	else:
 		main_course = course
-	
+
 	# give priority to course in lineage before checking the rest
 	for instance in chain( (course, main_course), main_course.SubInstances.values() ):
 		if is_course_instructor(instance, user):
 			# create a fake enrollment record w/ all scopes to signal an instructor
 			return ProxyEnrollmentRecord(course, IPrincipal(user), ES_ALL)
-	
+
 	result = get_any_enrollment(course, user) if course is not None else None
 	return result
 
 def get_courses(ntiids=()):
-	result = []
+	result = set()
 	catalog = component.getUtility(ICourseCatalog)
 	for ntiid in ntiids or ():
 		course = None
@@ -81,8 +81,10 @@ def get_courses(ntiids=()):
 				course = ICourseInstance(entry, None)
 			except KeyError:
 				pass
+		else:
+			course = ICourseInstance( context, None )
 		if course is not None:
-			result.append(course)
+			result.add(course)
 	return result
 
 def get_presentation_asset_courses(item, sort=False):
