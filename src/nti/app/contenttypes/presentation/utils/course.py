@@ -24,6 +24,8 @@ from nti.app.products.courseware.utils import is_course_instructor
 
 from nti.contentlibrary.indexed_data import get_catalog
 
+from nti.contentlibrary.interfaces import IContentPackage
+
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -71,7 +73,8 @@ def get_courses(ntiids=()):
 	for ntiid in ntiids or ():
 		course = None
 		context = find_object_with_ntiid(ntiid)
-		if ICourseCatalogEntry.providedBy(context):
+		if 	ICourseCatalogEntry.providedBy(context) \
+			or IContentPackage.providedBy(context):
 			course = ICourseInstance(context, None)
 		elif ICourseInstance.providedBy(context):
 			course = context
@@ -81,8 +84,6 @@ def get_courses(ntiids=()):
 				course = ICourseInstance(entry, None)
 			except KeyError:
 				pass
-		else:
-			course = ICourseInstance( context, None )
 		if course is not None:
 			result.add(course)
 	return result
