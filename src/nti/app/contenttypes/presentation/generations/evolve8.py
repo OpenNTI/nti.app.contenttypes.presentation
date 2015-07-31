@@ -62,7 +62,7 @@ def _reindex_items(catalog, intids):
 	registry = get_registry()
 	for provided in ITEM_INTERFACES:
 		for _, item in registry.getUtilitiesFor(provided):
-			courses = get_presentation_asset_courses(item)
+			courses = list(get_presentation_asset_courses(item) or ())
 			course = courses[0] if courses else None
 			if course is not None:
 				try:
