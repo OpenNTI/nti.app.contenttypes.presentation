@@ -28,8 +28,14 @@ zope.deferredimport.deprecated(
 	"Import from TypeIndex instead",
 	TypeIndex='nti.contentlibrary.indexed_data.index:TypeIndex')
 
-deprecated('PresentationAssetCatalog', 'Use lastest library implementation')
+deprecated('PresentationAssetCatalog', 'Use lastest library index implementation')
 class PresentationAssetCatalog(Persistent):
+
+	def reset(self):
+		pass
+
+deprecated('PACatalogIndex', 'Use lastest library index implementation')
+class PACatalogIndex(Persistent):
 
 	def reset(self):
 		pass
