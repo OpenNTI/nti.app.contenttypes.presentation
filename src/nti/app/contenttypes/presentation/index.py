@@ -36,6 +36,4 @@ class PresentationAssetCatalog(Persistent):
 
 deprecated('PACatalogIndex', 'Use lastest library index implementation')
 class PACatalogIndex(Persistent):
-
-	def reset(self):
-		pass
+	pass
