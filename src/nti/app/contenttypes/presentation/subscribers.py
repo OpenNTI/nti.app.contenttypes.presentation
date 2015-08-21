@@ -107,7 +107,10 @@ PACKAGE_CONTAINER_INTERFACES = (INTIAudio, INTIVideo, INTITimeline,
 								INTISlideDeck, INTIRelatedWorkRef)
 
 def _remove_registered_course_overview(name=None, registry=None, course=None):
+	result = 0
 	group = _removed_registered(INTICourseOverviewGroup, name=name, registry=registry)
+	if group is not None:
+		result += 1 
 
 	container = IPresentationAssetContainer(course, None) or {}
 	container.pop(name, None)
@@ -118,8 +121,11 @@ def _remove_registered_course_overview(name=None, registry=None, course=None):
 	for item in group or ():  # this shoud resolve weak refs
 		iface = iface_of_thing(item)
 		if iface not in PACKAGE_CONTAINER_INTERFACES:
-			_removed_registered(iface, name=item.ntiid, registry=registry)
+			ntiid = item.ntiid
+			if _removed_registered(iface, name=ntiid, registry=registry) is not None:
+				result += 1
 			container.pop(item.ntiid, None)
+	return result
 
 def _remove_registered_lesson_overview(name, registry=None, course=None):
 	container = IPresentationAssetContainer(course, None) or {}
@@ -128,13 +134,15 @@ def _remove_registered_lesson_overview(name, registry=None, course=None):
 	# remove lesson overviews
 	overview = _removed_registered(INTILessonOverview, name=name, registry=registry)
 	if overview is None:
-		return
+		return 0
 
+	result = 1 # count overview
 	# remove all groups
 	for group in overview:
-		_remove_registered_course_overview(name=group.ntiid,
-										   registry=registry,
-										   course=course)
+		result += _remove_registered_course_overview(name=group.ntiid,
+										   			 registry=registry,
+										   			 course=course)
+	return result
 
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 											validate=False, course=None):
@@ -243,13 +251,15 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 
 	catalog = get_catalog() if catalog is None else catalog
 	intids = component.queryUtility(IIntIds) if intids is None else intids
+	
+	result = 0
 	# unregister and unindex lesson overview obects
 	for item in catalog.search_objects(intids=intids, provided=INTILessonOverview,
 									   container_ntiids=container_ntiids,
 									   namespace=namespace):
-		_remove_registered_lesson_overview(name=item.ntiid,
-										   registry=registry,
-										   course=course)
+		result += _remove_registered_lesson_overview(name=item.ntiid,
+										   			 registry=registry,
+										   			 course=course)
 
 	if container_ntiids:  # unindex all other objects
 		container = IPresentationAssetContainer(course, None) or {}
@@ -260,6 +270,8 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 			if doc_id is not None:
 				catalog.remove_containers(doc_id, container_ntiids)
 			container.pop(obj.ntiid, None)
+	return result
+remove_and_unindex_course_assets = _remove_and_unindex_course_assets
 
 def _index_overview_items(items, container_ntiids=None, namespace=None,
 						  intids=None, catalog=None, node=None, course=None):

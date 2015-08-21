@@ -5,7 +5,6 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -26,10 +25,14 @@ from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtils
 from nti.app.products.courseware.views import CourseAdminPathAdapter
 from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseInstance
 
+from nti.common.string import TRUE_VALUES
+from nti.common.maps import CaseInsensitiveDict
+
 from nti.contentlibrary.indexed_data import get_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
@@ -41,7 +44,7 @@ from nti.externalization.interfaces import StandardExternalFields
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
-from ..utils import remove_all_utilities
+from ..subscribers import remove_and_unindex_course_assets
 
 ITEMS = StandardExternalFields.ITEMS
 
@@ -96,7 +99,7 @@ class GetPresentationAssetsView(AbstractAuthenticatedView,
 		params = self.request.params
 		result = LocatedExternalDict()
 		result[ITEMS] = items = {}
-		extended = (params.get('all') or u'').lower() in ('true', '1', 'yes', 'y', 't')
+		extended = (params.get('all') or u'').lower() in TRUE_VALUES
 		for provided in ALL_PRESENTATION_ASSETS_INTERFACES:
 			comps = list(component.getUtilitiesFor(provided))
 			count += len(comps)
@@ -118,11 +121,25 @@ class ResetPresentationAssetsView(AbstractAuthenticatedView,
 							  	  ModeledContentUploadRequestUtilsMixin):
 
 
+	def readInput(self, value=None):
+		values = super(ResetPresentationAssetsView, self).readInput(self, value=value)
+		return CaseInsensitiveDict(values)
+
 	def __call__(self):
 		now = time.time()
+		values = self.readInput()
+		courses = _parse_courses(values)
+		if not courses:
+			raise hexc.HTTPUnprocessableEntity('Must specify a valid course')
+
+		total = 0
+		catalog = get_catalog()
 		result = LocatedExternalDict()
-		result[ITEMS] = remove_all_utilities()
-		index = get_catalog()
-		index.reset()
+		for course in courses:
+			entry = ICourseCatalogEntry(course)
+			total += remove_and_unindex_course_assets(container_ntiids=entry.ntiid,
+											 		  course=course,
+											 		  catalog=catalog)
+		result['Total'] = total
 		result['Elapsed'] = time.time() - now
 		return result
