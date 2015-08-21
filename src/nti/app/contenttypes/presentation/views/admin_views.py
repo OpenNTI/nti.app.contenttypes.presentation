@@ -14,6 +14,8 @@ import time
 
 from zope import component
 
+from zope.intid import IIntIds
+
 from pyramid.view import view_config
 from pyramid.view import view_defaults
 from pyramid import httpexceptions as hexc
@@ -25,7 +27,6 @@ from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtils
 from nti.app.products.courseware.views import CourseAdminPathAdapter
 from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseInstance
 
-from nti.common.string import TRUE_VALUES
 from nti.common.maps import CaseInsensitiveDict
 
 from nti.contentlibrary.indexed_data import get_catalog
@@ -33,8 +34,6 @@ from nti.contentlibrary.indexed_data import get_catalog
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
-
-from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.dataserver import authorization as nauth
 from nti.dataserver.interfaces import IDataserverFolder
@@ -95,18 +94,23 @@ class GetPresentationAssetsView(AbstractAuthenticatedView,
 
 
 	def __call__(self):
+		params = CaseInsensitiveDict(self.request.params)
+		courses = _parse_courses(params)
+		if not courses:
+			raise hexc.HTTPUnprocessableEntity('Must specify a valid course')
+		
 		count = 0
-		params = self.request.params
+		catalog = get_catalog()
+		intids = component.getUtility(IIntIds)
+		
 		result = LocatedExternalDict()
-		result[ITEMS] = items = {}
-		extended = (params.get('all') or u'').lower() in TRUE_VALUES
-		for provided in ALL_PRESENTATION_ASSETS_INTERFACES:
-			comps = list(component.getUtilitiesFor(provided))
-			count += len(comps)
-			if extended:
-				items[provided.__name__] = sorted(n for n, _ in comps)
-			else:
-				items[provided.__name__] = len(comps)
+		result[ITEMS] = items = []
+		for course in courses:
+			entry = ICourseCatalogEntry(course)
+			for item in catalog.search_objects(intids=intids,
+									  		   container_ntiids=entry.ntiid):
+				count += 1
+				items.append(item)
 		result['Total'] = count
 		return result
 
