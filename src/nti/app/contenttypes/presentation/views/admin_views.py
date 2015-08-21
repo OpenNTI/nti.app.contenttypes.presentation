@@ -70,6 +70,10 @@ def _parse_courses(values):
 					result.append(course)
 			except KeyError:
 				pass
+		else:
+			course = ICourseInstance(context, None)
+			if course is not None:
+				result.append(course)
 	return result
 
 def _get_all_courses():
