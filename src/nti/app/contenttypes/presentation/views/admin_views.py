@@ -102,8 +102,7 @@ class GetPresentationAssetsView(AbstractAuthenticatedView,
 		courses = _parse_courses(params)
 		if not courses:
 			raise hexc.HTTPUnprocessableEntity('Must specify a valid course')
-		
-		count = 0
+
 		catalog = get_catalog()
 		intids = component.getUtility(IIntIds)
 		
@@ -111,11 +110,9 @@ class GetPresentationAssetsView(AbstractAuthenticatedView,
 		result[ITEMS] = items = []
 		for course in courses:
 			entry = ICourseCatalogEntry(course)
-			for item in catalog.search_objects(intids=intids,
-									  		   container_ntiids=entry.ntiid):
-				count += 1
-				items.append(item)
-		result['Total'] = count
+			objects = catalog.search_objects(intids=intids, container_ntiids=entry.ntiid)
+			items.extend(sorted(objects or (), key=lambda x: x.__class__.__name__))
+		result['ItemCount'] = result['Total'] = len(items)
 		return result
 
 @view_config(context=IDataserverFolder)
