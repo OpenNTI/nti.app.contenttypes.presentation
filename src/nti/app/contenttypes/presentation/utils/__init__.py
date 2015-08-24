@@ -35,9 +35,6 @@ from nti.contenttypes.presentation.interfaces import PURCHASED
 from nti.contenttypes.presentation.interfaces import IPresentationVisibility
 
 # re-export
-from .registry import remove_utilities
-from .registry import remove_all_utilities
-
 from .course import get_courses
 from .course import get_enrollment_record
 from .course import get_presentation_asset_courses

@@ -39,6 +39,7 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 
 @interface.implementer(ICourseInstanceEnrollmentRecord)
 class ProxyEnrollmentRecord(CreatedAndModifiedTimeMixin, Contained):
+
 	Scope = None
 	Principal = None
 	CourseInstance = None
@@ -49,7 +50,7 @@ class ProxyEnrollmentRecord(CreatedAndModifiedTimeMixin, Contained):
 		self.CourseInstance = course
 
 def get_enrollment_record(context, user):
-	course = ICourseInstance(context, None) # e.g. course in lineage
+	course = ICourseInstance(context, None)  # e.g. course in lineage
 	if course is None:
 		return None
 
@@ -59,7 +60,7 @@ def get_enrollment_record(context, user):
 		main_course = course
 
 	# give priority to course in lineage before checking the rest
-	for instance in chain( (course, main_course), main_course.SubInstances.values() ):
+	for instance in chain((course, main_course), main_course.SubInstances.values()):
 		if is_course_instructor(instance, user):
 			# create a fake enrollment record w/ all scopes to signal an instructor
 			return ProxyEnrollmentRecord(course, IPrincipal(user), ES_ALL)
@@ -96,7 +97,7 @@ def get_presentation_asset_courses(item, sort=False):
 
 def get_entry_by_relative_path_parts(*parts):
 	original = os.path.sep.join(parts)
-	transformed = os.path.sep.join([x.replace('_',' ') for x in parts])
+	transformed = os.path.sep.join([x.replace('_', ' ') for x in parts])
 	catalog = component.getUtility(ICourseCatalog)
 	for entry in catalog.iterCatalogEntries():
 		relative_path = getattr(entry, 'relative_path', None)
