@@ -74,7 +74,7 @@ def is_item_visible(item, user, context=None, record=None):
 def get_scope_term(name):
 	return ENROLLMENT_SCOPE_MAP.get(name)
 
-def get_implied_scopes(scopes=()):
+def get_implied_by_scopes(scopes=()):
 	result = set()
 	for scope in scopes or ():
 		result.add(scope)
@@ -84,7 +84,7 @@ def get_implied_scopes(scopes=()):
 			break
 		else:
 			es = ENROLLMENT_SCOPE_MAP.get(scope)
-			result.update(es.implies if es is not None else ())
+			result.update(es.implied_by if es is not None else ())
 	return result
 
 def resolve_discussion_course_bundle(user, item, context=None, record=None):
@@ -115,7 +115,7 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 	# get course discussion
 	key = get_discussion_key(item)
 	discussion = ICourseDiscussions(course).get(key) if key else None
-	scopes = get_implied_scopes(discussion.scopes) if discussion is not None else ()
+	scopes = get_implied_by_scopes(discussion.scopes) if discussion is not None else ()
 
 	if	(not scope) or \
 		(not scopes) or \
