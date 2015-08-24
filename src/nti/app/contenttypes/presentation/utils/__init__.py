@@ -21,7 +21,6 @@ from nti.contenttypes.courses.interfaces import ES_CREDIT_DEGREE
 from nti.contenttypes.courses.interfaces import ES_CREDIT_NONDEGREE
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_MAP
 from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
-from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
@@ -74,10 +73,7 @@ def is_item_visible(item, user, context=None, record=None):
 	return True
 
 def get_scope_term(name):
-	for scope in ENROLLMENT_SCOPE_VOCABULARY:
-		if scope.value == name:
-			return scope
-	return None
+	return ENROLLMENT_SCOPE_MAP.get(name)
 
 def get_implied_scopes(scopes=()):
 	result = set()
