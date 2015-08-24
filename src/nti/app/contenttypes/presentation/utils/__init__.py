@@ -22,7 +22,6 @@ from nti.contenttypes.courses.interfaces import ES_CREDIT_NONDEGREE
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_MAP
 from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
 
-from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.discussions.utils import get_discussion_key
 from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
