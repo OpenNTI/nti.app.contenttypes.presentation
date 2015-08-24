@@ -19,6 +19,7 @@ from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ES_PURCHASED
 from nti.contenttypes.courses.interfaces import ES_CREDIT_DEGREE
 from nti.contenttypes.courses.interfaces import ES_CREDIT_NONDEGREE
+from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_MAP
 from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
 
@@ -78,6 +79,19 @@ def get_scope_term(name):
 			return scope
 	return None
 
+def get_implied_scopes(scopes=()):
+	result = set()
+	for scope in scopes or ():
+		result.add(scope)
+		if scope == ES_ALL:
+			result.discard(scope)
+			result.update(ENROLLMENT_SCOPE_MAP.keys())
+			break
+		else:
+			es = ENROLLMENT_SCOPE_MAP.get(scope)
+			result.update(es.implies if es is not None else ())
+	return result
+
 def resolve_discussion_course_bundle(user, item, context=None, record=None):
 	"""
 	return the approproate topic according  the discussion ref and user enrollment
@@ -106,7 +120,7 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 	# get course discussion
 	key = get_discussion_key(item)
 	discussion = ICourseDiscussions(course).get(key) if key else None
-	scopes = discussion.scopes if discussion is not None else ()
+	scopes = get_implied_scopes(discussion.scopes) if discussion is not None else ()
 
 	if	(not scope) or \
 		(not scopes) or \
