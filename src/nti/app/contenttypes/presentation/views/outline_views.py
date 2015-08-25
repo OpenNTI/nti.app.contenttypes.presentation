@@ -120,7 +120,7 @@ class OutlineLessonOverviewSummaryView(_RecursiveUGDView,
 			   renderer='rest',
 			   permission=nauth.ACT_READ,
 			   request_method='GET',
-			   name='AssignmentsByOutlineNode')  # See decorators
+			   name='MediaByOutlineNode')  # See decorators
 class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 
 	def _outline_nodes(self, course):
