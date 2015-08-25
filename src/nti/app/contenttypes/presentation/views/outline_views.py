@@ -12,14 +12,25 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 
 from pyramid.view import view_config
+from pyramid.view import view_defaults
 from pyramid import httpexceptions as hexc
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
+from nti.app.products.courseware.interfaces import ICourseInstanceEnrollment
+
 from nti.appserver.ugd_query_views import _RecursiveUGDView
 
+from nti.contentlibrary.indexed_data import get_catalog
+
+from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 
+from nti.contenttypes.presentation.interfaces import INTIAudio
+from nti.contenttypes.presentation.interfaces import INTIVideo
+from nti.contenttypes.presentation.interfaces import INTIAudioRef
+from nti.contenttypes.presentation.interfaces import INTIVideoRef
+from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 
 from nti.dataserver import authorization as nauth
@@ -101,4 +112,44 @@ class OutlineLessonOverviewSummaryView(_RecursiveUGDView,
 				result[ item.ntiid ] = item_results = {}
 				item_results[ CLASS ] = 'OverviewItemSummary'
 				item_results['ItemCount'] = ugd_count
+		return result
+
+@view_config(context=ICourseInstance)
+@view_config(context=ICourseInstanceEnrollment)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   permission=nauth.ACT_READ,
+			   request_method='GET',
+			   name='AssignmentsByOutlineNode')  # See decorators
+class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
+
+	def _outline_nodes(self, course):
+		result = []
+		def _recur(node):
+			if ICourseOutlineContentNode.providedBy(node):
+				if node.src and node.ContentNTIID:
+					result.append(node)
+			for child in node.values():
+				_recur(child)
+		
+		outline = course.Outline
+		if outline is not None:
+			_recur(outline)
+		return result
+
+	def __call__(self):
+		result = LocatedExternalDict()
+		result.__name__ = self.request.view_name
+		result.__parent__ = self.request.context
+		
+		course = ICourseInstance(self.request.context)
+		for node in self._outline_nodes(course):
+			ntiid = node.ContentNTIID
+			result.setdefault(ntiid, [])
+			for item in get_catalog().search_objects(
+										namespace=node.src,
+										provided=(INTIAudioRef, INTIAudio,
+												  INTIVideoRef, INTIVideo,
+												  INTISlideDeck)):
+				print(item)
 		return result
