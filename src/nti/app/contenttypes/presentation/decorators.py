@@ -37,6 +37,7 @@ from nti.contenttypes.courses.interfaces import ES_CREDIT
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
 
+from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 
 from nti.contenttypes.presentation.interfaces import IVisible
@@ -302,3 +303,24 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 					if self.is_legacy_ipad:  # for legacy ipad
 						value = urljoin(self.request.host_url, value)
 					result[name] = value
+
+@interface.implementer(IExternalMappingDecorator)
+class _MediaByOutlineNodeDecorator(AbstractAuthenticatedRequestAwareDecorator):
+
+	def _predicate(self, context, result):
+		course = ICourseInstance(context, None)
+		record = get_enrollment_record(context, self) if course is not None else None
+		return record is not None
+	
+	def _do_decorate_external(self, context, result_map):
+		course = ICourseInstance(context, context)
+		links = result_map.setdefault( LINKS, [] )
+		for rel in ('MediaByOutlineNode',):
+			# Prefer to canonicalize these through to the course, if possible
+			link = Link( course,
+						 rel=rel,
+						 elements=(rel,),
+						 # We'd get the wrong type/ntiid values if we
+						 # didn't ignore them.
+						 ignore_properties_of_target=True)
+			links.append(link)
