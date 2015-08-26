@@ -309,7 +309,7 @@ class _MediaByOutlineNodeDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	def _predicate(self, context, result):
 		course = ICourseInstance(context, None)
-		record = get_enrollment_record(context, self) if course is not None else None
+		record = get_enrollment_record(context, self.remoteUser) if not course else None
 		return record is not None
 	
 	def _do_decorate_external(self, context, result_map):
