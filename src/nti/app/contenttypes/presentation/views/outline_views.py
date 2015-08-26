@@ -28,8 +28,10 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 
 from nti.contenttypes.presentation.interfaces import IVisible 
-from nti.contenttypes.presentation.interfaces import IMediaRef 
+from nti.contenttypes.presentation.interfaces import IMediaRef
+from nti.contenttypes.presentation.interfaces import INTIAudio 
 from nti.contenttypes.presentation.interfaces import INTIMedia
+from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
@@ -47,6 +49,7 @@ from . import VIEW_OVERVIEW_CONTENT
 from . import VIEW_OVERVIEW_SUMMARY
 
 CLASS = StandardExternalFields.CLASS
+ITEMS = StandardExternalFields.ITEMS
 LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 
 class OutlineLessonOverviewMixin(object):
@@ -142,6 +145,17 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 			_recur(outline)
 		return result
 
+	def _get_item_key(self, item):
+		if INTIAudio.providedBy(item):
+			result = 'AudioIndex'
+		elif INTIVideo.providedBy(item):
+			result = 'VideoIndex'
+		elif INTISlideDeck.providedBy(item):
+			result = 'SlideDeckIndex'
+		else:
+			result = 'OtherIndex'
+		return result
+
 	def __call__(self):
 		result = LocatedExternalDict()
 		result.__name__ = self.request.view_name
@@ -152,6 +166,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		if record is None:
 			return result
 		
+		collector = {}
 		catalog = get_catalog()
 		for node in self._outline_nodes(course):
 			ntiid = node.ContentNTIID
@@ -171,6 +186,19 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 						else:
 							item = INTIMedia(item, None)
 					if item is not None:
-						result.setdefault(ntiid, [])
-						result[ntiid].append(item)
+						clazz = self._get_item_key(item)
+						collector.setdefault(clazz, {})
+						collector[clazz].setdefault(ntiid, [])
+						collector[clazz][ntiid].append(item)
+						
+		for clazz, data in collector.items():
+			items = {}
+			containers = {}
+			index = {ITEMS:items, 'Containers':containers}
+			result[clazz] = index
+			for ntiid, elements in data.items():
+				containers.setdefault(ntiid, [])
+				for element in elements:
+					items[element.ntiid] = element
+					containers[ntiid].append(element.ntiid)
 		return result
