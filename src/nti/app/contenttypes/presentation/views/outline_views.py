@@ -24,20 +24,24 @@ from nti.appserver.ugd_query_views import _RecursiveUGDView
 from nti.contentlibrary.indexed_data import get_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 
-from nti.contenttypes.presentation.interfaces import INTIAudio
-from nti.contenttypes.presentation.interfaces import INTIVideo
-from nti.contenttypes.presentation.interfaces import INTIAudioRef
-from nti.contenttypes.presentation.interfaces import INTIVideoRef
+from nti.contenttypes.presentation.interfaces import IVisible 
+from nti.contenttypes.presentation.interfaces import IMediaRef 
+from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.dataserver import authorization as nauth
 
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.externalization import to_external_object
+
+from ..utils import is_item_visible
+from ..utils.course import get_enrollment_record
 
 from . import VIEW_OVERVIEW_CONTENT
 from . import VIEW_OVERVIEW_SUMMARY
@@ -115,6 +119,7 @@ class OutlineLessonOverviewSummaryView(_RecursiveUGDView,
 		return result
 
 @view_config(context=ICourseInstance)
+@view_config(context=ICourseCatalogEntry)
 @view_config(context=ICourseInstanceEnrollment)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
@@ -143,13 +148,28 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		result.__parent__ = self.request.context
 		
 		course = ICourseInstance(self.request.context)
+		record = get_enrollment_record(course, self.remoteUser)
+		if record is None:
+			return result
+		
+		catalog = get_catalog()
 		for node in self._outline_nodes(course):
 			ntiid = node.ContentNTIID
 			result.setdefault(ntiid, [])
-			for item in get_catalog().search_objects(
-										namespace=node.src,
-										provided=(INTIAudioRef, INTIAudio,
-												  INTIVideoRef, INTIVideo,
-												  INTISlideDeck)):
-				print(item)
+			for group in catalog.search_objects(
+									namespace=node.src,
+									provided=INTICourseOverviewGroup):
+				
+				for item in group.Items:
+					if 	not IMediaRef.providedBy(item) and \
+						not INTIMedia.providedBy(item) and \
+						not INTISlideDeck.providedBy(item):
+						continue
+					if IVisible.providedBy(item):
+						if not is_item_visible(item, self.remoteUser, record=record):
+							continue
+						else:
+							item = INTIMedia(item, None)
+					if item is not None:
+						result[ntiid].append(item)
 		return result
