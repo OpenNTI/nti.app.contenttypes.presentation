@@ -155,7 +155,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		catalog = get_catalog()
 		for node in self._outline_nodes(course):
 			ntiid = node.ContentNTIID
-			result.setdefault(ntiid, [])
+			
 			for group in catalog.search_objects(
 									namespace=node.src,
 									provided=INTICourseOverviewGroup):
@@ -171,5 +171,6 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 						else:
 							item = INTIMedia(item, None)
 					if item is not None:
+						result.setdefault(ntiid, [])
 						result[ntiid].append(item)
 		return result
