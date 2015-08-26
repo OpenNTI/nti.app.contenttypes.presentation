@@ -305,6 +305,9 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 								  node=node,
 								  course=course)
 		else:
+			# CS: We don't index items in groups with the namespace
+			# because and item can be in different groups with different
+			# namespace 
 			catalog.index(item,
 						  intids=intids,
 						  container_ntiids=container_ntiids)
