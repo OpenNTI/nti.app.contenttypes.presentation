@@ -207,7 +207,7 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 			return True
 		course = record.CourseInstance
 		predicate = get_course_assignment_predicate_for_user(self.remoteUser, course)
-		result = predicate is None and predicate(assg)
+		result = predicate is not None and predicate(assg)
 		return result	
 
 	def _decorate_external_impl(self, context, result):
