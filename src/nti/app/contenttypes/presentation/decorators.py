@@ -18,12 +18,16 @@ from zope.location.interfaces import ILocation
 
 from pyramid.interfaces import IRequest
 
+from nti.app.assessment.interfaces import get_course_assignment_predicate_for_user
+
 from nti.app.contentlibrary.utils import get_item_content_units
 
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_TOPIC
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_SECTION_TOPIC
 
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
+
+from nti.assessment.interfaces import IQAssignment
 
 from nti.common.property import Lazy
 
@@ -44,8 +48,9 @@ from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTITimeline
-from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
+from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
@@ -193,6 +198,18 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 		ext_item[NTIID] = ext_item['target'] = topic.NTIID  # replace the target to the topic NTIID
 		return True
 
+	def allow_assignmentref(self, context, item):
+		record = self.record(context)
+		assg = IQAssignment(item, None)
+		if assg is None or record is None:
+			return False
+		if record.Scope == ES_ALL: # instructor
+			return True
+		course = record.CourseInstance
+		predicate = get_course_assignment_predicate_for_user(self.remoteUser, course)
+		result = predicate is None and predicate(assg)
+		return result	
+
 	def _decorate_external_impl(self, context, result):
 		idx = 0
 		removal = set()
@@ -211,6 +228,10 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 					discussions.append(idx)
 			elif IMediaRef.providedBy(item):
 				self._handle_media_ref(items, item, idx)
+			elif INTIAssignmentRef.providedBy(item) and \
+				not self.allow_assignmentref(context, item):
+				removal.add(idx)
+				
 		# filter legacy discussions
 		if discussions:
 			self._filter_legacy_discussions(context, discussions, removal)
