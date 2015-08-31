@@ -21,17 +21,15 @@ from nti.app.products.courseware.interfaces import ICourseInstanceEnrollment
 
 from nti.appserver.ugd_query_views import _RecursiveUGDView
 
-from nti.contentlibrary.indexed_data import get_catalog
+from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 
-from nti.contenttypes.presentation.interfaces import IVisible 
+from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IMediaRef
-from nti.contenttypes.presentation.interfaces import INTIAudio 
 from nti.contenttypes.presentation.interfaces import INTIMedia
-from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
@@ -41,6 +39,8 @@ from nti.dataserver import authorization as nauth
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.externalization import to_external_object
+
+from nti.site.site import get_component_hierarchy_names
 
 from ..utils import is_item_visible
 from ..utils.course import get_enrollment_record
@@ -107,7 +107,7 @@ class OutlineLessonOverviewSummaryView(_RecursiveUGDView,
 				# With older content, we're not sure where the UGD
 				# may hang; so summarize per item.
 				for ntiid_field in ('ntiid', 'target_ntiid'):
-					self.ntiid = getattr( item, ntiid_field, None )
+					self.ntiid = getattr(item, ntiid_field, None)
 					if self.ntiid:
 						container_ntiids = ()
 						try:
@@ -139,42 +139,32 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 					result.append(node)
 			for child in node.values():
 				_recur(child)
-		
+
 		outline = course.Outline
 		if outline is not None:
 			_recur(outline)
-		return result
-
-	def _get_item_key(self, item):
-		if INTIAudio.providedBy(item):
-			result = 'AudioIndex'
-		elif INTIVideo.providedBy(item):
-			result = 'VideoIndex'
-		elif INTISlideDeck.providedBy(item):
-			result = 'SlideDeckIndex'
-		else:
-			result = 'OtherIndex'
 		return result
 
 	def __call__(self):
 		result = LocatedExternalDict()
 		result.__name__ = self.request.view_name
 		result.__parent__ = self.request.context
-		
+
+		catalog = get_library_catalog()
 		course = ICourseInstance(self.request.context)
 		record = get_enrollment_record(course, self.remoteUser)
 		if record is None:
 			return result
-		
-		collector = {}
-		catalog = get_catalog()
+
+		items = result[ITEMS] = {}
+		containers = result['Containers'] = {}
 		for node in self._outline_nodes(course):
 			ntiid = node.ContentNTIID
-			
 			for group in catalog.search_objects(
 									namespace=node.src,
-									provided=INTICourseOverviewGroup):
-				
+									provided=INTICourseOverviewGroup,
+									sites=get_component_hierarchy_names()):
+
 				for item in group.Items:
 					if 	not IMediaRef.providedBy(item) and \
 						not INTIMedia.providedBy(item) and \
@@ -186,19 +176,8 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 						else:
 							item = INTIMedia(item, None)
 					if item is not None:
-						clazz = self._get_item_key(item)
-						collector.setdefault(clazz, {})
-						collector[clazz].setdefault(ntiid, [])
-						collector[clazz][ntiid].append(item)
-						
-		for clazz, data in collector.items():
-			items = {}
-			containers = {}
-			index = {ITEMS:items, 'Containers':containers}
-			result[clazz] = index
-			for ntiid, elements in data.items():
-				containers.setdefault(ntiid, [])
-				for element in elements:
-					items[element.ntiid] = element
-					containers[ntiid].append(element.ntiid)
+						items[item.ntiid] = item
+						containers.setdefault(ntiid, [])
+						containers[ntiid].append(item.ntiid)
+
 		return result
