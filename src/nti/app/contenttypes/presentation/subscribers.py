@@ -254,10 +254,12 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 	intids = component.queryUtility(IIntIds) if intids is None else intids
 	
 	result = 0
+	sites = get_component_hierarchy_names()
 	# unregister and unindex lesson overview obects
 	for item in catalog.search_objects(intids=intids, provided=INTILessonOverview,
 									   container_ntiids=container_ntiids,
-									   namespace=namespace):
+									   namespace=namespace,
+									   sites=sites):
 		result += _remove_registered_lesson_overview(name=item.ntiid,
 										   			 registry=registry,
 										   			 course=course)
@@ -265,7 +267,7 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 	if container_ntiids:  # unindex all other objects
 		container = IPresentationAssetContainer(course, None) or {}
 		objs = catalog.search_objects(container_ntiids=container_ntiids,
-									  namespace=namespace, intids=intids)
+									  namespace=namespace, sites=sites, intids=intids)
 		for obj in list(objs):  # we are mutating
 			doc_id = intids.queryId(obj)
 			if doc_id is not None:
