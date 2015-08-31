@@ -23,8 +23,8 @@ from ZODB.interfaces import IConnection
 from nti.app.products.courseware.utils import get_parent_course
 from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseInstance
 
-from nti.contentlibrary.indexed_data import get_catalog
 from nti.contentlibrary.indexed_data import get_registry
+from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
@@ -51,6 +51,7 @@ from nti.ntiids.ntiids import is_valid_ntiid_string
 
 from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
+from nti.site.site import get_component_hierarchy_names
 
 from nti.wref.interfaces import IWeakRef
 
@@ -69,7 +70,7 @@ def _removed_registered(provided, name, intids=None, registry=None, catalog=None
 	registered = registry.queryUtility(provided, name=name)
 	intids = component.queryUtility(IIntIds) if intids is None else intids
 	if registered is not None:
-		catalog = get_catalog() if catalog is None else catalog
+		catalog = get_library_catalog() if catalog is None else catalog
 		catalog.unindex(registered, intids=intids)
 		unregisterUtility(registry, provided=provided, name=name)
 		intids.unregister(registered, event=False)
@@ -211,13 +212,13 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 	return overview
 
 def _get_source_lastModified(source, catalog=None):
-	catalog = get_catalog() if catalog is None else catalog
+	catalog = get_library_catalog() if catalog is None else catalog
 	key = '%s.lastModified' % source
 	result = catalog.get_last_modified(key)
 	return result
 
 def _set_source_lastModified(source, lastModified=0, catalog=None):
-	catalog = get_catalog() if catalog is None else catalog
+	catalog = get_library_catalog() if catalog is None else catalog
 	key = '%s.lastModified' % source
 	catalog.set_last_modified(key, lastModified)
 
@@ -249,7 +250,7 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 									  catalog=None, intids=None,
 									  registry=None, course=None):
 
-	catalog = get_catalog() if catalog is None else catalog
+	catalog = get_library_catalog() if catalog is None else catalog
 	intids = component.queryUtility(IIntIds) if intids is None else intids
 	
 	result = 0
@@ -275,7 +276,8 @@ remove_and_unindex_course_assets = _remove_and_unindex_course_assets
 
 def _index_overview_items(items, container_ntiids=None, namespace=None,
 						  intids=None, catalog=None, node=None, course=None):
-	catalog = get_catalog() if catalog is None else catalog
+	sites = get_component_hierarchy_names()
+	catalog = get_library_catalog() if catalog is None else catalog
 	container = IPresentationAssetContainer(course, None)
 	for item in items:
 		item = item() if IWeakRef.providedBy(item) else item
@@ -293,6 +295,7 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 		if 	INTILessonOverview.providedBy(item) or \
 			INTICourseOverviewGroup.providedBy(item):
 			catalog.index(item,
+						  sites=sites,
 						  intids=intids,
 						  namespace=namespace,
 						  container_ntiids=container_ntiids)
@@ -309,13 +312,14 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 			# because and item can be in different groups with different
 			# namespace 
 			catalog.index(item,
+						  sites=sites,
 						  intids=intids,
 						  container_ntiids=container_ntiids)
 
 def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 	result = []
 	course_packages = get_course_packages(course)
-	catalog = get_catalog() if catalog is None else catalog
+	catalog = get_library_catalog() if catalog is None else catalog
 	intids = component.queryUtility(IIntIds) if intids is None else intids
 
 	registry = get_registry()
@@ -397,7 +401,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 
 @component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
 def _on_course_instance_available(course, event):
-	catalog = get_catalog()
+	catalog = get_library_catalog()
 	if catalog is not None and not ILegacyCommunityBasedCourseInstance.providedBy(course):
 		synchronize_course_lesson_overview(course, catalog=catalog)
 
@@ -408,7 +412,7 @@ def _clear_course_assets(course):
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
 def _clear_data_when_course_removed(course, event):
-	catalog = get_catalog()
+	catalog = get_library_catalog()
 	if catalog is not None and not ILegacyCommunityBasedCourseInstance.providedBy(course):
 		_clear_course_assets(course)
 		entry = ICourseCatalogEntry(course, None)
