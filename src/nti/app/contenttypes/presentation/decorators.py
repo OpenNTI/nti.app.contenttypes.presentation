@@ -22,6 +22,7 @@ from nti.app.assessment.interfaces import get_course_assignment_predicate_for_us
 
 from nti.app.contentlibrary.utils import get_item_content_units
 
+from nti.app.products.courseware.utils import get_enrollment_record
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_TOPIC
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_SECTION_TOPIC
 
@@ -68,8 +69,8 @@ from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_provider_safe
 
 from .utils import is_item_visible
-from .utils import get_enrollment_record
 from .utils import resolve_discussion_course_bundle
+from .utils import get_enrollment_record as get_any_enrollment_record
 
 from . import VIEW_OVERVIEW_CONTENT
 from . import VIEW_OVERVIEW_SUMMARY
@@ -138,7 +139,7 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 
 	def record(self, context):
 		if self._record is None:
-			self._record = get_enrollment_record(context, self.remoteUser)
+			self._record = get_any_enrollment_record(context, self.remoteUser)
 		return self._record
 
 	def _handle_media_ref(self, items, item, idx):
@@ -330,18 +331,13 @@ class _MediaByOutlineNodeDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	def _predicate(self, context, result):
 		course = ICourseInstance(context, None)
-		record = get_enrollment_record(context, self.remoteUser) if not course else None
+		record = get_enrollment_record(course, self.remoteUser)
 		return record is not None
 	
 	def _do_decorate_external(self, context, result_map):
 		course = ICourseInstance(context, context)
 		links = result_map.setdefault( LINKS, [] )
-		for rel in ('MediaByOutlineNode',):
-			# Prefer to canonicalize these through to the course, if possible
-			link = Link( course,
-						 rel=rel,
-						 elements=(rel,),
-						 # We'd get the wrong type/ntiid values if we
-						 # didn't ignore them.
-						 ignore_properties_of_target=True)
-			links.append(link)
+		link = Link( course,
+					 rel='MediaByOutlineNode',
+					 elements=('MediaByOutlineNode',))
+		links.append(link)
