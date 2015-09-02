@@ -18,7 +18,7 @@ from zope.location.interfaces import ILocation
 
 from pyramid.interfaces import IRequest
 
-from nti.app.assessment.interfaces import get_course_assignment_predicate_for_user
+from nti.app.products.courseware.interfaces import get_course_assessment_predicate_for_user
 
 from nti.app.contentlibrary.utils import get_item_content_units
 
@@ -207,7 +207,7 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 		if record.Scope == ES_ALL: # instructor
 			return True
 		course = record.CourseInstance
-		predicate = get_course_assignment_predicate_for_user(self.remoteUser, course)
+		predicate = get_course_assessment_predicate_for_user(self.remoteUser, course)
 		result = predicate is not None and predicate(assg)
 		return result	
 
