@@ -18,8 +18,6 @@ from zope.location.interfaces import ILocation
 
 from pyramid.interfaces import IRequest
 
-from nti.app.products.courseware.interfaces import get_course_assessment_predicate_for_user
-
 from nti.app.contentlibrary.utils import get_item_content_units
 
 from nti.app.products.courseware.utils import get_enrollment_record
@@ -44,6 +42,7 @@ from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
+from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_for_user
 
 from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IMediaRef
