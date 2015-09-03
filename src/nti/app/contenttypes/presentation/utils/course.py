@@ -19,9 +19,6 @@ from zope.container.contained import Contained
 
 from zope.security.interfaces import IPrincipal
 
-from nti.app.products.courseware.utils import get_any_enrollment
-from nti.app.products.courseware.utils import is_course_instructor
-
 from nti.contentlibrary.indexed_data import get_catalog
 
 from nti.contentlibrary.interfaces import IContentPackage
@@ -29,9 +26,12 @@ from nti.contentlibrary.interfaces import IContentPackage
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
-from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
+
+from nti.contenttypes.courses.utils import get_parent_course
+from nti.contenttypes.courses.utils import get_any_enrollment
+from nti.contenttypes.courses.utils import is_course_instructor
 
 from nti.coremetadata.mixins import CreatedAndModifiedTimeMixin
 
@@ -54,10 +54,7 @@ def get_enrollment_record(context, user):
 	if course is None:
 		return None
 
-	if ICourseSubInstance.providedBy(course):
-		main_course = course.__parent__.__parent__
-	else:
-		main_course = course
+	main_course = get_parent_course(course)
 
 	# give priority to course in lineage before checking the rest
 	for instance in chain((course, main_course), main_course.SubInstances.values()):

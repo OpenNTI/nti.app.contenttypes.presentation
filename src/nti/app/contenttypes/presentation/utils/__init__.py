@@ -9,7 +9,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from nti.app.products.courseware.utils import get_any_enrollment
 from nti.app.products.courseware.discussions import get_topic_key
 from nti.app.products.courseware.discussions import get_forum_scopes
 
@@ -26,6 +25,8 @@ from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.discussions.utils import get_discussion_key
 from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
 from nti.contenttypes.courses.discussions.utils import get_course_for_discussion
+
+from nti.contenttypes.courses.utils import get_any_enrollment
 
 from nti.contenttypes.presentation.interfaces import PUBLIC
 from nti.contenttypes.presentation.interfaces import CREDIT
