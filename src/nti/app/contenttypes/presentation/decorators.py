@@ -292,11 +292,10 @@ class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwar
 class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	LEGACY_UAS = ("NTIFoundation DataLoader NextThought/1.0",
-				  "NTIFoundation DataLoader NextThought/1.1.0",
-				  "NTIFoundation DataLoader NextThought/1.1.1",
+				  "NTIFoundation DataLoader NextThought/1.1.",
 				  "NTIFoundation DataLoader NextThought/1.2.",
-				  "NTIFoundation DataLoader NextThought/1.3.0",
-				  "NTIFoundation DataLoader NextThought/1.3.1")
+				  "NTIFoundation DataLoader NextThought/1.3.",
+				  "NTIFoundation DataLoader NextThought/1.4.0")
 
 	@Lazy
 	def is_legacy_ipad(self):
