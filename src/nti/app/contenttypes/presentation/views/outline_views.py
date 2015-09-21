@@ -156,7 +156,9 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		if record is None:
 			return result
 
+		seen = set()
 		items = result[ITEMS] = {}
+		corder = result['ContainerOrder'] = []
 		containers = result['Containers'] = {}
 		for node in self._outline_nodes(course):
 			ntiid = node.ContentNTIID
@@ -179,5 +181,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 						items[item.ntiid] = item
 						containers.setdefault(ntiid, [])
 						containers[ntiid].append(item.ntiid)
-
+						if ntiid not in seen:
+							seen.add(ntiid)
+							corder.append(ntiid)
 		return result
