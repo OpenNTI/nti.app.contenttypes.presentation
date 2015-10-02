@@ -155,7 +155,6 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		record = get_enrollment_record(course, self.remoteUser)
 		if record is None:
 			return result
-
 		seen = set()
 		items = result[ITEMS] = {}
 		corder = result['ContainerOrder'] = []
@@ -184,12 +183,11 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 						if ntiid not in seen:
 							seen.add(ntiid)
 							corder.append(ntiid)
-		
+			
 			for item in catalog.search_objects(
-									namespace=node.src,
+									container_ntiids=ntiid,
 									provided=INTISlideDeck,
 									sites=get_component_hierarchy_names()):
-
 				items[item.ntiid] = item
 				containers.setdefault(ntiid, [])
 				containers[ntiid].append(item.ntiid)
