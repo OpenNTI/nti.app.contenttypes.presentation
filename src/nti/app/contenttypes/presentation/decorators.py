@@ -49,8 +49,10 @@ from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTITimeline
+from nti.contenttypes.presentation.interfaces import INTIQuestionRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
+from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
@@ -78,6 +80,8 @@ from . import VIEW_OVERVIEW_SUMMARY
 NTIID = StandardExternalFields.NTIID
 LINKS = StandardExternalFields.LINKS
 ITEMS = StandardExternalFields.ITEMS
+CLASS = StandardExternalFields.CLASS
+MIMETYPE = StandardExternalFields.MIMETYPE
 IN_CLASS_SAFE = make_provider_safe(IN_CLASS)
 
 def _lesson_overview_links(context):
@@ -286,20 +290,20 @@ class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwar
 	def _do_decorate_external(self, context, result):
 		self._overview_decorate_external(context, result)
 
+LEGACY_UAS_40 = ("NTIFoundation DataLoader NextThought/1.0",
+			  	 "NTIFoundation DataLoader NextThought/1.1.",
+			  	 "NTIFoundation DataLoader NextThought/1.2.",
+			  	 "NTIFoundation DataLoader NextThought/1.3.",
+			  	 "NTIFoundation DataLoader NextThought/1.4.0")
+	
 @interface.implementer(IExternalMappingDecorator)
 @component.adapter(INTIRelatedWorkRef, IRequest)
 @component.adapter(INTITimeline, IRequest)
 class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
-	LEGACY_UAS = ("NTIFoundation DataLoader NextThought/1.0",
-				  "NTIFoundation DataLoader NextThought/1.1.",
-				  "NTIFoundation DataLoader NextThought/1.2.",
-				  "NTIFoundation DataLoader NextThought/1.3.",
-				  "NTIFoundation DataLoader NextThought/1.4.0")
-
 	@Lazy
 	def is_legacy_ipad(self):
-		result = is_legacy_uas(self.request, self.LEGACY_UAS)
+		result = is_legacy_uas(self.request, LEGACY_UAS_40)
 		return result
 
 	def _predicate(self, context, result):
@@ -340,3 +344,23 @@ class _MediaByOutlineNodeDecorator(AbstractAuthenticatedRequestAwareDecorator):
 					 rel='MediaByOutlineNode',
 					 elements=('MediaByOutlineNode',))
 		links.append(link)
+
+@interface.implementer(IExternalMappingDecorator)
+class _IPADLegacyReferenceDecorator(AbstractAuthenticatedRequestAwareDecorator):
+
+	def _predicate(self, context, result):
+		result = is_legacy_uas(self.request, LEGACY_UAS_40)
+		return result
+	
+	def _do_decorate_external(self, context, result_map):
+		if INTIAssignmentRef.providedBy(context):
+			result_map[CLASS] = 'Assignment'
+			result_map[MIMETYPE] = 'application/vnd.nextthought.assessment.assignment'
+		elif INTIQuestionSetRef.providedBy(context):
+			result_map[CLASS] = 'QuestionSet'
+			result_map[MIMETYPE] = 'application/vnd.nextthought.naquestionset'
+		elif INTIQuestionRef.providedBy(context):
+			result_map[CLASS] = 'Question'
+			result_map[MIMETYPE] = 'application/vnd.nextthought.naquestion'
+		elif INTIDiscussionRef.providedBy(context):
+			result_map[MIMETYPE] = 'application/vnd.nextthought.discussion'
