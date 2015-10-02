@@ -184,4 +184,16 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 						if ntiid not in seen:
 							seen.add(ntiid)
 							corder.append(ntiid)
+		
+			for item in catalog.search_objects(
+									namespace=node.src,
+									provided=INTISlideDeck,
+									sites=get_component_hierarchy_names()):
+
+				items[item.ntiid] = item
+				containers.setdefault(ntiid, [])
+				containers[ntiid].append(item.ntiid)
+				if ntiid not in seen:
+					seen.add(ntiid)
+					corder.append(ntiid)
 		return result
