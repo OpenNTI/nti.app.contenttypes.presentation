@@ -163,6 +163,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 				if isinstance(index_text, bytes):
 					index_text = index_text.decode('utf-8')
 				result = simplejson.loads(index_text)
+				break
 		
 		result = LocatedExternalDict() if not result else result
 		return result
