@@ -164,7 +164,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 					index_text = index_text.decode('utf-8')
 				result = simplejson.loads(index_text)
 				break
-		
+
 		result = LocatedExternalDict() if not result else result
 		return result
 
@@ -173,7 +173,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		result.__name__ = self.request.view_name
 		result.__parent__ = self.request.context
 		catalog = get_library_catalog()
-		
+
 		seen = set()
 		items = result[ITEMS] = {}
 		corder = result['ContainerOrder'] = []
@@ -202,7 +202,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 						if ntiid not in seen:
 							seen.add(ntiid)
 							corder.append(ntiid)
-			
+
 			for item in catalog.search_objects(
 									container_ntiids=ntiid,
 									provided=INTISlideDeck,
@@ -220,7 +220,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		record = get_enrollment_record(course, self.remoteUser)
 		if record is None:
 			raise hexc.HTTPForbidden(_("Must be enrolled in a course."))
-		
+
 		if ILegacyCommunityBasedCourseInstance.providedBy(course):
 			return self._do_legacy(course, record)
 		else:

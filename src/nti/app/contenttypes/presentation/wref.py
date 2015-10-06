@@ -23,7 +23,7 @@ from nti.contenttypes.presentation.interfaces import IGroupOverViewableWeakRef
 
 @component.adapter(IGroupOverViewable)
 @interface.implementer(IGroupOverViewableWeakRef)
-class GroupOverViewableWeakRef(object): 
+class GroupOverViewableWeakRef(object):
 
 	def __init__(self, asset):
 		self._name = asset.ntiid
@@ -42,7 +42,7 @@ class GroupOverViewableWeakRef(object):
 
 	def __str__(self):
 		return "GroupOverViewableWeakRef(%s, %s)" % (self._provided, self._name)
-	
+
 	def __eq__(self, other):
 		try:
 			return other is self or self.__getstate__() == other.__getstate__()

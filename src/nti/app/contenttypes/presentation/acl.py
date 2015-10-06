@@ -54,7 +54,7 @@ class BaseACLProvider(object):
 			for course in courses:
 				acl = IACLProvider(course).__acl__
 				aces.extend(acl or ())
-			result = acl_from_aces( aces )
+			result = acl_from_aces(aces)
 			return result
 		return None
 
@@ -65,10 +65,10 @@ class BasePresentationAssetACLProvider(BaseACLProvider):
 	def __acl__(self):
 		result = super(BasePresentationAssetACLProvider, self).__acl__
 		if not result:
-			ace = ace_allowing( IPrincipal(AUTHENTICATED_GROUP_NAME),
+			ace = ace_allowing(	IPrincipal(AUTHENTICATED_GROUP_NAME),
 						 		(ACT_READ),
-						   		BasePresentationAssetACLProvider )
-			result = acl_from_aces( ace )
+						   		BasePresentationAssetACLProvider)
+			result = acl_from_aces(ace)
 		return result
 
 @component.adapter(IPresentationAsset)

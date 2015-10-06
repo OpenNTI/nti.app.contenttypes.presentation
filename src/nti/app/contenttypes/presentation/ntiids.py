@@ -80,7 +80,7 @@ class _NTICourseOverviewGroupResolver(_PresentationResolver):
 
 @interface.implementer(INTIIDResolver)
 class _NTICourseBundleResolver(object):
-	
+
 	separator = ':'
 
 	@property
@@ -88,7 +88,7 @@ class _NTICourseBundleResolver(object):
 		return get_remote_user()
 
 	def get_course(self, splits=()):
-		if splits and len(splits) >= 2: # by parts e.g Fall2015:BIOL_2124
+		if splits and len(splits) >= 2:  # by parts e.g Fall2015:BIOL_2124
 			result = get_course_by_relative_path_parts(*splits[:2])
 			return result
 		return None

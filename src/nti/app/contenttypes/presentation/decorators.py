@@ -208,12 +208,12 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 		assg = IQAssignment(item, None)
 		if assg is None or record is None:
 			return False
-		if record.Scope == ES_ALL: # instructor
+		if record.Scope == ES_ALL:  # instructor
 			return True
 		course = record.CourseInstance
 		predicate = get_course_assessment_predicate_for_user(self.remoteUser, course)
 		result = predicate is not None and predicate(assg)
-		return result	
+		return result
 
 	def _decorate_external_impl(self, context, result):
 		idx = 0
@@ -236,7 +236,7 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 			elif INTIAssignmentRef.providedBy(item) and \
 				not self.allow_assignmentref(context, item):
 				removal.add(idx)
-				
+
 		# filter legacy discussions
 		if discussions:
 			self._filter_legacy_discussions(context, discussions, removal)
@@ -252,7 +252,7 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 			logger.exception("Error while decorating course overview group")
 
 def is_legacy_uas(request, legacy_uas):
-	ua = request.environ.get('HTTP_USER_AGENT', '')
+	ua = request.environ.get(b'HTTP_USER_AGENT', '')
 	if not ua:
 		return False
 
@@ -295,7 +295,7 @@ LEGACY_UAS_40 = ("NTIFoundation DataLoader NextThought/1.0",
 			  	 "NTIFoundation DataLoader NextThought/1.2.",
 			  	 "NTIFoundation DataLoader NextThought/1.3.",
 			  	 "NTIFoundation DataLoader NextThought/1.4.0")
-	
+
 @interface.implementer(IExternalMappingDecorator)
 @component.adapter(INTIRelatedWorkRef, IRequest)
 @component.adapter(INTITimeline, IRequest)
@@ -336,11 +336,11 @@ class _MediaByOutlineNodeDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		course = ICourseInstance(context, None)
 		record = get_enrollment_record(course, self.remoteUser)
 		return record is not None
-	
+
 	def _do_decorate_external(self, context, result_map):
 		course = ICourseInstance(context, context)
-		links = result_map.setdefault( LINKS, [] )
-		link = Link( course,
+		links = result_map.setdefault(LINKS, [])
+		link = Link(course,
 					 rel='MediaByOutlineNode',
 					 elements=('MediaByOutlineNode',))
 		links.append(link)
@@ -351,7 +351,7 @@ class _IPADLegacyReferenceDecorator(AbstractAuthenticatedRequestAwareDecorator):
 	def _predicate(self, context, result):
 		result = is_legacy_uas(self.request, LEGACY_UAS_40)
 		return result
-	
+
 	def _do_decorate_external(self, context, result_map):
 		if INTIAssignmentRef.providedBy(context):
 			result_map[CLASS] = 'Assignment'
