@@ -9,6 +9,10 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from .. import MessageFactory as _
+
+import simplejson
+
 from zope import component
 
 from pyramid.view import view_config
@@ -18,6 +22,7 @@ from pyramid import httpexceptions as hexc
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.products.courseware.interfaces import ICourseInstanceEnrollment
+from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseInstance
 
 from nti.appserver.ugd_query_views import _RecursiveUGDView
 
@@ -145,16 +150,29 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 			_recur(outline)
 		return result
 
-	def __call__(self):
+	def _do_legacy(self, course, record):
+		result = None
+		index_filename = "video_index.json"
+		bundle = course.ContentPackageBundle
+		for package in bundle.ContentPackages:
+			sibling_key = package.does_sibling_entry_exist(index_filename)
+			if not sibling_key:
+				continue
+			else:
+				index_text = package.read_contents_of_sibling_entry(index_filename)
+				if isinstance(index_text, bytes):
+					index_text = index_text.decode('utf-8')
+				result = simplejson.loads(index_text)
+		
+		result = LocatedExternalDict() if not result else result
+		return result
+
+	def _do_current(self, course, record):
 		result = LocatedExternalDict()
 		result.__name__ = self.request.view_name
 		result.__parent__ = self.request.context
-
 		catalog = get_library_catalog()
-		course = ICourseInstance(self.request.context)
-		record = get_enrollment_record(course, self.remoteUser)
-		if record is None:
-			return result
+		
 		seen = set()
 		items = result[ITEMS] = {}
 		corder = result['ContainerOrder'] = []
@@ -195,3 +213,14 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 					seen.add(ntiid)
 					corder.append(ntiid)
 		return result
+
+	def __call__(self):
+		course = ICourseInstance(self.request.context)
+		record = get_enrollment_record(course, self.remoteUser)
+		if record is None:
+			raise hexc.HTTPForbidden(_("Must be enrolled in a course."))
+		
+		if ILegacyCommunityBasedCourseInstance.providedBy(course):
+			return self._do_legacy(course, record)
+		else:
+			return self._do_current(course, record)
