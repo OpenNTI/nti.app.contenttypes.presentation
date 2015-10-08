@@ -12,6 +12,9 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from nti.appserver.interfaces import IExternalFieldTraversable
+from nti.appserver._adapters import _AbstractExternalFieldTraverser
+
 from nti.assessment.interfaces import IQPoll
 from nti.assessment.interfaces import IQSurvey
 from nti.assessment.interfaces import IQInquiry
@@ -32,9 +35,14 @@ from nti.contenttypes.presentation.interfaces import INTIQuestionRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
+from nti.dataserver.users.interfaces import TAG_HIDDEN_IN_UI
+
 from nti.traversal.traversal import find_interface
+
+from . import iface_of_thing
 
 @interface.implementer(ICourseInstance)
 @component.adapter(INTICourseOverviewGroup)
@@ -93,3 +101,21 @@ def _pollref_to_poll(context):
 def _inquiryref_to_inquiry(context):
 	result = component.queryUtility(IQInquiry, name=context.target)
 	return result
+
+@component.adapter(IPresentationAsset)
+@interface.implementer(IExternalFieldTraversable)
+class _PresentationAssetExternalFieldTraverser(_AbstractExternalFieldTraverser):
+
+	def __init__(self, context, request=None):
+		super(_PresentationAssetExternalFieldTraverser, self).__init__(context, request=request)
+		assest_iface = iface_of_thing(context)
+		allowed_fields = set()
+		for k, v in assest_iface.namesAndDescriptions(all=True):
+			__traceback_info__ = k, v
+			if interface.interfaces.IMethod.providedBy(v):
+				continue
+			# v could be a schema field or an interface.Attribute
+			if v.queryTaggedValue(TAG_HIDDEN_IN_UI):
+				continue
+			allowed_fields.add(k)
+		self._allowed_fields = allowed_fields

@@ -76,6 +76,12 @@
 
 	<utility factory=".ntiids._NTICourseBundleResolver" name="NTICourseBundle" />
 	
+	<!-- Asset update -->
+	<adapter factory=".adapters._PresentationAssetExternalFieldTraverser"
+			 for="nti.contenttypes.presentation.interfaces.IPresentationAsset pyramid.interfaces.IRequest"
+			 provides="zope.traversing.interfaces.ITraversable"
+			 name="fields" />
+			 
 	<!-- Events -->
 	<subscriber handler=".subscribers._on_course_instance_available" />
 
