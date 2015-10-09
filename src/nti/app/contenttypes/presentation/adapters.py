@@ -38,7 +38,7 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
-from nti.dataserver.users.interfaces import TAG_HIDDEN_IN_UI
+from nti.schema.jsonschema import TAG_HIDDEN_IN_UI
 
 from nti.traversal.traversal import find_interface
 
@@ -108,8 +108,8 @@ class _PresentationAssetExternalFieldTraverser(_AbstractExternalFieldTraverser):
 
 	def __init__(self, context, request=None):
 		super(_PresentationAssetExternalFieldTraverser, self).__init__(context, request=request)
-		assest_iface = iface_of_thing(context)
 		allowed_fields = set()
+		assest_iface = iface_of_thing(context)
 		for k, v in assest_iface.namesAndDescriptions(all=True):
 			__traceback_info__ = k, v
 			if interface.interfaces.IMethod.providedBy(v):
