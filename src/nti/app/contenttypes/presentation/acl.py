@@ -30,9 +30,11 @@ from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.dataserver.interfaces import IACLProvider
 from nti.dataserver.interfaces import ACE_DENY_ALL
+from nti.dataserver.interfaces import ALL_PERMISSIONS
 from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
 
 from nti.dataserver.authorization import ACT_READ
+from nti.dataserver.authorization import ROLE_ADMIN
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
 
@@ -69,6 +71,8 @@ class BasePresentationAssetACLProvider(BaseACLProvider):
 						 		(ACT_READ),
 						   		BasePresentationAssetACLProvider)
 			result = acl_from_aces(ace)
+		else:
+			result.append(ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
 		return result
 
 @component.adapter(IPresentationAsset)
