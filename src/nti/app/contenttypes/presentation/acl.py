@@ -30,6 +30,7 @@ from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.dataserver.interfaces import IACLProvider
 from nti.dataserver.interfaces import ACE_DENY_ALL
+from nti.dataserver.interfaces import ACE_ACT_ALLOW
 from nti.dataserver.interfaces import ALL_PERMISSIONS
 from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
 
@@ -53,9 +54,17 @@ class BaseACLProvider(object):
 		courses = get_presentation_asset_courses(self.context)
 		if courses:
 			aces = []
+			deny = set()
+			allow = set()
 			for course in courses:
 				acl = IACLProvider(course).__acl__
-				aces.extend(acl or ())
+				for ace in acl or ():
+					if ace.action == ACE_ACT_ALLOW:
+						allow.add(ace)
+					else:
+						deny.add(ace)
+			aces.extend(allow)
+			aces.extend(deny)
 			result = acl_from_aces(aces)
 			return result
 		return None
