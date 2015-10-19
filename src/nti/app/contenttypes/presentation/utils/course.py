@@ -65,14 +65,32 @@ def get_enrollment_record(context, user):
 	result = get_any_enrollment(course, user) if course is not None else None
 	return result
 
+def get_courses_for_pacakge(ntiid):
+	result = list()
+	catalog = component.getUtility(ICourseCatalog)
+	for entry in catalog.iterCatalogEntries():
+		course = ICourseInstance(entry, None)
+		if course is None:
+			continue
+		try:
+			packs = course.ContentPackageBundle.ContentPackages
+		except AttributeError:
+			packs = (course.legacy_content_package,)
+			
+		for pack in packs:
+			if pack.ntiid == ntiid:
+				result.append(course)
+	return result
+
 def get_courses(ntiids=()):
 	result = set()
 	catalog = component.getUtility(ICourseCatalog)
 	for ntiid in ntiids or ():
 		course = None
 		context = find_object_with_ntiid(ntiid)
-		if 	ICourseCatalogEntry.providedBy(context) \
-			or IContentPackage.providedBy(context):
+		if IContentPackage.providedBy(context):
+			course = ICourseInstance(context, None) # TODO: Use get_courses_for_pacakge
+		elif ICourseCatalogEntry.providedBy(context):
 			course = ICourseInstance(context, None)
 		elif ICourseInstance.providedBy(context):
 			course = context
