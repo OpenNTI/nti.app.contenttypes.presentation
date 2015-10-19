@@ -43,6 +43,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_for_user
 
+from nti.contenttypes.courses.utils import is_course_instructor
 from nti.contenttypes.courses.utils import get_enrollment_record
 
 from nti.contenttypes.presentation.interfaces import IVisible
@@ -332,10 +333,11 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 @interface.implementer(IExternalMappingDecorator)
 class _MediaByOutlineNodeDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
-	def _predicate(self, context, result):
+	def _predicate(self, context, result_map):
 		course = ICourseInstance(context, None)
-		record = get_enrollment_record(course, self.remoteUser)
-		return record is not None
+		result = is_course_instructor(course, self.remoteUser) or \
+				 get_enrollment_record(course, self.remoteUser) is not None
+		return result 
 
 	def _do_decorate_external(self, context, result_map):
 		course = ICourseInstance(context, context)
