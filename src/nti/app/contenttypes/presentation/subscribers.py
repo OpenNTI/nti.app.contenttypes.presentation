@@ -93,9 +93,11 @@ def intid_register(item, registry, intids=None, connection=None):
 def _register_utility(item, provided, ntiid, registry=None, intids=None, connection=None):
 	if provided.providedBy(item):
 		registry = get_registry(registry)
-		registered = registry.queryUtility(provided, name=ntiid)
-		if registered is None:
+		registered = registry.queryUtility(provided, name=ntiid)	
+		if registered is None or intids.queryId(registered) is None:
 			assert is_valid_ntiid_string(ntiid), "invalid NTIID %s" % ntiid
+			if intids.queryId(registered) is None: # remove if invalid
+				unregisterUtility(registry, provided=provided, name=ntiid)
 			registerUtility(registry, item, provided=provided, name=ntiid)
 			intid_register(item, registry, intids, connection)
 			return (True, item)
