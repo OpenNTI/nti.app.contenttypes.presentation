@@ -29,11 +29,15 @@ from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseIn
 
 from nti.common.maps import CaseInsensitiveDict
 
-from nti.contentlibrary.indexed_data import get_catalog
+from nti.contentlibrary.indexed_data import get_registry
+from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+
+from nti.contenttypes.presentation.interfaces import IPresentationAsset
+from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.dataserver import authorization as nauth
 from nti.dataserver.interfaces import IDataserverFolder
@@ -43,7 +47,12 @@ from nti.externalization.interfaces import StandardExternalFields
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
+from nti.site.utils import unregisterUtility
+from nti.site.site import get_component_hierarchy_names
+
 from ..subscribers import remove_and_unindex_course_assets
+
+from .. import iface_of_thing
 
 ITEMS = StandardExternalFields.ITEMS
 
@@ -103,14 +112,18 @@ class GetPresentationAssetsView(AbstractAuthenticatedView,
 		if not courses:
 			raise hexc.HTTPUnprocessableEntity('Must specify a valid course')
 
-		catalog = get_catalog()
+		catalog = get_library_catalog()
 		intids = component.getUtility(IIntIds)
-		
+
 		result = LocatedExternalDict()
 		result[ITEMS] = items = []
+		sites = get_component_hierarchy_names()
 		for course in courses:
 			entry = ICourseCatalogEntry(course)
-			objects = catalog.search_objects(intids=intids, container_ntiids=entry.ntiid)
+			objects = catalog.search_objects(intids=intids,
+											 container_ntiids=entry.ntiid,
+											 sites=sites)
+
 			items.extend(sorted(objects or (), key=lambda x: x.__class__.__name__))
 		result['ItemCount'] = result['Total'] = len(items)
 		return result
@@ -138,13 +151,56 @@ class ResetPresentationAssetsView(AbstractAuthenticatedView,
 			raise hexc.HTTPUnprocessableEntity('Must specify a valid course')
 
 		total = 0
-		catalog = get_catalog()
+		catalog = get_library_catalog()
 		result = LocatedExternalDict()
+		sites = get_component_hierarchy_names()
 		for course in courses:
 			entry = ICourseCatalogEntry(course)
 			total += remove_and_unindex_course_assets(container_ntiids=entry.ntiid,
 											 		  course=course,
-											 		  catalog=catalog)
+											 		  catalog=catalog,
+											 		  sites=sites)
+		result['Total'] = total
+		result['Elapsed'] = time.time() - now
+		return result
+
+@view_config(context=IDataserverFolder)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   permission=nauth.ACT_NTI_ADMIN,
+			   name='RemoveInaccessibleAssets')
+class RemoveInaccessibleAssetsView(AbstractAuthenticatedView,
+							  	   ModeledContentUploadRequestUtilsMixin):
+
+	def __call__(self):
+		total = 0
+		now = time.time()
+		registry = get_registry()
+		catalog = get_library_catalog()
+		result = LocatedExternalDict()
+		sites = get_component_hierarchy_names()
+		intids = component.getUtility(IIntIds)
+
+		uncataloged = set()
+		references = catalog.get_references(sites=sites,
+										 	provided=ALL_PRESENTATION_ASSETS_INTERFACES)
+
+		for ntiid, asset in list(component.getUtilitiesFor(IPresentationAsset)):
+			uid = intids.queryId(asset)
+			provided = iface_of_thing(asset)
+			if uid is None:
+				total += 1
+				logger.info("Removing asset [%s] without intid", ntiid)
+				unregisterUtility(registry, provided, name=ntiid)
+			elif uid not in references:
+				uncataloged.add((uid, ntiid, provided))
+
+		for uid, ntiid, provided in uncataloged:
+			total += 1
+			logger.info("Removing and unindexing asset [%s, %s,%s]", provided, ntiid, uid)
+			unregisterUtility(registry, provided, name=ntiid)
+			catalog.unindex(uid, intids)
+
 		result['Total'] = total
 		result['Elapsed'] = time.time() - now
 		return result
