@@ -38,7 +38,6 @@ from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
-from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.dataserver import authorization as nauth
@@ -175,7 +174,7 @@ class ResetPresentationAssetsView(AbstractAuthenticatedView,
 class RemoveInaccessibleAssetsView(AbstractAuthenticatedView,
 							  	   ModeledContentUploadRequestUtilsMixin):
 
-	def unregister(self, sites_names, provided, name):
+	def _unregister(self, sites_names, provided, name):
 		hostsites = component.getUtility(IEtcNamespace, name='hostsites')
 		for site_name in sites_names:
 			try:
@@ -184,6 +183,11 @@ class RemoveInaccessibleAssetsView(AbstractAuthenticatedView,
 				unregisterUtility(registry, provided=provided, name=name)
 			except KeyError:
 				pass
+
+	def _assets(self, registry):
+		for iface in ALL_PRESENTATION_ASSETS_INTERFACES:
+			for ntiid, asset in list(registry.getUtilitiesFor(iface)):
+				yield ntiid, asset
 
 	def __call__(self):
 		now = time.time()
@@ -195,22 +199,22 @@ class RemoveInaccessibleAssetsView(AbstractAuthenticatedView,
 		result = LocatedExternalDict()
 		items = result[ITEMS] = []
 
-		removed = catalog.family.IF.LFSet()
+		registered = catalog.family.IF.LFSet()
 		references = catalog.get_references(sites=sites,
 										 	provided=ALL_PRESENTATION_ASSETS_INTERFACES)
 
-		registered = list(registry.getUtilitiesFor(IPresentationAsset))
-		for ntiid, asset in registered:
+		for ntiid, asset in self._assets(registry):
 			uid = intids.queryId(asset)
 			provided = iface_of_thing(asset)
 			if uid is None:
 				items.append(repr((provided.__name__, ntiid)))
-				self.unregister(sites, provided=provided, name=ntiid)
+				self._unregister(sites, provided=provided, name=ntiid)
+				continue
 			elif uid not in references:
-				removed.add(uid)
 				items.append(repr((provided.__name__, ntiid, uid)))
-				self.unregister(sites, provided=provided, name=ntiid)
+				self._unregister(sites, provided=provided, name=ntiid)
 				intids.unregister(asset)
+			registered.add(uid)
 
 		result['TotalRemoved'] = len(items)
 		result['TimeElapsed'] = time.time() - now
