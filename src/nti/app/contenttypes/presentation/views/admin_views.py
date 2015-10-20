@@ -193,6 +193,7 @@ class RemoveInaccessibleAssetsView(AbstractAuthenticatedView,
 		result = LocatedExternalDict()
 		items = result[ITEMS] = []
 
+		removed = catalog.family.IF.LFSet()
 		references = catalog.get_references(sites=sites,
 										 	provided=ALL_PRESENTATION_ASSETS_INTERFACES)
 
@@ -204,6 +205,7 @@ class RemoveInaccessibleAssetsView(AbstractAuthenticatedView,
 				items.append(repr((provided.__name__, ntiid)))
 				self.unregister(sites, provided=provided, name=ntiid)
 			elif uid not in references:
+				removed.add(uid)
 				items.append(repr((provided.__name__, ntiid, uid)))
 				self.unregister(sites, provided=provided, name=ntiid)
 				intids.unregister(asset)
