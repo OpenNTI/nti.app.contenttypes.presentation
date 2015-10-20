@@ -8,7 +8,7 @@ entry_points = {
 		'target = nti.app',
 	],
 	'console_scripts': [
-		"nti_sync_lessons_overviews = nti.app.contenttypes.presentation.scripts.nti_sync_lessons_overviews:main",
+		"nti_sync_lessons_overviews = nti.app.contenttypes.presentation.scripts.sync_lessons_overviews:main",
 	],
 }
 
