@@ -217,10 +217,8 @@ class RemoveAllPresentationAssetsView(RemoveInaccessibleAssetsView):
 		for ntiid, asset in self._assets(registry):
 			uid = intids.queryId(asset)
 			provided = iface_of_thing(asset)
-			if uid is None:
-				self._unregister(sites, provided=provided, name=ntiid)
-			elif uid not in references:
-				self._unregister(sites, provided=provided, name=ntiid)
+			self._unregister(sites, provided=provided, name=ntiid)
+			if uid is not None:
 				intids.unregister(asset)
 			registered += 1
 
