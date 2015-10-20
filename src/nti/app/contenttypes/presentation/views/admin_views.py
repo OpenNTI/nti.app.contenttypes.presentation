@@ -167,40 +167,40 @@ class ResetPresentationAssetsView(AbstractAuthenticatedView,
 @view_config(context=IDataserverFolder)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
+			   request_method='POST',
 			   permission=nauth.ACT_NTI_ADMIN,
 			   name='RemoveInaccessibleAssets')
 class RemoveInaccessibleAssetsView(AbstractAuthenticatedView,
 							  	   ModeledContentUploadRequestUtilsMixin):
 
 	def __call__(self):
-		total = 0
 		now = time.time()
 		registry = get_registry()
 		catalog = get_library_catalog()
-		result = LocatedExternalDict()
 		sites = get_component_hierarchy_names()
 		intids = component.getUtility(IIntIds)
 
-		uncataloged = set()
+		result = LocatedExternalDict()
+		items = result[ITEMS] = []
+		
 		references = catalog.get_references(sites=sites,
 										 	provided=ALL_PRESENTATION_ASSETS_INTERFACES)
 
-		for ntiid, asset in list(component.getUtilitiesFor(IPresentationAsset)):
+		registered = list(registry.getUtilitiesFor(IPresentationAsset))
+		for ntiid, asset in registered:
 			uid = intids.queryId(asset)
 			provided = iface_of_thing(asset)
 			if uid is None:
-				total += 1
-				logger.info("Removing asset [%s] without intid", ntiid)
+				items.append(repr((provided.__name__, ntiid)))
 				unregisterUtility(registry, provided, name=ntiid)
 			elif uid not in references:
-				uncataloged.add((uid, ntiid, provided))
+				from IPython.core.debugger import Tracer; Tracer()()
+				items.append(repr((provided.__name__, ntiid, uid)))
+				unregisterUtility(registry, provided, name=ntiid)
+				catalog.unindex(uid, intids)
 
-		for uid, ntiid, provided in uncataloged:
-			total += 1
-			logger.info("Removing and unindexing asset [%s, %s,%s]", provided, ntiid, uid)
-			unregisterUtility(registry, provided, name=ntiid)
-			catalog.unindex(uid, intids)
-
-		result['Total'] = total
+		result['TotalRemoved'] = len(items)
+		result['TotalCatalogedAssets'] = len(references)
+		result['TotalRegisteredAssets'] = len(registered)
 		result['Elapsed'] = time.time() - now
 		return result

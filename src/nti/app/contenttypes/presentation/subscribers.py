@@ -72,7 +72,7 @@ def _removed_registered(provided, name, intids=None, registry=None, catalog=None
 	if registered is not None:
 		catalog = get_library_catalog() if catalog is None else catalog
 		catalog.unindex(registered, intids=intids)
-		unregisterUtility(registry, provided=provided, name=name)
+		unregisterUtility(registry, component=registered, provided=provided, name=name)
 		intids.unregister(registered, event=False)
 	return registered
 
@@ -248,13 +248,14 @@ def _outline_nodes(outline):
 
 def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 									  catalog=None, intids=None,
-									  registry=None, course=None):
+									  registry=None, course=None,
+									  sites=None):
 
 	catalog = get_library_catalog() if catalog is None else catalog
 	intids = component.queryUtility(IIntIds) if intids is None else intids
 	
 	result = 0
-	sites = get_component_hierarchy_names()
+	sites = get_component_hierarchy_names() if not sites else sites
 	# unregister and unindex lesson overview obects
 	for item in catalog.search_objects(intids=intids, provided=INTILessonOverview,
 									   container_ntiids=container_ntiids,
