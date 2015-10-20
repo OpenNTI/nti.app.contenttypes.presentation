@@ -19,6 +19,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.legacy_catalog import ILegacyCommunityBasedCourseInstance
 
 from nti.dataserver.utils import run_with_dataserver
 from nti.dataserver.utils.base_script import set_site
@@ -34,7 +35,8 @@ def yield_courses(args, all_courses=False):
 	if all_courses or args.all:
 		for entry in catalog.iterCatalogEntries():
 			course = ICourseInstance(entry, None)
-			if course is not None:
+			if 	course is not None and \
+				not ILegacyCommunityBasedCourseInstance.providedBy(course):
 				yield course
 	else:
 		for ntiid in args.ntiids or ():
@@ -46,7 +48,7 @@ def yield_courses(args, all_courses=False):
 					course = ICourseInstance(entry, None)
 				except KeyError:
 					pass
-			if course is None:
+			if course is None or ILegacyCommunityBasedCourseInstance.providedBy(course):
 				logger.error("Could not find course with NTIID %s", ntiid)
 			else:
 				yield course
