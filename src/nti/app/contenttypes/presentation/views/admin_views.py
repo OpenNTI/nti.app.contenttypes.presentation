@@ -31,6 +31,7 @@ from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseIn
 
 from nti.common.maps import CaseInsensitiveDict
 
+from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
@@ -186,6 +187,7 @@ class RemoveInaccessibleAssetsView(AbstractAuthenticatedView,
 
 	def __call__(self):
 		now = time.time()
+		registry = get_registry()
 		catalog = get_library_catalog()
 		sites = get_component_hierarchy_names()
 		intids = component.getUtility(IIntIds)
@@ -197,7 +199,7 @@ class RemoveInaccessibleAssetsView(AbstractAuthenticatedView,
 		references = catalog.get_references(sites=sites,
 										 	provided=ALL_PRESENTATION_ASSETS_INTERFACES)
 
-		registered = list(component.getUtilitiesFor(IPresentationAsset))
+		registered = list(registry.getUtilitiesFor(IPresentationAsset))
 		for ntiid, asset in registered:
 			uid = intids.queryId(asset)
 			provided = iface_of_thing(asset)
