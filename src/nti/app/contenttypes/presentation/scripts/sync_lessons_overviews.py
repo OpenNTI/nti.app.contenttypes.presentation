@@ -13,45 +13,17 @@ import os
 import sys
 import argparse
 
-from zope import component
-
-from nti.contenttypes.courses.interfaces import ICourseCatalog
-from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
-from nti.contenttypes.courses.legacy_catalog import ILegacyCommunityBasedCourseInstance
 
 from nti.dataserver.utils import run_with_dataserver
 from nti.dataserver.utils.base_script import set_site
 from nti.dataserver.utils.base_script import create_context
 
-from nti.ntiids.ntiids import find_object_with_ntiid
+from ..utils.common import yield_sync_courses as yield_courses
 
 from ..subscribers import get_course_packages
 from ..subscribers import synchronize_course_lesson_overview
-
-def yield_courses(args, all_courses=False):
-	catalog = component.getUtility(ICourseCatalog)
-	if all_courses or args.all:
-		for entry in catalog.iterCatalogEntries():
-			course = ICourseInstance(entry, None)
-			if 	course is not None and \
-				not ILegacyCommunityBasedCourseInstance.providedBy(course):
-				yield course
-	else:
-		for ntiid in args.ntiids or ():
-			obj = find_object_with_ntiid(ntiid)
-			course = ICourseInstance(obj, None)
-			if course is None:
-				try:
-					entry = catalog.getCatalogEntry(ntiid)
-					course = ICourseInstance(entry, None)
-				except KeyError:
-					pass
-			if course is None or ILegacyCommunityBasedCourseInstance.providedBy(course):
-				logger.error("Could not find course with NTIID %s", ntiid)
-			else:
-				yield course
 
 def _sync_course(course, exclude=False, force=False):
 	result = []
@@ -63,7 +35,7 @@ def _sync_course(course, exclude=False, force=False):
 
 def _sync_courses(args):
 	result = []
-	for course in yield_courses(args):
+	for course in yield_courses(args.list, args.ntiids):
 		result.extend(_sync_course(course, args.exclude, args.force))
 	return result
 
@@ -74,9 +46,8 @@ def _process_args(args):
 		_sync_courses(args)
 	else:
 		print()
-		for course in yield_courses(args, True):
-			if 	ICourseSubInstance.providedBy(course) or \
-				ILegacyCommunityBasedCourseInstance.providedBy(course):
+		for course in yield_courses(all_courses=True):
+			if ICourseSubInstance.providedBy(course):
 				continue
 			entry = ICourseCatalogEntry(course)
 			print("==>", entry.ntiid)

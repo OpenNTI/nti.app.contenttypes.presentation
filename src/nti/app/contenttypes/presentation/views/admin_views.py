@@ -20,22 +20,18 @@ from zope.intid import IIntIds
 
 from pyramid.view import view_config
 from pyramid.view import view_defaults
-from pyramid import httpexceptions as hexc
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
 from nti.app.products.courseware.views import CourseAdminPathAdapter
-from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseInstance
 
 from nti.common.maps import CaseInsensitiveDict
 
 from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
-from nti.contenttypes.courses.interfaces import ICourseCatalog
-from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
@@ -46,10 +42,10 @@ from nti.dataserver.interfaces import IDataserverFolder
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 
-from nti.ntiids.ntiids import find_object_with_ntiid
-
 from nti.site.utils import unregisterUtility
 from nti.site.site import get_component_hierarchy_names
+
+from ..utils.common import yield_sync_courses
 
 from ..subscribers import remove_and_unindex_course_assets
 
@@ -57,44 +53,13 @@ from .. import iface_of_thing
 
 ITEMS = StandardExternalFields.ITEMS
 
-def _parse_courses(values):
+def _get_course_ntiids(values):
 	ntiids = values.get('ntiid') or values.get('ntiids') or \
 			 values.get('entry') or values.get('entries') or \
 			 values.get('course') or values.get('courses')
-	if not ntiids:
-		raise hexc.HTTPUnprocessableEntity(detail='No course entry identifier')
-
-	if isinstance(ntiids, six.string_types):
+	if ntiids and isinstance(ntiids, six.string_types):
 		ntiids = ntiids.split()
-
-	result = []
-	for ntiid in ntiids:
-		context = find_object_with_ntiid(ntiid)
-		if context is None:
-			try:
-				catalog = component.getUtility(ICourseCatalog)
-				entry = catalog.getCatalogEntry(ntiid)
-				course = ICourseInstance(entry, None)
-				if 	course is not None and \
-					not ILegacyCommunityBasedCourseInstance.providedBy(course):
-					result.append(course)
-			except KeyError:
-				pass
-		else:
-			course = ICourseInstance(context, None)
-			if course is not None:
-				result.append(course)
-	return result
-
-def _get_all_courses():
-	result = []
-	catalog = component.getUtility(ICourseCatalog)
-	for entry in catalog.iterCatalogEntries():
-		course = ICourseInstance(entry, None)
-		if 	course is not None and \
-			not ILegacyCommunityBasedCourseInstance.providedBy(course):
-			result.append(course)
-	return result
+	return ntiids
 
 @view_config(context=IDataserverFolder)
 @view_config(context=CourseAdminPathAdapter)
@@ -109,9 +74,11 @@ class GetPresentationAssetsView(AbstractAuthenticatedView,
 
 	def __call__(self):
 		params = CaseInsensitiveDict(self.request.params)
-		courses = _parse_courses(params)
-		if not courses:
-			raise hexc.HTTPUnprocessableEntity('Must specify a valid course')
+		ntiids = _get_course_ntiids(params)
+		if not ntiids:
+			courses = list(yield_sync_courses(all_courses=True))
+		else:
+			courses = list(yield_sync_courses(ntiids=ntiids))
 
 		catalog = get_library_catalog()
 		intids = component.getUtility(IIntIds)
@@ -147,9 +114,11 @@ class ResetPresentationAssetsView(AbstractAuthenticatedView,
 	def __call__(self):
 		now = time.time()
 		values = self.readInput()
-		courses = _parse_courses(values)
-		if not courses:
-			raise hexc.HTTPUnprocessableEntity('Must specify a valid course')
+		ntiids = _get_course_ntiids(values)
+		if not ntiids:
+			courses = list(yield_sync_courses(all_courses=True))
+		else:
+			courses = list(yield_sync_courses(ntiids=ntiids))
 
 		total = 0
 		catalog = get_library_catalog()
@@ -199,7 +168,7 @@ class RemoveInaccessibleAssetsView(AbstractAuthenticatedView,
 		result = LocatedExternalDict()
 		items = result[ITEMS] = []
 
-		registered = catalog.family.IF.LFSet()
+		registered = 0
 		references = catalog.get_references(sites=sites,
 										 	provided=ALL_PRESENTATION_ASSETS_INTERFACES)
 
@@ -209,15 +178,51 @@ class RemoveInaccessibleAssetsView(AbstractAuthenticatedView,
 			if uid is None:
 				items.append(repr((provided.__name__, ntiid)))
 				self._unregister(sites, provided=provided, name=ntiid)
-				continue
 			elif uid not in references:
 				items.append(repr((provided.__name__, ntiid, uid)))
 				self._unregister(sites, provided=provided, name=ntiid)
 				intids.unregister(asset)
-			registered.add(uid)
+			registered += 1
 
 		result['TotalRemoved'] = len(items)
 		result['TimeElapsed'] = time.time() - now
+		result['TotalRegisteredAssets'] = registered
 		result['TotalCatalogedAssets'] = len(references)
-		result['TotalRegisteredAssets'] = len(registered)
+		return result
+
+@view_config(context=IDataserverFolder)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='POST',
+			   permission=nauth.ACT_NTI_ADMIN,
+			   name='RemoveAllPresentationAssets')
+class RemoveAllPresentationAssetsView(RemoveInaccessibleAssetsView):
+
+	def __call__(self):
+		now = time.time()
+		registry = get_registry()
+		catalog = get_library_catalog()
+		sites = get_component_hierarchy_names()
+		intids = component.getUtility(IIntIds)
+
+		registered = 0
+		result = LocatedExternalDict()
+		references = catalog.get_references(sites=sites,
+										 	provided=ALL_PRESENTATION_ASSETS_INTERFACES)
+		for uid in references:
+			catalog.unindex(uid)
+			
+		for ntiid, asset in self._assets(registry):
+			uid = intids.queryId(asset)
+			provided = iface_of_thing(asset)
+			if uid is None:
+				self._unregister(sites, provided=provided, name=ntiid)
+			elif uid not in references:
+				self._unregister(sites, provided=provided, name=ntiid)
+				intids.unregister(asset)
+			registered += 1
+
+		result['TimeElapsed'] = time.time() - now
+		result['TotalRegisteredAssets'] = registered
+		result['TotalCatalogedAssets'] = len(references)
 		return result
