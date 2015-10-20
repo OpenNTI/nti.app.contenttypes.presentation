@@ -81,7 +81,7 @@ def _process_args(args):
 			entry = ICourseCatalogEntry(course)
 			print("==>", entry.ntiid)
 			for content_package in get_course_packages(course):
-				print('\t==>', content_package.ntiid)
+				print('\t', content_package.ntiid)
 		print()
 
 def main():
