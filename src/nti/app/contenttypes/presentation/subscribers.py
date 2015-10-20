@@ -224,6 +224,11 @@ def _set_source_lastModified(source, lastModified=0, catalog=None):
 	key = '%s.lastModified' % source
 	catalog.set_last_modified(key, lastModified)
 
+def _remove_source_lastModified(source, catalog=None):
+	catalog = get_library_catalog() if catalog is None else catalog
+	key = '%s.lastModified' % source
+	catalog.remove_last_modified(key)
+	
 def get_course_packages(context):
 	packages = ()
 	context = ICourseInstance(context)
@@ -414,12 +419,21 @@ def _clear_course_assets(course):
 	container = IPresentationAssetContainer(course, None)
 	if container is not None:
 		container.clear()
+clear_course_assets = _clear_course_assets
+
+def _clear_namespace_last_modified(course, catalog=None):
+	nodes = _outline_nodes(course.Outline)
+	for node in nodes or ():
+		namespace = node.src  # this is ntiid based file (unique)
+		_remove_source_lastModified(namespace, catalog)
+clear_namespace_last_modified = _clear_namespace_last_modified
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
 def _clear_data_when_course_removed(course, event):
 	catalog = get_library_catalog()
 	if catalog is not None and not ILegacyCommunityBasedCourseInstance.providedBy(course):
 		_clear_course_assets(course)
+		_clear_namespace_last_modified(course, catalog)
 		entry = ICourseCatalogEntry(course, None)
 		ntiid = entry.ntiid if entry is not None else course.__name__
 		_remove_and_unindex_course_assets(container_ntiids=ntiid, catalog=catalog)

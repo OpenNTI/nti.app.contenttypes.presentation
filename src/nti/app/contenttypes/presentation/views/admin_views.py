@@ -47,6 +47,8 @@ from nti.site.site import get_component_hierarchy_names
 
 from ..utils.common import yield_sync_courses
 
+from ..subscribers import clear_course_assets
+from ..subscribers import clear_namespace_last_modified
 from ..subscribers import remove_and_unindex_course_assets
 
 from .. import iface_of_thing
@@ -221,6 +223,10 @@ class RemoveAllPresentationAssetsView(RemoveInaccessibleAssetsView):
 				self._unregister(sites, provided=provided, name=ntiid)
 				intids.unregister(asset)
 			registered += 1
+
+		for course in yield_sync_courses(all_courses=True):
+			clear_course_assets(course)
+			clear_namespace_last_modified(course, catalog)
 
 		result['TimeElapsed'] = time.time() - now
 		result['TotalRegisteredAssets'] = registered
