@@ -27,6 +27,7 @@ from nti.dataserver.utils.base_script import create_context
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
+from ..subscribers import get_course_packages
 from ..subscribers import synchronize_course_lesson_overview
 
 def yield_courses(args, all_courses=False):
@@ -78,7 +79,9 @@ def _process_args(args):
 				ILegacyCommunityBasedCourseInstance.providedBy(course):
 				continue
 			entry = ICourseCatalogEntry(course)
-			print("===>", entry.ntiid)
+			print("==>", entry.ntiid)
+			for content_package in get_course_packages(course):
+				print('\t==>', content_package.ntiid)
 		print()
 
 def main():
