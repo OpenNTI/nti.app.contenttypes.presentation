@@ -51,9 +51,9 @@ def yield_courses(args, all_courses=False):
 			else:
 				yield course
 
-def _sync_course(course, exclude=False):
+def _sync_course(course, exclude=False, force=False):
 	result = []
-	result.extend(synchronize_course_lesson_overview(course))
+	result.extend(synchronize_course_lesson_overview(course, force=force))
 	if not exclude and not ICourseSubInstance.providedBy(course):
 		for sub_instance in (course.SubInstances or {}).values():
 			result.extend(synchronize_course_lesson_overview(sub_instance))
@@ -62,7 +62,7 @@ def _sync_course(course, exclude=False):
 def _sync_courses(args):
 	result = []
 	for course in yield_courses(args):
-		result.extend(_sync_course(course, args.exclude))
+		result.extend(_sync_course(course, args.exclude, args.force))
 	return result
 
 def _process_args(args):
@@ -89,6 +89,9 @@ def main():
 	arg_parser.add_argument('-x', '--exclude', help="Exclude course sub-instances",
 							action='store_true', dest='exclude')
 
+	arg_parser.add_argument('-f', '--force', help="Force update",
+							action='store_true', dest='force')
+	
 	arg_parser.add_argument('-s', '--site',
 							dest='site',
 							help="Application SITE.")

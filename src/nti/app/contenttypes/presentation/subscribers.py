@@ -319,7 +319,7 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 						  intids=intids,
 						  container_ntiids=container_ntiids)
 
-def synchronize_course_lesson_overview(course, intids=None, catalog=None):
+def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=False):
 	result = []
 	course_packages = get_course_packages(course)
 	catalog = get_library_catalog() if catalog is None else catalog
@@ -348,7 +348,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 
 			sibling_lastModified = sibling_key.lastModified
 			root_lastModified = _get_source_lastModified(namespace, catalog)
-			if root_lastModified >= sibling_lastModified:
+			if not force and root_lastModified >= sibling_lastModified:
 				# we want to associate the ntiid of the new course with the
 				# assets and set the lesson overview ntiid to the outline node
 				objects = catalog.search_objects(namespace=namespace,
