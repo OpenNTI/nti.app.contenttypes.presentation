@@ -75,7 +75,8 @@ def _process_args(args):
 	else:
 		print()
 		for course in yield_courses(args, True):
-			if ICourseSubInstance.providedBy(course):
+			if 	ICourseSubInstance.providedBy(course) or \
+				ILegacyCommunityBasedCourseInstance.providedBy(course):
 				continue
 			entry = ICourseCatalogEntry(course)
 			print(entry.ntiid)
