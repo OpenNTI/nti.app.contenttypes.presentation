@@ -14,6 +14,8 @@ import time
 
 from zope import component
 
+from zope.traversing.interfaces import IEtcNamespace
+
 from zope.intid import IIntIds
 
 from pyramid.view import view_config
@@ -29,7 +31,6 @@ from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseIn
 
 from nti.common.maps import CaseInsensitiveDict
 
-from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
@@ -173,34 +174,42 @@ class ResetPresentationAssetsView(AbstractAuthenticatedView,
 class RemoveInaccessibleAssetsView(AbstractAuthenticatedView,
 							  	   ModeledContentUploadRequestUtilsMixin):
 
+	def unregister(self, sites_names, provided, name):
+		hostsites = component.getUtility(IEtcNamespace, name='hostsites')
+		for site_name in sites_names:
+			try:
+				folder = hostsites[site_name]
+				registry = folder.getSiteManager()
+				unregisterUtility(registry, provided=provided, name=name)
+			except KeyError:
+				pass
+
 	def __call__(self):
 		now = time.time()
-		registry = get_registry()
 		catalog = get_library_catalog()
 		sites = get_component_hierarchy_names()
 		intids = component.getUtility(IIntIds)
 
 		result = LocatedExternalDict()
 		items = result[ITEMS] = []
-		
+
 		references = catalog.get_references(sites=sites,
 										 	provided=ALL_PRESENTATION_ASSETS_INTERFACES)
 
-		registered = list(registry.getUtilitiesFor(IPresentationAsset))
+		registered = list(component.getUtilitiesFor(IPresentationAsset))
 		for ntiid, asset in registered:
 			uid = intids.queryId(asset)
 			provided = iface_of_thing(asset)
 			if uid is None:
 				items.append(repr((provided.__name__, ntiid)))
-				unregisterUtility(registry, provided, name=ntiid)
+				self.unregister(sites, provided=provided, name=ntiid)
 			elif uid not in references:
-				from IPython.core.debugger import Tracer; Tracer()()
 				items.append(repr((provided.__name__, ntiid, uid)))
-				unregisterUtility(registry, provided, name=ntiid)
-				catalog.unindex(uid, intids)
+				self.unregister(sites, provided=provided, name=ntiid)
+				intids.unregister(asset)
 
 		result['TotalRemoved'] = len(items)
+		result['TimeElapsed'] = time.time() - now
 		result['TotalCatalogedAssets'] = len(references)
 		result['TotalRegisteredAssets'] = len(registered)
-		result['Elapsed'] = time.time() - now
 		return result
