@@ -132,7 +132,6 @@ class ResetPresentationAssetsView(AbstractAuthenticatedView,
 											 		  course=course,
 											 		  catalog=catalog,
 											 		  sites=sites)
-			clear_course_assets(course)
 			clear_namespace_last_modified(course, catalog)
 			
 		result['Total'] = total
