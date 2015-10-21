@@ -73,8 +73,11 @@ def _removed_registered(provided, name, intids=None, registry=None, catalog=None
 
 def _db_connection(registry=None):
 	registry = get_registry(registry)
-	result = IConnection(registry, None)
-	return result
+	if registry == component.getGlobalSiteManager():
+		return None
+	else:
+		result = IConnection(registry, None)
+		return result
 
 def intid_register(item, registry, intids=None, connection=None):
 	intids = component.getUtility(IIntIds) if intids is None else intids
