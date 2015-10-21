@@ -35,7 +35,7 @@ def _sync_course(course, exclude=False, force=False):
 
 def _sync_courses(args):
 	result = []
-	for course in yield_courses(not args.list, args.ntiids):
+	for course in yield_courses(args.all, args.ntiids):
 		result.extend(_sync_course(course, args.exclude, args.force))
 	return result
 
