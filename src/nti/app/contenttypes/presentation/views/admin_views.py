@@ -207,8 +207,8 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 			   renderer='rest',
 			   request_method='POST',
 			   permission=nauth.ACT_NTI_ADMIN,
-			   name='RemoveAllCoursePresentationAssets')
-class RemoveAllCoursePresentationAssetsView(RemoveCourseInaccessibleAssetsView):
+			   name='RemoveAllCoursesPresentationAssets')
+class RemoveAllCoursesPresentationAssetsView(RemoveCourseInaccessibleAssetsView):
 
 	def __call__(self):
 		now = time.time()
