@@ -82,7 +82,7 @@ def _db_connection(registry=None):
 	return result
 
 def intid_register(item, registry, intids=None, connection=None):
-	intids = component.queryUtility(IIntIds) if intids is None else intids
+	intids = component.getUtility(IIntIds) if intids is None else intids
 	connection = _db_connection(registry) if connection is None else connection
 	if connection is not None:
 		connection.add(item)
@@ -91,9 +91,10 @@ def intid_register(item, registry, intids=None, connection=None):
 	return False
 
 def _register_utility(item, provided, ntiid, registry=None, intids=None, connection=None):
+	intids = component.getUtility(IIntIds) if intids is None else intids
 	if provided.providedBy(item):
 		registry = get_registry(registry)
-		registered = registry.queryUtility(provided, name=ntiid)	
+		registered = registry.queryUtility(provided, name=ntiid)
 		if registered is None or intids.queryId(registered) is None:
 			assert is_valid_ntiid_string(ntiid), "invalid NTIID %s" % ntiid
 			if intids.queryId(registered) is None: # remove if invalid
@@ -330,7 +331,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 	result = []
 	course_packages = get_course_packages(course)
 	catalog = get_library_catalog() if catalog is None else catalog
-	intids = component.queryUtility(IIntIds) if intids is None else intids
+	intids = component.getUtility(IIntIds) if intids is None else intids
 
 	registry = get_registry()
 	entry = ICourseCatalogEntry(course, None)
