@@ -14,6 +14,7 @@ MessageFactory = zope.i18nmessageid.MessageFactory(__name__)
 
 from zope import component
 
+from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 VIEW_OVERVIEW_CONTENT = "overview-content"

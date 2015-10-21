@@ -30,12 +30,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
-from nti.contenttypes.presentation.interfaces import INTIAudio
-from nti.contenttypes.presentation.interfaces import INTIVideo
-from nti.contenttypes.presentation.interfaces import INTITimeline
-from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
-from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
@@ -107,8 +102,7 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 
 # Courses
 
-PACKAGE_CONTAINER_INTERFACES = (INTIAudio, INTIVideo, INTITimeline,
-								INTISlideDeck, INTIRelatedWorkRef)
+from . import PACKAGE_CONTAINER_INTERFACES
 
 def _remove_registered_course_overview(name=None, registry=None, course=None):
 	result = 0

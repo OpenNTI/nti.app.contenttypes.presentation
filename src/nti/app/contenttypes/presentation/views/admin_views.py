@@ -34,6 +34,7 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
+from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.dataserver import authorization as nauth
@@ -55,6 +56,13 @@ from .. import iface_of_thing
 
 ITEMS = StandardExternalFields.ITEMS
 
+def _get_course_ifaces():
+	result = []
+	for iface in ALL_PRESENTATION_ASSETS_INTERFACES:
+		if iface not in PACKAGE_CONTAINER_INTERFACES:
+			result.append(iface)
+	return result
+
 def _get_course_ntiids(values):
 	ntiids = values.get('ntiid') or values.get('ntiids') or \
 			 values.get('entry') or values.get('entries') or \
@@ -69,9 +77,9 @@ def _get_course_ntiids(values):
 			   renderer='rest',
 			   request_method='GET',
 			   permission=nauth.ACT_NTI_ADMIN,
-			   name='GetPresentationAssets')
-class GetPresentationAssetsView(AbstractAuthenticatedView,
-							  	ModeledContentUploadRequestUtilsMixin):
+			   name='GetCoursePresentationAssets')
+class GetCoursePresentationAssetsView(AbstractAuthenticatedView,
+							  		  ModeledContentUploadRequestUtilsMixin):
 
 
 	def __call__(self):
@@ -91,6 +99,7 @@ class GetPresentationAssetsView(AbstractAuthenticatedView,
 		for course in courses:
 			entry = ICourseCatalogEntry(course)
 			objects = catalog.search_objects(intids=intids,
+											 provided=_get_course_ifaces(),
 											 container_ntiids=entry.ntiid,
 											 sites=sites)
 
@@ -104,13 +113,12 @@ class GetPresentationAssetsView(AbstractAuthenticatedView,
 			   renderer='rest',
 			   request_method='POST',
 			   permission=nauth.ACT_NTI_ADMIN,
-			   name='ResetPresentationAssets')
-class ResetPresentationAssetsView(AbstractAuthenticatedView,
-							  	  ModeledContentUploadRequestUtilsMixin):
-
+			   name='ResetCoursePresentationAssets')
+class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
+							  	  		ModeledContentUploadRequestUtilsMixin):
 
 	def readInput(self, value=None):
-		values = super(ResetPresentationAssetsView, self).readInput(self, value=value)
+		values = super(ResetCoursePresentationAssetsView, self).readInput(self, value=value)
 		return CaseInsensitiveDict(values)
 
 	def __call__(self):
@@ -143,9 +151,9 @@ class ResetPresentationAssetsView(AbstractAuthenticatedView,
 			   renderer='rest',
 			   request_method='POST',
 			   permission=nauth.ACT_NTI_ADMIN,
-			   name='RemoveInaccessibleAssets')
-class RemoveInaccessibleAssetsView(AbstractAuthenticatedView,
-							  	   ModeledContentUploadRequestUtilsMixin):
+			   name='RemoveCourseInaccessibleAssets')
+class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
+							  	   		 ModeledContentUploadRequestUtilsMixin):
 
 	def _unregister(self, sites_names, provided, name):
 		hostsites = component.getUtility(IEtcNamespace, name='hostsites')
@@ -158,7 +166,7 @@ class RemoveInaccessibleAssetsView(AbstractAuthenticatedView,
 				pass
 
 	def _assets(self, registry):
-		for iface in ALL_PRESENTATION_ASSETS_INTERFACES:
+		for iface in _get_course_ifaces():
 			for ntiid, asset in list(registry.getUtilitiesFor(iface)):
 				yield ntiid, asset
 
@@ -174,7 +182,7 @@ class RemoveInaccessibleAssetsView(AbstractAuthenticatedView,
 
 		registered = 0
 		references = catalog.get_references(sites=sites,
-										 	provided=ALL_PRESENTATION_ASSETS_INTERFACES)
+										 	provided=_get_course_ifaces())
 
 		for ntiid, asset in self._assets(registry):
 			uid = intids.queryId(asset)
@@ -199,8 +207,8 @@ class RemoveInaccessibleAssetsView(AbstractAuthenticatedView,
 			   renderer='rest',
 			   request_method='POST',
 			   permission=nauth.ACT_NTI_ADMIN,
-			   name='RemoveAllPresentationAssets')
-class RemoveAllPresentationAssetsView(RemoveInaccessibleAssetsView):
+			   name='RemoveAllCoursePresentationAssets')
+class RemoveAllCoursePresentationAssetsView(RemoveCourseInaccessibleAssetsView):
 
 	def __call__(self):
 		now = time.time()
@@ -212,7 +220,7 @@ class RemoveAllPresentationAssetsView(RemoveInaccessibleAssetsView):
 		registered = 0
 		result = LocatedExternalDict()
 		references = catalog.get_references(sites=sites,
-										 	provided=ALL_PRESENTATION_ASSETS_INTERFACES)
+										 	provided=_get_course_ifaces())
 		for uid in references:
 			catalog.unindex(uid)
 			
