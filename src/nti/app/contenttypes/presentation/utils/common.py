@@ -13,7 +13,7 @@ from zope import component
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
-from nti.contenttypes.courses.legacy_catalog import ILegacyCommunityBasedCourseInstance
+from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -22,8 +22,7 @@ def yield_sync_courses(all_courses=True, ntiids=()):
 	if all_courses:
 		for entry in catalog.iterCatalogEntries():
 			course = ICourseInstance(entry, None)
-			if	 course is not None and \
-				not ILegacyCommunityBasedCourseInstance.providedBy(course):
+			if course is not None and not ILegacyCourseInstance.providedBy(course):
 				yield course
 	else:
 		for ntiid in ntiids or ():
@@ -35,7 +34,7 @@ def yield_sync_courses(all_courses=True, ntiids=()):
 					course = ICourseInstance(entry, None)
 				except KeyError:
 					pass
-			if course is None or ILegacyCommunityBasedCourseInstance.providedBy(course):
+			if course is None or ILegacyCourseInstance.providedBy(course):
 				logger.error("Could not find course with NTIID %s", ntiid)
 			else:
 				yield course
