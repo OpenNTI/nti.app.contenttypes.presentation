@@ -113,7 +113,6 @@ class GetCoursePresentationAssetsView(AbstractAuthenticatedView,
 @view_config(context=CourseAdminPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
-			   request_method='POST',
 			   permission=nauth.ACT_NTI_ADMIN,
 			   name='ResetCoursePresentationAssets')
 class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
@@ -151,7 +150,6 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 @view_config(context=IDataserverFolder)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
-			   request_method='POST',
 			   permission=nauth.ACT_NTI_ADMIN,
 			   name='RemoveCourseInaccessibleAssets')
 class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
@@ -207,7 +205,6 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 @view_config(context=IDataserverFolder)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
-			   request_method='POST',
 			   permission=nauth.ACT_NTI_ADMIN,
 			   name='RemoveAllCoursesPresentationAssets')
 class RemoveAllCoursesPresentationAssetsView(RemoveCourseInaccessibleAssetsView):
