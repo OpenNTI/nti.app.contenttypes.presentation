@@ -51,6 +51,7 @@ from ..utils.common import yield_sync_courses
 from ..subscribers import clear_course_assets
 from ..subscribers import clear_namespace_last_modified
 from ..subscribers import remove_and_unindex_course_assets
+from ..subscribers import synchronize_course_lesson_overview
 
 from .. import iface_of_thing
 
@@ -104,7 +105,7 @@ class GetCoursePresentationAssetsView(AbstractAuthenticatedView,
 											 container_ntiids=entry.ntiid,
 											 sites=sites)
 			items[entry.ntiid] = sorted(objects or (),
-										key=lambda x: x.__class__.__name__) 
+										key=lambda x: x.__class__.__name__)
 			total += len(items[entry.ntiid])
 		result['ItemCount'] = result['Total'] = total
 		return result
@@ -142,7 +143,7 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 											 		  catalog=catalog,
 											 		  sites=sites)
 			clear_namespace_last_modified(course, catalog)
-			
+
 		result['Total'] = total
 		result['Elapsed'] = time.time() - now
 		return result
@@ -222,7 +223,7 @@ class RemoveAllCoursesPresentationAssetsView(RemoveCourseInaccessibleAssetsView)
 										 	provided=_get_course_ifaces())
 		for uid in references:
 			catalog.unindex(uid)
-			
+
 		for ntiid, asset in self._assets(registry):
 			uid = intids.queryId(asset)
 			provided = iface_of_thing(asset)
@@ -238,4 +239,33 @@ class RemoveAllCoursesPresentationAssetsView(RemoveCourseInaccessibleAssetsView)
 		result['TimeElapsed'] = time.time() - now
 		result['TotalRegisteredAssets'] = registered
 		result['TotalCatalogedAssets'] = len(references)
+		return result
+
+@view_config(context=IDataserverFolder)
+@view_config(context=CourseAdminPathAdapter)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   permission=nauth.ACT_NTI_ADMIN,
+			   name='SyncCoursePresentationAssets')
+class SyncCoursePresentationAssetsView(AbstractAuthenticatedView,
+									   ModeledContentUploadRequestUtilsMixin):
+
+	def readInput(self, value=None):
+		values = super(SyncCoursePresentationAssetsView, self).readInput(self, value=value)
+		return CaseInsensitiveDict(values)
+
+	def __call__(self):
+		values = self.readInput()
+		ntiids = _get_course_ntiids(values)
+		if not ntiids:
+			courses = list(yield_sync_courses(all_courses=True))
+		else:
+			courses = list(yield_sync_courses(ntiids=ntiids))
+
+		now = time.time()
+		result = LocatedExternalDict()
+		for course in courses:
+			synchronize_course_lesson_overview(course)
+
+		result['TimeElapsed'] = time.time() - now
 		return result
