@@ -324,12 +324,24 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 						  intids=intids,
 						  container_ntiids=container_ntiids)
 
+def get_cataloged_namespaces(ntiid, catalog=None, sites=None):
+	catalog = get_library_catalog() if catalog is None else catalog
+	sites = get_component_hierarchy_names() if not sites else sites
+	references = catalog.get_references(provided=INTILessonOverview,
+										container_ntiids=ntiid,
+										sites=sites)
+	index = catalog.namespace_index
+	result = {v for _, v in index.zip(references)}
+	result.discard(None)
+	return result
+
 def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=False):
 	result = []
+	namespaces = set()
 	course_packages = get_course_packages(course)
 	catalog = get_library_catalog() if catalog is None else catalog
 	intids = component.getUtility(IIntIds) if intids is None else intids
-
+	
 	registry = get_registry()
 	entry = ICourseCatalogEntry(course, None)
 	ntiid = entry.ntiid if entry is not None else course.__name__
@@ -346,6 +358,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 	nodes = _outline_nodes(course.Outline)
 	for node in nodes:
 		namespace = node.src  # this is ntiid based file (unique)
+		namespaces.add(namespace)
 		for content_package in course_packages:
 			sibling_key = content_package.does_sibling_entry_exist(namespace)
 			if not sibling_key:
