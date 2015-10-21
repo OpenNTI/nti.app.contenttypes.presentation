@@ -93,8 +93,9 @@ class GetCoursePresentationAssetsView(AbstractAuthenticatedView,
 		catalog = get_library_catalog()
 		intids = component.getUtility(IIntIds)
 
+		total = 0
 		result = LocatedExternalDict()
-		result[ITEMS] = items = []
+		result[ITEMS] = items = {}
 		sites = get_component_hierarchy_names()
 		for course in courses:
 			entry = ICourseCatalogEntry(course)
@@ -102,9 +103,10 @@ class GetCoursePresentationAssetsView(AbstractAuthenticatedView,
 											 provided=_get_course_ifaces(),
 											 container_ntiids=entry.ntiid,
 											 sites=sites)
-
-			items.extend(sorted(objects or (), key=lambda x: x.__class__.__name__))
-		result['ItemCount'] = result['Total'] = len(items)
+			items[entry.ntiid] = sorted(objects or (),
+										key=lambda x: x.__class__.__name__) 
+			total += len(items[entry.ntiid])
+		result['ItemCount'] = result['Total'] = total
 		return result
 
 @view_config(context=IDataserverFolder)
