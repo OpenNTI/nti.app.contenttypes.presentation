@@ -416,7 +416,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 								  course=course)
 
 			_set_source_lastModified(namespace, sibling_lastModified, catalog)
-	
+
 	# remove any lesson overview items that were dropped
 	difference = cataloged.difference(namespaces)
 	if difference:
@@ -426,7 +426,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 										  catalog=catalog,
 										  intids=intids,
 										  course=course)
-		
+
 	logger.info('Lessons overviews for %s have been synchronized in %s(s)',
 				 name, time.time() - now)
 	return result

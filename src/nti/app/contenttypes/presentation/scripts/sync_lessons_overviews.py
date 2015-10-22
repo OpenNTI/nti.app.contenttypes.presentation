@@ -35,7 +35,7 @@ def _sync_course(course, exclude=False, force=False):
 
 def _sync_courses(args):
 	result = []
-	for course in yield_courses(args.all, args.ntiids):
+	for course in yield_courses(args.ntiids):
 		result.extend(_sync_course(course, args.exclude, args.force))
 	return result
 
@@ -46,7 +46,7 @@ def _process_args(args):
 		_sync_courses(args)
 	else:
 		print()
-		for course in yield_courses(all_courses=True):
+		for course in yield_courses():
 			if ICourseSubInstance.providedBy(course):
 				continue
 			entry = ICourseCatalogEntry(course)

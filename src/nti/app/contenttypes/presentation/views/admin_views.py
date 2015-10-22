@@ -82,14 +82,10 @@ def _get_course_ntiids(values):
 class GetCoursePresentationAssetsView(AbstractAuthenticatedView,
 							  		  ModeledContentUploadRequestUtilsMixin):
 
-
 	def __call__(self):
 		params = CaseInsensitiveDict(self.request.params)
 		ntiids = _get_course_ntiids(params)
-		if not ntiids:
-			courses = list(yield_sync_courses(all_courses=True))
-		else:
-			courses = list(yield_sync_courses(ntiids=ntiids))
+		courses = list(yield_sync_courses(ntiids))
 
 		catalog = get_library_catalog()
 		intids = component.getUtility(IIntIds)
@@ -120,24 +116,23 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 							  	  		ModeledContentUploadRequestUtilsMixin):
 
 	def readInput(self, value=None):
-		values = super(ResetCoursePresentationAssetsView, self).readInput(self, value=value)
+		values = super(ResetCoursePresentationAssetsView, self).readInput(value=value)
 		return CaseInsensitiveDict(values)
 
 	def __call__(self):
 		now = time.time()
 		values = self.readInput()
 		ntiids = _get_course_ntiids(values)
-		if not ntiids:
-			courses = list(yield_sync_courses(all_courses=True))
-		else:
-			courses = list(yield_sync_courses(ntiids=ntiids))
+		courses = list(yield_sync_courses(ntiids))
 
 		total = 0
 		catalog = get_library_catalog()
 		result = LocatedExternalDict()
+		items = result[ITEMS] = []
 		sites = get_component_hierarchy_names()
 		for course in courses:
 			entry = ICourseCatalogEntry(course)
+			items.append(entry.ntiid)
 			total += remove_and_unindex_course_assets(container_ntiids=entry.ntiid,
 											 		  course=course,
 											 		  catalog=catalog,
@@ -232,7 +227,7 @@ class RemoveAllCoursesPresentationAssetsView(RemoveCourseInaccessibleAssetsView)
 				intids.unregister(asset)
 			registered += 1
 
-		for course in yield_sync_courses(all_courses=True):
+		for course in yield_sync_courses():
 			clear_course_assets(course)
 			clear_namespace_last_modified(course, catalog)
 
@@ -251,21 +246,20 @@ class SyncCoursePresentationAssetsView(AbstractAuthenticatedView,
 									   ModeledContentUploadRequestUtilsMixin):
 
 	def readInput(self, value=None):
-		values = super(SyncCoursePresentationAssetsView, self).readInput(self, value=value)
+		values = super(SyncCoursePresentationAssetsView, self).readInput(value=value)
 		return CaseInsensitiveDict(values)
 
 	def __call__(self):
 		values = self.readInput()
 		ntiids = _get_course_ntiids(values)
-		if not ntiids:
-			courses = list(yield_sync_courses(all_courses=True))
-		else:
-			courses = list(yield_sync_courses(ntiids=ntiids))
+		courses = list(yield_sync_courses(ntiids=ntiids))
 
 		now = time.time()
 		result = LocatedExternalDict()
+		items = result[ITEMS] = []
 		for course in courses:
 			synchronize_course_lesson_overview(course)
-
+			items.append(ICourseCatalogEntry(course).ntiid)
+			
 		result['TimeElapsed'] = time.time() - now
 		return result

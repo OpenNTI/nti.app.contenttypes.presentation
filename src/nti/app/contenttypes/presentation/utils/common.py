@@ -17,15 +17,15 @@ from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
-def yield_sync_courses(all_courses=True, ntiids=()):
+def yield_sync_courses(ntiids=()):
 	catalog = component.getUtility(ICourseCatalog)
-	if all_courses:
+	if not ntiids:
 		for entry in catalog.iterCatalogEntries():
 			course = ICourseInstance(entry, None)
 			if course is not None and not ILegacyCourseInstance.providedBy(course):
 				yield course
 	else:
-		for ntiid in ntiids or ():
+		for ntiid in ntiids:
 			obj = find_object_with_ntiid(ntiid)
 			course = ICourseInstance(obj, None)
 			if course is None:
