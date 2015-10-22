@@ -419,8 +419,8 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 	
 	# remove any lesson overview items that were dropped
 	difference = cataloged.difference(namespaces)
-	for namespace in difference:
-		_remove_and_unindex_course_assets(namespace=namespace,
+	if difference:
+		_remove_and_unindex_course_assets(namespace=difference,
 										  container_ntiids=ntiid,
 										  registry=registry,
 										  catalog=catalog,
