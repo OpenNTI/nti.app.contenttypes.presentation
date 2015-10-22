@@ -352,6 +352,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 	ref_ntiid = parent.ntiid if parent is not None else ntiid
 
 	now = time.time()
+	cataloged = get_cataloged_namespaces(ntiid, catalog)
 	logger.info('Synchronizing lessons overviews for %s', name)
 
 	# parse and register
@@ -415,7 +416,17 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 								  course=course)
 
 			_set_source_lastModified(namespace, sibling_lastModified, catalog)
-
+	
+	# remove any lesson overview items that were dropped
+	difference = cataloged.difference(namespaces)
+	for namespace in difference:
+		_remove_and_unindex_course_assets(namespace=namespace,
+										  container_ntiids=ntiid,
+										  registry=registry,
+										  catalog=catalog,
+										  intids=intids,
+										  course=course)
+		
 	logger.info('Lessons overviews for %s have been synchronized in %s(s)',
 				 name, time.time() - now)
 	return result
