@@ -169,14 +169,18 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 							  	   		 ModeledContentUploadRequestUtilsMixin):
 
 	def _unregister(self, sites_names, provided, name):
+		result = False
 		hostsites = component.getUtility(IEtcNamespace, name='hostsites')
-		for site_name in sites_names:
+		for site_name in list(sites_names).reverse():
 			try:
 				folder = hostsites[site_name]
 				registry = folder.getSiteManager()
-				unregisterUtility(registry, provided=provided, name=name)
+				result = unregisterUtility(registry, 
+										   provided=provided, 
+										   name=name) or result
 			except KeyError:
 				pass
+		return result
 
 	def _assets(self, registry):
 		for iface in _get_course_ifaces():
