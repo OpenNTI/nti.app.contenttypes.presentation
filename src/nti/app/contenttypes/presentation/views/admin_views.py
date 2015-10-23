@@ -14,6 +14,9 @@ import time
 
 from zope import component
 
+from zope.security.management import endInteraction
+from zope.security.management import restoreInteraction
+
 from zope.traversing.interfaces import IEtcNamespace
 
 from zope.intid import IIntIds
@@ -22,7 +25,7 @@ from pyramid.view import view_config
 from pyramid.view import view_defaults
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
-
+from nti.app.externalization.internalization import read_body_as_external_object
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
 from nti.app.products.courseware.views import CourseAdminPathAdapter
@@ -116,19 +119,23 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 							  	  		ModeledContentUploadRequestUtilsMixin):
 
 	def readInput(self, value=None):
-		values = super(ResetCoursePresentationAssetsView, self).readInput(value=value)
-		return CaseInsensitiveDict(values)
+		result = CaseInsensitiveDict()
+		if self.request:
+			if self.request.body:
+				values = read_body_as_external_object(self.request)
+			else:
+				values = self.request.params
+			result.update(values)
+		return result
 
-	def __call__(self):
-		now = time.time()
+	def _do_call(self, result):
 		values = self.readInput()
 		ntiids = _get_course_ntiids(values)
 		courses = list(yield_sync_courses(ntiids))
 
 		total = 0
-		catalog = get_library_catalog()
-		result = LocatedExternalDict()
 		items = result[ITEMS] = []
+		catalog = get_library_catalog()
 		sites = get_component_hierarchy_names()
 		for course in courses:
 			entry = ICourseCatalogEntry(course)
@@ -140,7 +147,17 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 			clear_namespace_last_modified(course, catalog)
 
 		result['Total'] = total
-		result['Elapsed'] = time.time() - now
+		return result
+
+	def __call__(self):
+		now = time.time()
+		result = LocatedExternalDict()
+		endInteraction()
+		try:
+			self._do_call(result)
+		finally:
+			restoreInteraction()
+			result['TimeElapsed'] = time.time() - now
 		return result
 
 @view_config(context=IDataserverFolder)
@@ -166,17 +183,14 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 			for ntiid, asset in list(registry.getUtilitiesFor(iface)):
 				yield ntiid, asset
 
-	def __call__(self):
-		now = time.time()
+	def _do_call(self, result):
 		registry = get_registry()
 		catalog = get_library_catalog()
 		sites = get_component_hierarchy_names()
 		intids = component.getUtility(IIntIds)
 
-		result = LocatedExternalDict()
-		items = result[ITEMS] = []
-
 		registered = 0
+		items = result[ITEMS] = []
 		references = catalog.get_references(sites=sites,
 										 	provided=_get_course_ifaces())
 
@@ -193,9 +207,19 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 			registered += 1
 
 		result['TotalRemoved'] = len(items)
-		result['TimeElapsed'] = time.time() - now
 		result['TotalRegisteredAssets'] = registered
 		result['TotalCatalogedAssets'] = len(references)
+		return result
+
+	def __call__(self):
+		now = time.time()
+		result = LocatedExternalDict()
+		endInteraction()
+		try:
+			self._do_call(result)
+		finally:
+			restoreInteraction()
+			result['TimeElapsed'] = time.time() - now
 		return result
 
 @view_config(context=IDataserverFolder)
@@ -205,15 +229,13 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 			   name='RemoveAllCoursesPresentationAssets')
 class RemoveAllCoursesPresentationAssetsView(RemoveCourseInaccessibleAssetsView):
 
-	def __call__(self):
-		now = time.time()
+	def _do_call(self, result):
 		registry = get_registry()
 		catalog = get_library_catalog()
 		sites = get_component_hierarchy_names()
 		intids = component.getUtility(IIntIds)
 
 		registered = 0
-		result = LocatedExternalDict()
 		references = catalog.get_references(sites=sites,
 										 	provided=_get_course_ifaces())
 		for uid in references:
@@ -231,9 +253,19 @@ class RemoveAllCoursesPresentationAssetsView(RemoveCourseInaccessibleAssetsView)
 			clear_course_assets(course)
 			clear_namespace_last_modified(course, catalog)
 
-		result['TimeElapsed'] = time.time() - now
 		result['TotalRegisteredAssets'] = registered
 		result['TotalCatalogedAssets'] = len(references)
+		return result
+
+	def __call__(self):
+		now = time.time()
+		result = LocatedExternalDict()
+		endInteraction()
+		try:
+			self._do_call(result)
+		finally:
+			restoreInteraction()
+			result['TimeElapsed'] = time.time() - now
 		return result
 
 @view_config(context=IDataserverFolder)
@@ -246,20 +278,33 @@ class SyncCoursePresentationAssetsView(AbstractAuthenticatedView,
 									   ModeledContentUploadRequestUtilsMixin):
 
 	def readInput(self, value=None):
-		values = super(SyncCoursePresentationAssetsView, self).readInput(value=value)
-		return CaseInsensitiveDict(values)
+		result = CaseInsensitiveDict()
+		if self.request:
+			if self.request.body:
+				values = read_body_as_external_object(self.request)
+			else:
+				values = self.request.params
+			result.update(values)
+		return result
 
-	def __call__(self):
+	def _do_call(self, result):
 		values = self.readInput()
 		ntiids = _get_course_ntiids(values)
 		courses = list(yield_sync_courses(ntiids=ntiids))
 
-		now = time.time()
-		result = LocatedExternalDict()
 		items = result[ITEMS] = []
 		for course in courses:
 			synchronize_course_lesson_overview(course)
 			items.append(ICourseCatalogEntry(course).ntiid)
-			
-		result['TimeElapsed'] = time.time() - now
+		return result
+
+	def __call__(self):
+		now = time.time()
+		result = LocatedExternalDict()
+		endInteraction()
+		try:
+			self._do_call(result)
+		finally:
+			restoreInteraction()
+			result['TimeElapsed'] = time.time() - now
 		return result
