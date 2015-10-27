@@ -30,6 +30,7 @@ from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtils
 
 from nti.app.products.courseware.views import CourseAdminPathAdapter
 
+from nti.common.string import TRUE_VALUES
 from nti.common.maps import CaseInsensitiveDict
 
 from nti.contentlibrary.indexed_data import get_registry
@@ -52,6 +53,7 @@ from nti.site.site import get_component_hierarchy_names
 
 from ..utils.common import yield_sync_courses
 
+from ..subscribers import can_be_removed
 from ..subscribers import clear_course_assets
 from ..subscribers import clear_namespace_last_modified
 from ..subscribers import remove_and_unindex_course_assets
@@ -79,6 +81,19 @@ def _get_course_ntiids(values):
 		ntiids = ntiids.split()
 	return ntiids
 
+def _is_true(v):
+	return v and str(v).lower() in TRUE_VALUES
+
+def _read_input(request):
+	result = CaseInsensitiveDict()
+	if request:
+		if request.body:
+			values = read_body_as_external_object(request)
+		else:
+			values = request.params
+		result.update(values)
+	return result
+	
 @view_config(context=IDataserverFolder)
 @view_config(context=CourseAdminPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
@@ -123,20 +138,14 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 							  	  		ModeledContentUploadRequestUtilsMixin):
 
 	def readInput(self, value=None):
-		result = CaseInsensitiveDict()
-		if self.request:
-			if self.request.body:
-				values = read_body_as_external_object(self.request)
-			else:
-				values = self.request.params
-			result.update(values)
-		return result
+		return _read_input(self.request)
 
 	def _do_call(self, result):
 		values = self.readInput()
 		ntiids = _get_course_ntiids(values)
+		force = _is_true(values.get('force'))
 		courses = list(yield_sync_courses(ntiids))
-
+		
 		total = 0
 		items = result[ITEMS] = []
 		catalog = get_library_catalog()
@@ -147,6 +156,7 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 			total += remove_and_unindex_course_assets(container_ntiids=entry.ntiid,
 											 		  course=course,
 											 		  catalog=catalog,
+											 		  force=force,
 											 		  sites=sites)
 			clear_namespace_last_modified(course, catalog)
 
@@ -173,6 +183,9 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 							  	   		 ModeledContentUploadRequestUtilsMixin):
 
+	def readInput(self, value=None):
+		return _read_input(self.request)
+	
 	def _unregister(self, sites_names, provided, name):
 		result = False
 		reverse = list(sites_names)
@@ -266,18 +279,25 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 class RemoveAllCoursesPresentationAssetsView(RemoveCourseInaccessibleAssetsView):
 
 	def _do_call(self, result):
+		values = self.readInput()
 		registry = get_registry()
 		catalog = get_library_catalog()
+		force = _is_true(values.get('force'))
 		sites = get_component_hierarchy_names()
 		intids = component.getUtility(IIntIds)
 
 		registered = 0
-		references = catalog.get_references(sites=sites,
+		references = set()
+		result_set = catalog.search_objects(sites=sites,
 										 	provided=_course_asset_interfaces())
-		for uid in references:
-			catalog.unindex(uid)
+		for uid, asset in result_set.iter_pairs():
+			if can_be_removed(asset, force=force):
+				catalog.unindex(uid)
+			references.add(uid)
 
 		for ntiid, asset in self._assets(registry):
+			if not can_be_removed(asset, force=force):
+				continue
 			uid = intids.queryId(asset)
 			provided = iface_of_thing(asset)
 			self._unregister(sites, provided=provided, name=ntiid)
@@ -314,14 +334,7 @@ class SyncCoursePresentationAssetsView(AbstractAuthenticatedView,
 									   ModeledContentUploadRequestUtilsMixin):
 
 	def readInput(self, value=None):
-		result = CaseInsensitiveDict()
-		if self.request:
-			if self.request.body:
-				values = read_body_as_external_object(self.request)
-			else:
-				values = self.request.params
-			result.update(values)
-		return result
+		return _read_input(self.request)
 
 	def _do_call(self, result):
 		values = self.readInput()

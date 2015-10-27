@@ -67,6 +67,7 @@ def _can_be_removed(registered, force=False):
 			 (	force or
 			 	(not IRecordable.providedBy(registered) or not registered.locked) )
 	return result
+can_be_removed = _can_be_removed
 
 def _removed_registered(provided, name, intids=None, registry=None, catalog=None, force=False):
 	registry = get_registry(registry)
