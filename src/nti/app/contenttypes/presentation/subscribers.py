@@ -335,7 +335,7 @@ def get_cataloged_namespaces(ntiid, catalog=None, sites=None):
 	result.discard(None)
 	return result
 
-def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=False):
+def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 	result = []
 	namespaces = set()
 	course_packages = get_course_packages(course)
@@ -367,7 +367,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, force=
 
 			sibling_lastModified = sibling_key.lastModified
 			root_lastModified = _get_source_lastModified(namespace, catalog)
-			if not force and root_lastModified >= sibling_lastModified:
+			if root_lastModified >= sibling_lastModified:
 				# we want to associate the ntiid of the new course with the
 				# assets and set the lesson overview ntiid to the outline node
 				objects = catalog.search_objects(namespace=namespace,
