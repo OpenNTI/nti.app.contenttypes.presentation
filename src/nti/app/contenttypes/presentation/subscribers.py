@@ -22,6 +22,8 @@ from ZODB.interfaces import IConnection
 
 from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseInstance
 
+from nti.coremetadata.interfaces import IRecordable
+
 from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
@@ -60,24 +62,33 @@ def prepare_json_text(s):
 	result = unicode(s, 'utf-8') if isinstance(s, bytes) else s
 	return result
 
+def _can_be_removed(registered):
+	result = registered is not None and \
+			 (not IRecordable.providedBy(registered) or not registered.locked)
+	return result
+
 def _removed_registered(provided, name, intids=None, registry=None, catalog=None):
 	registry = get_registry(registry)
 	registered = registry.queryUtility(provided, name=name)
-	intids = component.queryUtility(IIntIds) if intids is None else intids
-	if registered is not None:
+	intids = component.getUtility(IIntIds) if intids is None else intids
+	if _can_be_removed(registered):
 		catalog = get_library_catalog() if catalog is None else catalog
 		catalog.unindex(registered, intids=intids)
 		unregisterUtility(registry, component=registered, provided=provided, name=name)
 		intids.unregister(registered, event=False)
+	elif registered is not None:
+		logger.warn("Object (%s,%s) is locked cannot be removed during sync",
+					provided.__name__, name)
+		registered = None # set to None since it was not removed
 	return registered
 
 def _db_connection(registry=None):
 	registry = get_registry(registry)
 	if registry == component.getGlobalSiteManager():
-		return None
+		result = None
 	else:
 		result = IConnection(registry, None)
-		return result
+	return result
 
 def intid_register(item, registry, intids=None, connection=None):
 	intids = component.getUtility(IIntIds) if intids is None else intids
@@ -109,33 +120,34 @@ from . import PACKAGE_CONTAINER_INTERFACES
 
 def _remove_registered_course_overview(name=None, registry=None, course=None):
 	result = 0
+	container = IPresentationAssetContainer(course, None) or {}
 	group = _removed_registered(INTICourseOverviewGroup, name=name, registry=registry)
 	if group is not None:
 		result += 1 
-
-	container = IPresentationAssetContainer(course, None) or {}
-	container.pop(name, None)
+		container.pop(name, None)
+	else:
+		group = ()
 
 	# For each group remove anything that is not synced in the content pacakge.
 	# As of 20150404 we don't have a way to edit and register common group
 	# overview items so we need to remove the old and re-register the new
-	for item in group or ():  # this shoud resolve weak refs
+	for item in group:  # this shoud resolve weak refs
 		iface = iface_of_thing(item)
 		if iface not in PACKAGE_CONTAINER_INTERFACES:
 			ntiid = item.ntiid
 			if _removed_registered(iface, name=ntiid, registry=registry) is not None:
 				result += 1
-			container.pop(item.ntiid, None)
+				container.pop(item.ntiid, None)
 	return result
 
 def _remove_registered_lesson_overview(name, registry=None, course=None):
-	container = IPresentationAssetContainer(course, None) or {}
-	container.pop(name, None)
-
 	# remove lesson overviews
 	overview = _removed_registered(INTILessonOverview, name=name, registry=registry)
 	if overview is None:
 		return 0
+	else: # remove from container
+		container = IPresentationAssetContainer(course, None) or {}
+		container.pop(name, None)
 
 	result = 1 # count overview
 	# remove all groups
@@ -257,7 +269,7 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 									  sites=None):
 
 	catalog = get_library_catalog() if catalog is None else catalog
-	intids = component.queryUtility(IIntIds) if intids is None else intids
+	intids = component.getUtility(IIntIds) if intids is None else intids
 	
 	result = 0
 	sites = get_component_hierarchy_names() if not sites else sites
