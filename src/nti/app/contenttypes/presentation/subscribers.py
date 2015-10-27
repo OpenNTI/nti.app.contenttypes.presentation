@@ -20,8 +20,6 @@ from zope.lifecycleevent import IObjectRemovedEvent
 
 from ZODB.interfaces import IConnection
 
-from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseInstance
-
 from nti.coremetadata.interfaces import IRecordable
 
 from nti.contentlibrary.indexed_data import get_registry
@@ -31,6 +29,8 @@ from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
+
+from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -62,16 +62,17 @@ def prepare_json_text(s):
 	result = unicode(s, 'utf-8') if isinstance(s, bytes) else s
 	return result
 
-def _can_be_removed(registered):
+def _can_be_removed(registered, force=False):
 	result = registered is not None and \
-			 (not IRecordable.providedBy(registered) or not registered.locked)
+			 (	force or
+			 	(not IRecordable.providedBy(registered) or not registered.locked) )
 	return result
 
-def _removed_registered(provided, name, intids=None, registry=None, catalog=None):
+def _removed_registered(provided, name, intids=None, registry=None, catalog=None, force=False):
 	registry = get_registry(registry)
 	registered = registry.queryUtility(provided, name=name)
 	intids = component.getUtility(IIntIds) if intids is None else intids
-	if _can_be_removed(registered):
+	if _can_be_removed(registered, force=force):
 		catalog = get_library_catalog() if catalog is None else catalog
 		catalog.unindex(registered, intids=intids)
 		unregisterUtility(registry, component=registered, provided=provided, name=name)
@@ -118,10 +119,13 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 
 from . import PACKAGE_CONTAINER_INTERFACES
 
-def _remove_registered_course_overview(name=None, registry=None, course=None):
+def _remove_registered_course_overview(name=None, registry=None, course=None, force=False):
 	result = 0
 	container = IPresentationAssetContainer(course, None) or {}
-	group = _removed_registered(INTICourseOverviewGroup, name=name, registry=registry)
+	group = _removed_registered(INTICourseOverviewGroup,
+								name=name,
+								force=force,
+								registry=registry)
 	if group is not None:
 		result += 1 
 		container.pop(name, None)
@@ -135,14 +139,17 @@ def _remove_registered_course_overview(name=None, registry=None, course=None):
 		iface = iface_of_thing(item)
 		if iface not in PACKAGE_CONTAINER_INTERFACES:
 			ntiid = item.ntiid
-			if _removed_registered(iface, name=ntiid, registry=registry) is not None:
+			if _removed_registered(iface, name=ntiid, registry=registry, force=force) is not None:
 				result += 1
 				container.pop(item.ntiid, None)
 	return result
 
-def _remove_registered_lesson_overview(name, registry=None, course=None):
+def _remove_registered_lesson_overview(name, registry=None, course=None, force=False):
 	# remove lesson overviews
-	overview = _removed_registered(INTILessonOverview, name=name, registry=registry)
+	overview = _removed_registered(INTILessonOverview, 
+								   name=name,
+								   force=force,
+								   registry=registry)
 	if overview is None:
 		return 0
 	else: # remove from container
@@ -153,6 +160,7 @@ def _remove_registered_lesson_overview(name, registry=None, course=None):
 	# remove all groups
 	for group in overview:
 		result += _remove_registered_course_overview(name=group.ntiid,
+													 force=force,
 										   			 registry=registry,
 										   			 course=course)
 	return result
@@ -266,7 +274,7 @@ def _outline_nodes(outline):
 def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 									  catalog=None, intids=None,
 									  registry=None, course=None,
-									  sites=None):
+									  sites=None, force=False):
 
 	catalog = get_library_catalog() if catalog is None else catalog
 	intids = component.getUtility(IIntIds) if intids is None else intids
@@ -280,6 +288,7 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 									   sites=sites):
 		result += _remove_registered_lesson_overview(name=item.ntiid,
 										   			 registry=registry,
+										   			 force=force,
 										   			 course=course)
 
 	if container_ntiids:  # unindex all other objects
@@ -290,7 +299,8 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 			doc_id = intids.queryId(obj)
 			if doc_id is not None:
 				catalog.remove_containers(doc_id, container_ntiids)
-			container.pop(obj.ntiid, None)
+			if _can_be_removed(obj, force):
+				container.pop(obj.ntiid, None)
 	return result
 remove_and_unindex_course_assets = _remove_and_unindex_course_assets
 
@@ -446,7 +456,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 @component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
 def _on_course_instance_available(course, event):
 	catalog = get_library_catalog()
-	if catalog is not None and not ILegacyCommunityBasedCourseInstance.providedBy(course):
+	if catalog is not None and not ILegacyCourseInstance.providedBy(course):
 		synchronize_course_lesson_overview(course, catalog=catalog)
 
 def _clear_course_assets(course):
@@ -465,9 +475,12 @@ clear_namespace_last_modified = _clear_namespace_last_modified
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
 def _clear_data_when_course_removed(course, event):
 	catalog = get_library_catalog()
-	if catalog is not None and not ILegacyCommunityBasedCourseInstance.providedBy(course):
+	if catalog is not None and not ILegacyCourseInstance.providedBy(course):
 		_clear_course_assets(course)
 		_clear_namespace_last_modified(course, catalog)
 		entry = ICourseCatalogEntry(course, None)
 		ntiid = entry.ntiid if entry is not None else course.__name__
-		_remove_and_unindex_course_assets(container_ntiids=ntiid, catalog=catalog)
+		_remove_and_unindex_course_assets(container_ntiids=ntiid, 
+										  catalog=catalog, 
+										  course=course,
+										  force=True)
