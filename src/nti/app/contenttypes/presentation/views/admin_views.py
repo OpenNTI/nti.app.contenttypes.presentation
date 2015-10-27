@@ -39,6 +39,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
+from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.dataserver import authorization as nauth
 from nti.dataserver.interfaces import IDataserverFolder
@@ -60,12 +61,15 @@ from .. import iface_of_thing
 
 ITEMS = StandardExternalFields.ITEMS
 
-def _get_course_ifaces():
-	result = []
-	for iface in ALL_PRESENTATION_ASSETS_INTERFACES:
-		if iface not in PACKAGE_CONTAINER_INTERFACES:
-			result.append(iface)
-	return result
+_asset_interfaces = None
+def _course_asset_interfaces():
+	global _asset_interfaces
+	if _asset_interfaces is None:
+		_asset_interfaces = []
+		for iface in ALL_PRESENTATION_ASSETS_INTERFACES:
+			if iface not in PACKAGE_CONTAINER_INTERFACES:
+				_asset_interfaces.append(iface)
+	return _asset_interfaces
 
 def _get_course_ntiids(values):
 	ntiids = values.get('ntiid') or values.get('ntiids') or \
@@ -100,7 +104,7 @@ class GetCoursePresentationAssetsView(AbstractAuthenticatedView,
 		for course in courses:
 			entry = ICourseCatalogEntry(course)
 			objects = catalog.search_objects(intids=intids,
-											 provided=_get_course_ifaces(),
+											 provided=_course_asset_interfaces(),
 											 container_ntiids=entry.ntiid,
 											 sites=sites)
 			items[entry.ntiid] = sorted(objects or (),
@@ -161,6 +165,7 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 		return result
 
 @view_config(context=IDataserverFolder)
+@view_config(context=CourseAdminPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   permission=nauth.ACT_NTI_ADMIN,
@@ -170,22 +175,34 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 
 	def _unregister(self, sites_names, provided, name):
 		result = False
+		reverse = list(sites_names)
+		reverse.reverse()
 		hostsites = component.getUtility(IEtcNamespace, name='hostsites')
-		for site_name in list(sites_names).reverse():
+		for site_name in reverse:
 			try:
 				folder = hostsites[site_name]
 				registry = folder.getSiteManager()
-				result = unregisterUtility(registry, 
-										   provided=provided, 
+				result = unregisterUtility(registry,
+										   provided=provided,
 										   name=name) or result
 			except KeyError:
 				pass
 		return result
 
-	def _assets(self, registry):
-		for iface in _get_course_ifaces():
+	def _registered_assets(self, registry):
+		for iface in _course_asset_interfaces():
 			for ntiid, asset in list(registry.getUtilitiesFor(iface)):
 				yield ntiid, asset
+
+	def _contained_assets(self):
+		result = []
+		for course in yield_sync_courses():
+			container = IPresentationAssetContainer(course, None) or {}
+			for key, value in container.items():
+				provided = iface_of_thing(value)
+				if provided in _course_asset_interfaces():
+					result.append((container, key, value))
+		return result
 
 	def _do_call(self, result):
 		registry = get_registry()
@@ -196,9 +213,9 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 		registered = 0
 		items = result[ITEMS] = []
 		references = catalog.get_references(sites=sites,
-										 	provided=_get_course_ifaces())
+										 	provided=_course_asset_interfaces())
 
-		for ntiid, asset in self._assets(registry):
+		for ntiid, asset in self._registered_assets(registry):
 			uid = intids.queryId(asset)
 			provided = iface_of_thing(asset)
 			if uid is None:
@@ -210,8 +227,22 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 				intids.unregister(asset)
 			registered += 1
 
+		contained = set()
+		for container, ntiid, asset in self._contained_assets():
+			uid = intids.queryId(asset)
+			provided = iface_of_thing(asset)
+			if 	uid is None or uid not in references or \
+				component.queryUtility(provided, name=ntiid) is None:
+				container.pop(ntiid, None)
+				self._unregister(sites, provided=provided, name=ntiid)
+				if uid is not None:
+					catalog.unindex(uid)
+					intids.unregister(asset)
+			contained.add(ntiid)
+
 		result['TotalRemoved'] = len(items)
 		result['TotalRegisteredAssets'] = registered
+		result['TotalContainedAssets'] = len(contained)
 		result['TotalCatalogedAssets'] = len(references)
 		return result
 
@@ -227,6 +258,7 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 		return result
 
 @view_config(context=IDataserverFolder)
+@view_config(context=CourseAdminPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   permission=nauth.ACT_NTI_ADMIN,
@@ -241,7 +273,7 @@ class RemoveAllCoursesPresentationAssetsView(RemoveCourseInaccessibleAssetsView)
 
 		registered = 0
 		references = catalog.get_references(sites=sites,
-										 	provided=_get_course_ifaces())
+										 	provided=_course_asset_interfaces())
 		for uid in references:
 			catalog.unindex(uid)
 
