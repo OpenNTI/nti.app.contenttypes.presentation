@@ -55,7 +55,7 @@ def _remove_from_registry(container_ntiids=None, provided=None, registry=None):
 class TestSubscribers(ApplicationLayerTest):
 
 	@WithMockDSTrans
-	def test_lessong_overview(self):
+	def test_lesson_overview(self):
 		path = os.path.join(os.path.dirname(__file__), 'lesson_overview.json')
 		with open(path, "r") as fp:
 			source = fp.read()
@@ -78,3 +78,17 @@ class TestSubscribers(ApplicationLayerTest):
 									   provided=INTILessonOverview,
 									   registry=registry)
 		assert_that(result, has_length(1))
+
+	@WithMockDSTrans
+	def test_sync_twice_lesson_overview(self):
+		path = os.path.join(os.path.dirname(__file__), 'lesson_overview.json')
+		with open(path, "r") as fp:
+			source = fp.read()
+
+		registry = PersistentComponents()
+		mock_dataserver.current_transaction.add(registry)
+
+		_, removed = _load_and_register_lesson_overview_json(source, registry=registry)
+		assert_that(removed, has_length(0))
+		_, removed = _load_and_register_lesson_overview_json(source, registry=registry)
+		assert_that(removed, has_length(10))
