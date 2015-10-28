@@ -185,9 +185,9 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 	overview = create_lessonoverview_from_external(data, notify=False)
 
 	# remove and register
-	_remove_registered_lesson_overview(name=overview.ntiid,
-									   registry=registry,
-									   course=course)
+	removed = _remove_registered_lesson_overview(name=overview.ntiid,
+									   			 registry=registry,
+									   			 course=course)
 
 	_register_utility(overview, INTILessonOverview, overview.ntiid, registry)
 
@@ -240,7 +240,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 				items[idx] = registered
 			idx += 1
 
-	return overview
+	return overview, removed
 
 def _get_source_lastModified(source, catalog=None):
 	catalog = get_library_catalog() if catalog is None else catalog
@@ -389,6 +389,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 	logger.info('Synchronizing lessons overviews for %s', name)
 
 	# parse and register
+	removed = []
 	nodes = _outline_nodes(course.Outline)
 	for node in nodes:
 		namespace = node.src  # this is ntiid based file (unique)
@@ -420,22 +421,23 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 			# don't allow shaing of lesson amogst different courses
 			# (not in hierarchy).. and overview groups are unique to
 			# its own lesson
-			_remove_and_unindex_course_assets(namespace=namespace,
-											  container_ntiids=ntiid,
-											  registry=registry,
-											  catalog=catalog,
-											  intids=intids,
-											  course=course)
+			removed.extend(_remove_and_unindex_course_assets(namespace=namespace,
+															 container_ntiids=ntiid,
+															 registry=registry,
+															 catalog=catalog,
+															 intids=intids,
+															 course=course))
 
 			logger.debug("Synchronizing %s", namespace)
 			index_text = content_package.read_contents_of_sibling_entry(namespace)
-			overview = _load_and_register_lesson_overview_json(index_text,
-															   validate=True,
-															   course=course,
-															   ntiid=ref_ntiid,
-															   registry=registry)
+			overview, rmv = _load_and_register_lesson_overview_json(index_text,
+																	validate=True,
+																	course=course,
+																	ntiid=ref_ntiid,
+																	registry=registry)
+			removed.extend(rmv)
 			result.append(overview)
-
+			
 			# set lineage
 			overview.__parent__ = node
 

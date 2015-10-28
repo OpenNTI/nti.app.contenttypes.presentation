@@ -63,8 +63,9 @@ class TestSubscribers(ApplicationLayerTest):
 		registry = PersistentComponents()
 		mock_dataserver.current_transaction.add(registry)
 
-		result = _load_and_register_lesson_overview_json(source, registry=registry)
+		result, removed = _load_and_register_lesson_overview_json(source, registry=registry)
 		assert_that(result, is_not(none()))
+		assert_that(removed, has_length(0))
 
 		_index_overview_items((result,), container_ntiids='xxx')
 
