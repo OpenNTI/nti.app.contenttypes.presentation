@@ -46,6 +46,9 @@ from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_provider_safe
 from nti.ntiids.ntiids import is_valid_ntiid_string
 
+from nti.recorder.record import copy_transaction_history
+from nti.recorder.record import remove_transaction_history
+
 from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
 from nti.site.site import get_component_hierarchy_names
@@ -242,6 +245,16 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 
 	return overview, removed
 
+def _copy_remove_transactions(items, registry=None):
+	registry = get_registry(registry)
+	for item in items or ():
+		provided = iface_of_thing(item)
+		obj = registry.queryUtility(provided, name=item.ntiid)
+		if obj is None:
+			remove_transaction_history(item)
+		else:
+			copy_transaction_history(item, obj)
+		
 def _get_source_lastModified(source, catalog=None):
 	catalog = get_library_catalog() if catalog is None else catalog
 	key = '%s.lastModified' % source
@@ -461,6 +474,9 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 										  catalog=catalog,
 										  intids=intids,
 										  course=course)
+
+	# finally copy transactions from removed to new objects
+	_copy_remove_transactions(removed, registry=registry)
 
 	logger.info('Lessons overviews for %s have been synchronized in %s(s)',
 				 name, time.time() - now)
