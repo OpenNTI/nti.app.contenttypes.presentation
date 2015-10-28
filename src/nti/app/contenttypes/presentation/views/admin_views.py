@@ -63,15 +63,12 @@ from .. import iface_of_thing
 
 ITEMS = StandardExternalFields.ITEMS
 
-_asset_interfaces = None
 def _course_asset_interfaces():
-	global _asset_interfaces
-	if _asset_interfaces is None:
-		_asset_interfaces = []
-		for iface in ALL_PRESENTATION_ASSETS_INTERFACES:
-			if iface not in PACKAGE_CONTAINER_INTERFACES:
-				_asset_interfaces.append(iface)
-	return _asset_interfaces
+	result = []
+	for iface in ALL_PRESENTATION_ASSETS_INTERFACES:
+		if iface not in PACKAGE_CONTAINER_INTERFACES:
+			result.append(iface)
+	return result
 
 def _get_course_ntiids(values):
 	ntiids = values.get('ntiid') or values.get('ntiids') or \
@@ -116,10 +113,11 @@ class GetCoursePresentationAssetsView(AbstractAuthenticatedView,
 		result = LocatedExternalDict()
 		result[ITEMS] = items = {}
 		sites = get_component_hierarchy_names()
+		asset_interfaces = _course_asset_interfaces()
 		for course in courses:
 			entry = ICourseCatalogEntry(course)
 			objects = catalog.search_objects(intids=intids,
-											 provided=_course_asset_interfaces(),
+											 provided=asset_interfaces,
 											 container_ntiids=entry.ntiid,
 											 sites=sites)
 			items[entry.ntiid] = sorted(objects or (),
@@ -209,11 +207,12 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 
 	def _contained_assets(self):
 		result = []
+		asset_interfaces = _course_asset_interfaces()
 		for course in yield_sync_courses():
 			container = IPresentationAssetContainer(course, None) or {}
 			for key, value in container.items():
 				provided = iface_of_thing(value)
-				if provided in _course_asset_interfaces():
+				if provided in asset_interfaces:
 					result.append((container, key, value))
 		return result
 
