@@ -69,7 +69,8 @@ def _can_be_removed(registered, force=False):
 	return result
 can_be_removed = _can_be_removed
 
-def _removed_registered(provided, name, intids=None, registry=None, catalog=None, force=False):
+def _removed_registered(provided, name, intids=None, registry=None, 
+						catalog=None, force=False):
 	registry = get_registry(registry)
 	registered = registry.queryUtility(provided, name=name)
 	intids = component.getUtility(IIntIds) if intids is None else intids
@@ -123,15 +124,16 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 
 from . import PACKAGE_CONTAINER_INTERFACES
 
-def _remove_registered_course_overview(name=None, registry=None, course=None, force=False):
-	result = 0
+def _remove_registered_course_overview(name=None, registry=None, 
+									   course=None, force=False):
+	result = []
 	container = IPresentationAssetContainer(course, None) or {}
 	group = _removed_registered(INTICourseOverviewGroup,
 								name=name,
 								force=force,
 								registry=registry)
 	if group is not None:
-		result += 1 
+		result.append(group) 
 		container.pop(name, None)
 	else:
 		group = ()
@@ -143,30 +145,35 @@ def _remove_registered_course_overview(name=None, registry=None, course=None, fo
 		iface = iface_of_thing(item)
 		if iface not in PACKAGE_CONTAINER_INTERFACES:
 			ntiid = item.ntiid
-			if _removed_registered(iface, name=ntiid, registry=registry, force=force) is not None:
-				result += 1
+			removed = _removed_registered(iface, 
+										  name=ntiid, 
+								   		  registry=registry, 
+								  		  force=force)
+			if removed is not None:
+				result.append(removed)
 				container.pop(item.ntiid, None)
 	return result
 
 def _remove_registered_lesson_overview(name, registry=None, course=None, force=False):
 	# remove lesson overviews
+	result = []
 	overview = _removed_registered(INTILessonOverview, 
 								   name=name,
 								   force=force,
 								   registry=registry)
 	if overview is None:
-		return 0
+		return result
 	else: # remove from container
 		container = IPresentationAssetContainer(course, None) or {}
 		container.pop(name, None)
+		result.append(overview)
 
-	result = 1 # count overview
 	# remove all groups
 	for group in overview:
-		result += _remove_registered_course_overview(name=group.ntiid,
-													 force=force,
-										   			 registry=registry,
-										   			 course=course)
+		result.extend(_remove_registered_course_overview(name=group.ntiid,
+													 	 force=force,
+										   			 	 registry=registry,
+										   			 	 course=course))
 	return result
 
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
@@ -283,17 +290,17 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 	catalog = get_library_catalog() if catalog is None else catalog
 	intids = component.getUtility(IIntIds) if intids is None else intids
 	
-	result = 0
+	result = []
 	sites = get_component_hierarchy_names() if not sites else sites
 	# unregister and unindex lesson overview obects
 	for item in catalog.search_objects(intids=intids, provided=INTILessonOverview,
 									   container_ntiids=container_ntiids,
 									   namespace=namespace,
 									   sites=sites):
-		result += _remove_registered_lesson_overview(name=item.ntiid,
-										   			 registry=registry,
-										   			 force=force,
-										   			 course=course)
+		result.extend(_remove_registered_lesson_overview(name=item.ntiid,
+										   			 	 registry=registry,
+										   			 	 force=force,
+										   			  	 course=course))
 
 	if container_ntiids:  # unindex all other objects
 		container = IPresentationAssetContainer(course, None) or {}

@@ -337,14 +337,14 @@ class _MediaByOutlineNodeDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		course = ICourseInstance(context, None)
 		result = is_course_instructor(course, self.remoteUser) or \
 				 get_enrollment_record(course, self.remoteUser) is not None
-		return result 
+		return result
 
 	def _do_decorate_external(self, context, result_map):
 		course = ICourseInstance(context, context)
 		links = result_map.setdefault(LINKS, [])
 		link = Link(course,
-					 rel='MediaByOutlineNode',
-					 elements=('MediaByOutlineNode',))
+					rel='MediaByOutlineNode',
+					elements=('MediaByOutlineNode',))
 		links.append(link)
 
 @interface.implementer(IExternalMappingDecorator)

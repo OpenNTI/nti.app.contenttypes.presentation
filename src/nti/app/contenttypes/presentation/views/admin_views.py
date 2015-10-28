@@ -147,17 +147,17 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 		courses = list(yield_sync_courses(ntiids))
 		
 		total = 0
-		items = result[ITEMS] = []
+		items = result[ITEMS] = {}
 		catalog = get_library_catalog()
 		sites = get_component_hierarchy_names()
 		for course in courses:
 			entry = ICourseCatalogEntry(course)
-			items.append(entry.ntiid)
-			total += remove_and_unindex_course_assets(container_ntiids=entry.ntiid,
-											 		  course=course,
-											 		  catalog=catalog,
-											 		  force=force,
-											 		  sites=sites)
+			removed = remove_and_unindex_course_assets(container_ntiids=entry.ntiid,
+											 		   course=course,
+											 		   catalog=catalog,
+											 		   force=force,
+											 		   sites=sites)
+			items[entry.ntiid] = removed
 			clear_namespace_last_modified(course, catalog)
 
 		result['Total'] = total
