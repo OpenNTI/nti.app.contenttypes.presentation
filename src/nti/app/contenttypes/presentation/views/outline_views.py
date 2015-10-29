@@ -177,9 +177,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		catalog = get_library_catalog()
 		intids = component.getUtility(IIntIds)
 
-		seen = set()
 		items = result[ITEMS] = {}
-		corder = result['ContainerOrder'] = []
 		containers = result['Containers'] = {}
 
 		nodes = self._outline_nodes(course)
@@ -192,7 +190,6 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 								sites=get_component_hierarchy_names()):
 
 			for item in group.Items:
-
 				# ignore non media items
 				if 	not IMediaRef.providedBy(item) and \
 					not INTIMedia.providedBy(item) and \
@@ -217,9 +214,6 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 					if ntiid in ntiids:
 						containers.setdefault(ntiid, [])
 						containers[ntiid].append(item.ntiid)
-						if ntiid not in seen:
-							seen.add(ntiid)
-							corder.append(ntiid)
 
 		for item in catalog.search_objects(
 								container_ntiids=ntiids,
@@ -227,13 +221,14 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 								container_all_of=False,
 								sites=get_component_hierarchy_names()):
 			items[item.ntiid] = item
-			containers.setdefault(ntiid, [])
-			containers[ntiid].append(item.ntiid)
-			if ntiid not in seen:
-				seen.add(ntiid)
-				corder.append(ntiid)
+			uid = intids.getId(item)
+			for ntiid in catalog.get_containers(uid):
+				if ntiid in ntiids:
+					containers.setdefault(ntiid, [])
+					containers[ntiid].append(item.ntiid)
 
 		result['Total'] = result['ItemCount'] = len(items)
+		result['ContainerOrder'] = [node.ContentNTIID for node in nodes]
 		return result
 
 	def __call__(self):
