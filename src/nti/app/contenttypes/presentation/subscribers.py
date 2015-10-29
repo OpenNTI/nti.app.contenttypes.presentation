@@ -503,12 +503,21 @@ clear_namespace_last_modified = _clear_namespace_last_modified
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
 def _clear_data_when_course_removed(course, event):
 	catalog = get_library_catalog()
-	if catalog is not None and not ILegacyCourseInstance.providedBy(course):
-		_clear_course_assets(course)
-		_clear_namespace_last_modified(course, catalog)
-		entry = ICourseCatalogEntry(course, None)
-		ntiid = entry.ntiid if entry is not None else course.__name__
-		_remove_and_unindex_course_assets(container_ntiids=ntiid, 
-										  catalog=catalog, 
-										  course=course,
-										  force=True)
+	if catalog is None or ILegacyCourseInstance.providedBy(course):
+		return
+
+	# clear containers
+	_clear_course_assets(course)
+	_clear_namespace_last_modified(course, catalog)
+
+	# unregister assets
+	entry = ICourseCatalogEntry(course, None)
+	ntiid = entry.ntiid if entry is not None else course.__name__
+	removed = _remove_and_unindex_course_assets(container_ntiids=ntiid, 
+									  			catalog=catalog, 
+									  			course=course,
+									  			force=True)
+
+	# remove transactions
+	for item in removed:
+		remove_transaction_history(item)
