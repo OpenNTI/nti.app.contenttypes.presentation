@@ -15,6 +15,8 @@ import simplejson
 
 from zope import component
 
+from zope.intid import IIntIds
+
 from pyramid.view import view_config
 from pyramid.view import view_defaults
 from pyramid import httpexceptions as hexc
@@ -173,46 +175,62 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		result.__name__ = self.request.view_name
 		result.__parent__ = self.request.context
 		catalog = get_library_catalog()
+		intids = component.getUtility(IIntIds)
 
 		seen = set()
 		items = result[ITEMS] = {}
 		corder = result['ContainerOrder'] = []
 		containers = result['Containers'] = {}
-		for node in self._outline_nodes(course):
-			ntiid = node.ContentNTIID
-			for group in catalog.search_objects(
-									namespace=node.src,
-									provided=INTICourseOverviewGroup,
-									sites=get_component_hierarchy_names()):
 
-				for item in group.Items:
-					if 	not IMediaRef.providedBy(item) and \
-						not INTIMedia.providedBy(item) and \
-						not INTISlideDeck.providedBy(item):
+		nodes = self._outline_nodes(course)
+		namespaces = {node.src for node in nodes}
+		ntiids = {node.ContentNTIID for node in nodes}
+
+		for group in catalog.search_objects(
+								namespace=namespaces,
+								provided=INTICourseOverviewGroup,
+								sites=get_component_hierarchy_names()):
+
+			for item in group.Items:
+				# ignore non media items
+				if 	not IMediaRef.providedBy(item) and \
+					not INTIMedia.providedBy(item) and \
+					not INTISlideDeck.providedBy(item):
+					continue
+
+				# check visibility
+				if IVisible.providedBy(item):
+					if not is_item_visible(item, self.remoteUser, record=record):
 						continue
-					if IVisible.providedBy(item):
-						if not is_item_visible(item, self.remoteUser, record=record):
-							continue
-						else:
-							item = INTIMedia(item, None)
-					if item is not None:
-						items[item.ntiid] = item
+					else:
+						item = INTIMedia(item, None)
+
+				# check if ref was valid
+				uid = intids.queryId(item) if item is not None else None
+				if uid is None:
+					continue
+
+				# set content containers
+				items[item.ntiid] = item
+				for ntiid in catalog.get_containers(uid):
+					if ntiid in ntiids:
 						containers.setdefault(ntiid, [])
 						containers[ntiid].append(item.ntiid)
 						if ntiid not in seen:
 							seen.add(ntiid)
 							corder.append(ntiid)
 
-			for item in catalog.search_objects(
-									container_ntiids=ntiid,
-									provided=INTISlideDeck,
-									sites=get_component_hierarchy_names()):
-				items[item.ntiid] = item
-				containers.setdefault(ntiid, [])
-				containers[ntiid].append(item.ntiid)
-				if ntiid not in seen:
-					seen.add(ntiid)
-					corder.append(ntiid)
+		for item in catalog.search_objects(
+								container_ntiids=ntiids,
+								provided=INTISlideDeck,
+								container_all_of=False,
+								sites=get_component_hierarchy_names()):
+			items[item.ntiid] = item
+			containers.setdefault(ntiid, [])
+			containers[ntiid].append(item.ntiid)
+			if ntiid not in seen:
+				seen.add(ntiid)
+				corder.append(ntiid)
 		return result
 
 	def __call__(self):
