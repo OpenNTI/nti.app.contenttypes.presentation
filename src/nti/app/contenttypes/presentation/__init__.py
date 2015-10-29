@@ -17,13 +17,9 @@ from zope import component
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
+from nti.contenttypes.presentation import iface_of_asset as iface_of_thing
+
 VIEW_OVERVIEW_CONTENT = "overview-content"
 VIEW_OVERVIEW_SUMMARY = "overview-summary"
 
 CATALOG_INDEX_NAME = '++etc++contenttypes.presentation-index'
-
-def iface_of_thing(item):
-	for iface in ALL_PRESENTATION_ASSETS_INTERFACES:
-		if iface.providedBy(item):
-			return iface
-	return None
