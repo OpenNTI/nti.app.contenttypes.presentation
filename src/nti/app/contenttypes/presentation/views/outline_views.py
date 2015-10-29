@@ -192,6 +192,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 								sites=get_component_hierarchy_names()):
 
 			for item in group.Items:
+
 				# ignore non media items
 				if 	not IMediaRef.providedBy(item) and \
 					not INTIMedia.providedBy(item) and \
@@ -231,6 +232,8 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 			if ntiid not in seen:
 				seen.add(ntiid)
 				corder.append(ntiid)
+
+		result['Total'] = result['ItemCount'] = len(items)
 		return result
 
 	def __call__(self):
