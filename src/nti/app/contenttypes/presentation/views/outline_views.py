@@ -24,7 +24,6 @@ from pyramid import httpexceptions as hexc
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.products.courseware.interfaces import ICourseInstanceEnrollment
-from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseInstance
 
 from nti.appserver.ugd_query_views import _RecursiveUGDView
 
@@ -33,6 +32,7 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
+from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IMediaRef
@@ -239,7 +239,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		if record is None:
 			raise hexc.HTTPForbidden(_("Must be enrolled in a course."))
 
-		if ILegacyCommunityBasedCourseInstance.providedBy(course):
+		if ILegacyCourseInstance.providedBy(course):
 			return self._do_legacy(course, record)
 		else:
 			return self._do_current(course, record)
