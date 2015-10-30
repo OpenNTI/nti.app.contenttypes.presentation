@@ -184,10 +184,11 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		namespaces = {node.src for node in nodes}
 		ntiids = {node.ContentNTIID for node in nodes}
 
+		sites = get_component_hierarchy_names()
 		for group in catalog.search_objects(
 								namespace=namespaces,
 								provided=INTICourseOverviewGroup,
-								sites=get_component_hierarchy_names()):
+								sites=sites):
 
 			for item in group.Items:
 				# ignore non media items
@@ -219,7 +220,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 								container_ntiids=ntiids,
 								provided=INTISlideDeck,
 								container_all_of=False,
-								sites=get_component_hierarchy_names()):
+								sites=sites):
 			items[item.ntiid] = item
 			uid = intids.getId(item)
 			for ntiid in catalog.get_containers(uid):
