@@ -89,7 +89,8 @@ def get_courses(ntiids=()):
 		course = None
 		context = find_object_with_ntiid(ntiid)
 		if IContentPackage.providedBy(context):
-			course = ICourseInstance(context, None) # TODO: Use get_courses_for_pacakge
+			# TODO: Use get_courses_for_pacakge
+			course = ICourseInstance(context, None) 	
 		elif ICourseCatalogEntry.providedBy(context):
 			course = ICourseInstance(context, None)
 		elif ICourseInstance.providedBy(context):
