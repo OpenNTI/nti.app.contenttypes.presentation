@@ -51,23 +51,19 @@ class BaseACLProvider(object):
 
 	@property
 	def __acl__(self):
+		aces = []
+		deny = set()
+		allow = set()
 		courses = get_presentation_asset_courses(self.context)
-		if courses:
-			aces = []
-			deny = set()
-			allow = set()
-			for course in courses:
-				acl = IACLProvider(course).__acl__
-				for ace in acl or ():
-					if ace.action == ACE_ACT_ALLOW:
-						allow.add(ace)
-					else:
-						deny.add(ace)
-			aces.extend(allow)
-			aces.extend(deny)
-			result = acl_from_aces(aces)
-			return result
-		return None
+		for course in courses or ():
+			acl = IACLProvider(course).__acl__ # courses have an ACL provider
+			for ace in acl or ():
+				s = allow if ace.action == ACE_ACT_ALLOW else deny
+				s.add(ace)
+		aces.extend(allow)
+		aces.extend(deny)
+		result = acl_from_aces(aces) if aces else None
+		return result
 
 @interface.implementer(IACLProvider)
 class BasePresentationAssetACLProvider(BaseACLProvider):
@@ -78,10 +74,9 @@ class BasePresentationAssetACLProvider(BaseACLProvider):
 		if not result:
 			ace = ace_allowing(	IPrincipal(AUTHENTICATED_GROUP_NAME),
 						 		(ACT_READ),
-						   		BasePresentationAssetACLProvider)
+						   		type(self))
 			result = acl_from_aces(ace)
-		else:
-			result.append(ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
+		result.insert(0, ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
 		return result
 
 @component.adapter(IPresentationAsset)
@@ -129,4 +124,5 @@ class NTILessonOverviewACLProvider(BaseACLProvider):
 				result = IACLProvider(course).__acl__
 			else:
 				result = [ACE_DENY_ALL]
+		result.insert(0, ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
 		return result
