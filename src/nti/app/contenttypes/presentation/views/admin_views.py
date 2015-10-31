@@ -294,7 +294,7 @@ class RemoveAllCoursesPresentationAssetsView(RemoveCourseInaccessibleAssetsView)
 				catalog.unindex(uid)
 			references.add(uid)
 
-		for ntiid, asset in self._assets(registry):
+		for ntiid, asset in self._registered_assets(registry):
 			if not can_be_removed(asset, force=force):
 				continue
 			uid = intids.queryId(asset)
