@@ -92,7 +92,7 @@ def _read_input(request):
 			values = request.params
 		result.update(values)
 	return result
-	
+
 @view_config(context=IDataserverFolder)
 @view_config(context=CourseAdminPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
@@ -145,7 +145,7 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 		ntiids = _get_course_ntiids(values)
 		force = _is_true(values.get('force'))
 		courses = list(yield_sync_courses(ntiids))
-		
+
 		total = 0
 		items = result[ITEMS] = {}
 		catalog = get_library_catalog()
@@ -187,7 +187,7 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 
 	def readInput(self, value=None):
 		return _read_input(self.request)
-	
+
 	def _unregister(self, sites_names, provided, name):
 		result = False
 		reverse = list(sites_names)
@@ -254,6 +254,7 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 				if uid is not None:
 					catalog.unindex(uid)
 					intids.unregister(asset)
+				remove_transaction_history(asset)
 			contained.add(ntiid)
 
 		result['TotalRemoved'] = len(items)
@@ -306,7 +307,7 @@ class RemoveAllCoursesPresentationAssetsView(RemoveCourseInaccessibleAssetsView)
 			# unregister utility
 			provided = iface_of_thing(asset)
 			self._unregister(sites, provided=provided, name=ntiid)
-			# unregister fron intid 
+			# unregister fron intid
 			uid = intids.queryId(asset)
 			if uid is not None:
 				intids.unregister(asset)
