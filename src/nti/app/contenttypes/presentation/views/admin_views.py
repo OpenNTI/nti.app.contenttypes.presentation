@@ -48,6 +48,8 @@ from nti.dataserver.interfaces import IDataserverFolder
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 
+from nti.recorder.record import remove_transaction_history
+
 from nti.site.utils import unregisterUtility
 from nti.site.site import get_component_hierarchy_names
 
@@ -157,6 +159,8 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 											 		   sites=sites)
 			items[entry.ntiid] = removed
 			clear_namespace_last_modified(course, catalog)
+			for obj in removed:
+				remove_transaction_history(obj)
 
 		result['Total'] = total
 		return result
@@ -292,11 +296,13 @@ class RemoveAllCoursesPresentationAssetsView(RemoveCourseInaccessibleAssetsView)
 		for uid, asset in result_set.iter_pairs():
 			if can_be_removed(asset, force=force):
 				catalog.unindex(uid)
-			references.add(uid)
+				references.add(uid)
 
 		for ntiid, asset in self._registered_assets(registry):
 			if not can_be_removed(asset, force=force):
 				continue
+			# remove trax
+			remove_transaction_history(asset)
 			# unregister utility
 			provided = iface_of_thing(asset)
 			self._unregister(sites, provided=provided, name=ntiid)
