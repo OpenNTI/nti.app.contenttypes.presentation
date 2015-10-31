@@ -297,11 +297,16 @@ class RemoveAllCoursesPresentationAssetsView(RemoveCourseInaccessibleAssetsView)
 		for ntiid, asset in self._registered_assets(registry):
 			if not can_be_removed(asset, force=force):
 				continue
-			uid = intids.queryId(asset)
+			# unregister utility
 			provided = iface_of_thing(asset)
 			self._unregister(sites, provided=provided, name=ntiid)
+			# unregister fron intid 
+			uid = intids.queryId(asset)
 			if uid is not None:
 				intids.unregister(asset)
+			# ground if possible
+			if hasattr('asset', '__parent__'):
+				asset.__parent__ = None
 			registered += 1
 
 		for course in yield_sync_courses():
