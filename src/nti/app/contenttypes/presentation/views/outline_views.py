@@ -218,7 +218,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 					if ntiid in ntiids:
 						containers.setdefault(ntiid, [])
 						containers[ntiid].append(item.ntiid)
-				items[item.ntiid] = to_external_object(item, decorate=False)
+				items[item.ntiid] = to_external_object(item)
 
 		for item in catalog.search_objects(
 								container_ntiids=ntiids,
@@ -230,7 +230,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 				if ntiid in ntiids:
 					containers.setdefault(ntiid, [])
 					containers[ntiid].append(item.ntiid)
-			items[item.ntiid] = to_external_object(item, decorate=False)
+			items[item.ntiid] = to_external_object(item)
 
 		result['Total'] = result['ItemCount'] = len(items)
 		result['TimeElapsed'] = time.time() - now
