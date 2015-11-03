@@ -11,6 +11,8 @@ logger = __import__('logging').getLogger(__name__)
 
 from .. import MessageFactory as _
 
+import time
+
 import simplejson
 
 from zope import component
@@ -171,6 +173,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		return result
 
 	def _do_current(self, course, record):
+		now = time.time()
 		result = LocatedExternalDict()
 		result.__name__ = self.request.view_name
 		result.__parent__ = self.request.context
@@ -228,6 +231,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 					containers.setdefault(ntiid, [])
 					containers[ntiid].append(item.ntiid)
 
+		result['TimeElapsed'] = time.time() - now
 		result['Total'] = result['ItemCount'] = len(items)
 		result['ContainerOrder'] = [node.ContentNTIID for node in nodes]
 		return result
