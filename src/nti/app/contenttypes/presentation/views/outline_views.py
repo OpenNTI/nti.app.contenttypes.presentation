@@ -182,11 +182,12 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 
 		items = result[ITEMS] = {}
 		containers = result['Containers'] = {}
-
+		
 		nodes = self._outline_nodes(course)
 		namespaces = {node.src for node in nodes}
 		ntiids = {node.ContentNTIID for node in nodes}
-
+		result['ContainerOrder'] = [node.ContentNTIID for node in nodes]
+		
 		sites = get_component_hierarchy_names()
 		for group in catalog.search_objects(
 								namespace=namespaces,
@@ -213,27 +214,26 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 					continue
 
 				# set content containers
-				items[item.ntiid] = item
 				for ntiid in catalog.get_containers(uid):
 					if ntiid in ntiids:
 						containers.setdefault(ntiid, [])
 						containers[ntiid].append(item.ntiid)
+				items[item.ntiid] = to_external_object(item, decorate=False)
 
 		for item in catalog.search_objects(
 								container_ntiids=ntiids,
 								provided=INTISlideDeck,
 								container_all_of=False,
 								sites=sites):
-			items[item.ntiid] = item
 			uid = intids.getId(item)
 			for ntiid in catalog.get_containers(uid):
 				if ntiid in ntiids:
 					containers.setdefault(ntiid, [])
 					containers[ntiid].append(item.ntiid)
+			items[item.ntiid] = to_external_object(item, decorate=False)
 
-		result['TimeElapsed'] = time.time() - now
 		result['Total'] = result['ItemCount'] = len(items)
-		result['ContainerOrder'] = [node.ContentNTIID for node in nodes]
+		result['TimeElapsed'] = time.time() - now
 		return result
 
 	def __call__(self):
