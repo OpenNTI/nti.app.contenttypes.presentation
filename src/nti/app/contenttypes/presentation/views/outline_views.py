@@ -11,8 +11,6 @@ logger = __import__('logging').getLogger(__name__)
 
 from .. import MessageFactory as _
 
-import time
-
 import simplejson
 
 from zope import component
@@ -173,7 +171,6 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		return result
 
 	def _do_current(self, course, record):
-		now = time.time()
 		result = LocatedExternalDict()
 		result.__name__ = self.request.view_name
 		result.__parent__ = self.request.context
@@ -233,7 +230,6 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 			items[item.ntiid] = to_external_object(item)
 
 		result['Total'] = result['ItemCount'] = len(items)
-		result['TimeElapsed'] = time.time() - now
 		return result
 
 	def __call__(self):
@@ -243,6 +239,8 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 			raise hexc.HTTPForbidden(_("Must be enrolled in a course."))
 
 		if ILegacyCourseInstance.providedBy(course):
-			return self._do_legacy(course, record)
+			result = self._do_legacy(course, record)
 		else:
-			return self._do_current(course, record)
+			self.request.no_edit_link = True
+			result = self._do_current(course, record)
+		return result
