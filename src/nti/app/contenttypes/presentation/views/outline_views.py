@@ -213,8 +213,8 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 				# set content containers
 				for ntiid in catalog.get_containers(uid):
 					if ntiid in ntiids:
-						containers.setdefault(ntiid, [])
-						containers[ntiid].append(item.ntiid)
+						containers.setdefault(ntiid, set())
+						containers[ntiid].add(item.ntiid)
 				items[item.ntiid] = to_external_object(item)
 
 		for item in catalog.search_objects(
@@ -225,10 +225,13 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 			uid = intids.getId(item)
 			for ntiid in catalog.get_containers(uid):
 				if ntiid in ntiids:
-					containers.setdefault(ntiid, [])
-					containers[ntiid].append(item.ntiid)
+					containers.setdefault(ntiid, set())
+					containers[ntiid].add(item.ntiid)
 			items[item.ntiid] = to_external_object(item)
 
+		# make json ready
+		for k,v in list(containers.items()):
+			containers[k] = list(v)
 		result['Total'] = result['ItemCount'] = len(items)
 		return result
 
