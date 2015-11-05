@@ -337,6 +337,8 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 		if item is None:
 			continue
 
+		item.publish() # by default
+
 		if container is not None:
 			container[item.ntiid] = item
 
