@@ -16,17 +16,17 @@ import functools
 from zope import component
 from zope import interface
 
-from zope.component.hooks import site, setHooks
+from zope.component.hooks import site
+from zope.component.hooks import setHooks
 
 from zope.intid.interfaces import IIntIds
-
-from nti.app.products.courseware.interfaces import ILegacyCommunityBasedCourseInstance
 
 from nti.contentlibrary.indexed_data import CATALOG_INDEX_NAME
 from nti.contentlibrary.indexed_data.interfaces import IContainedObjectCatalog
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
@@ -55,7 +55,7 @@ def _reindex_items(catalog, intids):
 
 	for entry in course_catalog.iterCatalogEntries():
 		course = ICourseInstance(entry, None)
-		if course is None or ILegacyCommunityBasedCourseInstance.providedBy(course):
+		if course is None or ILegacyCourseInstance.providedBy(course):
 			continue
 		container = IPresentationAssetContainer(course, None)
 		if container is None:
