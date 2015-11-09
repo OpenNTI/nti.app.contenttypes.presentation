@@ -41,6 +41,8 @@ from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
+from nti.coremetadata.interfaces import IPublishable
+
 from nti.dataserver import authorization as nauth
 
 from nti.externalization.interfaces import LocatedExternalDict
@@ -190,12 +192,19 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 								namespace=namespaces,
 								provided=INTICourseOverviewGroup,
 								sites=sites):
+			
+			if not IPublishable.providedBy(group) or not group.is_published:
+				continue
 
 			for item in group.Items:
 				# ignore non media items
-				if 	not IMediaRef.providedBy(item) and \
-					not INTIMedia.providedBy(item) and \
-					not INTISlideDeck.providedBy(item):
+				if 	(    not IMediaRef.providedBy(item)
+					 and not INTIMedia.providedBy(item)
+					 and not INTISlideDeck.providedBy(item) ):
+					continue
+				
+				# ignore unpublished items
+				if not IPublishable.providedBy(item) or not item.is_published:
 					continue
 
 				# check visibility
@@ -222,6 +231,8 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 								provided=INTISlideDeck,
 								container_all_of=False,
 								sites=sites):
+			if not IPublishable.providedBy(item) or not item.is_published:
+				continue
 			uid = intids.getId(item)
 			for ntiid in catalog.get_containers(uid):
 				if ntiid in ntiids:
