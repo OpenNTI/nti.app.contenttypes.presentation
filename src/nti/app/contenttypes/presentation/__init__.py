@@ -21,5 +21,6 @@ from nti.contenttypes.presentation import iface_of_asset as iface_of_thing
 
 VIEW_OVERVIEW_CONTENT = "overview-content"
 VIEW_OVERVIEW_SUMMARY = "overview-summary"
+VIEW_NODE_CONTENTS = 'contents'
 
 CATALOG_INDEX_NAME = '++etc++contenttypes.presentation-index'

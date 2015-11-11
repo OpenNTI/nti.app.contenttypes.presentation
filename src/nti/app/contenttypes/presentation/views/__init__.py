@@ -9,5 +9,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from .. import VIEW_NODE_CONTENTS
 from .. import VIEW_OVERVIEW_CONTENT
 from .. import VIEW_OVERVIEW_SUMMARY

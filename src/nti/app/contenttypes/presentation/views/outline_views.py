@@ -11,6 +11,7 @@ logger = __import__('logging').getLogger(__name__)
 
 from .. import MessageFactory as _
 
+import time
 import simplejson
 
 from zope import component
@@ -23,14 +24,22 @@ from pyramid import httpexceptions as hexc
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
+from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
+
 from nti.app.products.courseware.interfaces import ICourseInstanceEnrollment
 
 from nti.appserver.ugd_query_views import _RecursiveUGDView
+
+from nti.common.maps import CaseInsensitiveDict
+
+from nti.common.time import time_to_64bit_int
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseOutlineNode
+from nti.contenttypes.courses.interfaces import NTI_COURSE_OUTLINE_NODE
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
@@ -47,13 +56,19 @@ from nti.dataserver import authorization as nauth
 
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
+
 from nti.externalization.externalization import to_external_object
+
+from nti.ntiids.ntiids import make_ntiid
+from nti.ntiids.ntiids import get_provider
+from nti.ntiids.ntiids import get_specific
 
 from nti.site.site import get_component_hierarchy_names
 
 from ..utils import is_item_visible
 from ..utils.course import get_enrollment_record
 
+from . import VIEW_NODE_CONTENTS
 from . import VIEW_OVERVIEW_CONTENT
 from . import VIEW_OVERVIEW_SUMMARY
 
@@ -181,18 +196,18 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 
 		items = result[ITEMS] = {}
 		containers = result['Containers'] = {}
-		
+
 		nodes = self._outline_nodes(course)
 		namespaces = {node.src for node in nodes}
 		ntiids = {node.ContentNTIID for node in nodes}
 		result['ContainerOrder'] = [node.ContentNTIID for node in nodes]
-		
+
 		sites = get_component_hierarchy_names()
 		for group in catalog.search_objects(
 								namespace=namespaces,
 								provided=INTICourseOverviewGroup,
 								sites=sites):
-			
+
 			if not IPublishable.providedBy(group) or not group.is_published:
 				continue
 
@@ -202,7 +217,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 					 and not INTIMedia.providedBy(item)
 					 and not INTISlideDeck.providedBy(item) ):
 					continue
-				
+
 				# ignore unpublished items
 				if not IPublishable.providedBy(item) or not item.is_published:
 					continue
@@ -258,3 +273,166 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 			self.request.no_acl_decoration = True
 			result = self._do_current(course, record)
 		return result
+
+class _AbstractOutlineNodeIndexView( AbstractAuthenticatedView ):
+
+	def _get_index(self):
+		index = self.request.subpath[0] if self.request.subpath else None
+		if index is not None:
+			try:
+				index = int( index )
+			except TypeError:
+				raise hexc.HTTPUnprocessableEntity( 'Invalid index %s' % index )
+		if index is None:
+			index = self._default_index( index )
+		return index
+
+	def _default_index(self, index):
+		# Default to last element
+		children_count = len( self.context.values() )
+		if index is None or index > children_count:
+			index = max( children_count - 1, 0 )
+		return index
+
+@view_config(route_name='objects.generic.traversal',
+			 context=ICourseOutlineNode,
+			 request_method='GET',
+			 permission=nauth.ACT_READ,
+			 renderer='rest',
+			 name=VIEW_NODE_CONTENTS)
+class OutlineNodeGetView( _AbstractOutlineNodeIndexView ):
+
+	def __call__(self):
+		index = self._get_index()
+		children = tuple( self.context.values() )
+
+		try:
+			return children[index]
+		except IndexError:
+			raise hexc.HTTPNotFound( 'No item found at index %s' % index )
+
+@view_config(route_name='objects.generic.traversal',
+			 context=ICourseOutlineNode,
+			 request_method='POST',
+			 permission=nauth.ACT_CONTENT_EDIT,
+			 renderer='rest',
+			 name=VIEW_NODE_CONTENTS)
+class OutlineNodeInsertView( _AbstractOutlineNodeIndexView,
+							ModeledContentUploadRequestUtilsMixin ):
+	"""
+	Creates an outline node at the given index path, if supplied.
+	Otherwise, append to our context.
+
+	# TODO 'contents/index' sub-path?
+	"""
+
+	def _create_node_ntiid(self):
+		"""
+		Build an ntiid for our new node, making sure we don't conflict
+		with other ntiids. To help ensure this (and to avoid collisions
+		with deleted nodes), we use the creator and a timestamp.
+		"""
+		context = self.context
+		base = context.ntiid
+		provider = get_provider(base) or 'NTI'
+		current_time = time_to_64bit_int( time.time() )
+		specific_base = '%s.%s.%s' % ( get_specific(base), self.remoteUser.username, current_time  )
+		idx = 0
+		while True:
+			specific = specific_base + ".%s" % idx
+			ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
+							   base=base,
+							   provider=provider,
+							   specific=specific)
+			if ntiid not in context:
+				break
+			idx += 1
+		return ntiid
+
+	def _get_new_node(self):
+		# TODO Auto-publish
+		# TODO Create transaction
+		creator = self.remoteUser
+		new_node = self.readCreateUpdateContentObject(creator)
+		new_ntiid = self._create_node_ntiid()
+		new_node.ntiid = new_ntiid
+		new_node.locked = True
+		return new_node
+
+	def _reorder_for_ntiid(self, ntiid, index, old_keys):
+		"""
+		For a given ntiid and index, insert the ntiid into
+		the `index` slot, reordering the parent.
+		"""
+		new_keys = old_keys[:index]
+		new_keys.append( ntiid )
+		new_keys.extend( old_keys[index:] )
+		self.context.updateOrder( new_keys )
+
+	def __call__(self):
+		index = self._get_index()
+		new_node = self._get_new_node()
+		# TODO keys == _order?
+		old_keys = list( self.context.keys() )
+		children_size = len( old_keys )
+		self.context.append( new_node )
+
+		if index < children_size:
+			# TODO Do we lose transactions?
+			self._reorder_for_ntiid( new_node.ntiid, index, old_keys )
+		logger.info( 'Created new outline node (%s)', new_node.ntiid )
+		return hexc.HTTPCreated( new_node.ntiid )
+
+@view_config(route_name='objects.generic.traversal',
+			 context=ICourseOutlineNode,
+			 request_method='PUT',
+			 permission=nauth.ACT_CONTENT_EDIT,
+			 renderer='rest',
+			 name=VIEW_NODE_CONTENTS)
+class OutlineNodeMoveView( OutlineNodeInsertView ):
+	"""
+	Move the given ntiid to the given index.
+	"""
+
+	def _default_index(self, index):
+		# We don't want a default index for moves.
+		pass
+
+	def __call__(self):
+		index = self._get_index()
+		if index is None:
+			raise hexc.HTTPBadRequest( 'No index supplied' )
+		values = CaseInsensitiveDict( self.readInput() )
+		old_keys = list( self.context.keys() )
+		ntiid = values.get( 'ntiid' )
+
+		if 		ntiid not in self.context \
+			or 	index >= len( old_keys ) \
+			or 	index < 0:
+			raise hexc.HTTPConflict( 'Invalid index or ntiid (%s) (%s)' % (ntiid, index))
+
+		old_keys.remove( ntiid )
+		self._reorder_for_ntiid( ntiid, index, old_keys )
+		# Lock just the moved node
+		self.context[ntiid].locked = True
+		logger.info( 'Moved node (%s) to index (%s)', ntiid, index )
+		return hexc.HTTPOk()
+
+@view_config(route_name='objects.generic.traversal',
+			 context=ICourseOutlineNode,
+			 request_method='DELETE',
+			 permission=nauth.ACT_CONTENT_EDIT,
+			 renderer='rest',
+			 name=VIEW_NODE_CONTENTS)
+class OutlineNodeDeleteView( _AbstractOutlineNodeIndexView,
+							ModeledContentUploadRequestUtilsMixin ):
+
+	def __call__(self):
+		values = CaseInsensitiveDict( self.readInput() )
+		ntiid = values.get( 'ntiid' )
+		if ntiid not in self.context:
+			raise hexc.HTTPConflict()
+		# TODO What do we do here, delete, placeholder??
+		# TODO Remove transaction history?
+		# I believe we'll not want to perma-delete (e.g. undo),
+		# and, at the very least, preserve transaction history.
