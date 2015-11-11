@@ -61,7 +61,7 @@ def get_user_visibility(user):
 	return result
 
 def is_item_visible(item, user, context=None, record=None):
-	context = item if context is None else item
+	context = item if context is None else context
 	user_visibility = get_user_visibility(user)
 	if item.visibility != EVERYONE and user_visibility != item.visibility:
 		record = get_enrollment_record(context, user) if record is None else record

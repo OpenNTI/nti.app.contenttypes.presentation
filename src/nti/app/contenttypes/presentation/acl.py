@@ -60,6 +60,7 @@ class BaseACLProvider(object):
 			for ace in acl or ():
 				s = allow if ace.action == ACE_ACT_ALLOW else deny
 				s.add(ace)
+		# Make sure allows come first for performance.
 		aces.extend(allow)
 		aces.extend(deny)
 		result = acl_from_aces(aces) if aces else None
