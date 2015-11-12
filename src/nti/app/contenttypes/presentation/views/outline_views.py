@@ -15,7 +15,6 @@ import time
 import simplejson
 
 from zope import component
-
 from zope.intid import IIntIds
 
 from pyramid.view import view_config
@@ -36,6 +35,7 @@ from nti.common.time import time_to_64bit_int
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
+from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
@@ -63,6 +63,8 @@ from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 
+from nti.recorder.subscribers import record_trax
+
 from nti.site.site import get_component_hierarchy_names
 
 from ..utils import is_item_visible
@@ -74,6 +76,7 @@ from . import VIEW_OVERVIEW_SUMMARY
 
 CLASS = StandardExternalFields.CLASS
 ITEMS = StandardExternalFields.ITEMS
+MIME_TYPE = StandardExternalFields.MIMETYPE
 LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 
 class OutlineLessonOverviewMixin(object):
@@ -277,39 +280,25 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 class _AbstractOutlineNodeIndexView( AbstractAuthenticatedView ):
 
 	def _get_index(self):
-		index = self.request.subpath[0] if self.request.subpath else None
-		if index is not None:
+		"""
+		If the user supplies an index, we expect it to exist on the
+		path: '.../index/<index_number>'
+		"""
+		index = None
+		if 		self.request.subpath \
+			and self.request.subpath[0] == 'index' \
+			and len( self.request.subpath ) > 1:
 			try:
+				index = self.request.subpath[1]
 				index = int( index )
-			except TypeError:
+			except (TypeError, IndexError):
 				raise hexc.HTTPUnprocessableEntity( 'Invalid index %s' % index )
 		if index is None:
 			index = self._default_index( index )
-		return index
+		return max( index, 0 )
 
 	def _default_index(self, index):
-		# Default to last element
-		children_count = len( self.context.values() )
-		if index is None or index > children_count:
-			index = max( children_count - 1, 0 )
-		return index
-
-@view_config(route_name='objects.generic.traversal',
-			 context=ICourseOutlineNode,
-			 request_method='GET',
-			 permission=nauth.ACT_READ,
-			 renderer='rest',
-			 name=VIEW_NODE_CONTENTS)
-class OutlineNodeGetView( _AbstractOutlineNodeIndexView ):
-
-	def __call__(self):
-		index = self._get_index()
-		children = tuple( self.context.values() )
-
-		try:
-			return children[index]
-		except IndexError:
-			raise hexc.HTTPNotFound( 'No item found at index %s' % index )
+		return 0
 
 @view_config(route_name='objects.generic.traversal',
 			 context=ICourseOutlineNode,
@@ -323,8 +312,16 @@ class OutlineNodeInsertView( _AbstractOutlineNodeIndexView,
 	Creates an outline node at the given index path, if supplied.
 	Otherwise, append to our context.
 
-	# TODO 'contents/index' sub-path?
+	We could generalize this and the index views for
+	all IOrderedContainers.
 	"""
+
+	def _default_index(self, index):
+		# Default to last element
+		children_count = len( self.context.values() )
+		if index is None or index > children_count:
+			index = children_count - 1
+		return index
 
 	def _create_node_ntiid(self):
 		"""
@@ -336,7 +333,8 @@ class OutlineNodeInsertView( _AbstractOutlineNodeIndexView,
 		base = context.ntiid
 		provider = get_provider(base) or 'NTI'
 		current_time = time_to_64bit_int( time.time() )
-		specific_base = '%s.%s.%s' % ( get_specific(base), self.remoteUser.username, current_time  )
+		specific_base = '%s.%s.%s' % ( get_specific(base),
+									self.remoteUser.username, current_time )
 		idx = 0
 		while True:
 			specific = specific_base + ".%s" % idx
@@ -349,13 +347,35 @@ class OutlineNodeInsertView( _AbstractOutlineNodeIndexView,
 			idx += 1
 		return ntiid
 
+	def _set_node_ntiid(self, new_node):
+		content_ntiid = getattr( new_node, 'ContentNTIID', None )
+		ntiid = content_ntiid if content_ntiid else self._create_node_ntiid()
+		new_node.ntiid = ntiid
+
+	def readInput(self):
+		"""
+		Our node types are abstracted from clients.
+		"""
+		# TODO We need to handle multiple items here
+		result = super( OutlineNodeInsertView, self ).readInput()
+		if ICourseOutline.providedBy( self.context ):
+			mime_type = "application/vnd.nextthought.courses.courseoutlinenode"
+		else:
+			mime_type = "application/vnd.nextthought.courses.courseoutlinecontentnode"
+			# Since there is no ContentNTIID, re-use our ntiid.
+			# TODO Is this right?
+			if 'ContentNTIID' not in result:
+				result['ContentNTIID'] = self._create_node_ntiid()
+
+		if MIME_TYPE not in result:
+			result[MIME_TYPE] = mime_type
+		return result
+
 	def _get_new_node(self):
-		# TODO Auto-publish
-		# TODO Create transaction
+		# We could support auto-publishing based on type here.
 		creator = self.remoteUser
 		new_node = self.readCreateUpdateContentObject(creator)
-		new_ntiid = self._create_node_ntiid()
-		new_node.ntiid = new_ntiid
+		self._set_node_ntiid( new_node )
 		new_node.locked = True
 		return new_node
 
@@ -370,18 +390,17 @@ class OutlineNodeInsertView( _AbstractOutlineNodeIndexView,
 		self.context.updateOrder( new_keys )
 
 	def __call__(self):
+		# TODO Accept multiple nodes
 		index = self._get_index()
 		new_node = self._get_new_node()
-		# TODO keys == _order?
 		old_keys = list( self.context.keys() )
 		children_size = len( old_keys )
 		self.context.append( new_node )
 
 		if index < children_size:
-			# TODO Do we lose transactions?
 			self._reorder_for_ntiid( new_node.ntiid, index, old_keys )
 		logger.info( 'Created new outline node (%s)', new_node.ntiid )
-		return hexc.HTTPCreated( new_node.ntiid )
+		return new_node
 
 @view_config(route_name='objects.generic.traversal',
 			 context=ICourseOutlineNode,
@@ -398,6 +417,13 @@ class OutlineNodeMoveView( OutlineNodeInsertView ):
 		# We don't want a default index for moves.
 		pass
 
+	def _store_transaction(self, obj):
+		# This also sync locks our object, and we only want to
+		# lock the moved node.
+		# TODO How do we do this?
+		#record_trax( obj, ("index", ) )
+		pass
+
 	def __call__(self):
 		index = self._get_index()
 		if index is None:
@@ -406,33 +432,13 @@ class OutlineNodeMoveView( OutlineNodeInsertView ):
 		old_keys = list( self.context.keys() )
 		ntiid = values.get( 'ntiid' )
 
-		if 		ntiid not in self.context \
+		if 		ntiid not in old_keys \
 			or 	index >= len( old_keys ) \
 			or 	index < 0:
 			raise hexc.HTTPConflict( 'Invalid index or ntiid (%s) (%s)' % (ntiid, index))
 
 		old_keys.remove( ntiid )
 		self._reorder_for_ntiid( ntiid, index, old_keys )
-		# Lock just the moved node
-		self.context[ntiid].locked = True
+		self._store_transaction( self.context[ntiid] )
 		logger.info( 'Moved node (%s) to index (%s)', ntiid, index )
 		return hexc.HTTPOk()
-
-@view_config(route_name='objects.generic.traversal',
-			 context=ICourseOutlineNode,
-			 request_method='DELETE',
-			 permission=nauth.ACT_CONTENT_EDIT,
-			 renderer='rest',
-			 name=VIEW_NODE_CONTENTS)
-class OutlineNodeDeleteView( _AbstractOutlineNodeIndexView,
-							ModeledContentUploadRequestUtilsMixin ):
-
-	def __call__(self):
-		values = CaseInsensitiveDict( self.readInput() )
-		ntiid = values.get( 'ntiid' )
-		if ntiid not in self.context:
-			raise hexc.HTTPConflict()
-		# TODO What do we do here, delete, placeholder??
-		# TODO Remove transaction history?
-		# I believe we'll not want to perma-delete (e.g. undo),
-		# and, at the very least, preserve transaction history.
