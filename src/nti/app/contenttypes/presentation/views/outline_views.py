@@ -71,7 +71,7 @@ from nti.recorder.record import TransactionRecord
 from nti.site.site import get_component_hierarchy_names
 
 from ..utils import is_item_visible
-from ..utils.course import get_enrollment_record
+from ..utils import get_enrollment_record
 
 from . import VIEW_NODE_CONTENTS
 from . import VIEW_OVERVIEW_CONTENT
@@ -93,7 +93,7 @@ class OutlineLessonOverviewMixin(object):
 
 			lesson = component.getUtility(INTILessonOverview, name=ntiid)
 			if lesson is None:
-				raise hexc.HTTPNotFound("Cannot find lesson overview")
+				raise hexc.HTTPUnprocessableEntity("Cannot find lesson overview")
 			return lesson
 		except AttributeError:
 			raise hexc.HTTPServerError("Outline does not have a lesson overview attribute")
@@ -336,8 +336,8 @@ class OutlineNodeInsertView( _AbstractOutlineNodeIndexView,
 		base = context.ntiid
 		provider = get_provider(base) or 'NTI'
 		current_time = time_to_64bit_int( time.time() )
-		specific_base = '%s.%s.%s' % ( get_specific(base),
-									self.remoteUser.username, current_time )
+		specific_base = '%s.%s.%s' % (get_specific(base),
+									  self.remoteUser.username, current_time)
 		idx = 0
 		while True:
 			specific = specific_base + ".%s" % idx
@@ -381,6 +381,7 @@ class OutlineNodeInsertView( _AbstractOutlineNodeIndexView,
 		new_node = self.readCreateUpdateContentObject(creator)
 		self._set_node_ntiid( new_node )
 		new_node.locked = True
+		#TODO: Do we validate  for alesson overview ?
 		return new_node
 
 	def _reorder_for_ntiid(self, ntiid, index, old_keys):
@@ -425,6 +426,7 @@ class OutlineNodeMoveView( OutlineNodeInsertView ):
 	def _store_transaction(self, obj):
 		tid = getattr(obj, '_p_serial', None)
 		tid = unicode(serial_repr(tid)) if tid else None
+		# TODO: Add transaction type
 		record = TransactionRecord( principal=self.remoteUser.username, tid=tid )
 		append_records(obj, (record,))
 
