@@ -396,7 +396,6 @@ class OutlineNodeInsertView( _AbstractOutlineNodeIndexView,
 
 	def __call__(self):
 		# TODO Accept multiple nodes
-		# FIXME Must register so that we can be resolved.
 		index = self._get_index()
 		new_node = self._get_new_node()
 		old_keys = list( self.context.keys() )
