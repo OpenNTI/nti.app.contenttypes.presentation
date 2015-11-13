@@ -25,6 +25,8 @@ from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_SECTION_TOP
 
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
+from nti.appserver.pyramid_authorization import has_permission
+
 from nti.assessment.interfaces import IQAssignment
 
 from nti.common.property import Lazy
@@ -40,6 +42,7 @@ from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_for_user
 
@@ -57,6 +60,8 @@ from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+
+from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalObjectDecorator
@@ -98,6 +103,23 @@ def _lesson_overview_links(context):
 	except AttributeError:
 		pass
 	return None
+
+@component.adapter(ICourseOutlineNode)
+@interface.implementer(IExternalMappingDecorator)
+class _CourseOutlineEditLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
+
+	REL_NAME = 'ordered-contents'
+
+	def _predicate(self, context, result):
+		return has_permission( ACT_CONTENT_EDIT, context, self.request )
+
+	def _do_decorate_external(self, context, result):
+		links = result.setdefault(LINKS, [])
+		link = Link(context, rel=self.REL_NAME, elements=('contents',))
+		interface.alsoProvides(link, ILocation)
+		link.__name__ = ''
+		link.__parent__ = context
+		links.append(link)
 
 @component.adapter(ICourseOutlineContentNode)
 @interface.implementer(IExternalMappingDecorator)

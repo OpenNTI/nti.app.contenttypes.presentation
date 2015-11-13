@@ -14,6 +14,8 @@ from .. import MessageFactory as _
 import time
 import simplejson
 
+from ZODB.utils import serial_repr
+
 from zope import component
 from zope.intid import IIntIds
 
@@ -63,7 +65,8 @@ from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 
-from nti.recorder.subscribers import record_trax
+from nti.recorder.record import append_records
+from nti.recorder.record import TransactionRecord
 
 from nti.site.site import get_component_hierarchy_names
 
@@ -367,8 +370,7 @@ class OutlineNodeInsertView( _AbstractOutlineNodeIndexView,
 			if 'ContentNTIID' not in result:
 				result['ContentNTIID'] = self._create_node_ntiid()
 
-		if MIME_TYPE not in result:
-			result[MIME_TYPE] = mime_type
+		result[MIME_TYPE] = mime_type
 		return result
 
 	def _get_new_node(self):
@@ -418,11 +420,10 @@ class OutlineNodeMoveView( OutlineNodeInsertView ):
 		pass
 
 	def _store_transaction(self, obj):
-		# This also sync locks our object, and we only want to
-		# lock the moved node.
-		# TODO How do we do this?
-		#record_trax( obj, ("index", ) )
-		pass
+		tid = getattr(obj, '_p_serial', None)
+		tid = unicode(serial_repr(tid)) if tid else None
+		record = TransactionRecord( principal=self.remoteUser.username, tid=tid )
+		append_records(obj, (record,))
 
 	def __call__(self):
 		index = self._get_index()

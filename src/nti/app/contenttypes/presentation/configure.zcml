@@ -75,13 +75,13 @@
 	<utility factory=".ntiids._NTICourseOverviewGroupResolver" name="NTICourseOverviewGroup" />
 
 	<utility factory=".ntiids._NTICourseBundleResolver" name="NTICourseBundle" />
-	
+
 	<!-- Asset update -->
 	<adapter factory=".adapters._PresentationAssetExternalFieldTraverser"
 			 for="nti.contenttypes.presentation.interfaces.IPresentationAsset pyramid.interfaces.IRequest"
 			 provides="zope.traversing.interfaces.ITraversable"
 			 name="fields" />
-			 
+
 	<!-- Events -->
 	<subscriber handler=".subscribers._on_course_instance_available" />
 
@@ -90,6 +90,11 @@
 					 zope.lifecycleevent.IObjectRemovedEvent" />
 
 	<!-- Decorators -->
+	<subscriber factory=".decorators._CourseOutlineEditLinkDecorator"
+				provides="nti.externalization.interfaces.IExternalMappingDecorator"
+				for="nti.contenttypes.courses.interfaces.ICourseOutlineNode
+					 pyramid.interfaces.IRequest" />
+
 	<subscriber factory=".decorators._CourseOutlineContentNodeLinkDecorator"
 				provides="nti.externalization.interfaces.IExternalMappingDecorator"
 				for="nti.contenttypes.courses.interfaces.ICourseOutlineContentNode
@@ -124,7 +129,7 @@
 				provides="nti.externalization.interfaces.IExternalMappingDecorator"
 				for="nti.contenttypes.presentation.interfaces.IPresentationAsset
 					 pyramid.interfaces.IRequest" />
-					 
+
 	<configure zcml:condition="installed nti.app.products.courseware">
 		<subscriber factory=".decorators._MediaByOutlineNodeDecorator"
 					provides="nti.externalization.interfaces.IExternalMappingDecorator"
