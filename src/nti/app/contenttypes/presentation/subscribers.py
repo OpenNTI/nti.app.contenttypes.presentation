@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import six
 import time
 import simplejson
 
@@ -71,7 +72,7 @@ def _can_be_removed(registered, force=False):
 	return result
 can_be_removed = _can_be_removed
 
-def _removed_registered(provided, name, intids=None, registry=None, 
+def _removed_registered(provided, name, intids=None, registry=None,
 						catalog=None, force=False):
 	registry = get_registry(registry)
 	registered = registry.queryUtility(provided, name=name)
@@ -87,7 +88,7 @@ def _removed_registered(provided, name, intids=None, registry=None,
 	elif registered is not None:
 		logger.warn("Object (%s,%s) is locked cannot be removed during sync",
 					provided.__name__, name)
-		registered = None # set to None since it was not removed
+		registered = None  # set to None since it was not removed
 	return registered
 
 def _db_connection(registry=None):
@@ -114,7 +115,7 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 		registered = registry.queryUtility(provided, name=ntiid)
 		if registered is None or intids.queryId(registered) is None:
 			assert is_valid_ntiid_string(ntiid), "invalid NTIID %s" % ntiid
-			if intids.queryId(registered) is None: # remove if invalid
+			if intids.queryId(registered) is None:  # remove if invalid
 				unregisterUtility(registry, provided=provided, name=ntiid)
 			registerUtility(registry, item, provided=provided, name=ntiid)
 			intid_register(item, registry, intids, connection)
@@ -126,7 +127,7 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 
 from . import PACKAGE_CONTAINER_INTERFACES
 
-def _remove_registered_course_overview(name=None, registry=None, 
+def _remove_registered_course_overview(name=None, registry=None,
 									   course=None, force=False):
 	result = []
 	container = IPresentationAssetContainer(course, None) or {}
@@ -135,7 +136,7 @@ def _remove_registered_course_overview(name=None, registry=None,
 								force=force,
 								registry=registry)
 	if group is not None:
-		result.append(group) 
+		result.append(group)
 		container.pop(name, None)
 	else:
 		group = ()
@@ -147,9 +148,9 @@ def _remove_registered_course_overview(name=None, registry=None,
 		iface = iface_of_thing(item)
 		if iface not in PACKAGE_CONTAINER_INTERFACES:
 			ntiid = item.ntiid
-			removed = _removed_registered(iface, 
-										  name=ntiid, 
-								   		  registry=registry, 
+			removed = _removed_registered(iface,
+										  name=ntiid,
+								   		  registry=registry,
 								  		  force=force)
 			if removed is not None:
 				result.append(removed)
@@ -159,13 +160,13 @@ def _remove_registered_course_overview(name=None, registry=None,
 def _remove_registered_lesson_overview(name, registry=None, course=None, force=False):
 	# remove lesson overviews
 	result = []
-	overview = _removed_registered(INTILessonOverview, 
+	overview = _removed_registered(INTILessonOverview,
 								   name=name,
 								   force=force,
 								   registry=registry)
 	if overview is None:
 		return result
-	else: # remove from container
+	else:  # remove from container
 		container = IPresentationAssetContainer(course, None) or {}
 		container.pop(name, None)
 		result.append(overview)
@@ -209,6 +210,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 
 		idx = 0
 		items = group.Items
+
 		# canonicalize item refs
 		while idx < len(items):
 			item = items[idx]
@@ -253,7 +255,7 @@ def _copy_remove_transactions(items, registry=None):
 			remove_transaction_history(item)
 		else:
 			copy_transaction_history(item, obj)
-		
+
 def _get_source_lastModified(source, catalog=None):
 	catalog = get_library_catalog() if catalog is None else catalog
 	key = '%s.lastModified' % source
@@ -269,7 +271,7 @@ def _remove_source_lastModified(source, catalog=None):
 	catalog = get_library_catalog() if catalog is None else catalog
 	key = '%s.lastModified' % source
 	catalog.remove_last_modified(key)
-	
+
 def get_course_packages(context):
 	packages = ()
 	context = ICourseInstance(context)
@@ -301,7 +303,7 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 
 	catalog = get_library_catalog() if catalog is None else catalog
 	intids = component.getUtility(IIntIds) if intids is None else intids
-	
+
 	result = []
 	sites = get_component_hierarchy_names() if not sites else sites
 	# unregister and unindex lesson overview obects
@@ -327,8 +329,25 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 	return result
 remove_and_unindex_course_assets = _remove_and_unindex_course_assets
 
+def _make_set(target):
+	if target is None:
+		target = set()
+	elif isinstance(target, six.string_types):
+		target = {target}
+	elif not isinstance(target, set):
+		target = set(target)
+	return target
+
+def _recurse_copy(ntiids, *items):
+	ntiids = ntiids.copy() if ntiids is not None else set()
+	ntiids.update(items)
+	return ntiids
+
 def _index_overview_items(items, container_ntiids=None, namespace=None,
 						  intids=None, catalog=None, node=None, course=None):
+	# make it a set
+	container_ntiids = _make_set(container_ntiids)
+
 	sites = get_component_hierarchy_names()
 	catalog = get_library_catalog() if catalog is None else catalog
 	container = IPresentationAssetContainer(course, None)
@@ -337,7 +356,7 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 		if item is None:
 			continue
 
-		item.publish() # by default
+		item.publish()  # by default
 
 		if container is not None:
 			container[item.ntiid] = item
@@ -349,15 +368,18 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 		# for lesson and groups overviews index all fields
 		if 	INTILessonOverview.providedBy(item) or \
 			INTICourseOverviewGroup.providedBy(item):
+
+			to_index = _recurse_copy(container_ntiids, item.ntiid)
+
 			catalog.index(item,
 						  sites=sites,
 						  intids=intids,
 						  namespace=namespace,
-						  container_ntiids=container_ntiids)
+						  container_ntiids=to_index)
 
 			_index_overview_items(item.Items,
 								  namespace=namespace,
-								  container_ntiids=container_ntiids,
+								  container_ntiids=to_index,
 								  intids=intids,
 								  catalog=catalog,
 								  node=node,
@@ -365,7 +387,7 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 		else:
 			# CS: We don't index items in groups with the namespace
 			# because and item can be in different groups with different
-			# namespace 
+			# namespace
 			catalog.index(item,
 						  sites=sites,
 						  intids=intids,
@@ -388,7 +410,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 	course_packages = get_course_packages(course)
 	catalog = get_library_catalog() if catalog is None else catalog
 	intids = component.getUtility(IIntIds) if intids is None else intids
-	
+
 	registry = get_registry()
 	entry = ICourseCatalogEntry(course, None)
 	ntiid = entry.ntiid if entry is not None else course.__name__
@@ -451,7 +473,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 																	registry=registry)
 			removed.extend(rmv)
 			result.append(overview)
-			
+
 			# set lineage
 			overview.__parent__ = node
 
@@ -515,8 +537,8 @@ def _clear_data_when_course_removed(course, event):
 	# unregister assets
 	entry = ICourseCatalogEntry(course, None)
 	ntiid = entry.ntiid if entry is not None else course.__name__
-	removed = _remove_and_unindex_course_assets(container_ntiids=ntiid, 
-									  			catalog=catalog, 
+	removed = _remove_and_unindex_course_assets(container_ntiids=ntiid,
+									  			catalog=catalog,
 									  			course=course,
 									  			force=True)
 
