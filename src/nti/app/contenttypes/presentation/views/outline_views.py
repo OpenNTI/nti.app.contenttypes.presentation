@@ -64,6 +64,7 @@ from nti.externalization.externalization import to_external_object
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
+from nti.ntiids.ntiids import make_specific_safe
 
 from nti.recorder.record import append_records
 from nti.recorder.record import TransactionRecord
@@ -341,6 +342,7 @@ class OutlineNodeInsertView( _AbstractOutlineNodeIndexView,
 		idx = 0
 		while True:
 			specific = specific_base + ".%s" % idx
+			specific = make_specific_safe(specific)
 			ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
 							   base=base,
 							   provider=provider,
