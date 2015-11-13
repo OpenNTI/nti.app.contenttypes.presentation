@@ -16,9 +16,9 @@ import simplejson
 
 from zope import component
 
-from zope.intid import IIntIds
+from zope.event import notify
 
-from ZODB.utils import serial_repr
+from zope.intid import IIntIds
 
 from pyramid.view import view_config
 from pyramid.view import view_defaults
@@ -39,13 +39,14 @@ from nti.common.time import time_to_64bit_int
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import NTI_COURSE_OUTLINE_NODE
-from nti.contenttypes.courses.interfaces import TRX_OUTLINE_NODE_MOVE_TYPE
 
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
-from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
+from nti.contenttypes.courses.interfaces import CourseOutlineNodeMovedEvent
+
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.presentation.interfaces import IVisible
@@ -70,9 +71,6 @@ from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
-
-from nti.recorder.record import append_records
-from nti.recorder.record import TransactionRecord
 
 from nti.site.site import get_component_hierarchy_names
 
@@ -434,14 +432,6 @@ class OutlineNodeMoveView(OutlineNodeInsertView):
 		# We don't want a default index for moves.
 		pass
 
-	def _store_transaction(self, obj):
-		tid = getattr(obj, '_p_serial', None)
-		tid = unicode(serial_repr(tid)) if tid else None
-		record = TransactionRecord(type=TRX_OUTLINE_NODE_MOVE_TYPE,
-								   principal=self.remoteUser.username,
-								   tid=tid)
-		append_records(obj, (record,))
-
 	def __call__(self):
 		index = self._get_index()
 		if index is None:
@@ -456,7 +446,8 @@ class OutlineNodeMoveView(OutlineNodeInsertView):
 			raise hexc.HTTPConflict('Invalid index or ntiid (%s) (%s)' % (ntiid, index))
 
 		old_keys.remove(ntiid)
+		principal = self.remoteUser.username
 		self._reorder_for_ntiid(ntiid, index, old_keys)
-		self._store_transaction(self.context[ntiid])
+		notify(CourseOutlineNodeMovedEvent(self.context, principal, index))
 		logger.info('Moved node (%s) to index (%s)', ntiid, index)
 		return hexc.HTTPOk()
