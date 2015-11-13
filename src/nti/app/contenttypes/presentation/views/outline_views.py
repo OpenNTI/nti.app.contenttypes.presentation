@@ -14,10 +14,11 @@ from .. import MessageFactory as _
 import time
 import simplejson
 
-from ZODB.utils import serial_repr
-
 from zope import component
+
 from zope.intid import IIntIds
+
+from ZODB.utils import serial_repr
 
 from pyramid.view import view_config
 from pyramid.view import view_defaults
@@ -37,11 +38,13 @@ from nti.common.time import time_to_64bit_int
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
+from nti.contenttypes.courses.interfaces import NTI_COURSE_OUTLINE_NODE
+from nti.contenttypes.courses.interfaces import TRX_OUTLINE_NODE_MOVE_TYPE
+
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
-from nti.contenttypes.courses.interfaces import NTI_COURSE_OUTLINE_NODE
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
@@ -60,6 +63,8 @@ from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 
 from nti.externalization.externalization import to_external_object
+
+from nti.mimetype.mimetype import MIME_BASE
 
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
@@ -80,7 +85,7 @@ from . import VIEW_OVERVIEW_SUMMARY
 
 CLASS = StandardExternalFields.CLASS
 ITEMS = StandardExternalFields.ITEMS
-MIME_TYPE = StandardExternalFields.MIMETYPE
+MIMETYPE = StandardExternalFields.MIMETYPE
 LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 
 class OutlineLessonOverviewMixin(object):
@@ -126,29 +131,34 @@ class OutlineLessonOverviewSummaryView(_RecursiveUGDView,
 	_DEFAULT_BATCH_SIZE = None
 	_DEFAULT_BATCH_START = 0
 
+	def _do_count(self, item):
+		# With older content, we're not sure where the UGD
+		# may hang; so summarize per item.
+		count = 0
+		for ntiid_field in ('ntiid', 'target_ntiid'):
+			self.ntiid = getattr(item, ntiid_field, None)
+			if self.ntiid:
+				try:
+					results = super(OutlineLessonOverviewSummaryView, self).__call__()
+					container_ntiids = results.get('Items', ())
+					count += len(container_ntiids)
+				except hexc.HTTPNotFound:
+					pass  # Empty
+		return count
+
 	def __call__(self):
 		lesson = self._get_lesson()
 		result = LocatedExternalDict()
 		result[ CLASS ] = 'OverviewGroupSummary'
 		self.user = self.remoteUser
 
+		mime_type = MIME_BASE + ".courses.overviewitemsummary"
 		for lesson_group in lesson.items:
 			for item in lesson_group.items:
-				ugd_count = 0
-				# With older content, we're not sure where the UGD
-				# may hang; so summarize per item.
-				for ntiid_field in ('ntiid', 'target_ntiid'):
-					self.ntiid = getattr(item, ntiid_field, None)
-					if self.ntiid:
-						container_ntiids = ()
-						try:
-							ugd_results = super(OutlineLessonOverviewSummaryView, self).__call__()
-							container_ntiids = ugd_results.get('Items', ())
-							ugd_count += len(container_ntiids)
-						except hexc.HTTPNotFound:
-							pass  # Empty
+				ugd_count = self._do_count(item)
 				result[ item.ntiid ] = item_results = {}
-				item_results[ CLASS ] = 'OverviewItemSummary'
+				item_results[CLASS] = 'OverviewItemSummary'
+				item_results[MIMETYPE] = mime_type
 				item_results['ItemCount'] = ugd_count
 		return result
 
@@ -220,9 +230,9 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 
 			for item in group.Items:
 				# ignore non media items
-				if 	(    not IMediaRef.providedBy(item)
+				if 	(not IMediaRef.providedBy(item)
 					 and not INTIMedia.providedBy(item)
-					 and not INTISlideDeck.providedBy(item) ):
+					 and not INTISlideDeck.providedBy(item)):
 					continue
 
 				# ignore unpublished items
@@ -263,7 +273,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 			items[item.ntiid] = to_external_object(item)
 
 		# make json ready
-		for k,v in list(containers.items()):
+		for k, v in list(containers.items()):
 			containers[k] = list(v)
 		result['Total'] = result['ItemCount'] = len(items)
 		return result
@@ -281,7 +291,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 			result = self._do_current(course, record)
 		return result
 
-class _AbstractOutlineNodeIndexView( AbstractAuthenticatedView ):
+class _AbstractOutlineNodeIndexView(AbstractAuthenticatedView):
 
 	def _get_index(self):
 		"""
@@ -291,15 +301,15 @@ class _AbstractOutlineNodeIndexView( AbstractAuthenticatedView ):
 		index = None
 		if 		self.request.subpath \
 			and self.request.subpath[0] == 'index' \
-			and len( self.request.subpath ) > 1:
+			and len(self.request.subpath) > 1:
 			try:
 				index = self.request.subpath[1]
-				index = int( index )
+				index = int(index)
 			except (TypeError, IndexError):
-				raise hexc.HTTPUnprocessableEntity( 'Invalid index %s' % index )
+				raise hexc.HTTPUnprocessableEntity('Invalid index %s' % index)
 		if index is None:
-			index = self._default_index( index )
-		return max( index, 0 )
+			index = self._default_index(index)
+		return max(index, 0)
 
 	def _default_index(self, index):
 		return 0
@@ -310,8 +320,8 @@ class _AbstractOutlineNodeIndexView( AbstractAuthenticatedView ):
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest',
 			 name=VIEW_NODE_CONTENTS)
-class OutlineNodeInsertView( _AbstractOutlineNodeIndexView,
-							ModeledContentUploadRequestUtilsMixin ):
+class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
+							ModeledContentUploadRequestUtilsMixin):
 	"""
 	Creates an outline node at the given index path, if supplied.
 	Otherwise, append to our context.
@@ -322,7 +332,7 @@ class OutlineNodeInsertView( _AbstractOutlineNodeIndexView,
 
 	def _default_index(self, index):
 		# Default to last element
-		children_count = len( self.context.values() )
+		children_count = len(self.context.values())
 		if index is None or index > children_count:
 			index = children_count - 1
 		return index
@@ -336,7 +346,7 @@ class OutlineNodeInsertView( _AbstractOutlineNodeIndexView,
 		context = self.context
 		base = context.ntiid
 		provider = get_provider(base) or 'NTI'
-		current_time = time_to_64bit_int( time.time() )
+		current_time = time_to_64bit_int(time.time())
 		specific_base = '%s.%s.%s' % (get_specific(base),
 									  self.remoteUser.username, current_time)
 		idx = 0
@@ -353,7 +363,7 @@ class OutlineNodeInsertView( _AbstractOutlineNodeIndexView,
 		return ntiid
 
 	def _set_node_ntiid(self, new_node):
-		content_ntiid = getattr( new_node, 'ContentNTIID', None )
+		content_ntiid = getattr(new_node, 'ContentNTIID', None)
 		ntiid = content_ntiid if content_ntiid else self._create_node_ntiid()
 		new_node.ntiid = ntiid
 
@@ -363,8 +373,8 @@ class OutlineNodeInsertView( _AbstractOutlineNodeIndexView,
 		"""
 		# TODO We need to handle multiple items here
 		# We could validate the NTIID the clients pass in.
-		result = super( OutlineNodeInsertView, self ).readInput()
-		if ICourseOutline.providedBy( self.context ):
+		result = super(OutlineNodeInsertView, self).readInput()
+		if ICourseOutline.providedBy(self.context):
 			mime_type = "application/vnd.nextthought.courses.courseoutlinenode"
 		else:
 			mime_type = "application/vnd.nextthought.courses.courseoutlinecontentnode"
@@ -374,16 +384,16 @@ class OutlineNodeInsertView( _AbstractOutlineNodeIndexView,
 			if 'ContentNTIID' not in result:
 				result['ContentNTIID'] = self._create_node_ntiid()
 
-		result[MIME_TYPE] = mime_type
+		result[MIMETYPE] = mime_type
 		return result
 
 	def _get_new_node(self):
 		# We could support auto-publishing based on type here.
 		creator = self.remoteUser
 		new_node = self.readCreateUpdateContentObject(creator)
-		self._set_node_ntiid( new_node )
+		self._set_node_ntiid(new_node)
 		new_node.locked = True
-		#TODO: Do we validate  for alesson overview ?
+		# TODO: Do we validate  for alesson overview ?
 		return new_node
 
 	def _reorder_for_ntiid(self, ntiid, index, old_keys):
@@ -392,21 +402,21 @@ class OutlineNodeInsertView( _AbstractOutlineNodeIndexView,
 		the `index` slot, reordering the parent.
 		"""
 		new_keys = old_keys[:index]
-		new_keys.append( ntiid )
-		new_keys.extend( old_keys[index:] )
-		self.context.updateOrder( new_keys )
+		new_keys.append(ntiid)
+		new_keys.extend(old_keys[index:])
+		self.context.updateOrder(new_keys)
 
 	def __call__(self):
 		# TODO Accept multiple nodes
 		index = self._get_index()
 		new_node = self._get_new_node()
-		old_keys = list( self.context.keys() )
-		children_size = len( old_keys )
-		self.context.append( new_node )
+		old_keys = list(self.context.keys())
+		children_size = len(old_keys)
+		self.context.append(new_node)
 
 		if index < children_size:
-			self._reorder_for_ntiid( new_node.ntiid, index, old_keys )
-		logger.info( 'Created new outline node (%s)', new_node.ntiid )
+			self._reorder_for_ntiid(new_node.ntiid, index, old_keys)
+		logger.info('Created new outline node (%s)', new_node.ntiid)
 		return new_node
 
 @view_config(route_name='objects.generic.traversal',
@@ -415,7 +425,7 @@ class OutlineNodeInsertView( _AbstractOutlineNodeIndexView,
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest',
 			 name=VIEW_NODE_CONTENTS)
-class OutlineNodeMoveView( OutlineNodeInsertView ):
+class OutlineNodeMoveView(OutlineNodeInsertView):
 	"""
 	Move the given ntiid to the given index.
 	"""
@@ -427,25 +437,26 @@ class OutlineNodeMoveView( OutlineNodeInsertView ):
 	def _store_transaction(self, obj):
 		tid = getattr(obj, '_p_serial', None)
 		tid = unicode(serial_repr(tid)) if tid else None
-		# TODO: Add transaction type
-		record = TransactionRecord( principal=self.remoteUser.username, tid=tid )
+		record = TransactionRecord(type=TRX_OUTLINE_NODE_MOVE_TYPE,
+								   principal=self.remoteUser.username,
+								   tid=tid)
 		append_records(obj, (record,))
 
 	def __call__(self):
 		index = self._get_index()
 		if index is None:
-			raise hexc.HTTPBadRequest( 'No index supplied' )
-		values = CaseInsensitiveDict( self.readInput() )
-		old_keys = list( self.context.keys() )
-		ntiid = values.get( 'ntiid' )
+			raise hexc.HTTPBadRequest('No index supplied')
+		values = CaseInsensitiveDict(self.readInput())
+		old_keys = list(self.context.keys())
+		ntiid = values.get('ntiid')
 
 		if 		ntiid not in old_keys \
-			or 	index >= len( old_keys ) \
+			or 	index >= len(old_keys) \
 			or 	index < 0:
-			raise hexc.HTTPConflict( 'Invalid index or ntiid (%s) (%s)' % (ntiid, index))
+			raise hexc.HTTPConflict('Invalid index or ntiid (%s) (%s)' % (ntiid, index))
 
-		old_keys.remove( ntiid )
-		self._reorder_for_ntiid( ntiid, index, old_keys )
-		self._store_transaction( self.context[ntiid] )
-		logger.info( 'Moved node (%s) to index (%s)', ntiid, index )
+		old_keys.remove(ntiid)
+		self._reorder_for_ntiid(ntiid, index, old_keys)
+		self._store_transaction(self.context[ntiid])
+		logger.info('Moved node (%s) to index (%s)', ntiid, index)
 		return hexc.HTTPOk()
