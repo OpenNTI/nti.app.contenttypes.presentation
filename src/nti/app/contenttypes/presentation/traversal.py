@@ -32,7 +32,6 @@ class AssetsPathAdapter(Contained):
     def __getitem__(self, ntiid):
         if not ntiid:
             raise hexc.HTTPNotFound()
-
         ntiid = unquote(ntiid)
         result = find_object_with_ntiid(ntiid)
         if result is not None:

@@ -146,4 +146,9 @@
 			 provides="zope.traversing.interfaces.IPathAdapter"
 			 name="assets" />
 
+	<adapter factory=".traversal.AssetsPathAdapter"
+			 for="nti.contenttypes.courses.interfaces.ICourseCatalogEntry pyramid.interfaces.IRequest"
+			 provides="zope.traversing.interfaces.IPathAdapter"
+			 name="assets" />
+
 </configure>
