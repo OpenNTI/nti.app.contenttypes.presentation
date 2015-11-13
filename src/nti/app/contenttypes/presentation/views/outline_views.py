@@ -360,13 +360,15 @@ class OutlineNodeInsertView( _AbstractOutlineNodeIndexView,
 		Our node types are abstracted from clients.
 		"""
 		# TODO We need to handle multiple items here
+		# We could validate the NTIID the clients pass in.
 		result = super( OutlineNodeInsertView, self ).readInput()
 		if ICourseOutline.providedBy( self.context ):
 			mime_type = "application/vnd.nextthought.courses.courseoutlinenode"
 		else:
 			mime_type = "application/vnd.nextthought.courses.courseoutlinecontentnode"
-			# Since there is no ContentNTIID, re-use our ntiid.
-			# TODO Is this right?
+			# This ContentNTIID field is arbitrary; mainly, the
+			# clients use the presence of this field to determine
+			# if the node is 'clickable'.
 			if 'ContentNTIID' not in result:
 				result['ContentNTIID'] = self._create_node_ntiid()
 
@@ -393,6 +395,7 @@ class OutlineNodeInsertView( _AbstractOutlineNodeIndexView,
 
 	def __call__(self):
 		# TODO Accept multiple nodes
+		# FIXME Must register so that we can be resolved.
 		index = self._get_index()
 		new_node = self._get_new_node()
 		old_keys = list( self.context.keys() )
