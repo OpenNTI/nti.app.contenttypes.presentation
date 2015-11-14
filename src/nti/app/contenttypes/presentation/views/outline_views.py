@@ -30,7 +30,8 @@ from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtils
 
 from nti.app.products.courseware.interfaces import ICourseInstanceEnrollment
 
-from nti.appserver.ugd_query_views import _RecursiveUGDView
+from nti.appserver.ugd_edit_views import UGDPutView
+from nti.appserver.ugd_query_views import RecursiveUGDView
 
 from nti.common.maps import CaseInsensitiveDict
 
@@ -123,7 +124,7 @@ class OutlineLessonOverviewView(AbstractAuthenticatedView,
 			 permission=nauth.ACT_READ,
 			 renderer='rest',
 			 name=VIEW_OVERVIEW_SUMMARY)
-class OutlineLessonOverviewSummaryView(_RecursiveUGDView,
+class OutlineLessonOverviewSummaryView(RecursiveUGDView,
 									   OutlineLessonOverviewMixin):
 
 	_DEFAULT_BATCH_SIZE = None
@@ -451,3 +452,16 @@ class OutlineNodeMoveView(OutlineNodeInsertView):
 		notify(CourseOutlineNodeMovedEvent(self.context, principal, index))
 		logger.info('Moved node (%s) to index (%s)', ntiid, index)
 		return hexc.HTTPOk()
+
+@view_config(route_name='objects.generic.traversal',
+			 context=ICourseOutlineNode,
+			 request_method='PUT',
+			 permission=nauth.ACT_CONTENT_EDIT,
+			 renderer='rest')
+class OutlineNodePutView(UGDPutView):
+	
+	def readInput(self, value=None):
+		result = UGDPutView.readInput(self, value=value)
+		result.pop('ntiid', None) 
+		result.pop('NTIID', None)
+		return result
