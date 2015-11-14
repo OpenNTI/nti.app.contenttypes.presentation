@@ -55,7 +55,7 @@ from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
-from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.coremetadata.interfaces import IPublishable
 
@@ -214,49 +214,40 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		containers = result['Containers'] = {}
 
 		nodes = self._outline_nodes(course)
-		namespaces = {node.src for node in nodes}
 		ntiids = {node.ContentNTIID for node in nodes}
 		result['ContainerOrder'] = [node.ContentNTIID for node in nodes]
-
-		sites = get_component_hierarchy_names()
-		for group in catalog.search_objects(
-								namespace=namespaces,
-								provided=INTICourseOverviewGroup,
-								sites=sites):
-
-			if not IPublishable.providedBy(group) or not group.is_published:
+		
+		for item in IPresentationAssetContainer(course).values():
+			# ignore non media items
+			if 	(not IMediaRef.providedBy(item)
+				 and not INTIMedia.providedBy(item)
+				 and not INTISlideDeck.providedBy(item)):
 				continue
 
-			for item in group.Items:
-				# ignore non media items
-				if 	(not IMediaRef.providedBy(item)
-					 and not INTIMedia.providedBy(item)
-					 and not INTISlideDeck.providedBy(item)):
+			# ignore unpublished items
+			if not IPublishable.providedBy(item) or not item.is_published:
+				continue
+
+			# check visibility
+			if IVisible.providedBy(item):
+				if not is_item_visible(item, self.remoteUser, record=record):
 					continue
+				else:
+					item = INTIMedia(item, None)
 
-				# ignore unpublished items
-				if not IPublishable.providedBy(item) or not item.is_published:
-					continue
+			# check if ref was valid
+			uid = intids.queryId(item) if item is not None else None
+			if uid is None:
+				continue
 
-				# check visibility
-				if IVisible.providedBy(item):
-					if not is_item_visible(item, self.remoteUser, record=record):
-						continue
-					else:
-						item = INTIMedia(item, None)
+			# set content containers
+			for ntiid in catalog.get_containers(uid):
+				if ntiid in ntiids:
+					containers.setdefault(ntiid, set())
+					containers[ntiid].add(item.ntiid)
+			items[item.ntiid] = to_external_object(item)
 
-				# check if ref was valid
-				uid = intids.queryId(item) if item is not None else None
-				if uid is None:
-					continue
-
-				# set content containers
-				for ntiid in catalog.get_containers(uid):
-					if ntiid in ntiids:
-						containers.setdefault(ntiid, set())
-						containers[ntiid].add(item.ntiid)
-				items[item.ntiid] = to_external_object(item)
-
+		sites = get_component_hierarchy_names()
 		for item in catalog.search_objects(
 								container_ntiids=ntiids,
 								provided=INTISlideDeck,
