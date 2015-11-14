@@ -344,13 +344,20 @@ def _recurse_copy(ntiids, *items):
 	return ntiids
 
 def _index_overview_items(items, container_ntiids=None, namespace=None,
-						  intids=None, catalog=None, node=None, course=None):
+						  intids=None, catalog=None, node=None, course=None,
+						  parent=None):
 	# make it a set
 	container_ntiids = _make_set(container_ntiids)
 
 	sites = get_component_hierarchy_names()
 	catalog = get_library_catalog() if catalog is None else catalog
 	container = IPresentationAssetContainer(course, None)
+	
+	if parent is not None:
+		to_index = _recurse_copy(container_ntiids, parent.ntiid)
+	else:
+		to_index = container_ntiids
+
 	for item in items:
 		item = item() if IWeakRef.providedBy(item) else item
 		if item is None:
@@ -369,8 +376,6 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 		if 	INTILessonOverview.providedBy(item) or \
 			INTICourseOverviewGroup.providedBy(item):
 
-			to_index = _recurse_copy(container_ntiids, item.ntiid)
-
 			catalog.index(item,
 						  sites=sites,
 						  intids=intids,
@@ -383,7 +388,8 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 								  intids=intids,
 								  catalog=catalog,
 								  node=node,
-								  course=course)
+								  course=course,
+								  parent=item)
 		else:
 			# CS: We don't index items in groups with the namespace
 			# because and item can be in different groups with different
@@ -391,7 +397,7 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 			catalog.index(item,
 						  sites=sites,
 						  intids=intids,
-						  container_ntiids=container_ntiids)
+						  container_ntiids=to_index)
 
 def get_cataloged_namespaces(ntiid, catalog=None, sites=None):
 	catalog = get_library_catalog() if catalog is None else catalog
