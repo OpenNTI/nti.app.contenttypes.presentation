@@ -54,10 +54,14 @@
 	<adapter factory=".acl.NTICourseOverviewGroupACLProvider" />
 
 	<!-- Traversal-ish stuff -->
+	<utility factory=".ntiids._NTIAudioRefResolver" name="NTIAudioRef" />
+	<utility factory=".ntiids._NTIVideoRefResolver" name="NTIVideoRef" />
+
 	<utility factory=".ntiids._NTIAudioResolver" name="NTIAudio" />
 	<utility factory=".ntiids._NTIVideoResolver" name="NTIVideo" />
-
+	
 	<utility factory=".ntiids._NTITimeLineResolver" name="Timeline" />
+	<utility factory=".ntiids._NTITimeLineResolver" name="NTITimeline" />
 	<utility factory=".ntiids._NTITimeLineResolver" name="JSON:Timeline" />
 
 	<utility factory=".ntiids._NTISlideResolver" name="NTISlide" />
@@ -66,8 +70,10 @@
 
 	<utility factory=".ntiids._NTIRelatedWorkRefResolver" name="RelatedWork" />
 	<utility factory=".ntiids._NTIRelatedWorkRefResolver" name="RelatedWorkRef" />
-
+	<utility factory=".ntiids._NTIRelatedWorkRefResolver" name="NTIRelatedWorkRef" />
+	
 	<utility factory=".ntiids._NTIDiscussionRefResolver" name="DiscussionRef" />
+	<utility factory=".ntiids._NTIDiscussionRefResolver" name="NTIDiscussionRef" />
 	<utility factory=".ntiids._NTIDiscussionRefResolver" name="DiscussionRef:EnrolledCourseRoot" />
 	<utility factory=".ntiids._NTIDiscussionRefResolver" name="DiscussionRef:EnrolledCourseSection" />
 

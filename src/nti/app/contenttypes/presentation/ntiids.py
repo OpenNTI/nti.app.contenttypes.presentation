@@ -21,7 +21,9 @@ from nti.contenttypes.courses.discussions.utils import get_discussion_for_path
 from nti.contenttypes.presentation.interfaces import INTIAudio
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTISlide
+from nti.contenttypes.presentation.interfaces import INTIAudioRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
+from nti.contenttypes.presentation.interfaces import INTIVideoRef
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTISlideVideo
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
@@ -45,8 +47,14 @@ class _PresentationResolver(object):
 		result = component.queryUtility(self._ext_iface, name=key)
 		return result
 
+class _NTIAudioRefResolver(_PresentationResolver):
+	_ext_iface = INTIAudioRef
+	
 class _NTIAudioResolver(_PresentationResolver):
 	_ext_iface = INTIAudio
+
+class _NTIVideoRefResolver(_PresentationResolver):
+	_ext_iface = INTIVideoRef
 
 class _NTIVideoResolver(_PresentationResolver):
 	_ext_iface = INTIVideo
