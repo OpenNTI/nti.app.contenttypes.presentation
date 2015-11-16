@@ -50,3 +50,11 @@ class NoHrefAssetGetView(PresentationAssetGetView):
 		result = to_external_object(result)
 		interface.alsoProvides(result, INoHrefInResponse)
 		return result
+
+class AssetPutViewMixin(object):
+	
+	def readInput(self, value=None):
+		result = AssetPutViewMixin.readInput(self, value=value)
+		result.pop('ntiid', None) 
+		result.pop('NTIID', None)
+		return result
