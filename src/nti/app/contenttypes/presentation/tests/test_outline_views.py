@@ -111,13 +111,67 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		"""
 		Test we can insert/move units at/to various indexes.
 		"""
-		# multi-type
 		# move between nodes
 		# TODO Revert layer changes ?
 		# TODO test state: locked, published
 		self._test_unit_node_inserts()
 		self._test_moving_nodes()
 		self._test_deleting_nodes()
+		self._test_content_nodes()
+
+	def _test_content_nodes(self):
+		instructor_environ = self.instructor_environ
+		def _get_first_unit_node():
+			res = self.testapp.get( self.outline_url, extra_environ=instructor_environ )
+			res = res.json_body
+			return res[0]
+
+		res = _get_first_unit_node()
+		first_unit_ntiid = res.get( 'NTIID' )
+		child_ntiids = [x.get( 'NTIID' ) for x in res.get( 'contents' )]
+		assert_that( child_ntiids, has_length( 3 ))
+
+		# Append content node; validate fields
+		new_content_title = 'new content node title'
+		unit_url = '/dataserver2/NTIIDs/%s/contents' % first_unit_ntiid
+		content_data = {'title': new_content_title, 'MimeType': self.content_mime_type}
+		res = self.testapp.post_json(unit_url, content_data,
+									extra_environ=instructor_environ)
+		res = res.json_body
+		content_node_ntiid = res.get( 'NTIID' )
+		assert_that( res.get( 'Creator' ), is_( self.instructor_username ))
+		assert_that( res.get( 'MimeType' ), is_( self.content_mime_type ))
+		assert_that( res.get( 'title' ), is_( new_content_title ))
+		assert_that( res.get( 'ContentNTIID' ), is_not( content_node_ntiid ))
+		assert_that( content_node_ntiid, contains_string( 'NTICourseOutlineNode' ))
+		assert_that( res.get( 'ContentNTIID' ), contains_string( 'NTILessonOverview' ))
+
+		res = _get_first_unit_node()
+		child_ntiids = [x.get( 'NTIID' ) for x in res.get( 'contents' )]
+		assert_that( child_ntiids, has_length( 4 ))
+		assert_that( child_ntiids[-1], is_( content_node_ntiid ))
+
+		# Insert at index 0 with dates
+		new_content_title2 = 'new content node title2'
+		unit_url = '/dataserver2/NTIIDs/%s/contents/index/0' % first_unit_ntiid
+		content_beginning = '2013-08-13T06:00:00Z'
+		content_ending = '2013-12-13T06:00:00Z'
+		content_data = {'title': new_content_title2,
+						'MimeType': self.content_mime_type,
+						'ContentsAvailableBeginning': content_beginning,
+						'ContentsAvailableEnding': content_ending }
+		res = self.testapp.post_json(unit_url, content_data,
+									extra_environ=instructor_environ)
+		res = res.json_body
+		content_node_ntiid2 = res.get( 'NTIID' )
+		assert_that( res.get( 'ContentsAvailableBeginning' ), is_( content_beginning ))
+		assert_that( res.get( 'ContentsAvailableEnding' ), is_( content_ending ))
+
+		res = _get_first_unit_node()
+		child_ntiids = [x.get( 'NTIID' ) for x in res.get( 'contents' )]
+		assert_that( child_ntiids, has_length( 5 ))
+		assert_that( child_ntiids[0], is_( content_node_ntiid2 ))
+		assert_that( child_ntiids[-1], is_( content_node_ntiid ))
 
 	def _test_unit_node_inserts(self):
 		# Base case

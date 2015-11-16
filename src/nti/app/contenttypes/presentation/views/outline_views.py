@@ -50,12 +50,16 @@ from nti.contenttypes.courses.interfaces import CourseOutlineNodeMovedEvent
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
+from nti.contenttypes.presentation import NTI_LESSON_OVERVIEW
+
 from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
+
+from nti.contenttypes.presentation.lesson import NTILessonOverView
 
 from nti.coremetadata.interfaces import IPublishable
 
@@ -357,17 +361,25 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 		ntiid = content_ntiid if content_ntiid else self._create_node_ntiid()
 		new_node.ntiid = ntiid
 
+	def _make_lesson_node(self, node):
+		# TODO Create node, register, set.
+		# TODO Carlos verify
+		# Lesson field empty?
+		lesson_ntiid = make_ntiid(nttype=NTI_LESSON_OVERVIEW, base=node.ntiid)
+		new_lesson = NTILessonOverView()
+		new_lesson.ntiid = lesson_ntiid
+		new_lesson.__parent__ = node
+		new_lesson.title = node.title
+		new_lesson.creator = node.creator
+		return new_lesson
+
 	def readInput(self):
-		"""
-		Our node types are abstracted from clients.
-		"""
-		# TODO Create lesson overviews
 		result = super(OutlineNodeInsertView, self).readInput()
 		if result.get( MIMETYPE ) == "application/vnd.nextthought.courses.courseoutlinecontentnode":
 			# This ContentNTIID field is arbitrary; mainly, the
 			# clients use the presence of this field to determine
-			# if the node is 'clickable'.
-			# Needs to be lesson overview.
+			# if the node is 'clickable'. We add a placeholder until
+			# we create our lesson.
 			if 'ContentNTIID' not in result:
 				result['ContentNTIID'] = self._create_node_ntiid()
 		return result
@@ -377,8 +389,11 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 		creator = self.remoteUser
 		new_node = self.readCreateUpdateContentObject(creator)
 		self._set_node_ntiid(new_node)
+		if ICourseOutlineContentNode.providedBy( new_node ):
+			new_lesson = self._make_lesson_node( new_node )
+			new_node.ContentNTIID = new_lesson.ntiid
+			assert new_node.ContentNTIID != new_node.ntiid
 		new_node.locked = True
-		# TODO: Do we validate  for alesson overview ?
 		return new_node
 
 	def _reorder_for_ntiid(self, ntiid, index, old_keys):
@@ -457,6 +472,8 @@ class OutlineNodeDeleteView(OutlineNodeInsertView):
 
 		if ntiid not in old_keys:
 			raise hexc.HTTPConflict('Invalid ntiid (%s)' % ntiid)
+		# TODO Do we want to permanently delete nodes, or delete placeholder
+		# mark them (to undo and save transaction history)?
 		del self.context[ntiid]
 		logger.info( 'Deleted entity in outline %s', ntiid )
 		return hexc.HTTPOk()
