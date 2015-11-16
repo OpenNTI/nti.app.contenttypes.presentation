@@ -75,6 +75,8 @@ from nti.ntiids.ntiids import make_specific_safe
 
 from nti.site.site import get_component_hierarchy_names
 
+from nti.traversal.traversal import find_interface
+
 from ..utils import is_item_visible
 from ..utils import get_enrollment_record
 
@@ -216,7 +218,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		nodes = self._outline_nodes(course)
 		ntiids = {node.ContentNTIID for node in nodes}
 		result['ContainerOrder'] = [node.ContentNTIID for node in nodes]
-		
+
 		for item in IPresentationAssetContainer(course).values():
 			# ignore non media items
 			if 	(not IMediaRef.providedBy(item)
@@ -297,12 +299,7 @@ class _AbstractOutlineNodeIndexView(AbstractAuthenticatedView):
 				index = int(index)
 			except (TypeError, IndexError):
 				raise hexc.HTTPUnprocessableEntity('Invalid index %s' % index)
-		if index is None:
-			index = self._default_index(index)
-		return max(index, 0)
-
-	def _default_index(self, index):
-		return 0
+		return index
 
 @view_config(route_name='objects.generic.traversal',
 			 context=ICourseOutlineNode,
@@ -320,12 +317,10 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 	all IOrderedContainers.
 	"""
 
-	def _default_index(self, index):
-		# Default to last element
-		children_count = len(self.context.values())
-		if index is None or index > children_count:
-			index = children_count - 1
-		return index
+	def _get_catalog_entry( self, outline ):
+		course = find_interface(outline, ICourseInstance, strict=False)
+		result = ICourseCatalogEntry(course, None)
+		return result
 
 	def _create_node_ntiid(self):
 		"""
@@ -333,8 +328,13 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 		with other ntiids. To help ensure this (and to avoid collisions
 		with deleted nodes), we use the creator and a timestamp.
 		"""
-		context = self.context
-		base = context.ntiid
+		parent = self.context
+		try:
+			base = parent.ntiid
+		except AttributeError:
+			# Outline, use catalog entry
+			entry = self._get_catalog_entry( parent )
+			base = entry.ntiid if entry is not None else None
 		provider = get_provider(base) or 'NTI'
 		current_time = time_to_64bit_int(time.time())
 		specific_base = '%s.%s.%s' % (get_specific(base),
@@ -347,7 +347,7 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 							   base=base,
 							   provider=provider,
 							   specific=specific)
-			if ntiid not in context:
+			if ntiid not in parent:
 				break
 			idx += 1
 		return ntiid
@@ -361,8 +361,10 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 		"""
 		Our node types are abstracted from clients.
 		"""
-		# TODO We need to handle multiple items here
-		# We could validate the NTIID the clients pass in.
+		# TODO Break out by type
+		# TODO Trust client mime-type
+		# TODO Create lesson overviews
+		# We could validate the mime type the clients pass in.
 		result = super(OutlineNodeInsertView, self).readInput()
 		if ICourseOutline.providedBy(self.context):
 			mime_type = "application/vnd.nextthought.courses.courseoutlinenode"
@@ -371,6 +373,7 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 			# This ContentNTIID field is arbitrary; mainly, the
 			# clients use the presence of this field to determine
 			# if the node is 'clickable'.
+			# Needs to be lesson overview.
 			if 'ContentNTIID' not in result:
 				result['ContentNTIID'] = self._create_node_ntiid()
 
@@ -397,14 +400,14 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 		self.context.updateOrder(new_keys)
 
 	def __call__(self):
-		# TODO Accept multiple nodes
 		index = self._get_index()
+		index = index if index is None else max(index,0)
 		new_node = self._get_new_node()
 		old_keys = list(self.context.keys())
 		children_size = len(old_keys)
 		self.context.append(new_node)
 
-		if index < children_size:
+		if index is not None and index < children_size:
 			self._reorder_for_ntiid(new_node.ntiid, index, old_keys)
 		logger.info('Created new outline node (%s)', new_node.ntiid)
 		return new_node
@@ -420,10 +423,6 @@ class OutlineNodeMoveView(OutlineNodeInsertView):
 	Move the given ntiid to the given index.
 	"""
 
-	def _default_index(self, index):
-		# We don't want a default index for moves.
-		pass
-
 	def __call__(self):
 		index = self._get_index()
 		if index is None:
@@ -432,6 +431,10 @@ class OutlineNodeMoveView(OutlineNodeInsertView):
 		old_keys = list(self.context.keys())
 		ntiid = values.get('ntiid')
 
+		# TODO This may be a move from another node. Can we
+		# detect that easily?
+		# TODO Delete API, can we tell when to unregister/clean-up
+		# orphaned nodes.
 		if 		ntiid not in old_keys \
 			or 	index >= len(old_keys) \
 			or 	index < 0:
@@ -450,9 +453,9 @@ class OutlineNodeMoveView(OutlineNodeInsertView):
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest')
 class OutlineNodePutView(UGDPutView):
-	
+
 	def readInput(self, value=None):
 		result = UGDPutView.readInput(self, value=value)
-		result.pop('ntiid', None) 
+		result.pop('ntiid', None)
 		result.pop('NTIID', None)
 		return result
