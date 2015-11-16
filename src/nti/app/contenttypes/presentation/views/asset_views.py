@@ -47,11 +47,19 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
+from nti.contenttypes.presentation.interfaces import INTIAudio
+from nti.contenttypes.presentation.interfaces import INTIVideo
+from nti.contenttypes.presentation.interfaces import INTIAudioRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
+from nti.contenttypes.presentation.interfaces import INTIVideoRef
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
+from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
+
+from nti.contenttypes.presentation.media import NTIAudioRef
+from nti.contenttypes.presentation.media import NTIVideoRef
 
 from nti.externalization.externalization import to_external_object
 
@@ -218,18 +226,52 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 			# register unique copies
 			_canonicalize(item.Slides, creator, base=base, registry=self._registry)
 			_canonicalize(item.Videos, creator, base=base, registry=self._registry)
-			# register in containers
+			# register in containers and index
 			for x in chain(item.Slides, item.Videos):
 				_add_2_container(self._catalog, x, pacakges=True)
 				self._catalog.index(x, container_ntiids=containers,
 				  					namespace=containers[0]) # first pkg
-		
+		# index item
 		self._catalog.index(item, container_ntiids=containers,
 				  			namespace=containers[0]) # first pkg
 		
+	def _handle_overview_group(self, provided, item, creator, base=None):
+		containers = _add_2_container(self._catalog, item, pacakges=False)
+		_canonicalize(item.Items, creator, registry=self._registry, base=item.ntiid)
+		extended = containers + [item.ntiid] # include group ntiid
+		# register in containers and index
+		for idx, x in list(enumerate(item.Items)): # mutating
+			# add to container and index
+			_add_2_container(self._catalog, x, pacakges=False)
+			self._catalog.index(x, container_ntiids=extended, namespace=containers[0])
+			# move video and audio to ref objects
+			if INTIVideo.providedBy(x) or INTIAudio.providedBy(x):
+				x_iface = INTIVideoRef if INTIVideo.providedBy(x) else INTIAudioRef
+				stored = self._registry.queryUtility(x_iface, name=item.ntiid)
+				if stored is not None:
+					item.Items[idx] = stored
+				else:
+					stored = NTIVideoRef() if INTIVideo.providedBy(x) else NTIAudioRef()
+					stored.ntiid = stored.target = x.ntiid
+					if INTIVideo.providedBy(x):
+						stored.label = stored.poster = item.title
+					intid_register(stored, registry=self._registry)
+					registerUtility(self._registry,
+									component=stored,
+									provided=x_iface,
+									name=stored.ntiid)
+				# add and index ref
+				_add_2_container(self._catalog, stored, pacakges=False)
+				self._catalog.index(x, container_ntiids=extended, namespace=containers[0])
+		# index item
+		self._catalog.index(item, container_ntiids=containers,
+				  			namespace=containers[0]) # course entry
+
 	def _handle_asset(self, creator, provided, item):
 		if provided in PACKAGE_CONTAINER_INTERFACES:
 			self._handle_package_asset(provided, item, creator)
+		elif provided == INTICourseOverviewGroup:
+			self._handle_overview_group(provided, item, creator)
 
 	def _do_call(self):
 		creator = self.remoteUser
