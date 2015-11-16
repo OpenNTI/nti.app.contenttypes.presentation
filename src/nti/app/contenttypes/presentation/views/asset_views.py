@@ -11,6 +11,7 @@ logger = __import__('logging').getLogger(__name__)
 
 from .. import MessageFactory as _
 
+import six
 import time
 import uuid
 from itertools import chain
@@ -38,6 +39,9 @@ from nti.appserver.dataserver_pyramid_views import GenericGetView
 from nti.common.property import Lazy
 from nti.common.time import time_to_64bit_int
 
+from nti.coremetadata.interfaces import IRecordable
+from nti.coremetadata.interfaces import IPublishable
+
 from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
@@ -55,6 +59,7 @@ from nti.contenttypes.presentation.interfaces import INTIVideoRef
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
+from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
@@ -73,6 +78,9 @@ from nti.site.utils import registerUtility
 from . import AssetsPathAdapter
 
 def make_asset_ntiid(nttype, creator, base=None, extra=None):
+	if not isinstance(nttype, six.string_types):
+		nttype = nttype.__name__[1:]
+
 	current_time = time_to_64bit_int(time.time())
 	creator = getattr(creator, 'username', creator)
 	provider = get_provider(base) or 'NTI' if base else 'NTI'
@@ -99,6 +107,13 @@ def get_course_packages(course):
 	except AttributeError:
 		packs = (course.legacy_content_package,)
 	return packs
+
+def _notify_created(item):
+	lifecycleevent.created(item)
+	if IPublishable.providedBy(item):
+		item.unpublish()
+	if IRecordable.providedBy(item):
+		item.locked = True
 
 def _db_connection(registry=None):
 	registry = get_registry(registry)
@@ -143,13 +158,13 @@ def _canonicalize(items, creator, base=None, registry=None):
 				created = False
 		if created:
 			result.append(item)
-			item.locked = True # locked
-			item.creator = item.creator or creator # set creator before notify
-			lifecycleevent.created(item)
+			item.locked = True  # locked
+			item.creator = item.creator or creator  # set creator before notify
+			_notify_created(item)
 			intid_register(item, registry)
 			registerUtility(registry, item, provided, name=item.ntiid)
 	return result
-				
+
 @view_config(context=IPresentationAsset)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
@@ -223,27 +238,38 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 		containers = _add_2_container(self._catalog, item, pacakges=True)
 		if provided == INTISlideDeck:
 			base = item.ntiid
+
 			# register unique copies
 			_canonicalize(item.Slides, creator, base=base, registry=self._registry)
 			_canonicalize(item.Videos, creator, base=base, registry=self._registry)
+
 			# register in containers and index
 			for x in chain(item.Slides, item.Videos):
 				_add_2_container(self._catalog, x, pacakges=True)
 				self._catalog.index(x, container_ntiids=containers,
-				  					namespace=containers[0]) # first pkg
+				  					namespace=containers[0])  # first pkg
+
 		# index item
 		self._catalog.index(item, container_ntiids=containers,
-				  			namespace=containers[0]) # first pkg
-		
-	def _handle_overview_group(self, provided, item, creator, base=None):
-		containers = _add_2_container(self._catalog, item, pacakges=False)
+				  			namespace=containers[0])  # first pkg
+
+	def _handle_overview_group(self, item, creator, extended=None):
+		# add to course container
+		containers = _add_2_container(self._course, item, pacakges=False)
+
+		# have unique copies of group items
 		_canonicalize(item.Items, creator, registry=self._registry, base=item.ntiid)
-		extended = containers + [item.ntiid] # include group ntiid
-		# register in containers and index
-		for idx, x in list(enumerate(item.Items)): # mutating
+
+		# include group ntiid in containers
+		item_extended = list(extended or ()) + containers + [item.ntiid]
+
+		# process group items
+		for idx, x in list(enumerate(item.Items)):  # mutating
+
 			# add to container and index
 			_add_2_container(self._catalog, x, pacakges=False)
 			self._catalog.index(x, container_ntiids=extended, namespace=containers[0])
+
 			# move video and audio to ref objects
 			if INTIVideo.providedBy(x) or INTIAudio.providedBy(x):
 				x_iface = INTIVideoRef if INTIVideo.providedBy(x) else INTIAudioRef
@@ -252,43 +278,88 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 					item.Items[idx] = stored
 				else:
 					stored = NTIVideoRef() if INTIVideo.providedBy(x) else NTIAudioRef()
+					stored.creator = creator
 					stored.ntiid = stored.target = x.ntiid
+
 					if INTIVideo.providedBy(x):
 						stored.label = stored.poster = item.title
+
+					_notify_created(stored)
 					intid_register(stored, registry=self._registry)
 					registerUtility(self._registry,
 									component=stored,
 									provided=x_iface,
 									name=stored.ntiid)
+
 				# add and index ref
 				_add_2_container(self._catalog, stored, pacakges=False)
-				self._catalog.index(x, container_ntiids=extended, namespace=containers[0])
-		# index item
-		self._catalog.index(item, container_ntiids=containers,
-				  			namespace=containers[0]) # course entry
+				self._catalog.index(x, container_ntiids=item_extended,
+									namespace=containers[0])
 
-	def _handle_asset(self, creator, provided, item):
+		# index item
+		item_extended = list(extended or ()) + containers
+		self._catalog.index(item, container_ntiids=item_extended,
+				  			namespace=containers[0])  # course entry
+
+	def _handle_lesson_overview(self, item, creator):
+		# add to course container
+		containers = _add_2_container(self._course, item, pacakges=False)
+
+		# have unique copies of lesson groups
+		_canonicalize(item.Items, creator, registry=self._registry, base=item.ntiid)
+
+		# process lesson groups
+		for group in item.Items:
+			if group.__parent__ is not None:
+				msg = _("Overview group has been used by another lesson")
+				raise hexc.HTTPUnprocessableEntity(msg)
+
+			# take ownership
+			group.__parent__ = item
+			self._handle_overview_group(group,
+										creator=creator,
+										extended=(item.ntiid,))
+
+		# index lesson item
+		self._catalog.index(item, container_ntiids=containers,
+				  			namespace=containers[0])  # course entry
+
+	def _handle_other_asset(self, item, creator):
+		containers = _add_2_container(self._course, item, pacakges=False)
+		self._catalog.index(item, container_ntiids=containers,
+				  			namespace=containers[0])  # course entry
+
+	def _handle_asset(self, provided, item, creator):
 		if provided in PACKAGE_CONTAINER_INTERFACES:
 			self._handle_package_asset(provided, item, creator)
 		elif provided == INTICourseOverviewGroup:
-			self._handle_overview_group(provided, item, creator)
+			self._handle_overview_group(item, creator)
+		elif provided == INTILessonOverview:
+			self._handle_lesson_overview(item, creator)
+		else:
+			self._handle_other_asset(item, creator)
+		return item
 
 	def _do_call(self):
 		creator = self.remoteUser
 		content_object = self.readCreateUpdateContentObject(creator)
 		content_object.creator = creator.username  # use string
 		provided = iface_of_asset(content_object)
+
 		if content_object.ntiid:
 			self._check_exists(provided, content_object.ntiid)
 		else:
 			content_object.ntiid = make_asset_ntiid(provided, creator, extra=self._extra)
-		lifecycleevent.created(content_object)
+
+		_notify_created(content_object)
+
 		# register utility
 		intid_register(content_object, registry=self._registry)
 		registerUtility(self._registry,
 						component=content_object,
 						provided=provided,
 						name=content_object.ntiid)
+
 		# index and post process
-		self._handle_asset(creator.username, provided, content_object)
+		self._handle_asset(provided, content_object, creator.username)
 		return content_object
