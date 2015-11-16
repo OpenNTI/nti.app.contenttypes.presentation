@@ -8,6 +8,7 @@ __docformat__ = "restructuredtext en"
 # pylint: disable=W0212,R0904
 from hamcrest import is_
 from hamcrest import is_not
+from hamcrest import not_none
 from hamcrest import has_item
 from hamcrest import has_entry
 from hamcrest import has_length
@@ -18,6 +19,8 @@ from nti.app.testing.decorators import WithSharedApplicationMockDS
 from nti.app.testing.application_webtest import ApplicationLayerTest
 
 from nti.dataserver.tests import mock_dataserver
+
+from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.app.products.courseware.tests import InstructedCourseApplicationTestLayer
 
@@ -77,8 +80,22 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that( set(unit_ntiids), has_length( expected_size ))
 		return unit_ntiids
 
+	def _check_obj_state(self, ntiid, is_published=False, is_locked=True):
+		"""
+		Check our server state, specifically, whether an object is locked,
+		published, and registered.
+		"""
+		with mock_dataserver.mock_db_trans(self.ds, site_name='janux.ou.edu'):
+			obj = find_object_with_ntiid( ntiid )
+			assert_that( obj, not_none() )
+			assert_that( obj.locked, is_( is_locked ) )
+			assert_that( obj.isPublished(), is_( is_published ) )
+
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_permissions(self):
+		"""
+		Test non-editors cannot edit nodes.
+		"""
 		student = "ichigo"
 		with mock_dataserver.mock_db_trans(self.ds):
 			self._create_user(student)
@@ -111,15 +128,17 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		"""
 		Test we can insert/move units at/to various indexes.
 		"""
-		# move between nodes
+		# TODO Move between nodes
 		# TODO Revert layer changes ?
-		# TODO test state: locked, published
 		self._test_unit_node_inserts()
 		self._test_moving_nodes()
 		self._test_deleting_nodes()
 		self._test_content_nodes()
 
 	def _test_content_nodes(self):
+		"""
+		Create content nodes (via append or insert) with their lessons and fields.
+		"""
 		instructor_environ = self.instructor_environ
 		def _get_first_unit_node():
 			res = self.testapp.get( self.outline_url, extra_environ=instructor_environ )
@@ -139,12 +158,15 @@ class TestOutlineEditViews(ApplicationLayerTest):
 									extra_environ=instructor_environ)
 		res = res.json_body
 		content_node_ntiid = res.get( 'NTIID' )
+		lesson_ntiid = res.get( 'ContentNTIID' )
 		assert_that( res.get( 'Creator' ), is_( self.instructor_username ))
 		assert_that( res.get( 'MimeType' ), is_( self.content_mime_type ))
 		assert_that( res.get( 'title' ), is_( new_content_title ))
-		assert_that( res.get( 'ContentNTIID' ), is_not( content_node_ntiid ))
+		assert_that(lesson_ntiid, is_not( content_node_ntiid ))
 		assert_that( content_node_ntiid, contains_string( 'NTICourseOutlineNode' ))
-		assert_that( res.get( 'ContentNTIID' ), contains_string( 'NTILessonOverview' ))
+		assert_that( lesson_ntiid, contains_string( 'NTILessonOverview' ))
+		self._check_obj_state( content_node_ntiid )
+		self._check_obj_state( lesson_ntiid )
 
 		res = _get_first_unit_node()
 		child_ntiids = [x.get( 'NTIID' ) for x in res.get( 'contents' )]
@@ -164,9 +186,13 @@ class TestOutlineEditViews(ApplicationLayerTest):
 									extra_environ=instructor_environ)
 		res = res.json_body
 		content_node_ntiid2 = res.get( 'NTIID' )
+		lesson_ntiid2 = res.get( 'ContentNTIID' )
 		assert_that( res.get( 'ContentsAvailableBeginning' ), is_( content_beginning ))
 		assert_that( res.get( 'ContentsAvailableEnding' ), is_( content_ending ))
+		self._check_obj_state( content_node_ntiid2 )
+		self._check_obj_state( lesson_ntiid2 )
 
+		# TODO Shouldnt be visible outside contents dates.
 		res = _get_first_unit_node()
 		child_ntiids = [x.get( 'NTIID' ) for x in res.get( 'contents' )]
 		assert_that( child_ntiids, has_length( 5 ))
@@ -174,6 +200,9 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that( child_ntiids[-1], is_( content_node_ntiid ))
 
 	def _test_unit_node_inserts(self):
+		"""
+		Test inserting/appending unit nodes to an outline, with fields.
+		"""
 		# Base case
 		instructor_environ = self.instructor_environ
 		unit_ntiids = self._get_outline_ntiids( instructor_environ, 8 )
@@ -194,6 +223,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		# New ntiid is of correct type and contains our username
 		assert_that( new_ntiid, contains_string( self.content_ntiid_type ))
 		assert_that( new_ntiid, contains_string( 'sjohnson' ))
+		self._check_obj_state( new_ntiid )
 
 		# Test our outline; new ntiid is at end
 		unit_ntiids = self._get_outline_ntiids( instructor_environ, 9 )
@@ -216,6 +246,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		new_ntiid2 = res.get( 'NTIID' )
 		assert_that( res.get( 'ContentsAvailableBeginning' ), is_( content_beginning ))
 		assert_that( res.get( 'ContentsAvailableEnding' ), is_( content_ending ))
+		self._check_obj_state( new_ntiid2 )
 
 		unit_ntiids = self._get_outline_ntiids( instructor_environ, 10 )
 		assert_that( unit_ntiids[0], is_( new_ntiid2 ))
@@ -237,6 +268,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that( unit_ntiids[-3], is_( last_unit_ntiid ))
 		assert_that( unit_ntiids[-2], is_( new_ntiid3 ))
 		assert_that( unit_ntiids[-1], is_( new_ntiid ))
+		self._check_obj_state( new_ntiid3 )
 
 	def _test_moving_nodes(self):
 		instructor_environ = self.instructor_environ

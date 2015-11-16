@@ -45,6 +45,7 @@ from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseOutlineCalendarNode
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 from nti.contenttypes.courses.interfaces import CourseOutlineNodeMovedEvent
 
@@ -78,6 +79,8 @@ from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
 
 from nti.site.site import get_component_hierarchy_names
+
+from nti.site.utils import registerUtility
 
 from nti.traversal.traversal import find_interface
 
@@ -356,15 +359,30 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 			idx += 1
 		return ntiid
 
+	def iface_of_obj(self, obj):
+		for iface in (ICourseOutlineContentNode,
+					  ICourseOutlineCalendarNode,
+					  ICourseOutlineNode,
+					  ICourseOutline,
+			   	   	  INTILessonOverview): # order matters
+			if iface.providedBy(obj):
+				return iface
+		return None
+
 	def _set_node_ntiid(self, new_node):
 		content_ntiid = getattr(new_node, 'ContentNTIID', None)
 		ntiid = content_ntiid if content_ntiid else self._create_node_ntiid()
 		new_node.ntiid = ntiid
 
+	def _register_obj(self, obj):
+		registry = component.getSiteManager()
+		registerUtility(registry,
+						component=obj,
+						name=obj.ntiid,
+						provided=self.iface_of_obj(obj))
+
 	def _make_lesson_node(self, node):
-		# TODO Create node, register, set.
-		# TODO Carlos verify
-		# Lesson field empty?
+		# TODO Lesson field empty?
 		lesson_ntiid = make_ntiid(nttype=NTI_LESSON_OVERVIEW, base=node.ntiid)
 		new_lesson = NTILessonOverView()
 		new_lesson.ntiid = lesson_ntiid
@@ -385,14 +403,18 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 		return result
 
 	def _get_new_node(self):
-		# We could support auto-publishing based on type here.
+		# TODO We could support auto-publishing based on type here.
 		creator = self.remoteUser
 		new_node = self.readCreateUpdateContentObject(creator)
 		self._set_node_ntiid(new_node)
 		if ICourseOutlineContentNode.providedBy( new_node ):
 			new_lesson = self._make_lesson_node( new_node )
+			new_lesson.locked = True
+			self._register_obj( new_lesson )
 			new_node.ContentNTIID = new_lesson.ntiid
 			assert new_node.ContentNTIID != new_node.ntiid
+
+		self._register_obj( new_node )
 		new_node.locked = True
 		return new_node
 
