@@ -441,6 +441,28 @@ class OutlineNodeMoveView(OutlineNodeInsertView):
 
 @view_config(route_name='objects.generic.traversal',
 			 context=ICourseOutlineNode,
+			 request_method='DELETE',
+			 permission=nauth.ACT_CONTENT_EDIT,
+			 renderer='rest',
+			 name=VIEW_NODE_CONTENTS)
+class OutlineNodeDeleteView(OutlineNodeInsertView):
+	"""
+	Delete the given ntiid in our context.
+	"""
+
+	def __call__(self):
+		values = CaseInsensitiveDict(self.readInput())
+		old_keys = list(self.context.keys())
+		ntiid = values.get('ntiid')
+
+		if ntiid not in old_keys:
+			raise hexc.HTTPConflict('Invalid ntiid (%s)' % ntiid)
+		del self.context[ntiid]
+		logger.info( 'Deleted entity in outline %s', ntiid )
+		return hexc.HTTPOk()
+
+@view_config(route_name='objects.generic.traversal',
+			 context=ICourseOutlineNode,
 			 request_method='PUT',
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest')

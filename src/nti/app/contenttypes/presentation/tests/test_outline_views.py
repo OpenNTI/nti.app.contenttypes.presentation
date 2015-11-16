@@ -7,6 +7,8 @@ __docformat__ = "restructuredtext en"
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
 from hamcrest import is_
+from hamcrest import is_not
+from hamcrest import has_item
 from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
@@ -99,18 +101,23 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self.testapp.put_json(at_index_url, unit_data,
 							extra_environ=ichigo_environ, status=403)
 
+		# Deleting
+		unit_data = {'ntiid': unit_ntiids[-1]}
+		self.testapp.delete_json(self.outline_url, unit_data,
+							extra_environ=ichigo_environ, status=403)
+
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_unit_node_edits(self):
 		"""
 		Test we can insert/move units at/to various indexes.
 		"""
-		# TODO delete
 		# multi-type
 		# move between nodes
 		# TODO Revert layer changes ?
 		# TODO test state: locked, published
 		self._test_unit_node_inserts()
 		self._test_moving_nodes()
+		self._test_deleting_nodes()
 
 	def _test_unit_node_inserts(self):
 		# Base case
@@ -211,3 +218,22 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that( unit_ntiids[0], is_( last_ntiid ))
 		assert_that( unit_ntiids[-1], is_( first_ntiid ))
 
+	def _test_deleting_nodes(self):
+		instructor_environ = self.instructor_environ
+		unit_ntiids = self._get_outline_ntiids( instructor_environ, 11 )
+		first_ntiid = unit_ntiids[0]
+		last_ntiid = unit_ntiids[-1]
+
+		# One
+		unit_data = {'ntiid': first_ntiid}
+		self.testapp.delete_json(self.outline_url, unit_data,
+							extra_environ=instructor_environ)
+		unit_ntiids = self._get_outline_ntiids( instructor_environ, 10 )
+		assert_that( unit_ntiids, is_not( has_item( first_ntiid )))
+
+		# Two
+		unit_data = {'ntiid': last_ntiid}
+		self.testapp.delete_json(self.outline_url, unit_data,
+							extra_environ=instructor_environ)
+		unit_ntiids = self._get_outline_ntiids( instructor_environ, 9 )
+		assert_that( unit_ntiids, is_not( has_item( last_ntiid )))
