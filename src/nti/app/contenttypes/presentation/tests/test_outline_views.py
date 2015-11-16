@@ -6,7 +6,6 @@ __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
-
 from hamcrest import is_
 from hamcrest import has_entry
 from hamcrest import has_length
@@ -109,6 +108,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		# multi-type
 		# move between nodes
 		# TODO Revert layer changes ?
+		# TODO test state: locked, published
 		self._test_unit_node_inserts()
 		self._test_moving_nodes()
 
@@ -121,7 +121,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 
 		# Append unit node
 		new_unit_title = 'new unit title'
-		unit_data = {'title': new_unit_title, 'mime_type': self.unit_mime_type}
+		unit_data = {'title': new_unit_title, 'MimeType': self.unit_mime_type}
 		res = self.testapp.post_json(self.outline_url, unit_data,
 									extra_environ=instructor_environ)
 
@@ -143,10 +143,18 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		# Insert at index 0
 		at_index_url = self.outline_url + '/index/0'
 		new_unit_title2 = 'new unit title2'
-		unit_data2 = {'title': new_unit_title2, 'mime_type': self.unit_mime_type}
+		content_beginning = '2013-08-13T06:00:00Z'
+		content_ending = '2013-12-13T06:00:00Z'
+		unit_data2 = {'title': new_unit_title2,
+					'MimeType': self.unit_mime_type,
+					'ContentsAvailableBeginning': content_beginning,
+					'ContentsAvailableEnding': content_ending }
 		res = self.testapp.post_json(at_index_url, unit_data2,
 									extra_environ=instructor_environ)
-		new_ntiid2 = res.json_body.get( 'NTIID' )
+		res = res.json_body
+		new_ntiid2 = res.get( 'NTIID' )
+		assert_that( res.get( 'ContentsAvailableBeginning' ), is_( content_beginning ))
+		assert_that( res.get( 'ContentsAvailableEnding' ), is_( content_ending ))
 
 		unit_ntiids = self._get_outline_ntiids( instructor_environ, 10 )
 		assert_that( unit_ntiids[0], is_( new_ntiid2 ))
@@ -157,7 +165,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		# Insert at last index
 		at_index_url = self.outline_url + '/index/9'
 		new_unit_title3 = 'new unit title3'
-		unit_data3 = {'title': new_unit_title3, 'mime_type': self.unit_mime_type}
+		unit_data3 = {'title': new_unit_title3, 'MimeType': self.unit_mime_type}
 		res = self.testapp.post_json(at_index_url, unit_data3,
 									extra_environ=instructor_environ)
 		new_ntiid3 = res.json_body.get( 'NTIID' )
@@ -168,7 +176,6 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that( unit_ntiids[-3], is_( last_unit_ntiid ))
 		assert_that( unit_ntiids[-2], is_( new_ntiid3 ))
 		assert_that( unit_ntiids[-1], is_( new_ntiid ))
-
 
 	def _test_moving_nodes(self):
 		instructor_environ = self.instructor_environ

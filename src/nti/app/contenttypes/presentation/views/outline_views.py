@@ -361,23 +361,15 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 		"""
 		Our node types are abstracted from clients.
 		"""
-		# TODO Break out by type
-		# TODO Trust client mime-type
 		# TODO Create lesson overviews
-		# We could validate the mime type the clients pass in.
 		result = super(OutlineNodeInsertView, self).readInput()
-		if ICourseOutline.providedBy(self.context):
-			mime_type = "application/vnd.nextthought.courses.courseoutlinenode"
-		else:
-			mime_type = "application/vnd.nextthought.courses.courseoutlinecontentnode"
+		if result.get( MIMETYPE ) == "application/vnd.nextthought.courses.courseoutlinecontentnode":
 			# This ContentNTIID field is arbitrary; mainly, the
 			# clients use the presence of this field to determine
 			# if the node is 'clickable'.
 			# Needs to be lesson overview.
 			if 'ContentNTIID' not in result:
 				result['ContentNTIID'] = self._create_node_ntiid()
-
-		result[MIMETYPE] = mime_type
 		return result
 
 	def _get_new_node(self):
