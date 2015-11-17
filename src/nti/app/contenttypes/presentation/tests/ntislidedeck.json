@@ -1,0 +1,34 @@
+{
+    "MimeType": "application/vnd.nextthought.ntislidedeck",
+    "Slides": [
+        {
+            "MimeType": "application/vnd.nextthought.slide",
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTISlide-BLEACH_S_2015_Shikai_to_Bankai.nsd.pres:Install_Mac_slide_1",
+            "slideimage": "resources/BLEACH_S_2015_Shikai_to_Bankai/5ef56bcf8d12c9ef508272e708b431d86362c2f7/fd35e23767020999111e1f49239199b4c5eff23e.png",
+            "slidevideoend": "4.0",
+            "slidevideoid": "tag:nextthought.com,2011-10:OU-NTISlideVideo-BLEACH_S_2015_Shikai_to_Bankai.nsd.pres:Install_Mac_video",
+            "slidetitle": "Install Software on a Macintosh",
+            "slidenumber": "1",
+            "slidedeckid": "tag:nextthought.com,2011-10:OU-NTISlideDeck-BLEACH_S_2015_Shikai_to_Bankai.nsd.pres:Install_Mac",
+            "class": "slide",
+            "slidevideostart": "0.0"
+        }
+    ],
+    "ntiid": "tag:nextthought.com,2011-10:OU-NTISlideDeck-BLEACH_S_2015_Shikai_to_Bankai.nsd.pres:Install_Mac",
+    "Videos": [
+        {
+            "MimeType": "application/vnd.nextthought.ntislidevideo",
+            "video-ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-BLEACH_S_2015_Shikai_to_Bankai.ntivideo.video_01.01.02_Mac",
+            "ntiid": "tag:nextthought.com,2011-10:OU-NTISlideVideo-BLEACH_S_2015_Shikai_to_Bankai.nsd.pres:Install_Mac_video",
+            "title": "Install Software on Macintosh",
+            "creator": "Deborah Trytten",
+            "slidedeckid": "tag:nextthought.com,2011-10:OU-NTISlideDeck-BLEACH_S_2015_Shikai_to_Bankai.nsd.pres:Install_Mac",
+            "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_06h42bu6/width/640/",
+            "class": "ntislidevideo"
+        }
+    ],
+    "creator": "Deborah Trytten",
+    "title": "Install Software on a Macintosh",
+    "slidedeckid": "tag:nextthought.com,2011-10:OU-NTISlideDeck-BLEACH_S_2015_Shikai_to_Bankai.nsd.pres:Install_Mac",
+    "class": "ntislidedeck"
+}

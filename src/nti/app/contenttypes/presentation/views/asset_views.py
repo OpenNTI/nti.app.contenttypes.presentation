@@ -263,7 +263,7 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 
 			# register in containers and index
 			for x in chain(item.Slides, item.Videos):
-				_add_2_container(self._catalog, x, pacakges=True)
+				_add_2_container(self._course, x, pacakges=True)
 				self._catalog.index(x, container_ntiids=containers,
 				  					namespace=containers[0])  # first pkg
 

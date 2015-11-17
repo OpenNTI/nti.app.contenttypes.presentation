@@ -7,7 +7,6 @@ __docformat__ = "restructuredtext en"
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
 
-from hamcrest import is_
 from hamcrest import none
 from hamcrest import is_not
 from hamcrest import has_key
@@ -16,7 +15,10 @@ from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import greater_than
 
+from nti.schema.testing import validly_provides
+
 import os
+from itertools import chain
 
 import simplejson
 
@@ -24,8 +26,10 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
+from nti.contenttypes.presentation.interfaces import INTIVideo
+from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
-from nti.contenttypes.presentation.media import NTIVideo
+
 from nti.contenttypes.presentation.utils import prepare_json_text
 
 from nti.ntiids.ntiids import find_object_with_ntiid
@@ -45,27 +49,57 @@ class TestAssetViews(ApplicationLayerTest):
 
 	course_ntiid = 'tag:nextthought.com,2011-10:NTI-CourseInfo-Fall2015_CS_1323'
 	course_url = '/dataserver2/%2B%2Betc%2B%2Bhostsites/platform.ou.edu/%2B%2Betc%2B%2Bsite/Courses/Fall2015/CS%201323'
+	assets_url = course_url + '/assets'
+
+	def _load_resource(self, name):
+		path = os.path.join(os.path.dirname(__file__), name)
+		with open(path, "r") as fp:
+			source = simplejson.loads(prepare_json_text(fp.read()))
+		return source
+
+	def _check_containers(self, course, items=()):
+		for item in items or ():
+			ntiid = item.ntiid
+			container = IPresentationAssetContainer(course)
+			assert_that(container, has_key(ntiid))
+
+			packs = course.ContentPackageBundle.ContentPackages
+			container = IPresentationAssetContainer(packs[0])
+			assert_that(container, has_key(ntiid))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_post_ntivideo(self):
-		path = os.path.join(os.path.dirname(__file__), 'ntivideo.json')
-		with open(path, "r") as fp:
-			source = simplejson.loads(prepare_json_text(fp.read()))
+		source = self._load_resource('ntivideo.json')
 		source.pop('ntiid', None)
-		assets_url = self.course_url + '/assets'
-		res = self.testapp.post_json(assets_url, source)
+		res = self.testapp.post_json(self.assets_url, source, status=201)
 		assert_that(res.json_body, has_entry('ntiid', is_not(none())))
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			ntiid = res.json_body['ntiid']
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, is_not(none()))
-			assert_that(obj, is_(NTIVideo))
+			assert_that(obj, validly_provides(INTIVideo))
 
 			entry = find_object_with_ntiid(self.course_ntiid)
 			course = ICourseInstance(entry)
-			container = IPresentationAssetContainer(course)
-			assert_that(container, has_key(ntiid))
-
+			self._check_containers(course, (obj,))
+	
 			catalog = get_library_catalog()
 			containers = catalog.get_containers(obj)
 			assert_that(containers, has_length(greater_than(1)))
+
+	@WithSharedApplicationMockDS(testapp=True, users=True)
+	def test_post_slidedeck(self):
+		source = self._load_resource('ntislidedeck.json')
+		res = self.testapp.post_json(self.assets_url, source, status=201)
+		assert_that(res.json_body, has_entry('ntiid', is_not(none())))
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			ntiid = res.json_body['ntiid']
+			obj = find_object_with_ntiid(ntiid)
+			assert_that(obj, is_not(none()))
+			assert_that(obj, validly_provides(INTISlideDeck))
+
+			entry = find_object_with_ntiid(self.course_ntiid)
+			course = ICourseInstance(entry)
+			
+			items = chain(obj.Slides, obj.Videos, (obj,))
+			self._check_containers(course, items)
