@@ -1,10 +1,10 @@
 {
     "MimeType": "application/vnd.nextthought.ntivideo",
     "description": "",
-    "title": "Andrew Johnson",
-    "creator": "OU",
+    "title": "Kurosaki Ichigo",
+    "creator": "Bleach",
     "closedCaptions": null,
-    "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Andrew_Johnson",
+    "NTIID": "tag:nextthought.com,2011-10:OU-NTIVideo-BLEACH_S_2015_Shikai_to_Bankai.ntivideo.video_Andrew_Johnson",
     "sources": [
         {
             "service": "kaltura",
@@ -22,8 +22,8 @@
     ],
     "transcripts": [
         {
-            "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/cd0332efcd704487fab382b76fdc0523fb2dad7e/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
-            "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/cd0332efcd704487fab382b76fdc0523fb2dad7e/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+            "srcjsonp": "resources/BLEACH_S_2015_Shikai_to_Bankai/cd0332efcd704487fab382b76fdc0523fb2dad7e/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+            "src": "resources/BLEACH_S_2015_Shikai_to_Bankai/cd0332efcd704487fab382b76fdc0523fb2dad7e/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
             "type": "text/vtt",
             "lang": "en",
             "purpose": "normal"

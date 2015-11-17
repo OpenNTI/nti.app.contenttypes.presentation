@@ -14,6 +14,7 @@ from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import greater_than
+from hamcrest import has_property
 
 from nti.schema.testing import validly_provides
 
@@ -28,6 +29,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
+from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.contenttypes.presentation.utils import prepare_json_text
@@ -57,20 +59,21 @@ class TestAssetViews(ApplicationLayerTest):
 			source = simplejson.loads(prepare_json_text(fp.read()))
 		return source
 
-	def _check_containers(self, course, items=()):
+	def _check_containers(self, course, pacakges=True, items=()):
 		for item in items or ():
 			ntiid = item.ntiid
 			container = IPresentationAssetContainer(course)
 			assert_that(container, has_key(ntiid))
 
-			packs = course.ContentPackageBundle.ContentPackages
-			container = IPresentationAssetContainer(packs[0])
-			assert_that(container, has_key(ntiid))
+			if pacakges:
+				packs = course.ContentPackageBundle.ContentPackages
+				container = IPresentationAssetContainer(packs[0])
+				assert_that(container, has_key(ntiid))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_post_ntivideo(self):
 		source = self._load_resource('ntivideo.json')
-		source.pop('ntiid', None)
+		source.pop('NTIID', None)
 		res = self.testapp.post_json(self.assets_url, source, status=201)
 		assert_that(res.json_body, has_entry('ntiid', is_not(none())))
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
@@ -82,7 +85,7 @@ class TestAssetViews(ApplicationLayerTest):
 			entry = find_object_with_ntiid(self.course_ntiid)
 			course = ICourseInstance(entry)
 			self._check_containers(course, (obj,))
-	
+
 			catalog = get_library_catalog()
 			containers = catalog.get_containers(obj)
 			assert_that(containers, has_length(greater_than(1)))
@@ -100,6 +103,22 @@ class TestAssetViews(ApplicationLayerTest):
 
 			entry = find_object_with_ntiid(self.course_ntiid)
 			course = ICourseInstance(entry)
-			
+
 			items = chain(obj.Slides, obj.Videos, (obj,))
 			self._check_containers(course, items)
+
+	@WithSharedApplicationMockDS(testapp=True, users=True)
+	def test_post_overview_group(self):
+		source = self._load_resource('nticourseoverviewgroup.json')
+		res = self.testapp.post_json(self.assets_url, source, status=201)
+		assert_that(res.json_body, has_entry('ntiid', is_not(none())))
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			ntiid = res.json_body['ntiid']
+			obj = find_object_with_ntiid(ntiid)
+			assert_that(obj, is_not(none()))
+			assert_that(obj, validly_provides(INTICourseOverviewGroup))
+			assert_that(obj, has_property('Items', has_length(2)))
+
+			entry = find_object_with_ntiid(self.course_ntiid)
+			course = ICourseInstance(entry)
+			self._check_containers(course, False, obj.Items)

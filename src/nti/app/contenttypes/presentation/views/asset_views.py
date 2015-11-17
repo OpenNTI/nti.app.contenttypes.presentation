@@ -50,11 +50,7 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
-from nti.contenttypes.presentation.interfaces import INTIAudio
-from nti.contenttypes.presentation.interfaces import INTIVideo
-from nti.contenttypes.presentation.interfaces import INTIAudioRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
-from nti.contenttypes.presentation.interfaces import INTIVideoRef
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
@@ -62,11 +58,11 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
-from nti.contenttypes.presentation.media import NTIAudioRef
-from nti.contenttypes.presentation.media import NTIVideoRef
+from nti.contenttypes.presentation.utils import create_from_external
 
 from nti.externalization.externalization import to_external_object
 
+from nti.ntiids.ntiids import TYPE_UUID
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
@@ -120,7 +116,7 @@ def _db_connection(registry=None):
 	result = IConnection(registry, None)
 	return result
 
-def _intid_register(item, registry, connection=None):
+def _intid_register(item, registry=None, connection=None):
 	connection = _db_connection(registry) if connection is None else connection
 	if connection is not None:
 		connection.add(item)
@@ -170,8 +166,7 @@ def _canonicalize(items, creator, base=None, registry=None):
 				created = False
 		if created:
 			result.append(item)
-			item.locked = True  # locked
-			item.creator = item.creator or creator  # set creator before notify
+			item.creator = creator  # set creator before notify
 			_notify_created(item)
 			_intid_register(item, registry)
 			registerUtility(registry, item, provided, name=item.ntiid)
@@ -206,6 +201,15 @@ class NoHrefAssetGetView(PresentationAssetGetView):
 		return result
 
 # POST/PUT views
+
+class AssetViewMixin(object):
+
+	def readInput(self, value=None):
+		result = AssetPutViewMixin.readInput(self, value=value)
+		result.pop('ntiid', None)
+		result.pop('NTIID', None)
+		return result
+
 
 class AssetPutViewMixin(object):
 
@@ -248,10 +252,6 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 	def _registry(self):
 		return get_registry()
 
-	def _check_exists(self, provided, ntiid):
-		if self._registry.queryUtility(provided, name=ntiid):
-			raise hexc.HTTPUnprocessableEntity(_("Asset already exists."))
-
 	def _handle_package_asset(self, provided, item, creator):
 		containers = _add_2_container(self._course, item, pacakges=True)
 		if provided == INTISlideDeck:
@@ -282,37 +282,9 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 		item_extended = list(extended or ()) + containers + [item.ntiid]
 
 		# process group items
-		for idx, x in list(enumerate(item.Items)):  # mutating
-
-			# add to container and index
-			_add_2_container(self._catalog, x, pacakges=False)
-			self._catalog.index(x, container_ntiids=extended, namespace=containers[0])
-
-			# move video and audio to ref objects
-			if INTIVideo.providedBy(x) or INTIAudio.providedBy(x):
-				x_iface = INTIVideoRef if INTIVideo.providedBy(x) else INTIAudioRef
-				stored = self._registry.queryUtility(x_iface, name=item.ntiid)
-				if stored is not None:
-					item.Items[idx] = stored
-				else:
-					stored = NTIVideoRef() if INTIVideo.providedBy(x) else NTIAudioRef()
-					stored.creator = creator
-					stored.ntiid = stored.target = x.ntiid
-
-					if INTIVideo.providedBy(x):
-						stored.label = stored.poster = item.title
-
-					_notify_created(stored)
-					_intid_register(stored, registry=self._registry)
-					registerUtility(self._registry,
-									component=stored,
-									provided=x_iface,
-									name=stored.ntiid)
-
-				# add and index ref
-				_add_2_container(self._catalog, stored, pacakges=False)
-				self._catalog.index(x, container_ntiids=item_extended,
-									namespace=containers[0])
+		for x in item.Items:
+			_add_2_container(self._course, x, pacakges=False)
+			self._catalog.index(x, container_ntiids=item_extended)
 
 		# index item
 		item_extended = list(extended or ()) + containers
@@ -355,27 +327,46 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 			self._handle_other_asset(item, creator)
 		return item
 
+	def _get_ntiid(self, item):
+		ntiid = item.ntiid
+		if INTICourseOverviewGroup.providedBy(item) and TYPE_UUID in get_specific(ntiid):
+			ntiid = None
+		return ntiid
+
+	def _check_exists(self, provided, item, creator):
+		ntiid = self._get_ntiid(item)
+		if ntiid:
+			if self._registry.queryUtility(provided, name=ntiid):
+				raise hexc.HTTPUnprocessableEntity(_("Asset already exists."))
+		else:
+			item.ntiid = _make_asset_ntiid(provided, creator, extra=self._extra)
+		return item
+
+	def readCreateUpdateContentObject(self, user, search_owner=False, externalValue=None):
+		creator = user
+		externalValue = self.readInput() if not externalValue else externalValue
+		containedObject = create_from_external(externalValue, notify=False)
+		containedObject.creator = getattr(creator, 'username', creator)  # use string
+		self.updateContentObject(containedObject, externalValue, set_id=True, notify=False)
+		return containedObject
+
 	def _do_call(self):
 		creator = self.remoteUser
 		content_object = self.readCreateUpdateContentObject(creator)
 		content_object.creator = creator.username  # use string
 		provided = iface_of_asset(content_object)
 
-		if content_object.ntiid:
-			self._check_exists(provided, content_object.ntiid)
-		else:
-			content_object.ntiid = _make_asset_ntiid(provided, creator, extra=self._extra)
-
+		# check item does not exists and notify
+		self._check_exists(provided, content_object, creator)
 		_notify_created(content_object)
 
-		# register utility
+		# add to connection and register
 		_intid_register(content_object, registry=self._registry)
 		registerUtility(self._registry,
 						component=content_object,
 						provided=provided,
 						name=content_object.ntiid)
 
-		# index and post process
 		self.request.response.status_int = 201
 		self._handle_asset(provided, content_object, creator.username)
 		return content_object
