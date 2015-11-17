@@ -5,6 +5,7 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+from nti.appserver.ugd_edit_views import UGDPutView
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -15,6 +16,8 @@ import six
 import time
 import uuid
 from itertools import chain
+
+import transaction
 
 from zope import interface
 from zope import lifecycleevent
@@ -202,32 +205,7 @@ class NoHrefAssetGetView(PresentationAssetGetView):
 
 # POST/PUT views
 
-class AssetViewMixin(object):
-
-	def readInput(self, value=None):
-		result = AssetPutViewMixin.readInput(self, value=value)
-		result.pop('ntiid', None)
-		result.pop('NTIID', None)
-		return result
-
-
-class AssetPutViewMixin(object):
-
-	def readInput(self, value=None):
-		result = AssetPutViewMixin.readInput(self, value=value)
-		result.pop('ntiid', None)
-		result.pop('NTIID', None)
-		return result
-
-@view_config(context=ICourseInstance)
-@view_config(context=ICourseCatalogEntry)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   name="assets",
-			   request_method='POST')
-class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsMixin):
-
-	content_predicate = IPresentationAsset.providedBy
+class AssetSubmitMixin(AbstractAuthenticatedView):
 
 	@Lazy
 	def _course(self):
@@ -343,13 +321,34 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 			self._handle_other_asset(item, creator)
 		return item
 
+@view_config(context=ICourseInstance)
+@view_config(context=ICourseCatalogEntry)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   name="assets",
+			   request_method='POST')
+class AssetPostView(AssetSubmitMixin, 
+					AbstractAuthenticatedView,
+					ModeledContentUploadRequestUtilsMixin):
+
+	content_predicate = IPresentationAsset.providedBy
+
+	def checkContentObject(self, contentObject, externalValue):
+		if contentObject is None or not self.content_predicate(contentObject):
+			transaction.doom()
+			logger.debug("Failing to POST: input of unsupported/missing Class: %s => %s",
+						 externalValue, contentObject)
+			raise hexc.HTTPUnprocessableEntity(_('Unsupported/missing Class'))
+		return contentObject
+	
 	def readCreateUpdateContentObject(self, user, search_owner=False, externalValue=None):
 		creator = user
 		externalValue = self.readInput() if not externalValue else externalValue
-		containedObject = create_from_external(externalValue, notify=False)
-		containedObject.creator = getattr(creator, 'username', creator)  # use string
-		self.updateContentObject(containedObject, externalValue, set_id=True, notify=False)
-		return containedObject
+		contentObject = create_from_external(externalValue, notify=False)
+		contentObject = self.checkContentObject(contentObject, externalValue)
+		contentObject.creator = getattr(creator, 'username', creator)  # use string
+		self.updateContentObject(contentObject, externalValue, set_id=True, notify=False)
+		return contentObject
 
 	def _do_call(self):
 		creator = self.remoteUser
@@ -371,3 +370,19 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 		self.request.response.status_int = 201
 		self._handle_asset(provided, content_object, creator.username)
 		return content_object
+
+@view_config(context=IPresentationAsset)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='PUT')
+class AssetPutView(AssetSubmitMixin, UGDPutView):
+
+	def readInput(self, value=None):
+		result = UGDPutView.readInput(self, value=value)
+		result.pop('ntiid', None)
+		result.pop('NTIID', None)
+		return result
+
+	def __call__(self):
+		result = UGDPutView.__call__(self)
+		return result
