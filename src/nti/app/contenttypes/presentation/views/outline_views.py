@@ -419,6 +419,7 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 		new_lesson.__parent__ = node
 		new_lesson.title = node.title
 		new_lesson.creator = node.creator
+		new_lesson.__parent__ = node # take ownership
 		# if there is no lesson set it to the overview
 		if not node.ContentNTIID:
 			node.ContentNTIID = lesson_ntiid
