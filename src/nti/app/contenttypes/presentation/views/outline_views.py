@@ -15,10 +15,13 @@ import time
 import simplejson
 
 from zope import component
+from zope import lifecycleevent
 
 from zope.event import notify
 
 from zope.intid import IIntIds
+
+from ZODB.interfaces import IConnection
 
 from pyramid.view import view_config
 from pyramid.view import view_defaults
@@ -33,10 +36,10 @@ from nti.app.products.courseware.interfaces import ICourseInstanceEnrollment
 from nti.appserver.ugd_edit_views import UGDPutView
 from nti.appserver.ugd_query_views import RecursiveUGDView
 
+from nti.common.time import time_to_64bit_int
 from nti.common.maps import CaseInsensitiveDict
 
-from nti.common.time import time_to_64bit_int
-
+from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import NTI_COURSE_OUTLINE_NODE
@@ -58,7 +61,7 @@ from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
-from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
+from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.contenttypes.presentation.lesson import NTILessonOverView
 
@@ -96,6 +99,24 @@ CLASS = StandardExternalFields.CLASS
 ITEMS = StandardExternalFields.ITEMS
 MIMETYPE = StandardExternalFields.MIMETYPE
 LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
+
+def _db_connection(registry=None):
+	registry = get_registry(registry)
+	if registry == component.getGlobalSiteManager():
+		result = None
+	else:
+		result = IConnection(registry, None)
+	return result
+
+def intid_register(item, registry=None, intids=None, connection=None):
+	registry = get_registry(registry)
+	intids = component.getUtility(IIntIds) if intids is None else intids
+	connection = _db_connection(registry) if connection is None else connection
+	if connection is not None:
+		connection.add(item)
+		lifecycleevent.added(item)
+		return True
+	return False
 
 class OutlineLessonOverviewMixin(object):
 
@@ -224,40 +245,50 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		containers = result['Containers'] = {}
 
 		nodes = self._outline_nodes(course)
+		namespaces = {node.src for node in nodes}
 		ntiids = {node.ContentNTIID for node in nodes}
 		result['ContainerOrder'] = [node.ContentNTIID for node in nodes]
 
-		for item in IPresentationAssetContainer(course).values():
-			# ignore non media items
-			if 	(not IMediaRef.providedBy(item)
-				 and not INTIMedia.providedBy(item)
-				 and not INTISlideDeck.providedBy(item)):
-				continue
+		sites = get_component_hierarchy_names()
+		for group in catalog.search_objects(
+								namespace=namespaces,
+								provided=INTICourseOverviewGroup,
+								sites=sites):
 
 			# ignore unpublished items
-			if not IPublishable.providedBy(item) or not item.is_published:
+			if not IPublishable.providedBy(group) or not group.is_published:
 				continue
 
-			# check visibility
-			if IVisible.providedBy(item):
-				if not is_item_visible(item, self.remoteUser, record=record):
+			for item in group.Items:			
+				# ignore non media items
+				if 	(not IMediaRef.providedBy(item)
+					 and not INTIMedia.providedBy(item)
+					 and not INTISlideDeck.providedBy(item)):
 					continue
-				else:
-					item = INTIMedia(item, None)
+	
+				# ignore unpublished items
+				if not IPublishable.providedBy(item) or not item.is_published:
+					continue
+	
+				# check visibility
+				if IVisible.providedBy(item):
+					if not is_item_visible(item, self.remoteUser, record=record):
+						continue
+					else:
+						item = INTIMedia(item, None)
+	
+				# check if ref was valid
+				uid = intids.queryId(item) if item is not None else None
+				if uid is None:
+					continue
+	
+				# set content containers
+				for ntiid in catalog.get_containers(uid):
+					if ntiid in ntiids:
+						containers.setdefault(ntiid, set())
+						containers[ntiid].add(item.ntiid)
+				items[item.ntiid] = to_external_object(item)
 
-			# check if ref was valid
-			uid = intids.queryId(item) if item is not None else None
-			if uid is None:
-				continue
-
-			# set content containers
-			for ntiid in catalog.get_containers(uid):
-				if ntiid in ntiids:
-					containers.setdefault(ntiid, set())
-					containers[ntiid].add(item.ntiid)
-			items[item.ntiid] = to_external_object(item)
-
-		sites = get_component_hierarchy_names()
 		for item in catalog.search_objects(
 								container_ntiids=ntiids,
 								provided=INTISlideDeck,
@@ -325,7 +356,7 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 	all IOrderedContainers.
 	"""
 
-	def _get_catalog_entry( self, outline ):
+	def _get_catalog_entry(self, outline):
 		course = find_interface(outline, ICourseInstance, strict=False)
 		result = ICourseCatalogEntry(course, None)
 		return result
@@ -341,7 +372,7 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 			base = parent.ntiid
 		except AttributeError:
 			# Outline, use catalog entry
-			entry = self._get_catalog_entry( parent )
+			entry = self._get_catalog_entry(parent)
 			base = entry.ntiid if entry is not None else None
 		provider = get_provider(base) or 'NTI'
 		current_time = time_to_64bit_int(time.time())
@@ -365,14 +396,13 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 					  ICourseOutlineCalendarNode,
 					  ICourseOutlineNode,
 					  ICourseOutline,
-			   	   	  INTILessonOverview): # order matters
+			   	   	  INTILessonOverview):  # order matters
 			if iface.providedBy(obj):
 				return iface
 		return None
 
 	def _set_node_ntiid(self, new_node):
-		content_ntiid = getattr(new_node, 'ContentNTIID', None)
-		ntiid = content_ntiid if content_ntiid else self._create_node_ntiid()
+		ntiid = self._create_node_ntiid()
 		new_node.ntiid = ntiid
 
 	def _register_obj(self, obj):
@@ -383,39 +413,35 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 						provided=self.iface_of_obj(obj))
 
 	def _make_lesson_node(self, node):
-		# TODO Lesson field empty?
 		lesson_ntiid = make_ntiid(nttype=NTI_LESSON_OVERVIEW, base=node.ntiid)
 		new_lesson = NTILessonOverView()
 		new_lesson.ntiid = lesson_ntiid
 		new_lesson.__parent__ = node
 		new_lesson.title = node.title
 		new_lesson.creator = node.creator
+		# if there is no lesson set it to the overview
+		if not node.ContentNTIID:
+			node.ContentNTIID = lesson_ntiid
+		# XXX: set src and lesson ntiid (see MediaByOutlineView)
+		node.LessonOverviewNTIID = node.src = lesson_ntiid
 		return new_lesson
 
 	def readInput(self):
 		result = super(OutlineNodeInsertView, self).readInput()
-		if result.get( MIMETYPE ) == "application/vnd.nextthought.courses.courseoutlinecontentnode":
-			# This ContentNTIID field is arbitrary; mainly, the
-			# clients use the presence of this field to determine
-			# if the node is 'clickable'. We add a placeholder until
-			# we create our lesson.
-			if 'ContentNTIID' not in result:
-				result['ContentNTIID'] = self._create_node_ntiid()
 		return result
 
 	def _get_new_node(self):
-		# TODO We could support auto-publishing based on type here.
+		# TODO: We could support auto-publishing based on type here.
 		creator = self.remoteUser
 		new_node = self.readCreateUpdateContentObject(creator)
 		self._set_node_ntiid(new_node)
-		if ICourseOutlineContentNode.providedBy( new_node ):
-			new_lesson = self._make_lesson_node( new_node )
+		if ICourseOutlineContentNode.providedBy(new_node):
+			new_lesson = self._make_lesson_node(new_node)
 			new_lesson.locked = True
-			self._register_obj( new_lesson )
-			new_node.ContentNTIID = new_lesson.ntiid
-			assert new_node.ContentNTIID != new_node.ntiid
-
-		self._register_obj( new_node )
+			lifecycleevent.created(new_lesson)
+			intid_register(new_lesson)
+			self._register_obj(new_lesson)
+		self._register_obj(new_node)
 		new_node.locked = True
 		return new_node
 
@@ -431,7 +457,7 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 
 	def __call__(self):
 		index = self._get_index()
-		index = index if index is None else max(index,0)
+		index = index if index is None else max(index, 0)
 		new_node = self._get_new_node()
 		old_keys = list(self.context.keys())
 		children_size = len(old_keys)
@@ -471,10 +497,10 @@ class OutlineNodePutView(OutlineNodeInsertView):
 			old_keys.remove(ntiid)
 		else:
 			# It's a move, append to our context.
-			obj = find_object_with_ntiid( ntiid )
+			obj = find_object_with_ntiid(ntiid)
 			if obj is None:
-				raise hexc.HTTPUnprocessableEntity( 'Object no longer exists (%s)', ntiid )
-			self.context.append( obj )
+				raise hexc.HTTPUnprocessableEntity('Object no longer exists (%s)', ntiid)
+			self.context.append(obj)
 
 		principal = self.remoteUser.username
 		self._reorder_for_ntiid(ntiid, index, old_keys)
@@ -500,13 +526,13 @@ class OutlineNodeDeleteView(OutlineNodeInsertView):
 
 		if ntiid not in old_keys:
 			raise hexc.HTTPConflict('Invalid ntiid (%s)' % ntiid)
-		# TODO Can we tell when to unregister nodes (no longer contained)
+		# TODO: Can we tell when to unregister nodes (no longer contained)
 		# to avoid orphans?
 
-		# TODO Do we want to permanently delete nodes, or delete placeholder
+		# TODO: Do we want to permanently delete nodes, or delete placeholder
 		# mark them (to undo and save transaction history)?
 		del self.context[ntiid]
-		logger.info( 'Deleted entity in outline %s', ntiid )
+		logger.info('Deleted entity in outline %s', ntiid)
 		return hexc.HTTPOk()
 
 @view_config(route_name='objects.generic.traversal',
