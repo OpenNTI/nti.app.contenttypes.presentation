@@ -74,9 +74,9 @@ from nti.ntiids.ntiids import make_specific_safe
 
 from nti.site.utils import registerUtility
 
-from . import AssetsPathAdapter
+# helper functions
 
-def make_asset_ntiid(nttype, creator, base=None, extra=None):
+def _make_asset_ntiid(nttype, creator, base=None, extra=None):
 	if not isinstance(nttype, six.string_types):
 		nttype = nttype.__name__[1:]
 
@@ -100,7 +100,7 @@ def make_asset_ntiid(nttype, creator, base=None, extra=None):
 					   specific=specific)
 	return ntiid
 
-def get_course_packages(context):
+def _get_course_packages(context):
 	course = ICourseInstance(context)
 	try:
 		packs = course.ContentPackageBundle.ContentPackages
@@ -130,7 +130,7 @@ def intid_register(item, registry, connection=None):
 
 def _add_2_packages(context, item):
 	result = []
-	for package in get_course_packages(context):
+	for package in _get_course_packages(context):
 		container = IPresentationAssetContainer(package)
 		container[item.ntiid] = item
 		result.append(package.ntiid)
@@ -162,7 +162,7 @@ def _canonicalize(items, creator, base=None, registry=None):
 		created = True
 		provided = iface_of_asset(item)
 		if not item.ntiid:
-			item.ntiid = make_asset_ntiid(provided, creator, base=base, extra=idx)
+			item.ntiid = _make_asset_ntiid(provided, creator, base=base, extra=idx)
 		else:
 			stored = registry.queryUtility(provided, name=item.ntiid)
 			if stored is not None:
@@ -176,6 +176,8 @@ def _canonicalize(items, creator, base=None, registry=None):
 			intid_register(item, registry)
 			registerUtility(registry, item, provided, name=item.ntiid)
 	return result
+
+# GET views
 
 @view_config(context=IPresentationAsset)
 @view_defaults(route_name='objects.generic.traversal',
@@ -203,6 +205,8 @@ class NoHrefAssetGetView(PresentationAssetGetView):
 		interface.alsoProvides(result, INoHrefInResponse)
 		return result
 
+# POST/PUT views
+
 class AssetPutViewMixin(object):
 
 	def readInput(self, value=None):
@@ -211,9 +215,11 @@ class AssetPutViewMixin(object):
 		result.pop('NTIID', None)
 		return result
 
-@view_config(context=AssetsPathAdapter)
+@view_config(context=ICourseInstance)
+@view_config(context=ICourseCatalogEntry)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
+			   name="assets",
 			   request_method='POST')
 class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsMixin):
 
@@ -221,13 +227,13 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 
 	@Lazy
 	def _course(self):
-		parent = self.context.__parent__
+		parent = self.context
 		result = ICourseInstance(parent)
 		return result
 
 	@Lazy
 	def _entry(self):
-		result = ICourseCatalogEntry(self._course)
+		result = ICourseCatalogEntry(self.context)
 		return result
 
 	@Lazy
@@ -358,7 +364,7 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 		if content_object.ntiid:
 			self._check_exists(provided, content_object.ntiid)
 		else:
-			content_object.ntiid = make_asset_ntiid(provided, creator, extra=self._extra)
+			content_object.ntiid = _make_asset_ntiid(provided, creator, extra=self._extra)
 
 		_notify_created(content_object)
 
