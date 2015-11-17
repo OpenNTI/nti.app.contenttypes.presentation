@@ -108,7 +108,7 @@ def _db_connection(registry=None):
 		result = IConnection(registry, None)
 	return result
 
-def intid_register(item, registry=None, intids=None, connection=None):
+def _intid_register(item, registry=None, intids=None, connection=None):
 	registry = get_registry(registry)
 	intids = component.getUtility(IIntIds) if intids is None else intids
 	connection = _db_connection(registry) if connection is None else connection
@@ -440,7 +440,7 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 			new_lesson = self._make_lesson_node(new_node)
 			new_lesson.locked = True
 			lifecycleevent.created(new_lesson)
-			intid_register(new_lesson)
+			_intid_register(new_lesson)
 			self._register_obj(new_lesson)
 		self._register_obj(new_node)
 		new_node.locked = True
@@ -464,9 +464,12 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 		children_size = len(old_keys)
 		self.context.append(new_node)
 
+		self.request.response.status_int = 201
+
 		if index is not None and index < children_size:
 			self._reorder_for_ntiid(new_node.ntiid, index, old_keys)
 		logger.info('Created new outline node (%s)', new_node.ntiid)
+		
 		return new_node
 
 @view_config(route_name='objects.generic.traversal',

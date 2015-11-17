@@ -376,5 +376,6 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 						name=content_object.ntiid)
 
 		# index and post process
+		self.request.response.status_int = 201
 		self._handle_asset(provided, content_object, creator.username)
 		return content_object
