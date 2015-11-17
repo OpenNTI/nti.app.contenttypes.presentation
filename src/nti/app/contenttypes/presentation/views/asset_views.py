@@ -235,7 +235,7 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 			raise hexc.HTTPUnprocessableEntity(_("Asset already exists."))
 
 	def _handle_package_asset(self, provided, item, creator):
-		containers = _add_2_container(self._catalog, item, pacakges=True)
+		containers = _add_2_container(self._course, item, pacakges=True)
 		if provided == INTISlideDeck:
 			base = item.ntiid
 

@@ -1,0 +1,32 @@
+{
+    "MimeType": "application/vnd.nextthought.ntivideo",
+    "description": "",
+    "title": "Andrew Johnson",
+    "creator": "OU",
+    "closedCaptions": null,
+    "ntiid": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Andrew_Johnson",
+    "sources": [
+        {
+            "service": "kaltura",
+            "source": [
+                "1500101:0_hwfe5zjr"
+            ],
+            "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_hwfe5zjr/width/1280/",
+            "height": 480,
+            "width": 640,
+            "type": [
+                "video/kaltura"
+            ],
+            "thumbnail": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_hwfe5zjr/width/640/"
+        }
+    ],
+    "transcripts": [
+        {
+            "srcjsonp": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/cd0332efcd704487fab382b76fdc0523fb2dad7e/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp",
+            "src": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/cd0332efcd704487fab382b76fdc0523fb2dad7e/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt",
+            "type": "text/vtt",
+            "lang": "en",
+            "purpose": "normal"
+        }
+    ]
+}
