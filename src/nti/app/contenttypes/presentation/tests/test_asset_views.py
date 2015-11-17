@@ -73,7 +73,7 @@ class TestAssetViews(ApplicationLayerTest):
 				assert_that(container, has_key(ntiid))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def xtest_post_ntivideo(self):
+	def test_post_ntivideo(self):
 		source = self._load_resource('ntivideo.json')
 		source.pop('NTIID', None)
 		res = self.testapp.post_json(self.assets_url, source, status=201)
@@ -93,7 +93,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(containers, has_length(greater_than(1)))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def xtest_post_slidedeck(self):
+	def test_post_slidedeck(self):
 		source = self._load_resource('ntislidedeck.json')
 		res = self.testapp.post_json(self.assets_url, source, status=201)
 		assert_that(res.json_body, has_entry('ntiid', is_not(none())))
@@ -110,7 +110,7 @@ class TestAssetViews(ApplicationLayerTest):
 			self._check_containers(course, items)
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def xtest_post_overview_group(self):
+	def test_post_overview_group(self):
 		source = self._load_resource('nticourseoverviewgroup.json')
 		res = self.testapp.post_json(self.assets_url, source, status=201)
 		assert_that(res.json_body, has_entry('ntiid', is_not(none())))
