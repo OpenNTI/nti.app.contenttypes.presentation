@@ -101,7 +101,8 @@ def make_asset_ntiid(nttype, creator, base=None, extra=None):
 					   specific=specific)
 	return ntiid
 
-def get_course_packages(course):
+def get_course_packages(context):
+	course = ICourseInstance(context)
 	try:
 		packs = course.ContentPackageBundle.ContentPackages
 	except AttributeError:
@@ -129,16 +130,21 @@ def intid_register(item, registry, intids=None, connection=None):
 		return True
 	return False
 
+def _add_2_packages(context, item):
+	result = []
+	for package in get_course_packages(context):
+		container = IPresentationAssetContainer(package)
+		container[item.ntiid] = item
+		result.append(package.ntiid)
+	return result
+
 def _add_2_container(context, item, pacakges=False):
 	result = []
 	course = ICourseInstance(context)
 	container = IPresentationAssetContainer(context)
 	container[item.ntiid] = item
 	if pacakges:
-		for package in get_course_packages(course):
-			container = IPresentationAssetContainer(package)
-			container[item.ntiid] = item
-			result.append(package.ntiid)
+		result.extend(_add_2_packages(course, item))
 	entry = ICourseCatalogEntry(context)
 	result.append(entry.ntiid)
 	return result
