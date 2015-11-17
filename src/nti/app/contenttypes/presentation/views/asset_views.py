@@ -5,7 +5,6 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-from nti.appserver.ugd_edit_views import UGDPutView
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -34,6 +33,7 @@ from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
+from nti.appserver.ugd_edit_views import UGDPutView
 from nti.appserver.dataserver_pyramid_views import GenericGetView
 
 from nti.common.property import Lazy
