@@ -120,7 +120,7 @@ def _db_connection(registry=None):
 	result = IConnection(registry, None)
 	return result
 
-def intid_register(item, registry, connection=None):
+def _intid_register(item, registry, connection=None):
 	connection = _db_connection(registry) if connection is None else connection
 	if connection is not None:
 		connection.add(item)
@@ -173,7 +173,7 @@ def _canonicalize(items, creator, base=None, registry=None):
 			item.locked = True  # locked
 			item.creator = item.creator or creator  # set creator before notify
 			_notify_created(item)
-			intid_register(item, registry)
+			_intid_register(item, registry)
 			registerUtility(registry, item, provided, name=item.ntiid)
 	return result
 
@@ -303,7 +303,7 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 						stored.label = stored.poster = item.title
 
 					_notify_created(stored)
-					intid_register(stored, registry=self._registry)
+					_intid_register(stored, registry=self._registry)
 					registerUtility(self._registry,
 									component=stored,
 									provided=x_iface,
@@ -369,7 +369,7 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 		_notify_created(content_object)
 
 		# register utility
-		intid_register(content_object, registry=self._registry)
+		_intid_register(content_object, registry=self._registry)
 		registerUtility(self._registry,
 						component=content_object,
 						provided=provided,
