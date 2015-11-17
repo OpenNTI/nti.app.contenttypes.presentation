@@ -259,29 +259,29 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 			if not IPublishable.providedBy(group) or not group.is_published:
 				continue
 
-			for item in group.Items:			
+			for item in group.Items:
 				# ignore non media items
 				if 	(not IMediaRef.providedBy(item)
 					 and not INTIMedia.providedBy(item)
 					 and not INTISlideDeck.providedBy(item)):
 					continue
-	
+
 				# ignore unpublished items
 				if not IPublishable.providedBy(item) or not item.is_published:
 					continue
-	
+
 				# check visibility
 				if IVisible.providedBy(item):
 					if not is_item_visible(item, self.remoteUser, record=record):
 						continue
 					else:
 						item = INTIMedia(item, None)
-	
+
 				# check if ref was valid
 				uid = intids.queryId(item) if item is not None else None
 				if uid is None:
 					continue
-	
+
 				# set content containers
 				for ntiid in catalog.get_containers(uid):
 					if ntiid in ntiids:
@@ -419,17 +419,12 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 		new_lesson.__parent__ = node
 		new_lesson.title = node.title
 		new_lesson.creator = node.creator
-		new_lesson.__parent__ = node # take ownership
-		# if there is no lesson set it to the overview
+		# If there is no lesson set it to the overview
 		if not node.ContentNTIID:
 			node.ContentNTIID = lesson_ntiid
 		# XXX: set src and lesson ntiid (see MediaByOutlineView)
 		node.LessonOverviewNTIID = node.src = lesson_ntiid
 		return new_lesson
-
-	def readInput(self):
-		result = super(OutlineNodeInsertView, self).readInput()
-		return result
 
 	def _get_new_node(self):
 		# TODO: We could support auto-publishing based on type here.
@@ -469,7 +464,7 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 		if index is not None and index < children_size:
 			self._reorder_for_ntiid(new_node.ntiid, index, old_keys)
 		logger.info('Created new outline node (%s)', new_node.ntiid)
-		
+
 		return new_node
 
 @view_config(route_name='objects.generic.traversal',
