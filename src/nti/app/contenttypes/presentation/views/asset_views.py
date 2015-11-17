@@ -42,9 +42,10 @@ from nti.coremetadata.interfaces import IPublishable
 from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
-from nti.contenttypes.courses.interfaces import ICourseInstance,\
-	ICourseSubInstance
+from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+
+from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
@@ -140,15 +141,14 @@ def _add_2_course(context, item):
 	container = IPresentationAssetContainer(course)
 	container[item.ntiid] = item
 
-	# add to subinstances
-	if not ICourseSubInstance.providedBy(course):
-		for subinstance in course.SubInstances.values():
-			container = IPresentationAssetContainer(subinstance)
-			container[item.ntiid] = item
+def _add_2_courses(context, item):
+	_add_2_course(context, item)
+	for subinstance in get_course_subinstances(context):
+		_add_2_course(subinstance, item)
 
 def _add_2_container(context, item, pacakges=False):
 	result = []
-	_add_2_course(context, item)
+	_add_2_courses(context, item)
 	if pacakges:
 		result.extend(_add_2_packages(context, item))
 	entry = ICourseCatalogEntry(context)
