@@ -252,6 +252,21 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 	def _registry(self):
 		return get_registry()
 
+	def _get_ntiid(self, item):
+		ntiid = item.ntiid
+		if INTICourseOverviewGroup.providedBy(item) and TYPE_UUID in get_specific(ntiid):
+			ntiid = None
+		return ntiid
+
+	def _check_exists(self, provided, item, creator):
+		ntiid = self._get_ntiid(item)
+		if ntiid:
+			if self._registry.queryUtility(provided, name=ntiid):
+				raise hexc.HTTPUnprocessableEntity(_("Asset already exists."))
+		else:
+			item.ntiid = _make_asset_ntiid(provided, creator, extra=self._extra)
+		return item
+
 	def _handle_package_asset(self, provided, item, creator):
 		containers = _add_2_container(self._course, item, pacakges=True)
 		if provided == INTISlideDeck:
@@ -271,46 +286,47 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 		self._catalog.index(item, container_ntiids=containers,
 				  			namespace=containers[0])  # first pkg
 
-	def _handle_overview_group(self, item, creator, extended=None):
+	def _handle_overview_group(self, group, creator, extended=None):
 		# add to course container
-		containers = _add_2_container(self._course, item, pacakges=False)
+		containers = _add_2_container(self._course, group, pacakges=False)
 
 		# have unique copies of group items
-		_canonicalize(item.Items, creator, registry=self._registry, base=item.ntiid)
+		_canonicalize(group.Items, creator, registry=self._registry, base=group.ntiid)
 
 		# include group ntiid in containers
-		item_extended = list(extended or ()) + containers + [item.ntiid]
+		item_extended = list(extended or ()) + containers + [group.ntiid]
 
 		# process group items
-		for x in item.Items:
+		for x in group.Items:
 			_add_2_container(self._course, x, pacakges=False)
 			self._catalog.index(x, container_ntiids=item_extended)
 
-		# index item
+		# index group
 		item_extended = list(extended or ()) + containers
-		self._catalog.index(item, container_ntiids=item_extended)
+		self._catalog.index(group, container_ntiids=item_extended)
 
-	def _handle_lesson_overview(self, item, creator):
+	def _handle_lesson_overview(self, lesson, creator):
 		# add to course container
-		containers = _add_2_container(self._course, item, pacakges=False)
+		containers = _add_2_container(self._course, lesson, pacakges=False)
 
 		# have unique copies of lesson groups
-		_canonicalize(item.Items, creator, registry=self._registry, base=item.ntiid)
+		_canonicalize(lesson.Items, creator, registry=self._registry, base=lesson.ntiid)
 
 		# process lesson groups
-		for group in item.Items:
-			if group.__parent__ is not None and group.__parent__ != item:
+		for group in lesson.Items:
+			if group.__parent__ is not None and group.__parent__ != lesson:
 				msg = _("Overview group has been used by another lesson")
 				raise hexc.HTTPUnprocessableEntity(msg)
 
 			# take ownership
-			group.__parent__ = item
+			group.__parent__ = lesson
+			self._check_exists(INTICourseOverviewGroup, group, creator)
 			self._handle_overview_group(group,
 										creator=creator,
-										extended=(item.ntiid,))
+										extended=(lesson.ntiid,))
 
 		# index lesson item
-		self._catalog.index(item, container_ntiids=containers)
+		self._catalog.index(lesson, container_ntiids=containers)
 
 	def _handle_other_asset(self, item, creator):
 		containers = _add_2_container(self._course, item, pacakges=False)
@@ -325,21 +341,6 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 			self._handle_lesson_overview(item, creator)
 		else:
 			self._handle_other_asset(item, creator)
-		return item
-
-	def _get_ntiid(self, item):
-		ntiid = item.ntiid
-		if INTICourseOverviewGroup.providedBy(item) and TYPE_UUID in get_specific(ntiid):
-			ntiid = None
-		return ntiid
-
-	def _check_exists(self, provided, item, creator):
-		ntiid = self._get_ntiid(item)
-		if ntiid:
-			if self._registry.queryUtility(provided, name=ntiid):
-				raise hexc.HTTPUnprocessableEntity(_("Asset already exists."))
-		else:
-			item.ntiid = _make_asset_ntiid(provided, creator, extra=self._extra)
 		return item
 
 	def readCreateUpdateContentObject(self, user, search_owner=False, externalValue=None):

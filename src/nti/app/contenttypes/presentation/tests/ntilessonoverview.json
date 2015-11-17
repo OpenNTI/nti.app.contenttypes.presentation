@@ -1,0 +1,22 @@
+{
+    "MimeType": "application/vnd.nextthought.ntilessonoverview",
+    "NTIID": "tag:nextthought.com,2011-10:OU-NTILessonOverview-BLEACH_S_2015_Shikai_to_Bankai.lec:11.06_LESSON",
+    "Items": [
+        {
+            "MimeType": "application/vnd.nextthought.nticourseoverviewgroup",
+            "accentColor": "81c8dc",
+            "Items": [
+                {
+                    "MimeType": "application/vnd.nextthought.assessment.assignment",
+                    "ContainerId": "tag:nextthought.com,2011-10:OU-HTML-BLEACH_S_2015_Shikai_to_Bankai.discussions:_the_liberal_hour",
+                    "title": "Discussions: The Liberal Hour",
+                    "label": "Discussions: The Liberal Hour",
+                    "NTIID": "tag:nextthought.com,2011-10:OU-NAQ-BLEACH_S_2015_Shikai_to_Bankai.naq.asg.assignment:11.6_discussions",
+                    "Target-NTIID": "tag:nextthought.com,2011-10:OU-NAQ-BLEACH_S_2015_Shikai_to_Bankai.naq.asg.assignment:11.6_discussions"
+                }
+            ],
+            "title": "Assignments"
+        }
+    ],
+    "title": "11.6 Apply Your Knowledge"
+}
