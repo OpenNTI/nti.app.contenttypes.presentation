@@ -16,11 +16,8 @@ import time
 import uuid
 from itertools import chain
 
-from zope import component
 from zope import interface
 from zope import lifecycleevent
-
-from zope.intid import IIntIds
 
 from ZODB.interfaces import IConnection
 
@@ -45,7 +42,8 @@ from nti.coremetadata.interfaces import IPublishable
 from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
-from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseInstance,\
+	ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.presentation import iface_of_asset
@@ -121,12 +119,11 @@ def _db_connection(registry=None):
 	result = IConnection(registry, None)
 	return result
 
-def intid_register(item, registry, intids=None, connection=None):
-	intids = component.getUtility(IIntIds) if intids is None else intids
+def intid_register(item, registry, connection=None):
 	connection = _db_connection(registry) if connection is None else connection
 	if connection is not None:
 		connection.add(item)
-		intids.register(item, event=False)
+		lifecycleevent.added(item)
 		return True
 	return False
 
@@ -138,13 +135,22 @@ def _add_2_packages(context, item):
 		result.append(package.ntiid)
 	return result
 
+def _add_2_course(context, item):
+	course = ICourseInstance(context)
+	container = IPresentationAssetContainer(course)
+	container[item.ntiid] = item
+
+	# add to subinstances
+	if not ICourseSubInstance.providedBy(course):
+		for subinstance in course.SubInstances.values():
+			container = IPresentationAssetContainer(subinstance)
+			container[item.ntiid] = item
+
 def _add_2_container(context, item, pacakges=False):
 	result = []
-	course = ICourseInstance(context)
-	container = IPresentationAssetContainer(context)
-	container[item.ntiid] = item
+	_add_2_course(context, item)
 	if pacakges:
-		result.extend(_add_2_packages(course, item))
+		result.extend(_add_2_packages(context, item))
 	entry = ICourseCatalogEntry(context)
 	result.append(entry.ntiid)
 	return result
@@ -304,8 +310,7 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 
 		# index item
 		item_extended = list(extended or ()) + containers
-		self._catalog.index(item, container_ntiids=item_extended,
-				  			namespace=containers[0])  # course entry
+		self._catalog.index(item, container_ntiids=item_extended)
 
 	def _handle_lesson_overview(self, item, creator):
 		# add to course container
@@ -316,7 +321,7 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 
 		# process lesson groups
 		for group in item.Items:
-			if group.__parent__ is not None:
+			if group.__parent__ is not None and group.__parent__ != item:
 				msg = _("Overview group has been used by another lesson")
 				raise hexc.HTTPUnprocessableEntity(msg)
 
@@ -327,13 +332,11 @@ class AssetPostView(AbstractAuthenticatedView, ModeledContentUploadRequestUtilsM
 										extended=(item.ntiid,))
 
 		# index lesson item
-		self._catalog.index(item, container_ntiids=containers,
-				  			namespace=containers[0])  # course entry
+		self._catalog.index(item, container_ntiids=containers)
 
 	def _handle_other_asset(self, item, creator):
 		containers = _add_2_container(self._course, item, pacakges=False)
-		self._catalog.index(item, container_ntiids=containers,
-				  			namespace=containers[0])  # course entry
+		self._catalog.index(item, container_ntiids=containers)
 
 	def _handle_asset(self, provided, item, creator):
 		if provided in PACKAGE_CONTAINER_INTERFACES:
