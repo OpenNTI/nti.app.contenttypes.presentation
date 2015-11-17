@@ -12,11 +12,15 @@ from hamcrest import none
 from hamcrest import is_not
 from hamcrest import has_key
 from hamcrest import has_entry
+from hamcrest import has_length
 from hamcrest import assert_that
+from hamcrest import greater_than
 
 import os
 
 import simplejson
+
+from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
@@ -61,3 +65,7 @@ class TestAssetViews(ApplicationLayerTest):
 			course = ICourseInstance(entry)
 			container = IPresentationAssetContainer(course)
 			assert_that(container, has_key(ntiid))
+
+			catalog = get_library_catalog()
+			containers = catalog.get_containers(obj)
+			assert_that(containers, has_length(greater_than(1)))
