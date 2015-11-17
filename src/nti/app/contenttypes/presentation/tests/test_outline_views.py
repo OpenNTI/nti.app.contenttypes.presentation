@@ -8,6 +8,7 @@ __docformat__ = "restructuredtext en"
 # pylint: disable=W0212,R0904
 from hamcrest import is_
 from hamcrest import is_not
+from hamcrest import contains
 from hamcrest import not_none
 from hamcrest import has_item
 from hamcrest import has_entry
@@ -128,12 +129,13 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		"""
 		Test we can insert/move units at/to various indexes.
 		"""
-		# TODO Move between nodes
+		# TODO Validate publish visibility/publishing.
 		# TODO Revert layer changes ?
 		self._test_unit_node_inserts()
 		self._test_moving_nodes()
 		self._test_deleting_nodes()
 		self._test_content_nodes()
+		self._test_moving_content_nodes()
 
 	def _test_content_nodes(self):
 		"""
@@ -198,6 +200,60 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that( child_ntiids, has_length( 5 ))
 		assert_that( child_ntiids[0], is_( content_node_ntiid2 ))
 		assert_that( child_ntiids[-1], is_( content_node_ntiid ))
+
+	def _test_moving_content_nodes(self):
+		"""
+		Move nodes between unit nodes.
+		"""
+		instructor_environ = self.instructor_environ
+		def _get_unit_node( index ):
+			res = self.testapp.get( self.outline_url, extra_environ=instructor_environ )
+			res = res.json_body
+			return res[index]
+
+		res = _get_unit_node( 0 )
+		src_unit_ntiid = res.get( 'NTIID' )
+		original_src_child_ntiids = [x.get( 'NTIID' ) for x in res.get( 'contents' )]
+		moved_ntiid = original_src_child_ntiids[0]
+
+		res = _get_unit_node( 1 )
+		target_unit_ntiid = res.get( 'NTIID' )
+		original_target_child_ntiids = [x.get( 'NTIID' ) for x in res.get( 'contents' )]
+
+		# Move to our target
+		unit_url = '/dataserver2/NTIIDs/%s/contents/index/0' % target_unit_ntiid
+		ntiid_data = {'ntiid': moved_ntiid}
+		self.testapp.put_json(unit_url, ntiid_data,
+								extra_environ=instructor_environ)
+
+		# Still in old for now
+		res = _get_unit_node( 0 )
+		src_child_ntiids = [x.get( 'NTIID' ) for x in res.get( 'contents' )]
+		assert_that( src_child_ntiids, has_item( moved_ntiid ))
+		assert_that( src_child_ntiids, has_length( len( original_src_child_ntiids ) ))
+
+		res = _get_unit_node( 1 )
+		target_child_ntiids = [x.get( 'NTIID' ) for x in res.get( 'contents' )]
+		assert_that( target_child_ntiids[0], is_( moved_ntiid ) )
+		assert_that( target_child_ntiids, has_length( len( original_target_child_ntiids ) + 1 ))
+
+		# Now client deletes from old
+		unit_url = '/dataserver2/NTIIDs/%s/contents' % src_unit_ntiid
+		unit_data = {'ntiid': moved_ntiid}
+		self.testapp.delete_json(unit_url, unit_data,
+								extra_environ=instructor_environ)
+
+		res = _get_unit_node( 0 )
+		src_child_ntiids = [x.get( 'NTIID' ) for x in res.get( 'contents' )]
+		assert_that( src_child_ntiids, is_not( has_item( moved_ntiid )))
+		assert_that( src_child_ntiids, has_length( len( original_src_child_ntiids ) - 1 ))
+
+		# Nothing changes here
+		res = _get_unit_node( 1 )
+		target_child_ntiids2 = [x.get( 'NTIID' ) for x in res.get( 'contents' )]
+		assert_that( target_child_ntiids2[0], is_( moved_ntiid ) )
+		assert_that( target_child_ntiids2, contains( *target_child_ntiids ))
+		self._check_obj_state( moved_ntiid )
 
 	def _test_unit_node_inserts(self):
 		"""

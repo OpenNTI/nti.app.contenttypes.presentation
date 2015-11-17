@@ -77,6 +77,7 @@ from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
+from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.site.site import get_component_hierarchy_names
 
@@ -447,9 +448,11 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest',
 			 name=VIEW_NODE_CONTENTS)
-class OutlineNodeMoveView(OutlineNodeInsertView):
+class OutlineNodePutView(OutlineNodeInsertView):
 	"""
-	Move the given ntiid to the given index.
+	Put the given ntiid to the given context. We allow moves (copies)
+	between nodes, if the object exists. We expect the client to then
+	DELETE from the old node if moving.
 	"""
 
 	def __call__(self):
@@ -460,16 +463,19 @@ class OutlineNodeMoveView(OutlineNodeInsertView):
 		old_keys = list(self.context.keys())
 		ntiid = values.get('ntiid')
 
-		# TODO This may be a move from another node. Can we
-		# detect that easily?
-		# TODO Delete API, can we tell when to unregister/clean-up
-		# orphaned nodes.
-		if 		ntiid not in old_keys \
-			or 	index >= len(old_keys) \
+		if 		index >= len(old_keys) \
 			or 	index < 0:
 			raise hexc.HTTPConflict('Invalid index or ntiid (%s) (%s)' % (ntiid, index))
 
-		old_keys.remove(ntiid)
+		if ntiid in old_keys:
+			old_keys.remove(ntiid)
+		else:
+			# It's a move, append to our context.
+			obj = find_object_with_ntiid( ntiid )
+			if obj is None:
+				raise hexc.HTTPUnprocessableEntity( 'Object no longer exists (%s)', ntiid )
+			self.context.append( obj )
+
 		principal = self.remoteUser.username
 		self._reorder_for_ntiid(ntiid, index, old_keys)
 		notify(CourseOutlineNodeMovedEvent(self.context, principal, index))
@@ -494,6 +500,9 @@ class OutlineNodeDeleteView(OutlineNodeInsertView):
 
 		if ntiid not in old_keys:
 			raise hexc.HTTPConflict('Invalid ntiid (%s)' % ntiid)
+		# TODO Can we tell when to unregister nodes (no longer contained)
+		# to avoid orphans?
+
 		# TODO Do we want to permanently delete nodes, or delete placeholder
 		# mark them (to undo and save transaction history)?
 		del self.context[ntiid]
@@ -505,7 +514,7 @@ class OutlineNodeDeleteView(OutlineNodeInsertView):
 			 request_method='PUT',
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest')
-class OutlineNodePutView(UGDPutView):
+class OutlineNodeFieldPutView(UGDPutView):
 
 	def readInput(self, value=None):
 		result = UGDPutView.readInput(self, value=value)
