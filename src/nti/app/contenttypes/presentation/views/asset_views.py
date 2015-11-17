@@ -106,7 +106,7 @@ def _get_course_packages(context):
 
 def _notify_created(item):
 	lifecycleevent.created(item)
-	if IPublishable.providedBy(item) and item.is_published:
+	if IPublishable.providedBy(item) and item.is_published():
 		item.unpublish()
 	if IRecordable.providedBy(item):
 		item.locked = True
