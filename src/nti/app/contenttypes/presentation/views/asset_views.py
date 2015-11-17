@@ -72,6 +72,7 @@ from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
 
 from nti.site.utils import registerUtility
+from nti.site.utils import unregisterUtility
 
 # helper functions
 
@@ -113,6 +114,11 @@ def _notify_created(item):
 		item.unpublish()
 	if IRecordable.providedBy(item):
 		item.locked = True
+
+def _notify_removed(item):
+	lifecycleevent.removed(item)
+	if hasattr('item', '__parent__'):
+		item.__parent__ = None
 
 def _db_connection(registry=None):
 	registry = get_registry(registry)
@@ -327,7 +333,7 @@ class AssetSubmitMixin(AbstractAuthenticatedView):
 			   renderer='rest',
 			   name="assets",
 			   request_method='POST')
-class AssetPostView(AssetSubmitMixin, 
+class AssetPostView(AssetSubmitMixin,
 					AbstractAuthenticatedView,
 					ModeledContentUploadRequestUtilsMixin):
 
@@ -340,7 +346,7 @@ class AssetPostView(AssetSubmitMixin,
 						 externalValue, contentObject)
 			raise hexc.HTTPUnprocessableEntity(_('Unsupported/missing Class'))
 		return contentObject
-	
+
 	def readCreateUpdateContentObject(self, user, search_owner=False, externalValue=None):
 		creator = user
 		externalValue = self.readInput() if not externalValue else externalValue
@@ -377,12 +383,42 @@ class AssetPostView(AssetSubmitMixin,
 			   request_method='PUT')
 class AssetPutView(AssetSubmitMixin, UGDPutView):
 
+	def _remove_item(self, item, ntiid=None):
+		ntiid = ntiid or item.ntiid
+		self._catalog.unindex(item)
+		unregisterUtility(self._registry, provided=iface_of_asset(item), name=ntiid)
+		_notify_removed(item)
+
 	def readInput(self, value=None):
 		result = UGDPutView.readInput(self, value=value)
 		result.pop('ntiid', None)
 		result.pop('NTIID', None)
 		return result
 
+	def updateContentObject(self, contentObject, externalValue, set_id=False, notify=True):
+		# save data
+		data = None
+		provided = iface_of_asset(contentObject)
+		if provided == INTILessonOverview:
+			data = {x.ntiid:x for x in contentObject.Items}  # save groups
+
+		# update object
+		result = UGDPutView.updateContentObject(self,
+												contentObject,
+												externalValue,
+												set_id=set_id,
+												notify=notify)
+
+		# unregister any old data
+		if data and provided == INTILessonOverview:
+			updated = {x.ntiid for x in contentObject.Items}
+			for ntiid, group in data.items():
+				if ntiid not in updated:  # group removed
+					self._remove_item(group, ntiid)
+
+		return result
+
 	def __call__(self):
 		result = UGDPutView.__call__(self)
+		self._handle_asset(iface_of_asset(result), result, result.creator)
 		return result
