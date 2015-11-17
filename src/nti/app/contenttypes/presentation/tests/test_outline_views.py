@@ -90,6 +90,10 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self.testapp.post_json( url, None, extra_environ=self.instructor_environ )
 
 	def _check_visible_status(self, ntiid, is_visible=False, has_lesson=False):
+		"""
+		Validate a nodes fields are visible. A node's contents are not visible
+		if the content available dates are out-of-bounds.
+		"""
 		res = self.testapp.get(self.outline_url, extra_environ=self.instructor_environ)
 		res = res.json_body
 		def _find_item( items ):
@@ -375,7 +379,10 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		# Insert at last index
 		at_index_url = self.outline_url + '/index/9'
 		new_unit_title3 = 'new unit title3'
-		unit_data3 = {'title': new_unit_title3, 'MimeType': self.unit_mime_type}
+		content_beginning = '2000-08-13T06:00:00Z'
+		unit_data3 = {'title': new_unit_title3,
+					'MimeType': self.unit_mime_type,
+					'ContentsAvailableBeginning': content_beginning}
 		res = self.testapp.post_json(at_index_url, unit_data3,
 									 extra_environ=instructor_environ)
 		new_ntiid3 = res.json_body.get('NTIID')
@@ -384,6 +391,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self._publish_obj( new_ntiid3 )
 		node_count += 1
 		self._check_obj_state( new_ntiid3, is_published=True )
+		self._check_visible_status( new_ntiid3, is_visible=True )
 
 		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		assert_that(unit_ntiids[0], is_(new_ntiid2))
