@@ -82,6 +82,10 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that(set(unit_ntiids), has_length(expected_size))
 		return unit_ntiids
 
+	def _publish_obj( self, ntiid ):
+		url = '/dataserver2/Objects/%s/@@publish' % ntiid
+		self.testapp.post_json( url, None, extra_environ=self.instructor_environ )
+
 	def _check_obj_state(self, ntiid, is_published=False, is_locked=True):
 		"""
 		Check our server state, specifically, whether an object is locked,
@@ -130,11 +134,10 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		"""
 		Test we can insert/move units at/to various indexes.
 		"""
-		# TODO Validate publish visibility/publishing.
 		# TODO Revert layer changes ?
-		self._test_unit_node_inserts()
-		self._test_moving_nodes()
-		self._test_deleting_nodes()
+		node_count = self._test_unit_node_inserts()
+		self._test_moving_nodes( node_count )
+		node_count = self._test_deleting_nodes( node_count )
 		self._test_content_nodes()
 		self._test_moving_content_nodes()
 
@@ -148,10 +151,15 @@ class TestOutlineEditViews(ApplicationLayerTest):
 			res = res.json_body
 			return res[0]
 
+		def _first_node_size( expected_size=3 ):
+			res = _get_first_unit_node()
+			child_ntiids = [x.get('NTIID') for x in res.get('contents')]
+			assert_that(child_ntiids, has_length( expected_size ))
+			return child_ntiids
+
 		res = _get_first_unit_node()
 		first_unit_ntiid = res.get('NTIID')
-		child_ntiids = [x.get('NTIID') for x in res.get('contents')]
-		assert_that(child_ntiids, has_length(3))
+		_first_node_size()
 
 		# Append content node; validate fields
 		new_content_title = 'new content node title'
@@ -168,12 +176,15 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that(lesson_ntiid, is_not(content_node_ntiid))
 		assert_that(content_node_ntiid, contains_string('NTICourseOutlineNode'))
 		assert_that(lesson_ntiid, contains_string('NTILessonOverview'))
-		self._check_obj_state(content_node_ntiid)
-		self._check_obj_state(lesson_ntiid)
 
-		res = _get_first_unit_node()
-		child_ntiids = [x.get('NTIID') for x in res.get('contents')]
-		assert_that(child_ntiids, has_length(4))
+		# Must publish
+		_first_node_size( 3 )
+		self._check_obj_state( content_node_ntiid )
+		self._publish_obj( content_node_ntiid )
+		self._check_obj_state( content_node_ntiid, is_published=True )
+		self._check_obj_state( lesson_ntiid )
+
+		child_ntiids = _first_node_size( 4 )
 		assert_that(child_ntiids[-1], is_(content_node_ntiid))
 
 		# Insert at index 0 with dates
@@ -196,9 +207,14 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self._check_obj_state(lesson_ntiid2)
 
 		# TODO Shouldnt be visible outside contents dates.
-		res = _get_first_unit_node()
-		child_ntiids = [x.get('NTIID') for x in res.get('contents')]
-		assert_that(child_ntiids, has_length(5))
+		# Must publish
+		_first_node_size( 4 )
+		self._check_obj_state( content_node_ntiid2 )
+		self._publish_obj( content_node_ntiid2 )
+		self._check_obj_state( content_node_ntiid2, is_published=True )
+		self._check_obj_state( lesson_ntiid2 )
+
+		child_ntiids = _first_node_size( 5 )
 		assert_that(child_ntiids[0], is_(content_node_ntiid2))
 		assert_that(child_ntiids[-1], is_(content_node_ntiid))
 
@@ -254,15 +270,16 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		target_child_ntiids2 = [x.get('NTIID') for x in res.get('contents')]
 		assert_that(target_child_ntiids2[0], is_(moved_ntiid))
 		assert_that(target_child_ntiids2, contains(*target_child_ntiids))
-		self._check_obj_state(moved_ntiid)
+		self._check_obj_state( moved_ntiid, is_published=True )
 
 	def _test_unit_node_inserts(self):
 		"""
 		Test inserting/appending unit nodes to an outline, with fields.
 		"""
 		# Base case
+		node_count = 8
 		instructor_environ = self.instructor_environ
-		unit_ntiids = self._get_outline_ntiids(instructor_environ, 8)
+		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		first_unit_ntiid = unit_ntiids[0]
 		last_unit_ntiid = unit_ntiids[-1]
 
@@ -280,10 +297,16 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		# New ntiid is of correct type and contains our username
 		assert_that(new_ntiid, contains_string(self.content_ntiid_type))
 		assert_that(new_ntiid, contains_string('sjohnson'))
-		self._check_obj_state(new_ntiid)
+
+		# Before publishing, our outline is unchanged
+		self._get_outline_ntiids( instructor_environ, node_count )
+		self._check_obj_state( new_ntiid )
+		self._publish_obj( new_ntiid )
+		node_count += 1
+		self._check_obj_state( new_ntiid, is_published=True )
 
 		# Test our outline; new ntiid is at end
-		unit_ntiids = self._get_outline_ntiids(instructor_environ, 9)
+		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		assert_that(unit_ntiids[0], is_(first_unit_ntiid))
 		assert_that(unit_ntiids[-2], is_(last_unit_ntiid))
 		assert_that(unit_ntiids[-1], is_(new_ntiid))
@@ -303,9 +326,15 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		new_ntiid2 = res.get('NTIID')
 		assert_that(res.get('ContentsAvailableBeginning'), is_(content_beginning))
 		assert_that(res.get('ContentsAvailableEnding'), is_(content_ending))
-		self._check_obj_state(new_ntiid2)
 
-		unit_ntiids = self._get_outline_ntiids(instructor_environ, 10)
+		# TODO End date?
+		self._get_outline_ntiids( instructor_environ, node_count )
+		self._check_obj_state( new_ntiid2 )
+		self._publish_obj( new_ntiid2 )
+		node_count += 1
+		self._check_obj_state( new_ntiid2, is_published=True )
+
+		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		assert_that(unit_ntiids[0], is_(new_ntiid2))
 		assert_that(unit_ntiids[1], is_(first_unit_ntiid))
 		assert_that(unit_ntiids[-2], is_(last_unit_ntiid))
@@ -319,17 +348,22 @@ class TestOutlineEditViews(ApplicationLayerTest):
 									 extra_environ=instructor_environ)
 		new_ntiid3 = res.json_body.get('NTIID')
 
-		unit_ntiids = self._get_outline_ntiids(instructor_environ, 11)
+		self._check_obj_state(new_ntiid3)
+		self._publish_obj( new_ntiid3 )
+		node_count += 1
+		self._check_obj_state( new_ntiid3, is_published=True )
+
+		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		assert_that(unit_ntiids[0], is_(new_ntiid2))
 		assert_that(unit_ntiids[1], is_(first_unit_ntiid))
 		assert_that(unit_ntiids[-3], is_(last_unit_ntiid))
 		assert_that(unit_ntiids[-2], is_(new_ntiid3))
 		assert_that(unit_ntiids[-1], is_(new_ntiid))
-		self._check_obj_state(new_ntiid3)
+		return node_count
 
-	def _test_moving_nodes(self):
+	def _test_moving_nodes(self, node_count):
 		instructor_environ = self.instructor_environ
-		unit_ntiids = self._get_outline_ntiids(instructor_environ, 11)
+		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		first_ntiid = unit_ntiids[0]
 		last_ntiid = unit_ntiids[-1]
 
@@ -339,7 +373,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self.testapp.put_json(at_index_url, ntiid_data,
 							  extra_environ=instructor_environ)
 
-		unit_ntiids = self._get_outline_ntiids(instructor_environ, 11)
+		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		assert_that(unit_ntiids[0], is_(last_ntiid))
 		assert_that(unit_ntiids[1], is_(first_ntiid))
 
@@ -347,7 +381,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self.testapp.put_json(at_index_url, ntiid_data,
 							  extra_environ=instructor_environ)
 
-		unit_ntiids = self._get_outline_ntiids(instructor_environ, 11)
+		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		assert_that(unit_ntiids[0], is_(last_ntiid))
 		assert_that(unit_ntiids[1], is_(first_ntiid))
 
@@ -357,13 +391,13 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self.testapp.put_json(at_index_url, ntiid_data,
 							  extra_environ=instructor_environ)
 
-		unit_ntiids = self._get_outline_ntiids(instructor_environ, 11)
+		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		assert_that(unit_ntiids[0], is_(last_ntiid))
 		assert_that(unit_ntiids[-1], is_(first_ntiid))
 
-	def _test_deleting_nodes(self):
+	def _test_deleting_nodes(self, node_count):
 		instructor_environ = self.instructor_environ
-		unit_ntiids = self._get_outline_ntiids(instructor_environ, 11)
+		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		first_ntiid = unit_ntiids[0]
 		last_ntiid = unit_ntiids[-1]
 
@@ -371,12 +405,15 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		unit_data = {'ntiid': first_ntiid}
 		self.testapp.delete_json(self.outline_url, unit_data,
 								 extra_environ=instructor_environ)
-		unit_ntiids = self._get_outline_ntiids(instructor_environ, 10)
+		node_count -= 1
+		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		assert_that(unit_ntiids, is_not(has_item(first_ntiid)))
 
 		# Two
 		unit_data = {'ntiid': last_ntiid}
 		self.testapp.delete_json(self.outline_url, unit_data,
 								 extra_environ=instructor_environ)
-		unit_ntiids = self._get_outline_ntiids(instructor_environ, 9)
+		node_count -= 1
+		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		assert_that(unit_ntiids, is_not(has_item(last_ntiid)))
+		return node_count
