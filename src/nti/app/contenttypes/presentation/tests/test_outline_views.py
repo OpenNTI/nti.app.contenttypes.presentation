@@ -8,6 +8,7 @@ __docformat__ = "restructuredtext en"
 # pylint: disable=W0212,R0904
 
 from hamcrest import is_
+from hamcrest import none
 from hamcrest import is_not
 from hamcrest import contains
 from hamcrest import not_none
@@ -15,7 +16,9 @@ from hamcrest import has_item
 from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
+from hamcrest import has_entries
 from hamcrest import contains_string
+does_not = is_not
 
 from nti.app.testing.decorators import WithSharedApplicationMockDS
 from nti.app.testing.application_webtest import ApplicationLayerTest
@@ -85,6 +88,31 @@ class TestOutlineEditViews(ApplicationLayerTest):
 	def _publish_obj( self, ntiid ):
 		url = '/dataserver2/Objects/%s/@@publish' % ntiid
 		self.testapp.post_json( url, None, extra_environ=self.instructor_environ )
+
+	def _check_visible_status(self, ntiid, is_visible=False, has_lesson=False):
+		res = self.testapp.get(self.outline_url, extra_environ=self.instructor_environ)
+		res = res.json_body
+		def _find_item( items ):
+			for item in items:
+				if item.get( 'NTIID' ) == ntiid:
+					return item
+				for child in item.get( 'contents', () ):
+					if child.get( 'NTIID' ) == ntiid:
+						return child
+
+		obj = _find_item( res )
+		assert_that( obj, not_none() )
+		if not is_visible:
+			# Based on content available dates, items do not expose contents.
+			assert_that( obj, does_not( has_entries( 'contents', none(),
+													'ContentNTIID', none() )))
+		elif has_lesson:
+			# Content node with contents
+			assert_that( obj, has_entries( 'contents', not_none(),
+										'ContentNTIID', not_none() ))
+		else:
+			# Unit with contents
+			assert_that( obj, has_entries( 'contents', not_none() ))
 
 	def _check_obj_state(self, ntiid, is_published=False, is_locked=True):
 		"""
@@ -183,6 +211,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self._publish_obj( content_node_ntiid )
 		self._check_obj_state( content_node_ntiid, is_published=True )
 		self._check_obj_state( lesson_ntiid )
+		self._check_visible_status( content_node_ntiid, is_visible=True, has_lesson=True )
 
 		child_ntiids = _first_node_size( 4 )
 		assert_that(child_ntiids[-1], is_(content_node_ntiid))
@@ -190,8 +219,8 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		# Insert at index 0 with dates
 		new_content_title2 = 'new content node title2'
 		unit_url = '/dataserver2/NTIIDs/%s/contents/index/0' % first_unit_ntiid
-		content_beginning = '2013-08-13T06:00:00Z'
-		content_ending = '2013-12-13T06:00:00Z'
+		content_beginning = '2200-08-13T06:00:00Z'
+		content_ending = '2213-12-13T06:00:00Z'
 		content_data = {'title': new_content_title2,
 						'MimeType': self.content_mime_type,
 						'ContentsAvailableBeginning': content_beginning,
@@ -206,13 +235,14 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self._check_obj_state(content_node_ntiid2)
 		self._check_obj_state(lesson_ntiid2)
 
-		# TODO Shouldnt be visible outside contents dates.
 		# Must publish
 		_first_node_size( 4 )
 		self._check_obj_state( content_node_ntiid2 )
 		self._publish_obj( content_node_ntiid2 )
 		self._check_obj_state( content_node_ntiid2, is_published=True )
 		self._check_obj_state( lesson_ntiid2 )
+		# Based on dates, contents are not provided.
+		self._check_visible_status( content_node_ntiid2, is_visible=False, has_lesson=True )
 
 		child_ntiids = _first_node_size( 5 )
 		assert_that(child_ntiids[0], is_(content_node_ntiid2))
@@ -304,6 +334,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self._publish_obj( new_ntiid )
 		node_count += 1
 		self._check_obj_state( new_ntiid, is_published=True )
+		self._check_visible_status( new_ntiid, is_visible=True )
 
 		# Test our outline; new ntiid is at end
 		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
@@ -315,7 +346,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		at_index_url = self.outline_url + '/index/0'
 		new_unit_title2 = 'new unit title2'
 		content_beginning = '2013-08-13T06:00:00Z'
-		content_ending = '2013-12-13T06:00:00Z'
+		content_ending = '2200-12-13T06:00:00Z'
 		unit_data2 = {'title': new_unit_title2,
 					'MimeType': self.unit_mime_type,
 					'ContentsAvailableBeginning': content_beginning,
@@ -327,12 +358,13 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that(res.get('ContentsAvailableBeginning'), is_(content_beginning))
 		assert_that(res.get('ContentsAvailableEnding'), is_(content_ending))
 
-		# TODO End date?
 		self._get_outline_ntiids( instructor_environ, node_count )
 		self._check_obj_state( new_ntiid2 )
 		self._publish_obj( new_ntiid2 )
 		node_count += 1
 		self._check_obj_state( new_ntiid2, is_published=True )
+		# Based on dates, contents are not provided.
+		self._check_visible_status( new_ntiid2, is_visible=False )
 
 		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		assert_that(unit_ntiids[0], is_(new_ntiid2))
