@@ -108,21 +108,13 @@ class GetCoursePresentationAssetsView(AbstractAuthenticatedView,
 		ntiids = _get_course_ntiids(params)
 		courses = list(yield_sync_courses(ntiids))
 
-		catalog = get_library_catalog()
-		intids = component.getUtility(IIntIds)
-
 		total = 0
 		result = LocatedExternalDict()
 		result[ITEMS] = items = {}
-		sites = get_component_hierarchy_names()
-		asset_interfaces = _course_asset_interfaces()
 		for course in courses:
 			entry = ICourseCatalogEntry(course)
-			objects = catalog.search_objects(intids=intids,
-											 provided=asset_interfaces,
-											 container_ntiids=entry.ntiid,
-											 sites=sites)
-			items[entry.ntiid] = sorted(objects or (),
+			container = IPresentationAssetContainer(course)
+			items[entry.ntiid] = sorted(container.values(),
 										key=lambda x: x.__class__.__name__)
 			total += len(items[entry.ntiid])
 		result['ItemCount'] = result['Total'] = total
