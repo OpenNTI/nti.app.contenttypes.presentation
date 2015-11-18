@@ -29,14 +29,13 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.dataserver.interfaces import ACE_DENY_ALL
-from nti.dataserver.interfaces import ACE_ACT_ALLOW
 from nti.dataserver.interfaces import ALL_PERMISSIONS
-from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
 
 from nti.dataserver.interfaces import IACLProvider
 
 from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization import ROLE_ADMIN
+from nti.dataserver.authorization import ACT_CONTENT_EDIT
 from nti.dataserver.authorization import ROLE_CONTENT_EDITOR
 
 from nti.dataserver.authorization_acl import ace_allowing
@@ -47,40 +46,27 @@ from nti.traversal.traversal import find_interface
 from .utils import get_presentation_asset_courses
 
 @interface.implementer(IACLProvider)
-class BaseACLProvider(object):
+class BasePresentationAssetACLProvider(object):
 
 	def __init__(self, context):
 		self.context = context
 
 	@property
 	def __acl__(self):
-		aces = []
-		deny = set()
-		allow = set()
+		aces = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
+				ace_allowing(ROLE_CONTENT_EDITOR, ALL_PERMISSIONS, type(self))]
 		courses = get_presentation_asset_courses(self.context)
 		for course in courses or ():
-			acl = IACLProvider(course).__acl__  # courses have an ACL provider
-			for ace in acl or ():
-				s = allow if ace.action == ACE_ACT_ALLOW else deny
-				s.add(ace)
-		# Make sure allows come first for performance.
-		aces.extend(allow)
-		aces.extend(deny)
+			sharing_scopes = course.SharingScopes
+			sharing_scopes.initScopes()
+			for scope in sharing_scopes.values():
+				aces.append(ace_allowing(IPrincipal(scope), ACT_READ, type(self)))
+
+			for i in course.instructors or (): # get special powers
+				aces.append(ace_allowing(i, ALL_PERMISSIONS, type(self)))
+				aces.append(ace_allowing(i, ACT_CONTENT_EDIT, type(self)))
+
 		result = acl_from_aces(aces) if aces else None
-		return result
-
-@interface.implementer(IACLProvider)
-class BasePresentationAssetACLProvider(BaseACLProvider):
-
-	@Lazy
-	def __acl__(self):
-		result = super(BasePresentationAssetACLProvider, self).__acl__
-		if not result:
-			ace = ace_allowing(IPrincipal(AUTHENTICATED_GROUP_NAME),
-						 		(ACT_READ),
-						   		type(self))
-			result = acl_from_aces(ace)
-		result.insert(0, ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
 		return result
 
 @component.adapter(IPresentationAsset)
