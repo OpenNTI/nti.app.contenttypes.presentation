@@ -256,6 +256,7 @@ class AssetSubmitMixin(AbstractAuthenticatedView):
 
 	def _handle_package_asset(self, provided, item, creator):
 		containers = _add_2_container(self._course, item, pacakges=True)
+		namespace = containers[0] if containers else None  # first pkg
 		if provided == INTISlideDeck:
 			base = item.ntiid
 
@@ -266,12 +267,10 @@ class AssetSubmitMixin(AbstractAuthenticatedView):
 			# register in containers and index
 			for x in chain(item.Slides, item.Videos):
 				_add_2_container(self._course, x, pacakges=True)
-				self._catalog.index(x, container_ntiids=containers,
-				  					namespace=containers[0])  # first pkg
+				self._catalog.index(x, container_ntiids=containers, namespace=namespace)
 
 		# index item
-		self._catalog.index(item, container_ntiids=containers,
-				  			namespace=containers[0])  # first pkg
+		self._catalog.index(item, container_ntiids=containers, namespace=namespace) 
 
 	def _handle_overview_group(self, group, creator, extended=None):
 		# add to course container
