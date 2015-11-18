@@ -28,14 +28,17 @@ from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
-from nti.dataserver.interfaces import IACLProvider
 from nti.dataserver.interfaces import ACE_DENY_ALL
 from nti.dataserver.interfaces import ACE_ACT_ALLOW
 from nti.dataserver.interfaces import ALL_PERMISSIONS
 from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
 
+from nti.dataserver.interfaces import IACLProvider
+
 from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization import ROLE_ADMIN
+from nti.dataserver.authorization import ROLE_CONTENT_EDITOR
+
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
 
@@ -56,7 +59,7 @@ class BaseACLProvider(object):
 		allow = set()
 		courses = get_presentation_asset_courses(self.context)
 		for course in courses or ():
-			acl = IACLProvider(course).__acl__ # courses have an ACL provider
+			acl = IACLProvider(course).__acl__  # courses have an ACL provider
 			for ace in acl or ():
 				s = allow if ace.action == ACE_ACT_ALLOW else deny
 				s.add(ace)
@@ -73,7 +76,7 @@ class BasePresentationAssetACLProvider(BaseACLProvider):
 	def __acl__(self):
 		result = super(BasePresentationAssetACLProvider, self).__acl__
 		if not result:
-			ace = ace_allowing(	IPrincipal(AUTHENTICATED_GROUP_NAME),
+			ace = ace_allowing(IPrincipal(AUTHENTICATED_GROUP_NAME),
 						 		(ACT_READ),
 						   		type(self))
 			result = acl_from_aces(ace)
@@ -109,21 +112,34 @@ class NTISlideVideoACLProvider(BasePresentationAssetACLProvider):
 	pass
 
 @component.adapter(INTICourseOverviewGroup)
-class NTICourseOverviewGroupACLProvider(BasePresentationAssetACLProvider):
-	pass
+class NTICourseOverviewGroupACLProvider(object):
 
-@component.adapter(INTILessonOverview)
-@interface.implementer(IACLProvider)
-class NTILessonOverviewACLProvider(BaseACLProvider):
+	@property
+	def __parent__(self):
+		return self.context.__parent__
 
 	@Lazy
 	def __acl__(self):
-		result = super(NTILessonOverviewACLProvider, self).__acl__
-		if not result:
-			course = find_interface(self.context, ICourseInstance, strict=False)
-			if course is not None:
-				result = IACLProvider(course).__acl__
-			else:
-				result = [ACE_DENY_ALL]
-		result.insert(0, ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
+		result = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
+				  ace_allowing(ROLE_CONTENT_EDITOR, ALL_PERMISSIONS, type(self))]
+		course = find_interface(self.context, ICourseInstance, strict=False)
+		if course is None:
+			result.append(ACE_DENY_ALL)
+		return result
+
+@component.adapter(INTILessonOverview)
+@interface.implementer(IACLProvider)
+class NTILessonOverviewACLProvider(object):
+
+	@property
+	def __parent__(self):
+		return self.context.__parent__
+
+	@Lazy
+	def __acl__(self):
+		result = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
+				  ace_allowing(ROLE_CONTENT_EDITOR, ALL_PERMISSIONS, type(self))]
+		course = find_interface(self.context, ICourseInstance, strict=False)
+		if course is None:
+			result.append(ACE_DENY_ALL)
 		return result
