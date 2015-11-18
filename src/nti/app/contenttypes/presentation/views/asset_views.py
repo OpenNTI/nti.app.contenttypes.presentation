@@ -125,7 +125,7 @@ def _notify_created(item):
 
 def _notify_removed(item):
 	lifecycleevent.removed(item)
-	if hasattr('item', '__parent__'):
+	if hasattr(item, '__parent__'):
 		item.__parent__ = None
 
 def _db_connection(registry=None):
