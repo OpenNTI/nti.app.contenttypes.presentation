@@ -109,7 +109,7 @@ def _get_course_packages(context):
 			packs = course.ContentPackageBundle.ContentPackages
 		except AttributeError:
 			packs = (course.legacy_content_package,)
-		return packs
+		return packs or ()
 	return ()
 
 def _notify_created(item):
