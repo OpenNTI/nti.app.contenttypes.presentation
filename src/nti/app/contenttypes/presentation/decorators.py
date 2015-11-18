@@ -111,7 +111,7 @@ class _CourseOutlineEditLinkDecorator(AbstractAuthenticatedRequestAwareDecorator
 	REL_NAME = 'ordered-contents'
 
 	def _predicate(self, context, result):
-		return has_permission( ACT_CONTENT_EDIT, context, self.request )
+		return has_permission(ACT_CONTENT_EDIT, context, self.request)
 
 	def _do_decorate_external(self, context, result):
 		links = result.setdefault(LINKS, [])
@@ -223,7 +223,9 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 												 record=record)
 		if topic is None:
 			return False
-		ext_item[NTIID] = ext_item['target'] = topic.NTIID  # replace the target to the topic NTIID
+
+		# replace the target to the topic NTIID
+		ext_item[NTIID] = ext_item['target'] = topic.NTIID
 		return True
 
 	def allow_assignmentref(self, context, item):
@@ -263,6 +265,7 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 		# filter legacy discussions
 		if discussions:
 			self._filter_legacy_discussions(context, discussions, removal)
+
 		# remove disallowed items
 		if removal:
 			result[ITEMS] = [x for idx, x in enumerate(items) if idx not in removal]

@@ -102,8 +102,8 @@ class NTIVideoACLProvider(BasePresentationAssetACLProvider):
 class NTISlideDeckACLProvider(BasePresentationAssetACLProvider):
 	pass
 
-@component.adapter(INTIRelatedWorkRef)
 @interface.implementer(IACLProvider)
+@component.adapter(INTIRelatedWorkRef)
 class NTIRelatedWorkRefACLProvider(BasePresentationAssetACLProvider):
 	pass
 
