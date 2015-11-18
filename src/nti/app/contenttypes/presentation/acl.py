@@ -130,11 +130,12 @@ class NTICourseOverviewGroupACLProvider(object):
 
 	@Lazy
 	def __acl__(self):
-		result = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
-				  ace_allowing(ROLE_CONTENT_EDITOR, ALL_PERMISSIONS, type(self))]
+		aces = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
+				ace_allowing(ROLE_CONTENT_EDITOR, ALL_PERMISSIONS, type(self))]
 		course = find_interface(self.context, ICourseInstance, strict=False)
 		if course is None:
-			result.append(ACE_DENY_ALL)
+			aces.append(ACE_DENY_ALL)
+		result = acl_from_aces(aces)
 		return result
 
 @interface.implementer(IACLProvider)
@@ -150,9 +151,10 @@ class NTILessonOverviewACLProvider(object):
 
 	@Lazy
 	def __acl__(self):
-		result = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
-				  ace_allowing(ROLE_CONTENT_EDITOR, ALL_PERMISSIONS, type(self))]
+		aces = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
+				ace_allowing(ROLE_CONTENT_EDITOR, ALL_PERMISSIONS, type(self))]
 		course = find_interface(self.context, ICourseInstance, strict=False)
 		if course is None:
-			result.append(ACE_DENY_ALL)
+			aces.append(ACE_DENY_ALL)
+		result = acl_from_aces(aces)
 		return result
