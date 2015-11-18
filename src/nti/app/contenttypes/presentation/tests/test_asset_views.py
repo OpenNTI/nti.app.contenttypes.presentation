@@ -112,6 +112,8 @@ class TestAssetViews(ApplicationLayerTest):
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_slidedeck(self):
 		source = self._load_resource('ntislidedeck.json')
+		
+		# post
 		res = self.testapp.post_json(self.assets_url, source, status=201)
 		assert_that(res.json_body, has_entry('ntiid', is_not(none())))
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
@@ -142,12 +144,15 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(history, has_length(1))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def test_post_overview_group(self):
+	def test_overview_group(self):
 		source = self._load_resource('nticourseoverviewgroup.json')
+		
+		# post
 		res = self.testapp.post_json(self.assets_url, source, status=201)
 		assert_that(res.json_body, has_entry('ntiid', is_not(none())))
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			ntiid = res.json_body['ntiid']
+			href = res.json_body['href']
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, is_not(none()))
 			assert_that(obj, validly_provides(INTICourseOverviewGroup))
@@ -156,6 +161,18 @@ class TestAssetViews(ApplicationLayerTest):
 			entry = find_object_with_ntiid(self.course_ntiid)
 			course = ICourseInstance(entry)
 			self._check_containers(course, False, obj.Items)
+			
+		# put
+		source = self._load_resource('nticourseoverviewgroup.json')
+		source['Items'] = [source['Items'][1]] 
+		res = self.testapp.put_json(href, source, status=200)
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			ntiid = res.json_body['ntiid']
+			obj = find_object_with_ntiid(ntiid)
+			assert_that(obj, has_property('locked', is_(True)))
+			assert_that(obj, has_property('Items', has_length(1)))
+			history  = ITransactionRecordHistory(obj)
+			assert_that(history, has_length(1))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_post_lesson(self):
