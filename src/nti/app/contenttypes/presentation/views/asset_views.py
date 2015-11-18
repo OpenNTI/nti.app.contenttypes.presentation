@@ -18,8 +18,11 @@ from itertools import chain
 
 import transaction
 
+from zope import component
 from zope import interface
 from zope import lifecycleevent
+
+from zope.traversing.interfaces import IEtcNamespace
 
 from ZODB.interfaces import IConnection
 
@@ -73,6 +76,7 @@ from nti.ntiids.ntiids import make_specific_safe
 
 from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
+from nti.site.site import get_component_hierarchy_names
 
 from ..utils import get_presentation_asset_containers
 
@@ -206,6 +210,22 @@ def _remove_item(item, name=None, registry=None, catalog=None):
 	catalog.unindex(item)
 	# broadcast removed
 	_notify_removed(item)
+
+def _component_registry(context, name=None):
+	sites_names = list(get_component_hierarchy_names())
+	sites_names.reverse()  # higher sites first
+	name = name or context.ntiid
+	provided = iface_of_asset(context)
+	hostsites = component.getUtility(IEtcNamespace, name='hostsites')
+	for site_name in sites_names:
+		try:
+			folder = hostsites[site_name]
+			registry = folder.getSiteManager()
+			if registry.queryUtility(provided, name=name) == context:
+				return registry
+		except KeyError:
+			pass
+	return get_registry()
 
 # GET views
 
@@ -406,6 +426,10 @@ class AssetPostView(AssetSubmitMixin,
 			   renderer='rest',
 			   request_method='PUT')
 class AssetPutView(AssetSubmitMixin, UGDPutView):
+
+	@Lazy
+	def _registry(self):
+		return _component_registry(self.context, name=self.context.ntiid)
 
 	def readInput(self, value=None):
 		result = UGDPutView.readInput(self, value=value)
