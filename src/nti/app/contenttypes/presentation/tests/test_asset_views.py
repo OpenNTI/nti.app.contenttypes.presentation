@@ -119,6 +119,7 @@ class TestAssetViews(ApplicationLayerTest):
 			href = res.json_body['href']
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, is_not(none()))
+			assert_that(obj, has_property('locked', is_(True)))
 			assert_that(obj, validly_provides(INTISlideDeck))
 			assert_that(obj, has_property('title', is_('Install Software on a Macintosh')))
 			
@@ -135,6 +136,7 @@ class TestAssetViews(ApplicationLayerTest):
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			ntiid = res.json_body['ntiid']
 			obj = find_object_with_ntiid(ntiid)
+			assert_that(obj, has_property('locked', is_(True)))
 			assert_that(obj, has_property('title', is_('Install Software on a MAC')))
 			history  = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(1))
