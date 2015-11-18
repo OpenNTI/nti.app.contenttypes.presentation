@@ -39,6 +39,8 @@ from nti.contenttypes.presentation.utils import prepare_json_text
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
+from nti.recorder.interfaces import ITransactionRecordHistory
+
 from nti.app.testing.decorators import WithSharedApplicationMockDS
 from nti.app.testing.application_webtest import ApplicationLayerTest
 
@@ -108,21 +110,34 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj, has_property('description', is_('Human/Quincy')))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def test_post_slidedeck(self):
+	def test_slidedeck(self):
 		source = self._load_resource('ntislidedeck.json')
 		res = self.testapp.post_json(self.assets_url, source, status=201)
 		assert_that(res.json_body, has_entry('ntiid', is_not(none())))
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			ntiid = res.json_body['ntiid']
+			href = res.json_body['href']
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, is_not(none()))
 			assert_that(obj, validly_provides(INTISlideDeck))
-
+			assert_that(obj, has_property('title', is_('Install Software on a Macintosh')))
+			
 			entry = find_object_with_ntiid(self.course_ntiid)
 			course = ICourseInstance(entry)
 
 			items = chain(obj.Slides, obj.Videos, (obj,))
 			self._check_containers(course, items)
+			
+		# put
+		source = self._load_resource('ntislidedeck.json')
+		source['title'] = 'Install Software on a MAC'
+		res = self.testapp.put_json(href, source, status=200)
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			ntiid = res.json_body['ntiid']
+			obj = find_object_with_ntiid(ntiid)
+			assert_that(obj, has_property('title', is_('Install Software on a MAC')))
+			history  = ITransactionRecordHistory(obj)
+			assert_that(history, has_length(1))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_post_overview_group(self):
