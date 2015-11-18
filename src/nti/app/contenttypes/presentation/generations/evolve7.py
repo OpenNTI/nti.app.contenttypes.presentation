@@ -18,9 +18,9 @@ from zope.intid import IIntIds
 from nti.contentlibrary.indexed_data.interfaces import IContainedObjectCatalog
 from nti.contentlibrary.indexed_data import CATALOG_INDEX_NAME as LIB_INDEX_NAME
 
-from .. import CATALOG_INDEX_NAME as PA_INDEX_NAME
-
 from ..interfaces import IPresentationAssetsIndex
+
+from . import PA_INDEX_NAME
 
 def do_evolve(context):
 	setHooks()
@@ -32,7 +32,7 @@ def do_evolve(context):
 	intids = lsm.getUtility(IIntIds)
 	pa_catalog = lsm.queryUtility(IPresentationAssetsIndex, name=PA_INDEX_NAME)
 	if pa_catalog is None:
-		return # pragma no cover
+		return  # pragma no cover
 
 	lib_catalog = lsm.getUtility(IContainedObjectCatalog, name=LIB_INDEX_NAME)
 
@@ -46,7 +46,7 @@ def do_evolve(context):
 	intids.unregister(pa_catalog)
 	lsm.unregisterUtility(pa_catalog, provided=IPresentationAssetsIndex,
 						  name=PA_INDEX_NAME)
-	
+
 	if hasattr(pa_catalog, 'items'):
 		for name, index in list(pa_catalog.items()):
 			del pa_catalog[name]

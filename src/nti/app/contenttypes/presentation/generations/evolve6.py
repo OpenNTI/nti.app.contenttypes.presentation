@@ -16,9 +16,9 @@ from zope.component.hooks import setHooks
 from nti.contentlibrary.indexed_data.interfaces import IContainedObjectCatalog
 from nti.contentlibrary.indexed_data import CATALOG_INDEX_NAME as LIB_INDEX_NAME
 
-from .. import CATALOG_INDEX_NAME as PA_INDEX_NAME
-
 from ..interfaces import IPresentationAssetsIndex
+
+from . import PA_INDEX_NAME
 
 def do_evolve(context):
 	setHooks()
