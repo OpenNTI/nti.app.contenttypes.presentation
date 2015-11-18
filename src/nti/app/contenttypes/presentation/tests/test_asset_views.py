@@ -37,6 +37,8 @@ from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.contenttypes.presentation.utils import prepare_json_text
 
+from nti.externalization.externalization import to_external_object
+
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.recorder.interfaces import ITransactionRecordHistory
@@ -99,13 +101,13 @@ class TestAssetViews(ApplicationLayerTest):
 			catalog = get_library_catalog()
 			containers = catalog.get_containers(obj)
 			assert_that(containers, has_length(greater_than(1)))
+
+			source = to_external_object(obj)
 		
-		# put
-		source = self._load_resource('ntivideo.json')
+		# put		
 		source['description'] = 'Human/Quincy'
 		res = self.testapp.put_json(href, source, status=200)
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
-			ntiid = res.json_body['ntiid']
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, has_property('description', is_('Human/Quincy')))
 
@@ -131,12 +133,12 @@ class TestAssetViews(ApplicationLayerTest):
 			items = chain(obj.Slides, obj.Videos, (obj,))
 			self._check_containers(course, items)
 			
-		# put
-		source = self._load_resource('ntislidedeck.json')
+			source = to_external_object(obj)
+
+		# put		
 		source['title'] = 'Install Software on a MAC'
 		res = self.testapp.put_json(href, source, status=200)
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
-			ntiid = res.json_body['ntiid']
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, has_property('locked', is_(True)))
 			assert_that(obj, has_property('title', is_('Install Software on a MAC')))
@@ -162,12 +164,12 @@ class TestAssetViews(ApplicationLayerTest):
 			course = ICourseInstance(entry)
 			self._check_containers(course, False, obj.Items)
 			
+			source = to_external_object(obj)
+			
 		# put
-		source = self._load_resource('nticourseoverviewgroup.json')
 		source['Items'] = [source['Items'][1]] 
 		res = self.testapp.put_json(href, source, status=200)
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
-			ntiid = res.json_body['ntiid']
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, has_property('locked', is_(True)))
 			assert_that(obj, has_property('Items', has_length(1)))
@@ -175,18 +177,22 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(history, has_length(1))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def test_post_lesson(self):
+	def test_lesson(self):
 		source = self._load_resource('ntilessonoverview.json')
 		source.pop('NTIID', None)
+		
+		# post
 		res = self.testapp.post_json(self.assets_url, source, status=201)
 		assert_that(res.json_body, has_entry('ntiid', is_not(none())))
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			ntiid = res.json_body['ntiid']
+			href = res.json_body['href']
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, is_not(none()))
 			assert_that(obj, validly_provides(INTILessonOverview))
 			assert_that(obj, has_property('Items', has_length(1)))
-
+			group_ntiid = obj.Items[0].ntiid
+			
 			entry = find_object_with_ntiid(self.course_ntiid)
 			course = ICourseInstance(entry)
 			self._check_containers(course, False, obj.Items)
@@ -194,3 +200,17 @@ class TestAssetViews(ApplicationLayerTest):
 			catalog = get_library_catalog()
 			containers = catalog.get_containers(obj.Items[0])
 			assert_that(ntiid, is_in(containers))
+
+			source = to_external_object(obj)
+		
+		# remove ntiid to fake a new group
+		source['Items'][0].pop('ntiid', None) 
+		source['Items'][0].pop('NTIID', None)
+		res = self.testapp.put_json(href, source, status=200)
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			obj = find_object_with_ntiid(ntiid)
+			old_group = find_object_with_ntiid(group_ntiid)
+			assert_that(old_group, is_(none()))
+			assert_that(obj, has_property('Items', has_length(1)))
+			history  = ITransactionRecordHistory(obj)
+			assert_that(history, has_length(1))
