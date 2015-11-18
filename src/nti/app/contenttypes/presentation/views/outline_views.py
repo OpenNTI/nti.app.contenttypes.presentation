@@ -256,7 +256,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 								sites=sites):
 
 			# ignore unpublished items
-			if not IPublishable.providedBy(group) or not group.is_published:
+			if not IPublishable.providedBy(group) or not group.is_published():
 				continue
 
 			for item in group.Items:
@@ -267,7 +267,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 					continue
 
 				# ignore unpublished items
-				if not IPublishable.providedBy(item) or not item.is_published:
+				if not IPublishable.providedBy(item) or not item.is_published():
 					continue
 
 				# check visibility
@@ -294,7 +294,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 								provided=INTISlideDeck,
 								container_all_of=False,
 								sites=sites):
-			if not IPublishable.providedBy(item) or not item.is_published:
+			if not IPublishable.providedBy(item) or not item.is_published():
 				continue
 			uid = intids.getId(item)
 			for ntiid in catalog.get_containers(uid):
