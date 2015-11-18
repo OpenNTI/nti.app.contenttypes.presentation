@@ -88,29 +88,36 @@ class PresentationAssetACLProvider(BasePresentationAssetACLProvider):
 	pass
 
 @component.adapter(INTIAudio)
+@interface.implementer(IACLProvider)
 class NTIAudioACLProvider(BasePresentationAssetACLProvider):
 	pass
 
 @component.adapter(INTIVideo)
+@interface.implementer(IACLProvider)
 class NTIVideoACLProvider(BasePresentationAssetACLProvider):
 	pass
 
 @component.adapter(INTISlideDeck)
+@interface.implementer(IACLProvider)
 class NTISlideDeckACLProvider(BasePresentationAssetACLProvider):
 	pass
 
 @component.adapter(INTIRelatedWorkRef)
+@interface.implementer(IACLProvider)
 class NTIRelatedWorkRefACLProvider(BasePresentationAssetACLProvider):
 	pass
 
 @component.adapter(INTITimeline)
+@interface.implementer(IACLProvider)
 class NTITimelineACLProvider(BasePresentationAssetACLProvider):
 	pass
 
 @component.adapter(INTISlideVideo)
+@interface.implementer(IACLProvider)
 class NTISlideVideoACLProvider(BasePresentationAssetACLProvider):
 	pass
 
+@interface.implementer(IACLProvider)
 @component.adapter(INTICourseOverviewGroup)
 class NTICourseOverviewGroupACLProvider(object):
 
@@ -127,8 +134,8 @@ class NTICourseOverviewGroupACLProvider(object):
 			result.append(ACE_DENY_ALL)
 		return result
 
-@component.adapter(INTILessonOverview)
 @interface.implementer(IACLProvider)
+@component.adapter(INTILessonOverview)
 class NTILessonOverviewACLProvider(object):
 
 	@property
