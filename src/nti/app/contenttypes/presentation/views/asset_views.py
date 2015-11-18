@@ -219,8 +219,7 @@ class AssetSubmitMixin(AbstractAuthenticatedView):
 
 	@Lazy
 	def _course(self):
-		parent = self.context
-		result = ICourseInstance(parent, None)
+		result = ICourseInstance(self.context, None)
 		return result
 
 	@Lazy
