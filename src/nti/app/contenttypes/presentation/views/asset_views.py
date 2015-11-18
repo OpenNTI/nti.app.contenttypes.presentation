@@ -101,12 +101,14 @@ def _make_asset_ntiid(nttype, creator, base=None, extra=None):
 	return ntiid
 
 def _get_course_packages(context):
-	course = ICourseInstance(context)
-	try:
-		packs = course.ContentPackageBundle.ContentPackages
-	except AttributeError:
-		packs = (course.legacy_content_package,)
-	return packs
+	course = ICourseInstance(context, None)
+	if course is not None:
+		try:
+			packs = course.ContentPackageBundle.ContentPackages
+		except AttributeError:
+			packs = (course.legacy_content_package,)
+		return packs
+	return ()
 
 def _notify_created(item):
 	lifecycleevent.created(item)
@@ -142,9 +144,10 @@ def _add_2_packages(context, item):
 	return result
 
 def _add_2_course(context, item):
-	course = ICourseInstance(context)
-	container = IPresentationAssetContainer(course)
-	container[item.ntiid] = item
+	course = ICourseInstance(context, None)
+	if course is not None:
+		container = IPresentationAssetContainer(course, None)
+		container[item.ntiid] = item
 
 def _add_2_courses(context, item):
 	_add_2_course(context, item)
@@ -156,8 +159,9 @@ def _add_2_container(context, item, pacakges=False):
 	_add_2_courses(context, item)
 	if pacakges:
 		result.extend(_add_2_packages(context, item))
-	entry = ICourseCatalogEntry(context)
-	result.append(entry.ntiid)
+	entry = ICourseCatalogEntry(context, None)
+	if entry is not None:
+		result.append(entry.ntiid)
 	return result
 
 def _canonicalize(items, creator, base=None, registry=None):
@@ -216,12 +220,12 @@ class AssetSubmitMixin(AbstractAuthenticatedView):
 	@Lazy
 	def _course(self):
 		parent = self.context
-		result = ICourseInstance(parent)
+		result = ICourseInstance(parent, None)
 		return result
 
 	@Lazy
 	def _entry(self):
-		result = ICourseCatalogEntry(self.context)
+		result = ICourseCatalogEntry(self.context, None)
 		return result
 
 	@Lazy
