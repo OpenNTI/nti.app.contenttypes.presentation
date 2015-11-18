@@ -419,7 +419,7 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 		new_lesson.__parent__ = node
 		new_lesson.title = node.title
 		new_lesson.creator = node.creator
-		# If there is no lesson set it to the overview
+		# XXX If there is no lesson set it to the overview
 		if not node.ContentNTIID:
 			node.ContentNTIID = lesson_ntiid
 		# XXX: set src and lesson ntiid (see MediaByOutlineView)

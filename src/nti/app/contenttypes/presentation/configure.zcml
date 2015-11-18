@@ -89,6 +89,7 @@
 			 name="fields" />
 
 	<!-- Events -->
+	<subscriber handler=".subscribers._on_outlinenode_unregistered" />
 	<subscriber handler=".subscribers._on_course_instance_available" />
 
 	<subscriber handler=".subscribers._clear_data_when_course_removed"

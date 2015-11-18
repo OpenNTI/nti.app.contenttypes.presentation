@@ -17,6 +17,8 @@ from zope.intid import IIntIds
 
 from zope import component
 
+from zope.interface.interfaces import IUnregistered
+
 from zope.lifecycleevent import IObjectRemovedEvent
 
 from ZODB.interfaces import IConnection
@@ -28,6 +30,7 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
@@ -42,7 +45,7 @@ from nti.contenttypes.presentation.utils import create_lessonoverview_from_exter
 
 from nti.externalization.interfaces import StandardExternalFields
 
-from nti.ntiids.ntiids import make_ntiid
+from nti.ntiids.ntiids import make_ntiid, find_object_with_ntiid
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_provider_safe
 from nti.ntiids.ntiids import is_valid_ntiid_string
@@ -550,3 +553,12 @@ def _clear_data_when_course_removed(course, event):
 	# remove transactions
 	for item in removed:
 		remove_transaction_history(item)
+
+# Outline nodes
+
+@component.adapter(ICourseOutlineNode, IUnregistered)
+def _on_outlinenode_unregistered(node, event):
+	if hasattr(node, 'LessonOverviewNTIID'):
+		lesson = find_object_with_ntiid(node.LessonOverviewNTIID)
+		if lesson is not None:
+			lesson.__parent__ = None
