@@ -352,7 +352,7 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 	sites = get_component_hierarchy_names()
 	catalog = get_library_catalog() if catalog is None else catalog
 	container = IPresentationAssetContainer(course, None)
-	
+
 	if parent is not None:
 		to_index = _recurse_copy(container_ntiids, parent.ntiid)
 	else:
@@ -370,6 +370,7 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 
 		# set lesson overview NTIID on the outline node
 		if INTILessonOverview.providedBy(item) and node is not None:
+			item.__parent__ = node  # lineage
 			node.LessonOverviewNTIID = item.ntiid
 
 		# for lesson and groups overviews index all fields
@@ -456,6 +457,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 									  intids=intids,
 									  node=node,
 									  course=course)
+
 				continue
 
 			# this remove all lesson overviews and overview groups
@@ -479,9 +481,6 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 																	registry=registry)
 			removed.extend(rmv)
 			result.append(overview)
-
-			# set lineage
-			overview.__parent__ = node
 
 			# index
 			_index_overview_items((overview,),
