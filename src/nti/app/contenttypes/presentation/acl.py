@@ -121,6 +121,9 @@ class NTISlideVideoACLProvider(BasePresentationAssetACLProvider):
 @component.adapter(INTICourseOverviewGroup)
 class NTICourseOverviewGroupACLProvider(object):
 
+	def __init__(self, context):
+		self.context = context
+
 	@property
 	def __parent__(self):
 		return self.context.__parent__
@@ -137,6 +140,9 @@ class NTICourseOverviewGroupACLProvider(object):
 @interface.implementer(IACLProvider)
 @component.adapter(INTILessonOverview)
 class NTILessonOverviewACLProvider(object):
+
+	def __init__(self, context):
+		self.context = context
 
 	@property
 	def __parent__(self):
