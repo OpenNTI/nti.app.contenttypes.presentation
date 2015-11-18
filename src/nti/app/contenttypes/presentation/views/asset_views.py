@@ -74,6 +74,8 @@ from nti.ntiids.ntiids import make_specific_safe
 from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
 
+from ..utils import get_presentation_asset_containers
+
 # helper functions
 
 def _make_asset_ntiid(nttype, creator, base=None, extra=None):
@@ -185,6 +187,26 @@ def _canonicalize(items, creator, base=None, registry=None):
 			registerUtility(registry, item, provided, name=item.ntiid)
 	return result
 
+def _remove_item(item, name=None, registry=None, catalog=None):
+	name = name or item.ntiid
+	# remove from containers (expand if necessary)
+	for context in get_presentation_asset_containers(item):
+		if ICourseInstance.providedBy(context):
+			containers = chain((context,), _get_course_packages(context))
+		else:
+			containers = (context,)
+		for container in containers:
+			mapping = IPresentationAssetContainer(container, None) or {}
+			mapping.pop(name, None)
+	# remove utility
+	registry = get_registry(registry)
+	unregisterUtility(registry, provided=iface_of_asset(item), name=name)
+	# unindex
+	catalog = get_library_catalog() if catalog is None else catalog
+	catalog.unindex(item)
+	# broadcast removed
+	_notify_removed(item)
+
 # GET views
 
 @view_config(context=IPresentationAsset)
@@ -270,7 +292,7 @@ class AssetSubmitMixin(AbstractAuthenticatedView):
 				self._catalog.index(x, container_ntiids=containers, namespace=namespace)
 
 		# index item
-		self._catalog.index(item, container_ntiids=containers, namespace=namespace) 
+		self._catalog.index(item, container_ntiids=containers, namespace=namespace)
 
 	def _handle_overview_group(self, group, creator, extended=None):
 		# add to course container
@@ -385,12 +407,6 @@ class AssetPostView(AssetSubmitMixin,
 			   request_method='PUT')
 class AssetPutView(AssetSubmitMixin, UGDPutView):
 
-	def _remove_item(self, item, ntiid=None):
-		ntiid = ntiid or item.ntiid
-		self._catalog.unindex(item)
-		unregisterUtility(self._registry, provided=iface_of_asset(item), name=ntiid)
-		_notify_removed(item)
-
 	def readInput(self, value=None):
 		result = UGDPutView.readInput(self, value=value)
 		result.pop('ntiid', None)
@@ -416,7 +432,7 @@ class AssetPutView(AssetSubmitMixin, UGDPutView):
 			updated = {x.ntiid for x in contentObject.Items}
 			for ntiid, group in data.items():
 				if ntiid not in updated:  # group removed
-					self._remove_item(group, ntiid)
+					_remove_item(group, ntiid, self._registry, self._catalog)
 
 		return result
 

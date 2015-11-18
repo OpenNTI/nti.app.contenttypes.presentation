@@ -21,6 +21,7 @@ from zope.security.interfaces import IPrincipal
 
 from nti.contentlibrary.indexed_data import get_catalog
 
+from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackage
 
 from nti.contenttypes.courses.interfaces import ES_ALL
@@ -82,6 +83,17 @@ def get_courses_for_pacakge(ntiid):
 				result.append(course)
 	return result
 
+def get_containers(ntiids=()):
+	result = list()
+	for ntiid in ntiids or ():
+		context = find_object_with_ntiid(ntiid)
+		if IContentUnit.providedBy(context) or ICourseInstance.providedBy(context):
+			result.append(context)
+		elif ICourseCatalogEntry.providedBy(context):
+			course = ICourseInstance(context, None)
+			result.append(course)
+	return result
+
 def get_courses(ntiids=()):
 	result = set()
 	catalog = component.getUtility(ICourseCatalog)
@@ -109,6 +121,12 @@ def get_presentation_asset_courses(item, sort=False):
 	catalog = get_catalog()
 	entries = catalog.get_containers(item)
 	result = get_courses(entries) if entries else ()
+	return result
+
+def get_presentation_asset_containers(item):
+	catalog = get_catalog()
+	entries = catalog.get_containers(item)
+	result = get_containers(entries) if entries else ()
 	return result
 
 def get_entry_by_relative_path_parts(*parts):

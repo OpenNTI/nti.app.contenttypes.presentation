@@ -42,6 +42,7 @@ from .course import get_enrollment_record
 from .course import get_presentation_asset_courses
 from .course import get_entry_by_relative_path_parts
 from .course import get_course_by_relative_path_parts
+from .course import get_presentation_asset_containers
 
 VISIBILITY_SCOPE_MAP = {
 	ES_ALL: EVERYONE,
