@@ -423,6 +423,9 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 		if not node.ContentNTIID:
 			node.ContentNTIID = lesson_ntiid
 		# XXX: set src and lesson ntiid (see MediaByOutlineView)
+		# at his point is very likely that LessonOverviewNTIID,
+		# ContentNTIID and src are simply alias fields. All of them
+		# are kept so long as we have manual sync and BWC
 		node.LessonOverviewNTIID = node.src = lesson_ntiid
 		return new_lesson
 
