@@ -59,8 +59,10 @@ from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
+from nti.dataserver.authorization import ACT_UPDATE
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.externalization.interfaces import StandardExternalFields
@@ -157,6 +159,29 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 	def _do_decorate_external(self, context, result):
 		if not self._overview_decorate_external(context, result):
 			self._legacy_decorate_external(context, result)
+
+@component.adapter(IPresentationAsset)
+@interface.implementer(IExternalMappingDecorator)
+class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
+
+	@Lazy
+	def _no_acl_decoration_in_request(self):
+		request = self.request
+		result = getattr(request, 'no_acl_decoration', False)
+		return result
+
+	def _predicate(self, context, result):
+		return 	not self._no_acl_decoration_in_request and \
+				bool(self.authenticated_userid) and \
+				has_permission(ACT_UPDATE, context, self.request)
+
+	def _do_decorate_external(self, context, result):
+		_links = result.setdefault(LINKS, [])
+		link = Link(context, rel='edit')
+		interface.alsoProvides(link, ILocation)
+		link.__name__ = ''
+		link.__parent__ = context
+		_links.append(link)
 
 @component.adapter(INTICourseOverviewGroup)
 @interface.implementer(IExternalObjectDecorator)
