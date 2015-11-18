@@ -122,8 +122,12 @@ class TestOutlineEditViews(ApplicationLayerTest):
 			# Unit with contents
 			assert_that( obj, has_entries( 'contents', not_none() ))
 
-		link_rel = VIEW_UNPUBLISH if published else VIEW_PUBLISH
-		self.require_link_href_with_rel( obj, link_rel )
+		if published:
+			self.require_link_href_with_rel( obj, VIEW_UNPUBLISH )
+			assert_that( obj.get( 'PublicationState' ), not_none() )
+		else:
+			self.require_link_href_with_rel( obj, VIEW_PUBLISH )
+			assert_that( obj.get( 'PublicationState' ), none() )
 
 	def _check_obj_state(self, ntiid, is_published=False, is_locked=True):
 		"""
