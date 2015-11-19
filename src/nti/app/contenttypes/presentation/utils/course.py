@@ -32,6 +32,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import get_any_enrollment
+from nti.contenttypes.courses.utils import get_course_packages
 from nti.contenttypes.courses.utils import is_course_instructor
 
 from nti.coremetadata.mixins import CreatedAndModifiedTimeMixin
@@ -65,16 +66,6 @@ def get_enrollment_record(context, user):
 
 	result = get_any_enrollment(course, user) if course is not None else None
 	return result
-
-def get_course_packages(context):
-	course = ICourseInstance(context, None)
-	if course is not None:
-		try:
-			packs = course.ContentPackageBundle.ContentPackages
-		except AttributeError:
-			packs = (course.legacy_content_package,)
-		return packs or ()
-	return ()
 
 def get_courses_for_pacakge(ntiid):
 	result = list()
