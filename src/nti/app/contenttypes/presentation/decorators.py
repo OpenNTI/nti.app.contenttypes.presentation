@@ -210,10 +210,18 @@ class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecor
 		result = getattr(self.request, 'no_acl_decoration', False)
 		return result
 
+	def _has_edit_link(self, result):
+		_links = result.get(LINKS)
+		for link in _links or ():
+			if getattr(link, 'rel', None) == 'edit':
+				return True
+		return False
+
 	def _predicate(self, context, result):
-		return 	not self._no_acl_decoration and \
-				bool(self.authenticated_userid) and \
-				has_permission(ACT_UPDATE, context, self.request)
+		return 	not self._no_acl_decoration \
+				and	not self._has_edit_link(result) \
+				and bool(self.authenticated_userid) \
+				and has_permission(ACT_UPDATE, context, self.request)
 
 	def _do_decorate_external(self, context, result):
 		_links = result.setdefault(LINKS, [])
@@ -434,7 +442,7 @@ class _MediaByOutlineNodeDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		links = result_map.setdefault(LINKS, [])
 		link = Link(course,
 					rel='MediaByOutlineNode',
-					elements=('MediaByOutlineNode',))
+					elements=('@@MediaByOutlineNode',))
 		links.append(link)
 
 @interface.implementer(IExternalMappingDecorator)
