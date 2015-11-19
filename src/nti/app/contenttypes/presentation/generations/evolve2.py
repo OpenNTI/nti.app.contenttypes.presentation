@@ -12,7 +12,4 @@ logger = __import__('logging').getLogger(__name__)
 generation = 2
 
 def evolve(context):
-	"""
-	Evolve to generation 2 by adjusting the last mod valued
-	"""
 	pass
