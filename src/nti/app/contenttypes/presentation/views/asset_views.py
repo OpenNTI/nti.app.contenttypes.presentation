@@ -296,10 +296,13 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin, AbstractAuthentic
 			_canonicalize(item.Slides, creator, base=base, registry=self._registry)
 			_canonicalize(item.Videos, creator, base=base, registry=self._registry)
 
+			# add slidedeck ntiid
+			extended = tuple(containers or ()) + (item.ntiid,)
+
 			# register in containers and index
 			for x in chain(item.Slides, item.Videos):
 				_add_2_container(self._course, x, pacakges=True)
-				self._catalog.index(x, container_ntiids=containers, namespace=namespace)
+				self._catalog.index(x, container_ntiids=extended, namespace=namespace)
 
 		# index item
 		self._catalog.index(item, container_ntiids=containers, namespace=namespace)
