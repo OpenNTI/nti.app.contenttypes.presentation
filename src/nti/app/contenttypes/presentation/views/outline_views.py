@@ -303,10 +303,11 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		if record is None:
 			raise hexc.HTTPForbidden(_("Must be enrolled in a course."))
 
+		self.request.no_acl_decoration = True # at all times
+
 		if ILegacyCourseInstance.providedBy(course):
 			result = self._do_legacy(course, record)
 		else:
-			self.request.no_acl_decoration = True
 			result = self._do_current(course, record)
 		return result
 
