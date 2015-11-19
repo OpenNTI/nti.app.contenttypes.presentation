@@ -39,7 +39,7 @@ from nti.app.base.abstract_views import AbstractAuthenticatedView
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
 from nti.appserver.ugd_edit_views import UGDPutView
-from nti.appserver.ugd_edit_views import UGDDeleteView 
+from nti.appserver.ugd_edit_views import UGDDeleteView
 from nti.appserver.dataserver_pyramid_views import GenericGetView
 
 from nti.common.property import Lazy
@@ -58,6 +58,7 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
+from nti.contenttypes.presentation import COURSE_OVERVIEW_GROUP_MIMETYES
 
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
@@ -73,7 +74,9 @@ from nti.contenttypes.presentation.utils import get_external_pre_hook
 
 from nti.dataserver import authorization as nauth
 
+from nti.externalization.internalization import notify_modified
 from nti.externalization.externalization import to_external_object
+from nti.externalization.externalization import StandardExternalFields
 
 from nti.ntiids.ntiids import TYPE_UUID
 from nti.ntiids.ntiids import make_ntiid
@@ -86,6 +89,9 @@ from nti.site.utils import unregisterUtility
 from nti.site.site import get_component_hierarchy_names
 
 from ..utils import get_course_packages
+
+ITEMS = StandardExternalFields.ITEMS
+MIMETYPE = StandardExternalFields.MIMETYPE
 
 # helper functions
 
@@ -475,3 +481,61 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 	def _do_delete_object(self, theObject):
 		_remove_item(theObject, self._registry, self._catalog)
 		return theObject
+
+@view_config(context=INTILessonOverview)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='POST',
+			   name="ordered-contents",
+			   permission=nauth.ACT_CONTENT_EDIT)
+class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
+										ModeledContentUploadRequestUtilsMixin):
+
+	content_predicate = INTICourseOverviewGroup.providedBy
+
+	def checkContentObject(self, contentObject, externalValue):
+		if contentObject is None or not self.content_predicate(contentObject):
+			transaction.doom()
+			logger.debug("Failing to POST: input of unsupported/missing Class: %s => %s",
+						 externalValue, contentObject)
+			raise hexc.HTTPUnprocessableEntity(_('Unsupported/missing Class'))
+		return contentObject
+
+	def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
+		externalValue = self.readInput() if not externalValue else externalValue
+		# check for mimeType
+		if MIMETYPE not in externalValue:
+			externalValue[MIMETYPE] = COURSE_OVERVIEW_GROUP_MIMETYES[0]
+		# create object
+		contentObject = create_from_external(externalValue, notify=False)
+		contentObject = self.checkContentObject(contentObject, externalValue)
+		contentObject.creator = getattr(creator, 'username', creator)  # use string
+		return contentObject, externalValue
+
+	def _do_call(self):
+		creator = self.remoteUser
+		provided = self.content_predicate
+		contentObject, externalValue = self.readCreateUpdateContentObject(creator)
+
+		# set lineage
+		contentObject.__parent__ = self.context
+
+		# check item does not exists and notify
+		self._check_exists(provided, contentObject, creator)
+		_notify_created(contentObject)
+
+		# add to connection and register
+		_intid_register(contentObject, registry=self._registry)
+		registerUtility(self._registry,
+						provided=provided,
+						component=contentObject,
+						name=contentObject.ntiid)
+		
+		self.context.append(contentObject)
+		self._handle_overview_group(contentObject,
+									creator=creator,
+									extended=(self.context.ntiid,))
+
+		notify_modified(self.context, externalValue, external_keys=(ITEMS,))
+		self.request.response.status_int = 201
+		return contentObject
