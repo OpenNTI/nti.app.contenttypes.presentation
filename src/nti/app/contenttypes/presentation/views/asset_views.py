@@ -5,7 +5,6 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-from nti.externalization.internalization import pre_hook
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
