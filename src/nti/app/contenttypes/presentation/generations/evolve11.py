@@ -38,10 +38,10 @@ def _reindex_items(catalog, intids):
 		entry = ICourseCatalogEntry(course, None)
 		entry = (entry.ntiid,) if entry is not None else ()
 		grp_ntiids = (ntiid,) + entry
-		for group in lesson.Items:
+		for group in lesson.Items or ():
 			catalog.index(group, container_ntiids=grp_ntiids)
 			item_ntiids = grp_ntiids + (group.ntiid,)
-			for item in group.Items:
+			for item in group.Items or ():
 				catalog.index(item, container_ntiids=item_ntiids)
 
 def do_evolve(context, generation=generation):

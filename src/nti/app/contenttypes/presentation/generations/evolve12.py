@@ -29,9 +29,9 @@ from nti.site.hostpolicy import run_job_in_all_host_sites
 
 def _reindex_items(catalog, intids):
 	for ntiid, deck in list(component.getUtilitiesFor(INTISlideDeck)):
-		for slide in deck.Slides:
+		for slide in deck.Slides or ():
 			catalog.index(slide, container_ntiids=ntiid)
-		for video in deck.Videos:
+		for video in deck.Videos or ():
 			catalog.index(video, container_ntiids=ntiid)
 			
 def do_evolve(context, generation=generation):
