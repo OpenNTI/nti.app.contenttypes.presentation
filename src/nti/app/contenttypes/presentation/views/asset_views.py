@@ -22,6 +22,8 @@ from zope import component
 from zope import interface
 from zope import lifecycleevent
 
+from zope.event import notify
+
 from zope.traversing.interfaces import IEtcNamespace
 
 from ZODB.interfaces import IConnection
@@ -63,6 +65,7 @@ from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
+from nti.contenttypes.presentation.interfaces import WillRemovePresentationAssetEvent
 
 from nti.contenttypes.presentation.utils import create_from_external
 
@@ -78,7 +81,7 @@ from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
 from nti.site.site import get_component_hierarchy_names
 
-from ..utils import get_presentation_asset_containers
+from ..utils import get_course_packages
 
 # helper functions
 
@@ -105,16 +108,6 @@ def _make_asset_ntiid(nttype, creator, base=None, extra=None):
 					   provider=provider,
 					   specific=specific)
 	return ntiid
-
-def _get_course_packages(context):
-	course = ICourseInstance(context, None)
-	if course is not None:
-		try:
-			packs = course.ContentPackageBundle.ContentPackages
-		except AttributeError:
-			packs = (course.legacy_content_package,)
-		return packs or ()
-	return ()
 
 def _notify_created(item):
 	lifecycleevent.created(item)
@@ -143,7 +136,7 @@ def _intid_register(item, registry=None, connection=None):
 
 def _add_2_packages(context, item):
 	result = []
-	for package in _get_course_packages(context):
+	for package in get_course_packages(context):
 		container = IPresentationAssetContainer(package)
 		container[item.ntiid] = item
 		result.append(package.ntiid)
@@ -191,20 +184,11 @@ def _canonicalize(items, creator, base=None, registry=None):
 			registerUtility(registry, item, provided, name=item.ntiid)
 	return result
 
-def _remove_item(item, name=None, registry=None, catalog=None):
-	name = name or item.ntiid
-	# remove from containers (expand if necessary)
-	for context in get_presentation_asset_containers(item):
-		if ICourseInstance.providedBy(context):
-			containers = chain((context,), _get_course_packages(context))
-		else:
-			containers = (context,)
-		for container in containers:
-			mapping = IPresentationAssetContainer(container, None) or {}
-			mapping.pop(name, None)
+def _remove_item(item, registry=None, catalog=None):
+	notify(WillRemovePresentationAssetEvent(item))
 	# remove utility
 	registry = get_registry(registry)
-	unregisterUtility(registry, provided=iface_of_asset(item), name=name)
+	unregisterUtility(registry, provided=iface_of_asset(item), name=item.ntiid)
 	# unindex
 	catalog = get_library_catalog() if catalog is None else catalog
 	catalog.unindex(item)
@@ -456,7 +440,7 @@ class AssetPutView(AssetSubmitMixin, UGDPutView):
 			updated = {x.ntiid for x in contentObject.Items}
 			for ntiid, group in data.items():
 				if ntiid not in updated:  # group removed
-					_remove_item(group, ntiid, self._registry, self._catalog)
+					_remove_item(group, self._registry, self._catalog)
 
 		return result
 

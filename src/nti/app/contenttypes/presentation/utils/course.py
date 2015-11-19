@@ -66,18 +66,22 @@ def get_enrollment_record(context, user):
 	result = get_any_enrollment(course, user) if course is not None else None
 	return result
 
+def get_course_packages(context):
+	course = ICourseInstance(context, None)
+	if course is not None:
+		try:
+			packs = course.ContentPackageBundle.ContentPackages
+		except AttributeError:
+			packs = (course.legacy_content_package,)
+		return packs or ()
+	return ()
+
 def get_courses_for_pacakge(ntiid):
 	result = list()
 	catalog = component.getUtility(ICourseCatalog)
 	for entry in catalog.iterCatalogEntries():
 		course = ICourseInstance(entry, None)
-		if course is None:
-			continue
-		try:
-			packs = course.ContentPackageBundle.ContentPackages
-		except AttributeError:
-			packs = (course.legacy_content_package,)
-			
+		packs = get_course_packages(course)	
 		for pack in packs:
 			if pack.ntiid == ntiid:
 				result.append(course)

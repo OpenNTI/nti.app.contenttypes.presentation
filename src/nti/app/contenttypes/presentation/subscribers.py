@@ -12,6 +12,7 @@ logger = __import__('logging').getLogger(__name__)
 import six
 import time
 import simplejson
+from itertools import chain
 
 from zope.intid import IIntIds
 
@@ -38,8 +39,10 @@ from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
+from nti.contenttypes.presentation.interfaces import IWillRemovePresentationAssetEvent
 
 from nti.contenttypes.presentation.utils import create_lessonoverview_from_external
 
@@ -60,6 +63,9 @@ from nti.site.site import get_component_hierarchy_names
 from nti.wref.interfaces import IWeakRef
 
 from .interfaces import IItemRefValidator
+
+from .utils import get_course_packages
+from .utils import get_presentation_asset_containers
 
 from . import iface_of_thing
 
@@ -562,3 +568,19 @@ def _on_outlinenode_unregistered(node, event):
 		lesson = find_object_with_ntiid(node.LessonOverviewNTIID)
 		if lesson is not None:
 			lesson.__parent__ = None
+
+@component.adapter(IPresentationAsset, IWillRemovePresentationAssetEvent)
+def _on_will_remove_presentation_asset(asset, event):
+	ntiid = getattr(asset, 'ntiid', None)
+	if not ntiid:
+		return
+	# remove from containers
+	for context in get_presentation_asset_containers(asset):
+		if ICourseInstance.providedBy(context):
+			containers = chain((context,), get_course_packages(context))
+		else:
+			containers = (context,)
+		for container in containers:
+			mapping = IPresentationAssetContainer(container, None)
+			if mapping is not None:
+				mapping.pop(asset.ntiid, None)
