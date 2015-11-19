@@ -5,6 +5,7 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+from nti.externalization.internalization import pre_hook
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -68,6 +69,7 @@ from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import WillRemovePresentationAssetEvent
 
 from nti.contenttypes.presentation.utils import create_from_external
+from nti.contenttypes.presentation.utils import get_external_pre_hook
 
 from nti.externalization.externalization import to_external_object
 
@@ -429,11 +431,13 @@ class AssetPutView(AssetSubmitMixin, UGDPutView):
 			data = {x.ntiid:x for x in contentObject.Items}  # save groups
 
 		# update object
+		pre_hook = get_external_pre_hook(externalValue)
 		result = UGDPutView.updateContentObject(self,
 												contentObject,
 												externalValue,
 												set_id=set_id,
-												notify=notify)
+												notify=notify,
+												pre_hook=pre_hook)
 
 		# unregister any old data
 		if data and provided == INTILessonOverview:
