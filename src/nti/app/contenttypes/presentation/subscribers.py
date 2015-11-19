@@ -27,6 +27,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
+from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import IWillRemovePresentationAssetEvent
 
@@ -83,6 +85,12 @@ def _on_outlinenode_unregistered(node, event):
 
 # Presentation assets
 
+@component.adapter(INTICourseOverviewGroup, IWillRemovePresentationAssetEvent)
+def _on_will_remove_course_overview_group(group, event):
+	lesson = group.__parent__
+	if INTILessonOverview.providedBy(lesson):
+		lesson.remove(group)
+
 @component.adapter(IPresentationAsset, IWillRemovePresentationAssetEvent)
 def _on_will_remove_presentation_asset(asset, event):
 	ntiid = getattr(asset, 'ntiid', None)
@@ -95,6 +103,9 @@ def _on_will_remove_presentation_asset(asset, event):
 		else:
 			containers = (context,)
 		for container in containers:
-			mapping = IPresentationAssetContainer(container, None)
-			if mapping is not None:
-				mapping.pop(asset.ntiid, None)
+			if INTICourseOverviewGroup.providedBy(container):
+				container.remove(asset)
+			else:
+				mapping = IPresentationAssetContainer(container, None)
+				if mapping is not None:
+					mapping.pop(asset.ntiid, None)

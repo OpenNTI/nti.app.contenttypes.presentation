@@ -87,6 +87,8 @@ def get_containers(ntiids=()):
 		elif ICourseCatalogEntry.providedBy(context):
 			course = ICourseInstance(context, None)
 			result.append(course)
+		elif context is not None:
+			result.append(context)
 	return result
 
 def get_courses(ntiids=()):
