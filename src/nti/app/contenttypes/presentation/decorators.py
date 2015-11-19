@@ -40,7 +40,10 @@ from nti.contenttypes.courses.interfaces import IN_CLASS
 from nti.contenttypes.courses.interfaces import ES_CREDIT
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
+from nti.contenttypes.courses.interfaces import ICourseSubInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
+from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
@@ -48,6 +51,7 @@ from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_
 
 from nti.contenttypes.courses.utils import is_course_instructor
 from nti.contenttypes.courses.utils import get_enrollment_record
+from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IMediaRef
@@ -70,6 +74,8 @@ from nti.externalization.interfaces import IExternalObjectDecorator
 from nti.externalization.interfaces import IExternalMappingDecorator
 
 from nti.externalization.externalization import to_external_object
+
+from nti.externalization.singleton import SingletonDecorator
 
 from nti.links.links import Link
 from nti.links.externalization import render_link
@@ -105,6 +111,39 @@ def _lesson_overview_links(context):
 	except AttributeError:
 		pass
 	return None
+
+@interface.implementer(IExternalMappingDecorator)
+@component.adapter(ICourseOutline)
+class _CourseOutlineSharedDecorator(object):
+	"""
+	For course outline editors, display contextual information
+	if an outline is shared across multiple courses.
+	"""
+	__metaclass__ = SingletonDecorator
+
+	def _predicate(self, context, result):
+		return has_permission(ACT_CONTENT_EDIT, context, self.request)
+
+	def _possible_courses(self, course):
+		if ICourseSubInstance.providedBy( course ):
+			course = course.__parent__.__parent__
+		return get_course_subinstances( course )
+
+	def decorateExternalMapping(self, context, result):
+		course = context.__parent__
+		possible_courses = self._possible_courses( course )
+		if possible_courses:
+			matches = []
+			is_shared = False
+			our_outline = course.Outline
+			for course in possible_courses:
+				if course.Outline == our_outline:
+					is_shared = True
+					catalog = ICourseCatalogEntry( course, None )
+					if catalog is not None:
+						matches.append( catalog.ntiid )
+			result['IsCourseOutlineShared'] = is_shared
+			result['CourseOutlineSharedEntries'] = matches
 
 @component.adapter(ICourseOutlineNode)
 @interface.implementer(IExternalMappingDecorator)

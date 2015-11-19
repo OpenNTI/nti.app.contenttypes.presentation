@@ -500,3 +500,11 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		assert_that(unit_ntiids, is_not(has_item(last_ntiid)))
 		return node_count
+
+	@WithSharedApplicationMockDS(testapp=True, users=True)
+	def test_outline_sharing_decorator(self):
+		url = '/dataserver2/%2B%2Betc%2B%2Bhostsites/platform.ou.edu/%2B%2Betc%2B%2Bsite/Courses/Fall2015/CS%201323/SubInstances/995'
+		res = self.testapp.get( url, extra_environ=self.instructor_environ )
+		res = res.json_body.get( 'Outline' )
+		assert_that( res, has_entries( 'IsCourseOutlineShared', is_( True ),
+									'CourseOutlineSharedEntries', has_length( 3 )))

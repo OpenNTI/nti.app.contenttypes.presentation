@@ -59,7 +59,7 @@
 
 	<utility factory=".ntiids._NTIAudioResolver" name="NTIAudio" />
 	<utility factory=".ntiids._NTIVideoResolver" name="NTIVideo" />
-	
+
 	<utility factory=".ntiids._NTITimeLineResolver" name="Timeline" />
 	<utility factory=".ntiids._NTITimeLineResolver" name="NTITimeline" />
 	<utility factory=".ntiids._NTITimeLineResolver" name="JSON:Timeline" />
@@ -71,7 +71,7 @@
 	<utility factory=".ntiids._NTIRelatedWorkRefResolver" name="RelatedWork" />
 	<utility factory=".ntiids._NTIRelatedWorkRefResolver" name="RelatedWorkRef" />
 	<utility factory=".ntiids._NTIRelatedWorkRefResolver" name="NTIRelatedWorkRef" />
-	
+
 	<utility factory=".ntiids._NTIDiscussionRefResolver" name="DiscussionRef" />
 	<utility factory=".ntiids._NTIDiscussionRefResolver" name="NTIDiscussionRef" />
 	<utility factory=".ntiids._NTIDiscussionRefResolver" name="DiscussionRef:EnrolledCourseRoot" />
@@ -99,6 +99,11 @@
 					 zope.lifecycleevent.IObjectRemovedEvent" />
 
 	<!-- Decorators -->
+	<subscriber factory=".decorators._CourseOutlineSharedDecorator"
+				provides="nti.externalization.interfaces.IExternalMappingDecorator"
+				for="nti.contenttypes.courses.interfaces.ICourseOutline
+					 pyramid.interfaces.IRequest" />
+
 	<subscriber factory=".decorators._CourseOutlineEditLinkDecorator"
 				provides="nti.externalization.interfaces.IExternalMappingDecorator"
 				for="nti.contenttypes.courses.interfaces.ICourseOutlineNode
