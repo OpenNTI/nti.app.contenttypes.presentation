@@ -26,6 +26,8 @@ from nti.contentlibrary.indexed_data.interfaces import IContainedObjectCatalog
 
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 
+from nti.contenttypes.courses.utils import get_course_packages
+
 from nti.contenttypes.presentation.interfaces import INTIAudio
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTITimeline
@@ -55,7 +57,7 @@ class MockDataserver(object):
 		return None
 
 def _reindex_items(catalog, intids):
-	library = component.queryUtility( IContentPackageLibrary )
+	library = component.queryUtility(IContentPackageLibrary)
 	if library is None:
 		return
 
@@ -64,23 +66,26 @@ def _reindex_items(catalog, intids):
 		for _, item in registry.getUtilitiesFor(provided):
 			courses = list(get_presentation_asset_courses(item) or ())
 			course = courses[0] if courses else None
-			if course is not None:
-				try:
-					packs = course.ContentPackageBundle.ContentPackages
-				except AttributeError:
-					packs = (course.legacy_content_package,)
-				content_package = packs[0]
-				catalog.index(item, container_ntiids=content_package.ntiid,
-						  	  namespace=content_package.ntiid)
-				
-				if INTISlideDeck.providedBy(item):
-					for slide in item.Slides or ():
-						catalog.index(slide, container_ntiids=content_package.ntiid,
-							  		  namespace=content_package.ntiid)
-					
-					for video in item.Videos or ():
-						catalog.index(video, container_ntiids=content_package.ntiid,
-							  		  namespace=content_package.ntiid)
+			if course is None:
+				continue
+
+			packs = get_course_packages(course)
+			if not packs:
+				continue
+
+			content_package = packs[0]
+			catalog.index(item, container_ntiids=content_package.ntiid,
+					  	  namespace=content_package.ntiid)
+
+			if INTISlideDeck.providedBy(item):
+				extended = (content_package.ntiid, item.ntiid)
+				for slide in item.Slides or ():
+					catalog.index(slide, container_ntiids=extended,
+						  		  namespace=content_package.ntiid)
+
+				for video in item.Videos or ():
+					catalog.index(video, container_ntiids=extended,
+						  		  namespace=content_package.ntiid)
 
 def do_evolve(context):
 	setHooks()
@@ -91,7 +96,7 @@ def do_evolve(context):
 	mock_ds = MockDataserver()
 	mock_ds.root = dataserver_folder
 	component.provideUtility(mock_ds, IDataserver)
-	
+
 	with site(dataserver_folder):
 		assert	component.getSiteManager() == dataserver_folder.getSiteManager(), \
 				"Hooks not installed?"
