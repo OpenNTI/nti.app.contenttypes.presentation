@@ -206,13 +206,12 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	@Lazy
-	def _no_acl_decoration_in_request(self):
-		request = self.request
-		result = getattr(request, 'no_acl_decoration', False)
+	def _no_acl_decoration(self):
+		result = getattr(self.request, 'no_acl_decoration', False)
 		return result
 
 	def _predicate(self, context, result):
-		return 	not self._no_acl_decoration_in_request and \
+		return 	not self._no_acl_decoration and \
 				bool(self.authenticated_userid) and \
 				has_permission(ACT_UPDATE, context, self.request)
 
