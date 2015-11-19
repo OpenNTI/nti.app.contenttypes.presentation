@@ -17,6 +17,7 @@ from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import greater_than
 from hamcrest import has_property
+does_not = is_not
 
 from nti.schema.testing import validly_provides
 
@@ -110,6 +111,17 @@ class TestAssetViews(ApplicationLayerTest):
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, has_property('description', is_('Human/Quincy')))
+			
+		# delete		
+		res = self.testapp.delete(href, status=204)
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			obj = find_object_with_ntiid(ntiid)
+			assert_that(obj, is_(none()))
+			
+			entry = find_object_with_ntiid(self.course_ntiid)
+			course = ICourseInstance(entry)
+			container = IPresentationAssetContainer(course)
+			assert_that(container, does_not(has_key(ntiid)))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_slidedeck(self):

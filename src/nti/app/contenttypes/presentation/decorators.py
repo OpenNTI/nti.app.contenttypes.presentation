@@ -40,6 +40,7 @@ from nti.contenttypes.courses.interfaces import IN_CLASS
 from nti.contenttypes.courses.interfaces import ES_CREDIT
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
+
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
@@ -49,6 +50,7 @@ from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_for_user
 
+from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import is_course_instructor
 from nti.contenttypes.courses.utils import get_enrollment_record
 from nti.contenttypes.courses.utils import get_course_subinstances
@@ -125,13 +127,13 @@ class _CourseOutlineSharedDecorator(object):
 		return has_permission(ACT_CONTENT_EDIT, context, self.request)
 
 	def _possible_courses(self, course):
-		if ICourseSubInstance.providedBy( course ):
-			course = course.__parent__.__parent__
-		return get_course_subinstances( course )
+		if ICourseSubInstance.providedBy(course):
+			course = get_parent_course(course)
+		return get_course_subinstances(course)
 
 	def decorateExternalMapping(self, context, result):
 		course = context.__parent__
-		possible_courses = self._possible_courses( course )
+		possible_courses = self._possible_courses(course)
 		if possible_courses:
 			matches = []
 			is_shared = False
@@ -139,9 +141,9 @@ class _CourseOutlineSharedDecorator(object):
 			for course in possible_courses:
 				if course.Outline == our_outline:
 					is_shared = True
-					catalog = ICourseCatalogEntry( course, None )
+					catalog = ICourseCatalogEntry(course, None)
 					if catalog is not None:
-						matches.append( catalog.ntiid )
+						matches.append(catalog.ntiid)
 			result['IsCourseOutlineShared'] = is_shared
 			result['CourseOutlineSharedEntries'] = matches
 
