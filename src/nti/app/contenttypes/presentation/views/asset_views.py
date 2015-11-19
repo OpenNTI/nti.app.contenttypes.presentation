@@ -486,7 +486,7 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   request_method='POST',
-			   name="ordered-contents",
+			   name="contents",
 			   permission=nauth.ACT_CONTENT_EDIT)
 class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 										ModeledContentUploadRequestUtilsMixin):
@@ -514,7 +514,7 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 
 	def _do_call(self):
 		creator = self.remoteUser
-		provided = self.content_predicate
+		provided = INTICourseOverviewGroup
 		contentObject, externalValue = self.readCreateUpdateContentObject(creator)
 
 		# set lineage
