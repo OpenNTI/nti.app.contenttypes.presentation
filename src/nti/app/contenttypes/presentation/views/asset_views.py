@@ -39,6 +39,7 @@ from nti.app.base.abstract_views import AbstractAuthenticatedView
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
 from nti.appserver.ugd_edit_views import UGDPutView
+from nti.appserver.ugd_edit_views import UGDDeleteView 
 from nti.appserver.dataserver_pyramid_views import GenericGetView
 
 from nti.common.property import Lazy
@@ -69,6 +70,8 @@ from nti.contenttypes.presentation.interfaces import WillRemovePresentationAsset
 
 from nti.contenttypes.presentation.utils import create_from_external
 from nti.contenttypes.presentation.utils import get_external_pre_hook
+
+from nti.dataserver import authorization as nauth
 
 from nti.externalization.externalization import to_external_object
 
@@ -242,17 +245,7 @@ class NoHrefAssetGetView(PresentationAssetGetView):
 
 # POST/PUT views
 
-class AssetSubmitMixin(AbstractAuthenticatedView):
-
-	@Lazy
-	def _course(self):
-		result = ICourseInstance(self.context, None)
-		return result
-
-	@Lazy
-	def _entry(self):
-		result = ICourseCatalogEntry(self.context, None)
-		return result
+class PresentationAssetMixin(object):
 
 	@Lazy
 	def _catalog(self):
@@ -265,6 +258,18 @@ class AssetSubmitMixin(AbstractAuthenticatedView):
 	@Lazy
 	def _registry(self):
 		return get_registry()
+
+class PresentationAssetSubmitViewMixin(PresentationAssetMixin, AbstractAuthenticatedView):
+
+	@Lazy
+	def _course(self):
+		result = ICourseInstance(self.context, None)
+		return result
+
+	@Lazy
+	def _entry(self):
+		result = ICourseCatalogEntry(self.context, None)
+		return result
 
 	def _get_ntiid(self, item):
 		ntiid = item.ntiid
@@ -361,10 +366,10 @@ class AssetSubmitMixin(AbstractAuthenticatedView):
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   name="assets",
-			   request_method='POST')
-class AssetPostView(AssetSubmitMixin,
-					AbstractAuthenticatedView,
-					ModeledContentUploadRequestUtilsMixin):
+			   request_method='POST',
+			   permission=nauth.ACT_CONTENT_EDIT)
+class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
+								ModeledContentUploadRequestUtilsMixin):
 
 	content_predicate = IPresentationAsset.providedBy
 
@@ -409,8 +414,9 @@ class AssetPostView(AssetSubmitMixin,
 @view_config(context=IPresentationAsset)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
-			   request_method='PUT')
-class AssetPutView(AssetSubmitMixin, UGDPutView):
+			   request_method='PUT',
+			   permission=nauth.ACT_CONTENT_EDIT)
+class PresentationAssetPutView(PresentationAssetSubmitViewMixin, UGDPutView):
 
 	@Lazy
 	def _registry(self):
@@ -451,3 +457,18 @@ class AssetPutView(AssetSubmitMixin, UGDPutView):
 		result = UGDPutView.__call__(self)
 		self._handle_asset(iface_of_asset(result), result, result.creator)
 		return result
+
+@view_config(context=IPresentationAsset)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='DELETE',
+			   permission=nauth.ACT_CONTENT_EDIT)
+class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
+
+	@Lazy
+	def _registry(self):
+		return _component_registry(self.context, name=self.context.ntiid)
+
+	def _do_delete_object(self, theObject):
+		_remove_item(theObject, self._registry, self._catalog)
+		return theObject
