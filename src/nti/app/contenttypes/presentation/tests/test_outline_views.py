@@ -106,9 +106,9 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that(set(unit_ntiids), has_length(expected_size))
 		return unit_ntiids
 
-	def _publish_obj(self, ntiid):
+	def _publish_obj( self, ntiid ):
 		url = '/dataserver2/Objects/%s/@@publish' % ntiid
-		self.testapp.post_json(url, None, extra_environ=self.instructor_environ)
+		self.testapp.post_json( url, None, extra_environ=self.instructor_environ )
 
 	def _check_ext_state(self, ntiid, is_visible=False, has_lesson=False, published=True):
 		"""
@@ -118,34 +118,35 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		"""
 		res = self.testapp.get(self.outline_url, extra_environ=self.instructor_environ)
 		res = res.json_body
-		def _find_item(items):
+		def _find_item( items ):
 			for item in items:
-				if item.get('NTIID') == ntiid:
+				if item.get( 'NTIID' ) == ntiid:
 					return item
-				for child in item.get('contents', ()):
-					if child.get('NTIID') == ntiid:
+				for child in item.get( 'contents', () ):
+					if child.get( 'NTIID' ) == ntiid:
 						return child
 
-		obj = _find_item(res)
-		assert_that(obj, not_none())
+		obj = _find_item( res )
+		assert_that( obj, not_none() )
 		if not is_visible:
 			# Based on content available dates, items do not expose contents.
-			assert_that(obj, does_not(has_entries('contents', none(),
-													'ContentNTIID', none())))
+			assert_that( obj, does_not( has_entries( 'contents', none(),
+													'ContentNTIID', none() )))
 		elif has_lesson:
 			# Content node with contents
-			assert_that(obj, has_entries('contents', not_none(),
-										'ContentNTIID', not_none()))
+			assert_that( obj, has_entries( 'contents', not_none(),
+										'ContentNTIID', not_none() ))
 		else:
 			# Unit with contents
-			assert_that(obj, has_entries('contents', not_none()))
+			assert_that( obj, has_entries( 'contents', not_none() ))
 
 		if published:
-			self.require_link_href_with_rel(obj, VIEW_UNPUBLISH)
-			assert_that(obj.get('PublicationState'), not_none())
+			self.require_link_href_with_rel( obj, VIEW_UNPUBLISH )
+			assert_that( obj.get( 'PublicationState' ), not_none() )
 		else:
-			self.require_link_href_with_rel(obj, VIEW_PUBLISH)
-			assert_that(obj.get('PublicationState'), none())
+			self.require_link_href_with_rel( obj, VIEW_PUBLISH )
+			assert_that( obj.get( 'PublicationState' ), none() )
+		self.require_link_href_with_rel( obj, 'edit' )
 
 	def _check_obj_state(self, ntiid, is_published=False, is_locked=True):
 		"""
@@ -156,6 +157,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, not_none())
 			assert_that(obj.locked, is_(is_locked))
+			#assert_that(obj.isPublished(), is_(is_published))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_permissions(self):
@@ -185,8 +187,9 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		res = self.testapp.get(self.outline_url, extra_environ=student_environ)
 		res = res.json_body
 		for item in res:
-			self.forbid_link_with_rel(item, VIEW_PUBLISH)
-			self.forbid_link_with_rel(item, VIEW_UNPUBLISH)
+			self.forbid_link_with_rel( item, VIEW_PUBLISH )
+			self.forbid_link_with_rel( item, VIEW_UNPUBLISH )
+			self.forbid_link_with_rel( item, 'edit' )
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_unit_node_edits(self):
@@ -195,8 +198,8 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		"""
 		# TODO Revert layer changes?
 		node_count = self._test_unit_node_inserts()
-		self._test_moving_nodes(node_count)
-		node_count = self._test_deleting_nodes(node_count)
+		self._test_moving_nodes( node_count )
+		node_count = self._test_deleting_nodes( node_count )
 		self._test_content_nodes()
 		self._test_moving_content_nodes()
 
@@ -206,21 +209,21 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		"""
 		instructor_environ = self.instructor_environ
 		student_environ = self._create_student_environ()
-		def _get_first_unit_node(_environ=instructor_environ):
+		def _get_first_unit_node( _environ=instructor_environ ):
 			res = self.testapp.get(self.outline_url, extra_environ=_environ)
 			res = res.json_body
 			return res[0]
 
-		def _first_node_size(expected_size=3, _environ=instructor_environ):
-			res = _get_first_unit_node(_environ)
+		def _first_node_size( expected_size=3, _environ=instructor_environ ):
+			res = _get_first_unit_node( _environ )
 			child_ntiids = [x.get('NTIID') for x in res.get('contents')]
-			assert_that(child_ntiids, has_length(expected_size))
+			assert_that(child_ntiids, has_length( expected_size ))
 			return child_ntiids
 
 		res = _get_first_unit_node()
 		first_unit_ntiid = res.get('NTIID')
 		_first_node_size()
-		_first_node_size(_environ=student_environ)
+		_first_node_size( _environ=student_environ )
 
 		# Append content node; validate fields
 		new_content_title = 'new content node title'
@@ -240,16 +243,16 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self.require_link_href_with_rel(res, VIEW_PUBLISH)
 
 		# Must publish for students to see
-		_first_node_size(4)
-		_first_node_size(3, student_environ)
-		self._check_obj_state(content_node_ntiid)
-		self._publish_obj(content_node_ntiid)
-		self._check_obj_state(content_node_ntiid, is_published=True)
-		self._check_obj_state(lesson_ntiid)
-		self._check_ext_state(content_node_ntiid, is_visible=True, has_lesson=True)
+		_first_node_size( 4 )
+		_first_node_size( 3, student_environ )
+		self._check_obj_state( content_node_ntiid )
+		self._publish_obj( content_node_ntiid )
+		self._check_obj_state( content_node_ntiid, is_published=True )
+		self._check_obj_state( lesson_ntiid )
+		self._check_ext_state( content_node_ntiid, is_visible=True, has_lesson=True )
 
-		_first_node_size(4, student_environ)
-		child_ntiids = _first_node_size(4)
+		_first_node_size( 4, student_environ )
+		child_ntiids = _first_node_size( 4 )
 		assert_that(child_ntiids[-1], is_(content_node_ntiid))
 
 		# Insert at index 0 with dates
@@ -273,17 +276,17 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self._check_obj_state(lesson_ntiid2)
 
 		# Must publish for students to see
-		_first_node_size(5)
-		_first_node_size(4, student_environ)
-		self._check_obj_state(content_node_ntiid2)
-		self._publish_obj(content_node_ntiid2)
-		self._check_obj_state(content_node_ntiid2, is_published=True)
-		self._check_obj_state(lesson_ntiid2)
+		_first_node_size( 5 )
+		_first_node_size( 4, student_environ )
+		self._check_obj_state( content_node_ntiid2 )
+		self._publish_obj( content_node_ntiid2 )
+		self._check_obj_state( content_node_ntiid2, is_published=True )
+		self._check_obj_state( lesson_ntiid2 )
 		# Based on dates, contents are not provided.
-		self._check_ext_state(content_node_ntiid2, is_visible=False, has_lesson=True)
+		self._check_ext_state( content_node_ntiid2, is_visible=False, has_lesson=True )
 
-		_first_node_size(5)
-		child_ntiids = _first_node_size(5, student_environ)
+		_first_node_size( 5 )
+		child_ntiids = _first_node_size( 5, student_environ )
 		assert_that(child_ntiids[0], is_(content_node_ntiid2))
 		assert_that(child_ntiids[-1], is_(content_node_ntiid))
 
@@ -339,7 +342,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		target_child_ntiids2 = [x.get('NTIID') for x in res.get('contents')]
 		assert_that(target_child_ntiids2[0], is_(moved_ntiid))
 		assert_that(target_child_ntiids2, contains(*target_child_ntiids))
-		self._check_obj_state(moved_ntiid, is_published=True)
+		self._check_obj_state( moved_ntiid, is_published=True )
 
 	def _test_unit_node_inserts(self):
 		"""
@@ -371,16 +374,16 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self.require_link_href_with_rel(res, VIEW_PUBLISH)
 
 		# Before publishing, our outline is unchanged for students
-		self._get_outline_ntiids(student_environ, node_count)
-		self._get_outline_ntiids(instructor_environ, node_count + 1)
-		self._check_obj_state(new_ntiid)
-		self._publish_obj(new_ntiid)
+		self._get_outline_ntiids( student_environ, node_count )
+		self._get_outline_ntiids( instructor_environ, node_count + 1 )
+		self._check_obj_state( new_ntiid )
+		self._publish_obj( new_ntiid )
 		node_count += 1
-		self._check_obj_state(new_ntiid, is_published=True)
-		self._check_ext_state(new_ntiid, is_visible=True)
+		self._check_obj_state( new_ntiid, is_published=True )
+		self._check_ext_state( new_ntiid, is_visible=True )
 
 		# Test our outline; new ntiid is at end
-		unit_ntiids = self._get_outline_ntiids(student_environ, node_count)
+		unit_ntiids = self._get_outline_ntiids( student_environ, node_count )
 		assert_that(unit_ntiids[0], is_(first_unit_ntiid))
 		assert_that(unit_ntiids[-2], is_(last_unit_ntiid))
 		assert_that(unit_ntiids[-1], is_(new_ntiid))
@@ -390,10 +393,10 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		new_unit_title2 = 'new unit title2'
 		content_beginning = '2013-08-13T06:00:00Z'
 		content_ending = '2200-12-13T06:00:00Z'
-		unit_data2 = {	'title': new_unit_title2,
-						'MimeType': self.unit_mime_type,
-						'ContentsAvailableBeginning': content_beginning,
-						'ContentsAvailableEnding': content_ending }
+		unit_data2 = {'title': new_unit_title2,
+					'MimeType': self.unit_mime_type,
+					'ContentsAvailableBeginning': content_beginning,
+					'ContentsAvailableEnding': content_ending }
 		res = self.testapp.post_json(at_index_url, unit_data2,
 									 extra_environ=instructor_environ)
 		res = res.json_body
@@ -402,16 +405,16 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that(res.get('ContentsAvailableEnding'), is_(content_ending))
 		self.require_link_href_with_rel(res, VIEW_PUBLISH)
 
-		self._get_outline_ntiids(student_environ, node_count)
-		self._get_outline_ntiids(instructor_environ, node_count + 1)
-		self._check_obj_state(new_ntiid2)
-		self._publish_obj(new_ntiid2)
+		self._get_outline_ntiids( student_environ, node_count )
+		self._get_outline_ntiids( instructor_environ, node_count + 1 )
+		self._check_obj_state( new_ntiid2 )
+		self._publish_obj( new_ntiid2 )
 		node_count += 1
-		self._check_obj_state(new_ntiid2, is_published=True)
+		self._check_obj_state( new_ntiid2, is_published=True )
 		# Based on dates, contents are not provided.
-		self._check_ext_state(new_ntiid2, is_visible=False)
+		self._check_ext_state( new_ntiid2, is_visible=False )
 
-		unit_ntiids = self._get_outline_ntiids(student_environ, node_count)
+		unit_ntiids = self._get_outline_ntiids( student_environ, node_count )
 		assert_that(unit_ntiids[0], is_(new_ntiid2))
 		assert_that(unit_ntiids[1], is_(first_unit_ntiid))
 		assert_that(unit_ntiids[-2], is_(last_unit_ntiid))
@@ -421,20 +424,20 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		at_index_url = self.outline_url + '/index/9'
 		new_unit_title3 = 'new unit title3'
 		content_beginning = '2000-08-13T06:00:00Z'
-		unit_data3 = {	'title': new_unit_title3,
-						'MimeType': self.unit_mime_type,
-						'ContentsAvailableBeginning': content_beginning}
+		unit_data3 = {'title': new_unit_title3,
+					'MimeType': self.unit_mime_type,
+					'ContentsAvailableBeginning': content_beginning}
 		res = self.testapp.post_json(at_index_url, unit_data3,
 									 extra_environ=instructor_environ)
 		new_ntiid3 = res.json_body.get('NTIID')
 
 		self._check_obj_state(new_ntiid3)
-		self._publish_obj(new_ntiid3)
+		self._publish_obj( new_ntiid3 )
 		node_count += 1
-		self._check_obj_state(new_ntiid3, is_published=True)
-		self._check_ext_state(new_ntiid3, is_visible=True)
+		self._check_obj_state( new_ntiid3, is_published=True )
+		self._check_ext_state( new_ntiid3, is_visible=True )
 
-		unit_ntiids = self._get_outline_ntiids(student_environ, node_count)
+		unit_ntiids = self._get_outline_ntiids( student_environ, node_count )
 		assert_that(unit_ntiids[0], is_(new_ntiid2))
 		assert_that(unit_ntiids[1], is_(first_unit_ntiid))
 		assert_that(unit_ntiids[-3], is_(last_unit_ntiid))
@@ -502,7 +505,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_outline_sharing_decorator(self):
 		url = '/dataserver2/%2B%2Betc%2B%2Bhostsites/platform.ou.edu/%2B%2Betc%2B%2Bsite/Courses/Fall2015/CS%201323/SubInstances/995'
-		res = self.testapp.get(url, extra_environ=self.instructor_environ)
-		res = res.json_body.get('Outline')
-		assert_that(res, has_entries('IsCourseOutlineShared', is_(True),
-									 'CourseOutlineSharedEntries', has_length(3)))
+		res = self.testapp.get( url, extra_environ=self.instructor_environ )
+		res = res.json_body.get( 'Outline' )
+		assert_that( res, has_entries( 'IsCourseOutlineShared', is_( True ),
+									'CourseOutlineSharedEntries', has_length( 3 )))
