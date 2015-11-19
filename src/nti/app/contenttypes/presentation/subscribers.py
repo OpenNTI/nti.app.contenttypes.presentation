@@ -26,6 +26,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
+from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
@@ -93,9 +94,6 @@ def _on_will_remove_course_overview_group(group, event):
 
 @component.adapter(IPresentationAsset, IWillRemovePresentationAssetEvent)
 def _on_will_remove_presentation_asset(asset, event):
-	ntiid = getattr(asset, 'ntiid', None)
-	if not ntiid:
-		return
 	# remove from containers
 	for context in get_presentation_asset_containers(asset):
 		if ICourseInstance.providedBy(context):
@@ -104,6 +102,8 @@ def _on_will_remove_presentation_asset(asset, event):
 			containers = (context,)
 		for container in containers:
 			if INTICourseOverviewGroup.providedBy(container):
+				container.remove(asset)
+			elif INTISlideDeck.providedBy(container):
 				container.remove(asset)
 			else:
 				mapping = IPresentationAssetContainer(container, None)
