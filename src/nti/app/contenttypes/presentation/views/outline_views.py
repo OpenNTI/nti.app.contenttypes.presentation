@@ -65,8 +65,6 @@ from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.contenttypes.presentation.lesson import NTILessonOverView
 
-from nti.coremetadata.interfaces import IPublishable
-
 from nti.dataserver import authorization as nauth
 
 from nti.externalization.interfaces import LocatedExternalDict
@@ -286,8 +284,6 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 								provided=INTISlideDeck,
 								container_all_of=False,
 								sites=sites):
-			if not IPublishable.providedBy(item) or not item.is_published():
-				continue
 			uid = intids.getId(item)
 			for ntiid in catalog.get_containers(uid):
 				if ntiid in ntiids:
