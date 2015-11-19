@@ -255,19 +255,11 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 								provided=INTICourseOverviewGroup,
 								sites=sites):
 
-			# ignore unpublished items
-			if not IPublishable.providedBy(group) or not group.is_published():
-				continue
-
 			for item in group.Items:
 				# ignore non media items
 				if 	(not IMediaRef.providedBy(item)
 					 and not INTIMedia.providedBy(item)
 					 and not INTISlideDeck.providedBy(item)):
-					continue
-
-				# ignore unpublished items
-				if not IPublishable.providedBy(item) or not item.is_published():
 					continue
 
 				# check visibility
