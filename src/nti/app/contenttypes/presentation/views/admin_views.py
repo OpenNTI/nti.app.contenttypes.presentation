@@ -55,11 +55,11 @@ from nti.site.site import get_component_hierarchy_names
 
 from ..utils.common import yield_sync_courses
 
-from ..subscribers import can_be_removed
-from ..subscribers import clear_course_assets
-from ..subscribers import clear_namespace_last_modified
-from ..subscribers import remove_and_unindex_course_assets
-from ..subscribers import synchronize_course_lesson_overview
+from ..synchronizer import can_be_removed
+from ..synchronizer import clear_course_assets
+from ..synchronizer import clear_namespace_last_modified
+from ..synchronizer import remove_and_unindex_course_assets
+from ..synchronizer import synchronize_course_lesson_overview
 
 from .. import iface_of_thing
 

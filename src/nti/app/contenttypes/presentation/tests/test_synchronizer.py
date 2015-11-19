@@ -22,9 +22,9 @@ from nti.contentlibrary.indexed_data import get_catalog
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
-from nti.app.contenttypes.presentation.subscribers import _removed_registered
-from nti.app.contenttypes.presentation.subscribers import _index_overview_items
-from nti.app.contenttypes.presentation.subscribers import _load_and_register_lesson_overview_json
+from nti.app.contenttypes.presentation.synchronizer import _removed_registered
+from nti.app.contenttypes.presentation.synchronizer import _index_overview_items
+from nti.app.contenttypes.presentation.synchronizer import _load_and_register_lesson_overview_json
 
 from nti.app.contenttypes.presentation.tests import PersistentComponents
 
@@ -52,7 +52,7 @@ def _remove_from_registry(container_ntiids=None, provided=None, registry=None):
 			pass
 	return result
 
-class TestSubscribers(ApplicationLayerTest):
+class TestSynchronizer(ApplicationLayerTest):
 
 	@WithMockDSTrans
 	def test_lesson_overview(self):

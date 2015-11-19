@@ -22,8 +22,8 @@ from nti.dataserver.utils.base_script import create_context
 
 from ..utils.common import yield_sync_courses as yield_courses
 
-from ..subscribers import get_course_packages
-from ..subscribers import synchronize_course_lesson_overview
+from ..synchronizer import get_course_packages
+from ..synchronizer import synchronize_course_lesson_overview
 
 def _sync_course(course, exclude=False):
 	result = []
