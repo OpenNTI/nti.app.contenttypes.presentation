@@ -21,16 +21,38 @@ from zope.component.hooks import setHooks
 from nti.contentlibrary.indexed_data import CATALOG_INDEX_NAME
 from nti.contentlibrary.indexed_data.interfaces import IContainedObjectCatalog
 
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
+from nti.contenttypes.presentation.interfaces import INTILessonOverview
 
 from nti.site.hostpolicy import run_job_in_all_host_sites
 
-def _reindex_items(catalog):
+from nti.traversal.traversal import find_interface
+
+def _reindex_lessons(catalog):
+	for ntiid, lesson in list(component.getUtilitiesFor(INTILessonOverview)):
+		course = find_interface(lesson, ICourseInstance, strict=False)
+		entry = ICourseCatalogEntry(course, None)
+		entry = (entry.ntiid,) if entry is not None else ()
+		grp_ntiids = (ntiid,) + entry
+		for group in lesson.Items or ():
+			catalog.index(group, container_ntiids=grp_ntiids)
+			item_ntiids = grp_ntiids + (group.ntiid,)
+			for item in group.Items or ():
+				catalog.index(item, container_ntiids=item_ntiids)
+		
+def _reindex_slidedecks(catalog):
 	for ntiid, deck in list(component.getUtilitiesFor(INTISlideDeck)):
 		for slide in deck.Slides or ():
 			catalog.index(slide, container_ntiids=ntiid)
 		for video in deck.Videos or ():
 			catalog.index(video, container_ntiids=ntiid)
+					
+def _reindex_items(catalog):
+	_reindex_lessons(catalog)
+	_reindex_slidedecks(catalog)
 			
 def do_evolve(context, generation=generation):
 	setHooks()
@@ -50,6 +72,6 @@ def do_evolve(context, generation=generation):
 		
 def evolve(context):
 	"""
-	Evolve to gen 12 by reindexing containers of slidedecks
+	Evolve to gen 12 by reindexing containers of slidedecks and lesson overviews
 	"""
 	do_evolve(context)
