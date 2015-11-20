@@ -15,6 +15,8 @@ from .. import VIEW_NODE_CONTENTS
 from .. import VIEW_OVERVIEW_CONTENT
 from .. import VIEW_OVERVIEW_SUMMARY
 
+ORDERED_CONTENTS = 'ordered-contents'
+
 LEGACY_UAS_40 = ("NTIFoundation DataLoader NextThought/1.0",
 				 "NTIFoundation DataLoader NextThought/1.1.",
 				 "NTIFoundation DataLoader NextThought/1.2.",

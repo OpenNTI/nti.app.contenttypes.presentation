@@ -43,7 +43,8 @@ from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
 
 from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_for_user
 
-from nti.contenttypes.presentation.interfaces import IVisible
+from nti.contenttypes.presentation.interfaces import IVisible, \
+	INTILessonOverview
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTITimeline
@@ -56,6 +57,7 @@ from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.dataserver.authorization import ACT_UPDATE
+from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalObjectDecorator
@@ -74,6 +76,7 @@ from ..utils import resolve_discussion_course_bundle
 from ..utils import get_enrollment_record as get_any_enrollment_record
 
 from . import LEGACY_UAS_40
+from . import ORDERED_CONTENTS
 
 from . import is_legacy_uas
 
@@ -102,8 +105,8 @@ class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecor
 
 	def _predicate(self, context, result):
 		return 	not self._no_acl_decoration \
+				and bool(self._is_authenticated) \
 				and	not self._has_edit_link(result) \
-				and bool(self.authenticated_userid) \
 				and has_permission(ACT_UPDATE, context, self.request)
 
 	def _do_decorate_external(self, context, result):
@@ -113,6 +116,28 @@ class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecor
 		link.__name__ = ''
 		link.__parent__ = context
 		_links.append(link)
+
+@component.adapter(INTILessonOverview)
+@interface.implementer(IExternalMappingDecorator)
+class _NTILessonOverviewLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
+
+	@Lazy
+	def _no_acl_decoration(self):
+		result = getattr(self.request, 'no_acl_decoration', False)
+		return result
+
+	def _predicate(self, context, result):
+		return 	not self._no_acl_decoration \
+				and bool(self._is_authenticated) \
+				and has_permission(ACT_CONTENT_EDIT, context, self.request)
+
+	def _do_decorate_external(self, context, result):
+		links = result.setdefault(LINKS, [])
+		link = Link(context, rel=ORDERED_CONTENTS, elements=('contents',))
+		interface.alsoProvides(link, ILocation)
+		link.__name__ = ''
+		link.__parent__ = context
+		links.append(link)
 
 @component.adapter(INTICourseOverviewGroup)
 @interface.implementer(IExternalObjectDecorator)

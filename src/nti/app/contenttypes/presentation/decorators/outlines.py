@@ -48,6 +48,7 @@ from nti.externalization.singleton import SingletonDecorator
 from nti.links.links import Link
 from nti.links.externalization import render_link
 
+from . import ORDERED_CONTENTS
 from . import VIEW_OVERVIEW_CONTENT
 from . import VIEW_OVERVIEW_SUMMARY
 
@@ -106,14 +107,12 @@ class _CourseOutlineSharedDecorator(object):
 @interface.implementer(IExternalMappingDecorator)
 class _CourseOutlineEditLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
-	REL_NAME = 'ordered-contents'
-
 	def _predicate(self, context, result):
 		return has_permission(ACT_CONTENT_EDIT, context, self.request)
 
 	def _do_decorate_external(self, context, result):
 		links = result.setdefault(LINKS, [])
-		link = Link(context, rel=self.REL_NAME, elements=('contents',))
+		link = Link(context, rel=ORDERED_CONTENTS, elements=('contents',))
 		interface.alsoProvides(link, ILocation)
 		link.__name__ = ''
 		link.__parent__ = context
