@@ -187,6 +187,17 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj, has_property('Items', has_length(1)))
 			history  = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(1))
+			
+		# contents
+		source = self._load_resource('relatedwork.json')
+		source.pop('NTIID', None)
+		contents_url = href + '/@@contents'
+		res = self.testapp.post_json(contents_url, source, status=201)
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			obj = find_object_with_ntiid(ntiid)
+			assert_that(obj, has_property('Items', has_length(2)))
+			history  = ITransactionRecordHistory(obj)
+			assert_that(history, has_length(2))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_lesson(self):
@@ -227,6 +238,7 @@ class TestAssetViews(ApplicationLayerTest):
 			history  = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(1))
 
+		# contents
 		source = {'title':'mygroup'}
 		contents_url = href + '/@@contents'
 		res = self.testapp.post_json(contents_url, source, status=201)
