@@ -34,7 +34,6 @@ from nti.contenttypes.presentation.interfaces import INTIInquiryRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
-from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
@@ -49,7 +48,7 @@ from . import iface_of_thing
 def _course_overview_group_to_course(group):
 	return find_interface(group, ICourseInstance, strict=False)
 
-@interface.implementer(INTILessonOverview)
+@interface.implementer(ICourseInstance)
 @component.adapter(INTICourseOverviewGroup)
 def _lesson_overview_to_course(group):
 	return find_interface(group, ICourseInstance, strict=False)
@@ -57,13 +56,15 @@ def _lesson_overview_to_course(group):
 @component.adapter(INTIAudioRef)
 @interface.implementer(INTIAudio)
 def _audioref_to_audio(context):
-	result = component.queryUtility(INTIAudio, name=context.ntiid)
+	name = context.target or context.ntiid
+	result = component.queryUtility(INTIAudio, name=name)
 	return result
 
 @component.adapter(INTIVideoRef)
 @interface.implementer(INTIVideo)
 def _videoref_to_video(context):
-	result = component.queryUtility(INTIVideo, name=context.ntiid)
+	name = context.target or context.ntiid
+	result = component.queryUtility(INTIVideo, name=name)
 	return result
 
 @interface.implementer(IQuestion)
