@@ -395,7 +395,7 @@ def _index_pacakge_assets(course, catalog=None, sites=None):
 	for doc_id in catalog.get_references(provided=PACKAGE_CONTAINER_INTERFACES,
 									   	 container_ntiids=packs,
 									   	 sites=sites):
-		catalog.update_containers(doc_id, container_ntiids=(entry.ntiid,))
+		catalog.update_containers(doc_id, (entry.ntiid,))
 index_pacakge_assets = _index_pacakge_assets
 
 def get_cataloged_namespaces(ntiid, catalog=None, sites=None):
