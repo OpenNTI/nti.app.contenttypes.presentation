@@ -22,7 +22,6 @@ from zope.security.interfaces import IPrincipal
 from nti.contentlibrary.indexed_data import get_catalog
 
 from nti.contentlibrary.interfaces import IContentUnit
-from nti.contentlibrary.interfaces import IContentPackage
 
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import ICourseCatalog
@@ -97,10 +96,7 @@ def get_courses(ntiids=()):
 	for ntiid in ntiids or ():
 		course = None
 		context = find_object_with_ntiid(ntiid)
-		if IContentPackage.providedBy(context):
-			# TODO: Use get_courses_for_pacakge
-			course = ICourseInstance(context, None) 	
-		elif ICourseCatalogEntry.providedBy(context):
+		if ICourseCatalogEntry.providedBy(context):
 			course = ICourseInstance(context, None)
 		elif ICourseInstance.providedBy(context):
 			course = context
