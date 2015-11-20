@@ -384,6 +384,21 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 						  intids=intids,
 						  container_ntiids=to_index)
 
+def _index_pacakge_assets(course, intids=None, catalog=None, sites=None):
+	entry = ICourseCatalogEntry(course)
+	packs = get_course_packages(course)
+	packs = [x.ntiid for x in packs]
+
+	catalog = get_library_catalog() if catalog is None else catalog
+	sites = get_component_hierarchy_names() if not sites else sites
+	intids = component.getUtility(IIntIds) if intids is None else intids
+
+	for item in catalog.search_objects(intids=intids, provided=PACKAGE_CONTAINER_INTERFACES,
+									   container_ntiids=packs,
+									   sites=sites):
+		catalog.index(item, container_ntiids=(entry.ntiid,))
+index_pacakge_assets = _index_pacakge_assets
+
 def get_cataloged_namespaces(ntiid, catalog=None, sites=None):
 	catalog = get_library_catalog() if catalog is None else catalog
 	sites = get_component_hierarchy_names() if not sites else sites
@@ -490,6 +505,8 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 	# finally copy transactions from removed to new objects
 	_copy_remove_transactions(removed, registry=registry)
 
+	_index_pacakge_assets(course, intids=intids, catalog=catalog)
+	
 	logger.info('Lessons overviews for %s have been synchronized in %s(s)',
 				 name, time.time() - now)
 	return result
