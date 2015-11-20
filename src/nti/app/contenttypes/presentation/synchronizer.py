@@ -20,6 +20,7 @@ from zope import component
 from ZODB.interfaces import IConnection
 
 from nti.coremetadata.interfaces import IRecordable
+from nti.coremetadata.interfaces import IPublishable 
 
 from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
@@ -488,6 +489,10 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 								  intids=intids,
 								  node=node,
 								  course=course)
+
+			
+			if IPublishable.providedBy(overview):
+				overview.publish() # by default
 
 			_set_source_lastModified(namespace, sibling_lastModified, catalog)
 
