@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-generation = 12
+generation = 14
 
 import functools
 
@@ -21,16 +21,23 @@ from zope.component.hooks import setHooks
 from nti.contentlibrary.indexed_data import CATALOG_INDEX_NAME
 from nti.contentlibrary.indexed_data.interfaces import IContainedObjectCatalog
 
-from nti.contenttypes.presentation.interfaces import INTISlideDeck
+from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.site.hostpolicy import run_job_in_all_host_sites
 
-def _reindex_items(catalog):
-	for ntiid, deck in list(component.getUtilitiesFor(INTISlideDeck)):
-		for slide in deck.Slides or ():
-			catalog.index(slide, container_ntiids=ntiid)
-		for video in deck.Videos or ():
-			catalog.index(video, container_ntiids=ntiid)
+from ..synchronizer import index_pacakge_assets
+
+def _index_package_assets(catalog):
+	course_catalog = component.queryUtility(ICourseCatalog)
+	if course_catalog is None:
+		return
+
+	for entry in course_catalog.iterCatalogEntries():
+		course = ICourseInstance(entry, None)
+		if course is not None and not ILegacyCourseInstance.providedBy(course):
+			index_pacakge_assets(course, catalog=catalog)
 			
 def do_evolve(context, generation=generation):
 	setHooks()
@@ -45,11 +52,11 @@ def do_evolve(context, generation=generation):
 		lsm = dataserver_folder.getSiteManager()
 		catalog = lsm.getUtility(IContainedObjectCatalog, name=CATALOG_INDEX_NAME)
 
-		run_job_in_all_host_sites(functools.partial(_reindex_items, catalog))
+		run_job_in_all_host_sites(functools.partial(_index_package_assets, catalog))
 		logger.info('Evolution %s done.', generation)
 		
 def evolve(context):
 	"""
-	Evolve to gen 12 by reindexing containers of slidedecks
+	Evolve to gen 14 by updating containers of the package assets
 	"""
 	do_evolve(context)
