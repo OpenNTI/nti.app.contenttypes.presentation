@@ -19,6 +19,7 @@ from zope import interface
 from zope.component.hooks import site
 from zope.component.hooks import setHooks
 
+from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 
 from nti.coremetadata.interfaces import IDefaultPublished
@@ -27,7 +28,8 @@ from nti.site.hostpolicy import run_job_in_all_host_sites
 
 def _remove_interface():
 	for _, item in list(component.getUtilitiesFor(IPresentationAsset)):
-		interface.noLongerProvides(item, IDefaultPublished)
+		if not INTILessonOverview.providedBy(item):
+			interface.noLongerProvides(item, IDefaultPublished)
 			
 def do_evolve(context, generation=generation):
 	setHooks()
