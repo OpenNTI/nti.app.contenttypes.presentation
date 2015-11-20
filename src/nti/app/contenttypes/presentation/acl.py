@@ -53,20 +53,20 @@ class BasePresentationAssetACLProvider(object):
 
 	@property
 	def __acl__(self):
+		instructors = set()
 		aces = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
 				ace_allowing(ROLE_CONTENT_EDITOR, ALL_PERMISSIONS, type(self))]
 		courses = get_presentation_asset_courses(self.context)
 		for course in courses or ():
-			sharing_scopes = course.SharingScopes
-			sharing_scopes.initScopes()
-			for scope in sharing_scopes.values():
+			for scope in course.SharingScopes.values():
 				aces.append(ace_allowing(IPrincipal(scope), ACT_READ, type(self)))
 
 			for i in course.instructors or (): # get special powers
-				aces.append(ace_allowing(i, ALL_PERMISSIONS, type(self)))
-				aces.append(ace_allowing(i, ACT_CONTENT_EDIT, type(self)))
+				instructors.add(ace_allowing(i, ALL_PERMISSIONS, type(self)))
+				instructors.add(ace_allowing(i, ACT_CONTENT_EDIT, type(self)))
 
-		result = acl_from_aces(aces) if aces else None
+		aces.extend(instructors)
+		result = acl_from_aces(aces)
 		return result
 
 @component.adapter(IPresentationAsset)
