@@ -233,6 +233,8 @@ class PresentationAssetGetView(GenericGetView):
 		accept = self.request.headers.get(b'Accept') or u''
 		if accept == 'application/vnd.nextthought.pageinfo+json':
 			raise hexc.HTTPNotAcceptable()
+		if IPublishable.providedBy(self.context) and not self.context.is_published():
+			raise hexc.HTTPForbidden(_("Item not published."))
 		result = GenericGetView.__call__(self)
 		return result
 
