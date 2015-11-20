@@ -43,14 +43,14 @@ from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
 
 from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_for_user
 
-from nti.contenttypes.presentation.interfaces import IVisible, \
-	INTILessonOverview
+from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIQuestionRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
+from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
@@ -118,8 +118,9 @@ class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecor
 		_links.append(link)
 
 @component.adapter(INTILessonOverview)
+@component.adapter(INTICourseOverviewGroup)
 @interface.implementer(IExternalMappingDecorator)
-class _NTILessonOverviewLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
+class _NTIAssetOrderedContentsLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	@Lazy
 	def _no_acl_decoration(self):

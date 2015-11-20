@@ -62,6 +62,7 @@ from nti.contenttypes.presentation import COURSE_OVERVIEW_GROUP_MIMETYES
 
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
+from nti.contenttypes.presentation.interfaces import IGroupOverViewable
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -294,7 +295,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin, AbstractAuthentic
 			item.ntiid = _make_asset_ntiid(provided, creator, extra=self._extra)
 		return item
 
-	def _handle_package_asset(self, provided, item, creator):
+	def _handle_package_asset(self, provided, item, creator, extended=None):
 		containers = _add_2_container(self._course, item, pacakges=True)
 		namespace = containers[0] if containers else None  # first pkg
 		if provided == INTISlideDeck:
@@ -305,15 +306,16 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin, AbstractAuthentic
 			_canonicalize(item.Videos, creator, base=base, registry=self._registry)
 
 			# add slidedeck ntiid
-			extended = tuple(containers or ()) + (item.ntiid,)
+			item_extended = tuple(extended or ()) + tuple(containers or ()) + (item.ntiid,)
 
 			# register in containers and index
 			for x in chain(item.Slides, item.Videos):
 				_add_2_container(self._course, x, pacakges=True)
-				self._catalog.index(x, container_ntiids=extended, namespace=namespace)
+				self._catalog.index(x, container_ntiids=item_extended, namespace=namespace)
 
 		# index item
-		self._catalog.index(item, container_ntiids=containers, namespace=namespace)
+		item_extended = list(extended or ()) + containers
+		self._catalog.index(item, container_ntiids=item_extended, namespace=namespace)
 
 	def _handle_overview_group(self, group, creator, extended=None):
 		# add to course container
@@ -334,13 +336,16 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin, AbstractAuthentic
 		item_extended = list(extended or ()) + containers
 		self._catalog.index(group, container_ntiids=item_extended)
 
-	def _handle_lesson_overview(self, lesson, creator):
+	def _handle_lesson_overview(self, lesson, creator, extended=None):
 		# add to course container
 		containers = _add_2_container(self._course, lesson, pacakges=False)
 
 		# have unique copies of lesson groups
 		_canonicalize(lesson.Items, creator, registry=self._registry, base=lesson.ntiid)
 
+		# extend but don't add containers
+		item_extended = list(extended or ()) + [lesson.ntiid]
+		
 		# process lesson groups
 		for group in lesson.Items:
 			if group.__parent__ is not None and group.__parent__ != lesson:
@@ -352,24 +357,26 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin, AbstractAuthentic
 			self._check_exists(INTICourseOverviewGroup, group, creator)
 			self._handle_overview_group(group,
 										creator=creator,
-										extended=(lesson.ntiid,))
+										extended=item_extended)
 
 		# index lesson item
-		self._catalog.index(lesson, container_ntiids=containers)
+		item_extended = list(extended or ()) + containers
+		self._catalog.index(lesson, container_ntiids=item_extended)
 
-	def _handle_other_asset(self, item, creator):
+	def _handle_other_asset(self, item, creator, extended=None):
 		containers = _add_2_container(self._course, item, pacakges=False)
-		self._catalog.index(item, container_ntiids=containers)
+		item_extended = list(extended or ()) + containers
+		self._catalog.index(item, container_ntiids=item_extended)
 
-	def _handle_asset(self, provided, item, creator):
+	def _handle_asset(self, provided, item, creator, extended=()):
 		if provided in PACKAGE_CONTAINER_INTERFACES:
-			self._handle_package_asset(provided, item, creator)
+			self._handle_package_asset(provided, item, creator, extended)
 		elif provided == INTICourseOverviewGroup:
-			self._handle_overview_group(item, creator)
+			self._handle_overview_group(item, creator, extended)
 		elif provided == INTILessonOverview:
-			self._handle_lesson_overview(item, creator)
+			self._handle_lesson_overview(item, creator, extended)
 		else:
-			self._handle_other_asset(item, creator)
+			self._handle_other_asset(item, creator, extended)
 		return item
 
 @view_config(context=ICourseInstance)
@@ -537,6 +544,60 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 		self._handle_overview_group(contentObject,
 									creator=creator,
 									extended=(self.context.ntiid,))
+
+		notify_modified(self.context, externalValue, external_keys=(ITEMS,))
+		self.request.response.status_int = 201
+		return contentObject
+
+@view_config(context=INTICourseOverviewGroup)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='POST',
+			   name="contents",
+			   permission=nauth.ACT_CONTENT_EDIT)
+class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
+											 ModeledContentUploadRequestUtilsMixin):
+
+	content_predicate = IGroupOverViewable.providedBy
+
+	def checkContentObject(self, contentObject, externalValue):
+		if contentObject is None or not self.content_predicate(contentObject):
+			transaction.doom()
+			logger.debug("Failing to POST: input of unsupported/missing Class: %s => %s",
+						 externalValue, contentObject)
+			raise hexc.HTTPUnprocessableEntity(_('Unsupported/missing Class'))
+		return contentObject
+
+	def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
+		externalValue = self.readInput() if not externalValue else externalValue
+		contentObject = create_from_external(externalValue, notify=False)
+		contentObject = self.checkContentObject(contentObject, externalValue)
+		contentObject.creator = getattr(creator, 'username', creator)  # use string
+		return contentObject, externalValue
+
+	def _do_call(self):
+		creator = self.remoteUser
+		contentObject, externalValue = self.readCreateUpdateContentObject(creator)
+		provided = iface_of_asset(contentObject)
+
+		# check item does not exists and notify
+		self._check_exists(provided, contentObject, creator)
+		_notify_created(contentObject)
+
+		# add to connection and register
+		_intid_register(contentObject, registry=self._registry)
+		registerUtility(self._registry,
+						provided=provided,
+						component=contentObject,
+						name=contentObject.ntiid)
+		
+		parent = self.context.__parent__
+		extended = (self.context.ntiid,) + ((parent.ntiid,) if parent is not None else ())
+		self.context.append(contentObject)
+		self._handle_asset(provided, 
+						   contentObject,
+						   creator=creator,
+						   extended=extended)
 
 		notify_modified(self.context, externalValue, external_keys=(ITEMS,))
 		self.request.response.status_int = 201
