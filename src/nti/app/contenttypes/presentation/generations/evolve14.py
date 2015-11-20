@@ -31,13 +31,11 @@ from ..synchronizer import index_pacakge_assets
 
 def _index_package_assets(catalog):
 	course_catalog = component.queryUtility(ICourseCatalog)
-	if course_catalog is None:
-		return
-
-	for entry in course_catalog.iterCatalogEntries():
-		course = ICourseInstance(entry, None)
-		if course is not None and not ILegacyCourseInstance.providedBy(course):
-			index_pacakge_assets(course, catalog=catalog)
+	if course_catalog is not None:
+		for entry in course_catalog.iterCatalogEntries():
+			course = ICourseInstance(entry, None)
+			if course is not None and not ILegacyCourseInstance.providedBy(course):
+				index_pacakge_assets(course, catalog=catalog)
 			
 def do_evolve(context, generation=generation):
 	setHooks()
