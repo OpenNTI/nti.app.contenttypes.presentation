@@ -65,6 +65,8 @@ from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.contenttypes.presentation.lesson import NTILessonOverView
 
+from nti.coremetadata.interfaces import IPublishable
+
 from nti.dataserver import authorization as nauth
 
 from nti.externalization.interfaces import LocatedExternalDict
@@ -123,14 +125,16 @@ class OutlineLessonOverviewMixin(object):
 		try:
 			ntiid = context.LessonOverviewNTIID
 			if not ntiid:
-				raise hexc.HTTPServerError("Outline does not have a valid lesson overview")
+				raise hexc.HTTPServerError(
+						_("Outline does not have a valid lesson overview."))
 
 			lesson = component.getUtility(INTILessonOverview, name=ntiid)
 			if lesson is None:
-				raise hexc.HTTPUnprocessableEntity("Cannot find lesson overview")
+				raise hexc.HTTPUnprocessableEntity(_("Cannot find lesson overview."))
 			return lesson
 		except AttributeError:
-			raise hexc.HTTPServerError("Outline does not have a lesson overview attribute")
+			raise hexc.HTTPServerError(
+						_("Outline does not have a lesson overview attribute."))
 
 @view_config(route_name='objects.generic.traversal',
 			 context=ICourseOutlineContentNode,
@@ -168,7 +172,7 @@ class OutlineLessonOverviewSummaryView(RecursiveUGDView,
 			if self.ntiid:
 				try:
 					results = super(OutlineLessonOverviewSummaryView, self).__call__()
-					container_ntiids = results.get('Items', ())
+					container_ntiids = results.get(ITEMS, ())
 					count += len(container_ntiids)
 				except hexc.HTTPNotFound:
 					pass  # Empty
@@ -177,17 +181,18 @@ class OutlineLessonOverviewSummaryView(RecursiveUGDView,
 	def __call__(self):
 		lesson = self._get_lesson()
 		result = LocatedExternalDict()
-		result[ CLASS ] = 'OverviewGroupSummary'
-		self.user = self.remoteUser
-
-		mime_type = MIME_BASE + ".courses.overviewitemsummary"
-		for lesson_group in lesson.items:
-			for item in lesson_group.items:
-				ugd_count = self._do_count(item)
-				result[ item.ntiid ] = item_results = {}
-				item_results[CLASS] = 'OverviewItemSummary'
-				item_results[MIMETYPE] = mime_type
-				item_results['ItemCount'] = ugd_count
+		result[CLASS] = 'OverviewGroupSummary'
+		result[MIMETYPE] = MIME_BASE + ".courses.overviewgroupsummary"
+		if not IPublishable.providedBy(lesson) or lesson.is_published():
+			self.user = self.remoteUser
+			mime_type = MIME_BASE + ".courses.overviewitemsummary"
+			for lesson_group in lesson.items:
+				for item in lesson_group.items:
+					ugd_count = self._do_count(item)
+					result[item.ntiid] = item_results = {}
+					item_results[CLASS] = 'OverviewItemSummary'
+					item_results[MIMETYPE] = mime_type
+					item_results['ItemCount'] = ugd_count
 		return result
 
 @view_config(context=ICourseInstance)
@@ -303,7 +308,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		if record is None:
 			raise hexc.HTTPForbidden(_("Must be enrolled in a course."))
 
-		self.request.no_acl_decoration = True # at all times
+		self.request.no_acl_decoration = True  # at all times
 
 		if ILegacyCourseInstance.providedBy(course):
 			result = self._do_legacy(course, record)
