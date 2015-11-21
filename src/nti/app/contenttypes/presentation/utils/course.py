@@ -21,8 +21,6 @@ from zope.security.interfaces import IPrincipal
 
 from nti.contentlibrary.indexed_data import get_catalog
 
-from nti.contentlibrary.interfaces import IContentUnit
-
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -67,26 +65,23 @@ def get_enrollment_record(context, user):
 	return result
 
 def get_courses_for_pacakge(ntiid):
-	result = list()
+	result = []
 	catalog = component.getUtility(ICourseCatalog)
 	for entry in catalog.iterCatalogEntries():
 		course = ICourseInstance(entry, None)
 		packs = get_course_packages(course)	
-		for pack in packs:
+		for pack in packs or ():
 			if pack.ntiid == ntiid:
 				result.append(course)
 	return result
 
 def get_containers(ntiids=()):
-	result = list()
+	result = []
 	for ntiid in ntiids or ():
 		context = find_object_with_ntiid(ntiid)
-		if IContentUnit.providedBy(context) or ICourseInstance.providedBy(context):
-			result.append(context)
-		elif ICourseCatalogEntry.providedBy(context):
-			course = ICourseInstance(context, None)
-			result.append(course)
-		elif context is not None:
+		if ICourseCatalogEntry.providedBy(context):
+			context = ICourseInstance(context, None)
+		if context is not None:
 			result.append(context)
 	return result
 
