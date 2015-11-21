@@ -147,8 +147,12 @@ class OutlineLessonOverviewView(AbstractAuthenticatedView,
 
 	def __call__(self):
 		lesson = self._get_lesson()
-		external = to_external_object(lesson, name="render")
-		external.lastModified = external[LAST_MODIFIED] = lesson.lastModified
+		if not IPublishable.providedBy(lesson) or lesson.is_published():
+			external = to_external_object(lesson, name="render")
+			external.lastModified = external[LAST_MODIFIED] = lesson.lastModified
+		else:
+			external = LocatedExternalDict()
+			external.lastModified = external[LAST_MODIFIED] = 0
 		return external
 
 @view_config(route_name='objects.generic.traversal',
