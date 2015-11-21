@@ -31,6 +31,7 @@ from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 
+from nti.coremetadata.interfaces import IPublishable
 from nti.coremetadata.interfaces import IDefaultPublished
 
 from nti.site.hostpolicy import run_job_in_all_host_sites
@@ -72,6 +73,8 @@ def _process_assets(catalog):
 		# remove publish interface
 		if not INTILessonOverview.providedBy(item):
 			interface.noLongerProvides(item, IDefaultPublished)
+		elif IPublishable.providedBy(item):
+			item.publish()
 
 		# reindex
 		if INTILessonOverview.providedBy(item):
