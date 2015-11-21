@@ -35,6 +35,10 @@ def _process_nodes( registry ):
 	count = 0
 	for _, obj in list(registry.getUtilitiesFor(ICourseOutlineNode)):
 		interface.alsoProvides( obj, ICalendarPublishable )
+		# Remove old attributes
+		for attr in ('ContentsAvailableBeginning', 'ContentsAvailableEnding'):
+			if hasattr( obj, attr ):
+				delattr( obj, attr )
 		count += 1
 	return count
 
