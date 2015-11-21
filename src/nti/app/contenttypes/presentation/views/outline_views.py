@@ -264,7 +264,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 
 			for item in group.Items:
 				# ignore non media items
-				if 	(not IMediaRef.providedBy(item)
+				if 	(	 not IMediaRef.providedBy(item)
 					 and not INTIMedia.providedBy(item)
 					 and not INTISlideDeck.providedBy(item)):
 					continue

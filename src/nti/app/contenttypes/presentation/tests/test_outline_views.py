@@ -20,6 +20,11 @@ from hamcrest import has_entries
 from hamcrest import contains_string
 does_not = is_not
 
+import time
+
+from datetime import datetime
+from calendar import timegm as _calendar_timegm
+
 from nti.app.publishing import VIEW_PUBLISH
 from nti.app.publishing import VIEW_UNPUBLISH
 
@@ -106,15 +111,29 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that(set(unit_ntiids), has_length(expected_size))
 		return unit_ntiids
 
-	def _publish_obj( self, ntiid ):
-		url = '/dataserver2/Objects/%s/@@publish' % ntiid
-		self.testapp.post_json( url, None, extra_environ=self.instructor_environ )
+	def _publish_obj( self, ntiid, start=None, end=None, unpublish=False ):
+		"""
+		Publish an object, optionally with start and end dates.
+		"""
+		data = None
+		start = start and _calendar_timegm( start.timetuple() )
+		end = end and _calendar_timegm( end.timetuple() )
+		publish = 'unpublish' if unpublish else 'publish'
 
-	def _check_ext_state(self, ntiid, is_visible=False, has_lesson=False, published=True):
+		if start or end:
+			data = { 'publishBeginning': start,
+					'publishEnding': end }
+		url = '/dataserver2/Objects/%s/@@%s' % ( ntiid, publish )
+		if data:
+			self.testapp.post_json( url, data, extra_environ=self.instructor_environ )
+		else:
+			self.testapp.post_json( url, extra_environ=self.instructor_environ )
+
+	def _check_ext_state(self, ntiid, is_visible=False, has_lesson=False, published=True, start=None, end=None):
 		"""
 		Validate a node's external state. A node's contents are not visible
 		if the content available dates are out-of-bounds. Validate pub/unpub
-		links.
+		links. Validate publish beginning/end times.
 		"""
 		res = self.testapp.get(self.outline_url, extra_environ=self.instructor_environ)
 		res = res.json_body
@@ -140,13 +159,22 @@ class TestOutlineEditViews(ApplicationLayerTest):
 			# Unit with contents
 			assert_that( obj, has_entries( 'contents', not_none() ))
 
-		if published:
-			self.require_link_href_with_rel( obj, VIEW_UNPUBLISH )
-			assert_that( obj.get( 'PublicationState' ), not_none() )
-		else:
-			self.require_link_href_with_rel( obj, VIEW_PUBLISH )
-			assert_that( obj.get( 'PublicationState' ), none() )
+		publish_matcher = not_none if published else none
+		assert_that( obj.get( 'PublicationState' ), publish_matcher() )
+
+		# Edit links are always available
 		self.require_link_href_with_rel( obj, 'edit' )
+		self.require_link_href_with_rel( obj, VIEW_PUBLISH )
+		self.require_link_href_with_rel( obj, VIEW_UNPUBLISH )
+
+		def _to_date( val ):
+			return val and datetime.strptime( val, '%Y-%m-%dT%H:%M:%SZ' )
+
+		start = start and start.replace( microsecond=0 )
+		end = end and end.replace( microsecond=0 )
+
+		assert_that( _to_date( obj.get('publishBeginning')), is_(start))
+		assert_that( _to_date( obj.get('publishEnding')), is_(end))
 
 	def _check_obj_state(self, ntiid, is_published=False, is_locked=True):
 		"""
@@ -157,7 +185,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, not_none())
 			assert_that(obj.locked, is_(is_locked))
-			#assert_that(obj.isPublished(), is_(is_published))
+			assert_that(obj.isPublished(), is_(is_published))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_permissions(self):
@@ -241,6 +269,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that(content_node_ntiid, contains_string('NTICourseOutlineNode'))
 		assert_that(lesson_ntiid, contains_string('NTILessonOverview'))
 		self.require_link_href_with_rel(res, VIEW_PUBLISH)
+		self.require_link_href_with_rel(res, VIEW_UNPUBLISH)
 
 		# Must publish for students to see
 		_first_node_size( 4 )
@@ -258,20 +287,15 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		# Insert at index 0 with dates
 		new_content_title2 = 'new content node title2'
 		unit_url = '/dataserver2/NTIIDs/%s/contents/index/0' % first_unit_ntiid
-		content_beginning = '2200-08-13T06:00:00Z'
-		content_ending = '2213-12-13T06:00:00Z'
 		content_data = {'title': new_content_title2,
-						'MimeType': self.content_mime_type,
-						'ContentsAvailableBeginning': content_beginning,
-						'ContentsAvailableEnding': content_ending }
+						'MimeType': self.content_mime_type }
 		res = self.testapp.post_json(unit_url, content_data,
 									 extra_environ=instructor_environ)
 		res = res.json_body
 		content_node_ntiid2 = res.get('NTIID')
 		lesson_ntiid2 = res.get('ContentNTIID')
-		assert_that(res.get('ContentsAvailableBeginning'), is_(content_beginning))
-		assert_that(res.get('ContentsAvailableEnding'), is_(content_ending))
 		self.require_link_href_with_rel(res, VIEW_PUBLISH)
+		self.require_link_href_with_rel(res, VIEW_UNPUBLISH)
 		self._check_obj_state(content_node_ntiid2)
 		self._check_obj_state(lesson_ntiid2)
 
@@ -279,16 +303,54 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		_first_node_size( 5 )
 		_first_node_size( 4, student_environ )
 		self._check_obj_state( content_node_ntiid2 )
+
+		content_beginning = datetime.utcnow().replace( year=2200 )
+		content_ending = datetime.utcnow().replace( year=2213 )
+		self._publish_obj( content_node_ntiid2, start=content_beginning, end=content_ending )
+		# Based on dates, node is still not published
+		self._check_obj_state( content_node_ntiid2 )
+		self._check_obj_state( lesson_ntiid2 )
+		self._check_ext_state( content_node_ntiid2, is_visible=False,
+							published=False, has_lesson=True,
+							start=content_beginning, end=content_ending )
+
+		# Unpublish, dates are gone
+		self._publish_obj( content_node_ntiid2, unpublish=True )
+		self._check_obj_state( content_node_ntiid2 )
+		self._check_ext_state( content_node_ntiid2, is_visible=False,
+							published=False, has_lesson=True )
+
+		# Re-add dates and explicitly publish, dates are gone
+		self._publish_obj( content_node_ntiid2, start=content_beginning, end=content_ending )
 		self._publish_obj( content_node_ntiid2 )
 		self._check_obj_state( content_node_ntiid2, is_published=True )
 		self._check_obj_state( lesson_ntiid2 )
-		# Based on dates, contents are not provided.
-		self._check_ext_state( content_node_ntiid2, is_visible=False, has_lesson=True )
+		self._check_ext_state( content_node_ntiid2, is_visible=False,
+							published=True, has_lesson=True )
 
 		_first_node_size( 5 )
 		child_ntiids = _first_node_size( 5, student_environ )
 		assert_that(child_ntiids[0], is_(content_node_ntiid2))
 		assert_that(child_ntiids[-1], is_(content_node_ntiid))
+
+		# Now publish the lesson with dates
+		self._publish_obj( lesson_ntiid2, start=content_beginning )
+		self._check_obj_state( content_node_ntiid2, is_published=True )
+		self._check_obj_state( lesson_ntiid2 )
+
+		# Now explicit publish lesson
+		self._publish_obj( lesson_ntiid2 )
+		self._check_obj_state( content_node_ntiid2, is_published=True )
+		self._check_obj_state( lesson_ntiid2, is_published=True )
+		self._check_ext_state( content_node_ntiid2, is_visible=True,
+							published=True, has_lesson=True )
+
+		# Unpublish lesson
+		self._publish_obj( lesson_ntiid2, unpublish=True )
+		self._check_obj_state( content_node_ntiid2, is_published=True )
+		self._check_obj_state( lesson_ntiid2 )
+		self._check_ext_state( content_node_ntiid2, is_visible=False,
+							published=True, has_lesson=True )
 
 	def _test_moving_content_nodes(self):
 		"""
@@ -372,6 +434,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that(new_ntiid, contains_string(self.content_ntiid_type))
 		assert_that(new_ntiid, contains_string('sjohnson'))
 		self.require_link_href_with_rel(res, VIEW_PUBLISH)
+		self.require_link_href_with_rel(res, VIEW_UNPUBLISH)
 
 		# Before publishing, our outline is unchanged for students
 		self._get_outline_ntiids( student_environ, node_count )
@@ -391,28 +454,26 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		# Insert at index 0
 		at_index_url = self.outline_url + '/index/0'
 		new_unit_title2 = 'new unit title2'
-		content_beginning = '2013-08-13T06:00:00Z'
-		content_ending = '2200-12-13T06:00:00Z'
 		unit_data2 = {'title': new_unit_title2,
-					'MimeType': self.unit_mime_type,
-					'ContentsAvailableBeginning': content_beginning,
-					'ContentsAvailableEnding': content_ending }
+					'MimeType': self.unit_mime_type}
 		res = self.testapp.post_json(at_index_url, unit_data2,
 									 extra_environ=instructor_environ)
 		res = res.json_body
 		new_ntiid2 = res.get('NTIID')
-		assert_that(res.get('ContentsAvailableBeginning'), is_(content_beginning))
-		assert_that(res.get('ContentsAvailableEnding'), is_(content_ending))
 		self.require_link_href_with_rel(res, VIEW_PUBLISH)
+		self.require_link_href_with_rel(res, VIEW_UNPUBLISH)
 
 		self._get_outline_ntiids( student_environ, node_count )
 		self._get_outline_ntiids( instructor_environ, node_count + 1 )
 		self._check_obj_state( new_ntiid2 )
-		self._publish_obj( new_ntiid2 )
+
+		content_beginning =  datetime.utcnow().replace( year=2013 )
+		content_ending = datetime.utcnow().replace( year=2213 )
+		self._publish_obj( new_ntiid2, start=content_beginning, end=content_ending )
 		node_count += 1
 		self._check_obj_state( new_ntiid2, is_published=True )
-		# Based on dates, contents are not provided.
-		self._check_ext_state( new_ntiid2, is_visible=False )
+		self._check_ext_state( new_ntiid2, is_visible=False,
+							start=content_beginning, end=content_ending )
 
 		unit_ntiids = self._get_outline_ntiids( student_environ, node_count )
 		assert_that(unit_ntiids[0], is_(new_ntiid2))
@@ -423,19 +484,18 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		# Insert at last index
 		at_index_url = self.outline_url + '/index/9'
 		new_unit_title3 = 'new unit title3'
-		content_beginning = '2000-08-13T06:00:00Z'
 		unit_data3 = {'title': new_unit_title3,
-					'MimeType': self.unit_mime_type,
-					'ContentsAvailableBeginning': content_beginning}
+					'MimeType': self.unit_mime_type}
 		res = self.testapp.post_json(at_index_url, unit_data3,
 									 extra_environ=instructor_environ)
 		new_ntiid3 = res.json_body.get('NTIID')
 
 		self._check_obj_state(new_ntiid3)
-		self._publish_obj( new_ntiid3 )
+		content_beginning = datetime.utcnow().replace( year=2000 )
+		self._publish_obj( new_ntiid3, start=content_beginning )
 		node_count += 1
 		self._check_obj_state( new_ntiid3, is_published=True )
-		self._check_ext_state( new_ntiid3, is_visible=True )
+		self._check_ext_state( new_ntiid3, is_visible=True, start=content_beginning )
 
 		unit_ntiids = self._get_outline_ntiids( student_environ, node_count )
 		assert_that(unit_ntiids[0], is_(new_ntiid2))
