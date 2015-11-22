@@ -24,21 +24,23 @@ from nti.dataserver.interfaces import ICalendarPublishable
 
 from nti.site.hostpolicy import get_all_host_sites
 
-def _process_lessons( registry ):
+def _process_lessons(registry):
 	count = 0
 	for _, obj in list(registry.getUtilitiesFor(INTILessonOverview)):
-		interface.alsoProvides( obj, ICalendarPublishable )
+		interface.alsoProvides(obj, ICalendarPublishable)
+		obj.publish()
 		count += 1
 	return count
 
-def _process_nodes( registry ):
+def _process_nodes(registry):
 	count = 0
 	for _, obj in list(registry.getUtilitiesFor(ICourseOutlineNode)):
-		interface.alsoProvides( obj, ICalendarPublishable )
+		interface.alsoProvides(obj, ICalendarPublishable)
 		# Remove old attributes
 		for attr in ('ContentsAvailableBeginning', 'ContentsAvailableEnding'):
-			if hasattr( obj, attr ):
-				delattr( obj, attr )
+			if hasattr(obj, attr):
+				delattr(obj, attr)
+		obj.publish()
 		count += 1
 	return count
 
@@ -54,11 +56,11 @@ def do_evolve(context, generation=generation):
 		for site in get_all_host_sites():
 			with current_site(site):
 				registry = component.getSiteManager()
-				node_count += _process_nodes( registry )
-				lesson_count += _process_lessons( registry )
+				node_count += _process_nodes(registry)
+				lesson_count += _process_lessons(registry)
 
 	logger.info('Evolution %s done (nodes=%s) (lessons=%s).',
-				generation, node_count, lesson_count )
+				generation, node_count, lesson_count)
 
 def evolve(context):
 	"""
