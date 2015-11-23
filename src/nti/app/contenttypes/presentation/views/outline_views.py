@@ -36,6 +36,8 @@ from nti.app.products.courseware.interfaces import ICourseInstanceEnrollment
 from nti.appserver.ugd_edit_views import UGDPutView
 from nti.appserver.ugd_query_views import RecursiveUGDView
 
+from nti.appserver.pyramid_authorization import has_permission
+
 from nti.common.time import time_to_64bit_int
 from nti.common.maps import CaseInsensitiveDict
 
@@ -547,3 +549,20 @@ class OutlineNodeFieldPutView(UGDPutView):
 		result.pop('ntiid', None)
 		result.pop('NTIID', None)
 		return result
+
+@view_config(route_name='objects.generic.traversal',
+			 context=ICourseOutlineNode,
+			 request_method='GET',
+			 permission=nauth.ACT_READ,
+			 renderer='rest')
+class OutlineNodeGetView( AbstractAuthenticatedView ):
+
+	def _is_visible(self, item):
+		return 	not IPublishable.providedBy(item) \
+				or 	item.is_published() \
+				or	has_permission( nauth.ACT_CONTENT_EDIT, item, self.request )
+
+	def __call__(self):
+		if self._is_visible( self.context ):
+			return self.context
+		raise hexc.HTTPForbidden()

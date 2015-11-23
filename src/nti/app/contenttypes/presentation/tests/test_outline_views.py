@@ -318,6 +318,11 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self._check_ext_state( content_node_ntiid2, is_visible=False,
 							published=False, has_lesson=True )
 
+		# Random access on unpublished item; instructor can see, student cannot not.
+		get_url = '/dataserver2/Objects/%s' % content_node_ntiid2
+		self.testapp.get( get_url, extra_environ=instructor_environ )
+		self.testapp.get( get_url, extra_environ=student_environ, status=403 )
+
 		# Re-add dates and explicitly publish, dates are gone
 		self._publish_obj( content_node_ntiid2, start=content_beginning, end=content_ending )
 		self._publish_obj( content_node_ntiid2 )
