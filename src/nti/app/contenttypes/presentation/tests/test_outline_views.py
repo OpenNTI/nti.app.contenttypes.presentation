@@ -20,8 +20,6 @@ from hamcrest import has_entries
 from hamcrest import contains_string
 does_not = is_not
 
-import time
-
 from datetime import datetime
 from calendar import timegm as _calendar_timegm
 
@@ -345,6 +343,20 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self._check_ext_state( content_node_ntiid2, is_visible=True,
 							published=True, has_lesson=True )
 
+		# Publish with end date boundary in past (unpublished).
+		last_year_content_ending = datetime.utcnow().replace( year=2014 )
+		self._publish_obj( lesson_ntiid2, end=last_year_content_ending )
+		self._check_obj_state( content_node_ntiid2, is_published=True )
+		self._check_obj_state( lesson_ntiid2 )
+		self._check_ext_state( content_node_ntiid2, is_visible=False,
+							published=True, has_lesson=True )
+
+		# Publish with end date boundary in future (published).
+		self._publish_obj( lesson_ntiid2, end=content_ending )
+		self._check_obj_state( lesson_ntiid2, is_published=True )
+		self._check_ext_state( content_node_ntiid2, is_visible=True,
+							published=True, has_lesson=True )
+
 		# Unpublish lesson
 		self._publish_obj( lesson_ntiid2, unpublish=True )
 		self._check_obj_state( content_node_ntiid2, is_published=True )
@@ -467,7 +479,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self._get_outline_ntiids( instructor_environ, node_count + 1 )
 		self._check_obj_state( new_ntiid2 )
 
-		content_beginning =  datetime.utcnow().replace( year=2013 )
+		content_beginning = datetime.utcnow().replace( year=2013 )
 		content_ending = datetime.utcnow().replace( year=2213 )
 		self._publish_obj( new_ntiid2, start=content_beginning, end=content_ending )
 		node_count += 1
