@@ -92,6 +92,7 @@ from nti.site.utils import unregisterUtility
 from nti.site.site import get_component_hierarchy_names
 
 from ..utils import get_course_packages
+from ..utils import get_presentation_asset_courses
 
 from .view_mixins import slugify
 from .view_mixins import get_namedfile
@@ -223,15 +224,17 @@ def _get_unique_filename(folder, context, name):
 	result = slugify(name, folder)
 	return result
 
-def _handle_multipart(context, contentObject, sources):
-	provided = iface_of_asset(contentObject)
+def _handle_multipart(context, contentObject, sources, provided=None):
+	provided = iface_of_asset(contentObject) if provided is None else provided
 	assets = get_assets_folder(context)
 	for name, source in sources.items():
 		if name in provided:
 			filename = _get_unique_filename(assets, source, name)
 			namedfile = get_namedfile(source, filename)
 			assets[filename] = namedfile # add to container
-			setattr(contentObject, name, get_render_link(namedfile)) # set location
+			location = get_render_link(namedfile)
+			setattr(contentObject, name, location)
+
 # GET views
 
 @view_config(context=IPresentationAsset)
@@ -478,6 +481,12 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin, UGDPutView):
 												notify=notify,
 												pre_hook=pre_hook)
 
+		sources = get_all_sources(self.request)
+		if sources:
+			courses = get_presentation_asset_courses(self.context)
+			if courses:  # pick first to store assets
+				_handle_multipart(courses.__iter__().next(), self.context, sources)
+			
 		# unregister any old data
 		if data and provided == INTILessonOverview:
 			updated = {x.ntiid for x in contentObject.Items}
