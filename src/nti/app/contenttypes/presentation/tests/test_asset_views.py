@@ -19,6 +19,8 @@ from hamcrest import greater_than
 from hamcrest import has_property
 does_not = is_not
 
+import fudge
+
 from nti.schema.testing import validly_provides
 
 import os
@@ -158,7 +160,10 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(history, has_length(1))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def test_overview_group(self):
+	@fudge.patch('nti.app.contenttypes.presentation.views.asset_views.CourseOverviewGroupOrderedContentsView.readInput',
+				 'nti.app.contenttypes.presentation.views.asset_views._get_assets_folder',
+				 'nti.app.contenttypes.presentation.views.asset_views._get_render_link')
+	def test_overview_group(self, mc_ri, mc_gaf, mc_lnk):
 		source = self._load_resource('nticourseoverviewgroup.json')
 		
 		# post
@@ -191,9 +196,20 @@ class TestAssetViews(ApplicationLayerTest):
 		# contents
 		source = self._load_resource('relatedwork.json')
 		source.pop('NTIID', None)
+		assert_that(source, has_entry('icon','http://bleach.com/aizen.jpg'))
+
+		mc_ri.is_callable().with_args().returns(source)
+		mc_gaf.is_callable().with_args().returns({})
+		mc_lnk.is_callable().with_args().returns('http://bleach.org/ichigo.png')
+
 		contents_url = href + '/@@contents'
-		res = self.testapp.post_json(contents_url, source, status=201)
+		res = self.testapp.post(contents_url, 
+								upload_files=[('icon', 'ichigo.png', b'ichigo')],
+								status=201)
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			# check returned object
+			assert_that(res.json_body, has_entry('icon', 'http://bleach.org/ichigo.png'))
+						
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, has_property('Items', has_length(2)))
 			history  = ITransactionRecordHistory(obj)

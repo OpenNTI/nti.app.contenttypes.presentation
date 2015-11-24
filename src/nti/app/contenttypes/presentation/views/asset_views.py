@@ -28,10 +28,6 @@ from zope.traversing.interfaces import IEtcNamespace
 
 from ZODB.interfaces import IConnection
 
-from plone.namedfile.file import getImageInfo
-
-from slugify import UniqueSlugify
-
 from pyramid.view import view_config
 from pyramid.view import view_defaults
 from pyramid import httpexceptions as hexc
@@ -88,9 +84,6 @@ from nti.externalization.internalization import notify_modified
 from nti.externalization.externalization import to_external_object
 from nti.externalization.externalization import StandardExternalFields
 
-from nti.contentfile.model import ContentBlobFile
-from nti.contentfile.model import ContentBlobImage
-
 from nti.links import Link
 from nti.links.externalization import render_link
 
@@ -110,6 +103,9 @@ from nti.site.site import get_component_hierarchy_names
 from nti.traversal.traversal import find_interface
 
 from ..utils import get_course_packages
+
+from . import slugify
+from . import get_namedfile
 
 ASSETS_FOLDER = 'assets'
 ITEMS = StandardExternalFields.ITEMS
@@ -258,24 +254,7 @@ def _get_assets_folder(context):
 def _get_unique_filename(folder, context, name):
 	name = getattr(context, 'filename', None) or getattr(context, 'name', None) or name
 	name = safe_filename(name_finder(name))
-	uids = set(folder.keys())
-	slugify_unique = UniqueSlugify(uids=uids)
-	slugify_unique.ui.to_lower= True
-	result = slugify_unique(name)
-	return result
-
-def _get_namedfile(filename, source):
-	content_type, _, _ = getImageInfo(source)
-	source.seek(0)  # reset
-	if content_type:  # it's an image
-		result = ContentBlobImage()
-		result.data = source.read() # set content type
-	else:
-		result = ContentBlobFile()
-		result.data = source.read()
-		result.contentType = source.contentType
-	result.name = filename
-	result.filename = filename
+	result = slugify(name, folder)
 	return result
 
 def _get_render_link(item):
@@ -633,6 +612,10 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 			raise hexc.HTTPUnprocessableEntity(_('Unsupported/missing Class'))
 		return contentObject
 
+	def readInput(self, value=None):
+		result = ModeledContentUploadRequestUtilsMixin.readInput(self, value=value)
+		return result
+
 	def parseInput(self, creator, search_owner=False, externalValue=None):
 		externalValue = self.readInput() if not externalValue else externalValue
 		contentObject = create_from_external(externalValue, notify=False)
@@ -646,7 +629,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		for name, source in sources.items():
 			if name in provided:
 				filename = _get_unique_filename(assets, source, name)
-				namedfile = _get_namedfile(filename, source)
+				namedfile = get_namedfile(source, filename)
 				assets[filename] = namedfile # add to container
 				setattr(contentObject, name, _get_render_link(namedfile)) # set location
 
