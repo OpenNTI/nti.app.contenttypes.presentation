@@ -409,13 +409,19 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 			raise hexc.HTTPUnprocessableEntity(_('Unsupported/missing Class'))
 		return contentObject
 
-	def readCreateUpdateContentObject(self, user, search_owner=False, externalValue=None):
-		creator = user
+	def parseInput(self, creator, search_owner=False, externalValue=None):
 		externalValue = self.readInput() if not externalValue else externalValue
 		contentObject = create_from_external(externalValue, notify=False)
 		contentObject = self.checkContentObject(contentObject, externalValue)
 		contentObject.creator = getattr(creator, 'username', creator)  # use string
 		self.updateContentObject(contentObject, externalValue, set_id=True, notify=False)
+		return contentObject
+
+	def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
+		contentObject = self.parseInput(creator, search_owner, externalValue)
+		sources = get_all_sources(self.request)
+		if sources: # multi-part data
+			_handle_multipart(self._course, contentObject, sources)
 		return contentObject
 
 	def _do_call(self):
@@ -457,11 +463,11 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin, UGDPutView):
 		return result
 
 	def updateContentObject(self, contentObject, externalValue, set_id=False, notify=True):
-		# save data
-		data = None
 		provided = iface_of_asset(contentObject)
 		if provided == INTILessonOverview:
 			data = {x.ntiid:x for x in contentObject.Items}  # save groups
+		else:
+			data = None
 
 		# update object
 		pre_hook = get_external_pre_hook(externalValue)
@@ -577,10 +583,6 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 						 externalValue, contentObject)
 			raise hexc.HTTPUnprocessableEntity(_('Unsupported/missing Class'))
 		return contentObject
-
-	def readInput(self, value=None):
-		result = ModeledContentUploadRequestUtilsMixin.readInput(self, value=value)
-		return result
 
 	def parseInput(self, creator, search_owner=False, externalValue=None):
 		externalValue = self.readInput() if not externalValue else externalValue
