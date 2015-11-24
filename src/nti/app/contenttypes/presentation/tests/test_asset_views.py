@@ -161,8 +161,8 @@ class TestAssetViews(ApplicationLayerTest):
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	@fudge.patch('nti.app.contenttypes.presentation.views.asset_views.CourseOverviewGroupOrderedContentsView.readInput',
-				 'nti.app.contenttypes.presentation.views.asset_views._get_assets_folder',
-				 'nti.app.contenttypes.presentation.views.asset_views._get_render_link')
+				 'nti.app.contenttypes.presentation.views.asset_views.get_assets_folder',
+				 'nti.app.contenttypes.presentation.views.asset_views.get_render_link')
 	def test_overview_group(self, mc_ri, mc_gaf, mc_lnk):
 		source = self._load_resource('nticourseoverviewgroup.json')
 		

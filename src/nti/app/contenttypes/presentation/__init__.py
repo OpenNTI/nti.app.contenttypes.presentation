@@ -19,6 +19,7 @@ from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.contenttypes.presentation import iface_of_asset as iface_of_thing
 
+ASSETS_FOLDER = 'assets'
 VIEW_NODE_CONTENTS = 'contents'
 VIEW_OVERVIEW_CONTENT = "overview-content"
 VIEW_OVERVIEW_SUMMARY = "overview-summary"

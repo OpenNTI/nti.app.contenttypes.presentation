@@ -26,8 +26,6 @@ from zope.event import notify
 
 from zope.traversing.interfaces import IEtcNamespace
 
-from ZODB.interfaces import IConnection
-
 from pyramid.view import view_config
 from pyramid.view import view_defaults
 from pyramid import httpexceptions as hexc
@@ -38,8 +36,6 @@ from nti.app.base.abstract_views import get_all_sources
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
-
-from nti.app.products.courseware.interfaces import ICourseRootFolder
 
 from nti.appserver.ugd_edit_views import UGDPutView
 from nti.appserver.ugd_edit_views import UGDDeleteView
@@ -53,8 +49,6 @@ from nti.coremetadata.interfaces import IPublishable
 
 from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
-
-from nti.contentfolder.model import ContentFolder
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
@@ -84,9 +78,6 @@ from nti.externalization.internalization import notify_modified
 from nti.externalization.externalization import to_external_object
 from nti.externalization.externalization import StandardExternalFields
 
-from nti.links import Link
-from nti.links.externalization import render_link
-
 from nti.namedfile.file import name_finder
 from nti.namedfile.file import safe_filename 
 
@@ -100,14 +91,14 @@ from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
 from nti.site.site import get_component_hierarchy_names
 
-from nti.traversal.traversal import find_interface
-
 from ..utils import get_course_packages
 
-from . import slugify
-from . import get_namedfile
+from .view_mixins import slugify
+from .view_mixins import get_namedfile
+from .view_mixins import intid_register
+from .view_mixins import get_render_link
+from .view_mixins import get_assets_folder
 
-ASSETS_FOLDER = 'assets'
 ITEMS = StandardExternalFields.ITEMS
 MIMETYPE = StandardExternalFields.MIMETYPE
 
@@ -148,19 +139,6 @@ def _notify_removed(item):
 	lifecycleevent.removed(item)
 	if hasattr(item, '__parent__'):
 		item.__parent__ = None
-
-def _db_connection(registry=None):
-	registry = get_registry(registry)
-	result = IConnection(registry, None)
-	return result
-
-def _intid_register(item, registry=None, connection=None):
-	connection = _db_connection(registry) if connection is None else connection
-	if connection is not None:
-		connection.add(item)
-		lifecycleevent.added(item)
-		return True
-	return False
 
 def _add_2_packages(context, item):
 	result = []
@@ -208,7 +186,7 @@ def _canonicalize(items, creator, base=None, registry=None):
 			result.append(item)
 			item.creator = creator  # set creator before notify
 			_notify_created(item)
-			_intid_register(item, registry)
+			intid_register(item, registry)
 			registerUtility(registry, item, provided, name=item.ntiid)
 	return result
 
@@ -239,31 +217,10 @@ def _component_registry(context, name=None):
 			pass
 	return get_registry()
 
-def _get_assets_folder(context):
-	course = ICourseInstance(context, None)
-	if course is None:
-		course = find_interface(context, ICourseInstance, strict=True)
-	root = ICourseRootFolder(course)
-	if ASSETS_FOLDER not in root:
-		result = ContentFolder(name=ASSETS_FOLDER)
-		root[ASSETS_FOLDER] = result
-	else:
-		result = root[ASSETS_FOLDER]
-	return result
-
 def _get_unique_filename(folder, context, name):
 	name = getattr(context, 'filename', None) or getattr(context, 'name', None) or name
 	name = safe_filename(name_finder(name))
 	result = slugify(name, folder)
-	return result
-
-def _get_render_link(item):
-	try:
-		link = Link(item)
-		href = render_link(link)['href']
-		result =  href + '/@@view'
-	except (KeyError, ValueError, AssertionError):
-		pass  # Nope
 	return result
 
 # GET views
@@ -463,7 +420,7 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 		_notify_created(content_object)
 
 		# add to connection and register
-		_intid_register(content_object, registry=self._registry)
+		intid_register(content_object, registry=self._registry)
 		registerUtility(self._registry,
 						component=content_object,
 						provided=provided,
@@ -578,7 +535,7 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 		_notify_created(contentObject)
 
 		# add to connection and register
-		_intid_register(contentObject, registry=self._registry)
+		intid_register(contentObject, registry=self._registry)
 		registerUtility(self._registry,
 						provided=provided,
 						component=contentObject,
@@ -625,13 +582,13 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 
 	def handle_multipart(self, course, contentObject, sources):
 		provided = iface_of_asset(contentObject)
-		assets = _get_assets_folder(self.context)
+		assets = get_assets_folder(self.context)
 		for name, source in sources.items():
 			if name in provided:
 				filename = _get_unique_filename(assets, source, name)
 				namedfile = get_namedfile(source, filename)
 				assets[filename] = namedfile # add to container
-				setattr(contentObject, name, _get_render_link(namedfile)) # set location
+				setattr(contentObject, name, get_render_link(namedfile)) # set location
 
 	def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
 		contentObject, externalValue = self.parseInput(creator, search_owner, externalValue)
@@ -650,7 +607,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		_notify_created(contentObject)
 
 		# add to connection and register
-		_intid_register(contentObject, registry=self._registry)
+		intid_register(contentObject, registry=self._registry)
 		registerUtility(self._registry,
 						provided=provided,
 						component=contentObject,
