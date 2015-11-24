@@ -223,6 +223,15 @@ def _get_unique_filename(folder, context, name):
 	result = slugify(name, folder)
 	return result
 
+def _handle_multipart(context, contentObject, sources):
+	provided = iface_of_asset(contentObject)
+	assets = get_assets_folder(context)
+	for name, source in sources.items():
+		if name in provided:
+			filename = _get_unique_filename(assets, source, name)
+			namedfile = get_namedfile(source, filename)
+			assets[filename] = namedfile # add to container
+			setattr(contentObject, name, get_render_link(namedfile)) # set location
 # GET views
 
 @view_config(context=IPresentationAsset)
@@ -580,21 +589,11 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		contentObject.creator = getattr(creator, 'username', creator)  # use string
 		return contentObject, externalValue
 
-	def handle_multipart(self, course, contentObject, sources):
-		provided = iface_of_asset(contentObject)
-		assets = get_assets_folder(self.context)
-		for name, source in sources.items():
-			if name in provided:
-				filename = _get_unique_filename(assets, source, name)
-				namedfile = get_namedfile(source, filename)
-				assets[filename] = namedfile # add to container
-				setattr(contentObject, name, get_render_link(namedfile)) # set location
-
 	def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
 		contentObject, externalValue = self.parseInput(creator, search_owner, externalValue)
 		sources = get_all_sources(self.request)
 		if sources: # multi-part data
-			self.handle_multipart(self._course, contentObject, sources)
+			_handle_multipart(self._course, contentObject, sources)
 		return contentObject, externalValue
 
 	def _do_call(self):
