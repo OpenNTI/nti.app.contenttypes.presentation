@@ -28,15 +28,22 @@ from zope.traversing.interfaces import IEtcNamespace
 
 from ZODB.interfaces import IConnection
 
+from plone.namedfile.file import getImageInfo
+
+from slugify import UniqueSlugify
+
 from pyramid.view import view_config
 from pyramid.view import view_defaults
 from pyramid import httpexceptions as hexc
 
 from nti.app.renderers.interfaces import INoHrefInResponse
 
+from nti.app.base.abstract_views import get_all_sources
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
+
+from nti.app.products.courseware.interfaces import ICourseRootFolder
 
 from nti.appserver.ugd_edit_views import UGDPutView
 from nti.appserver.ugd_edit_views import UGDDeleteView
@@ -50,6 +57,8 @@ from nti.coremetadata.interfaces import IPublishable
 
 from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
+
+from nti.contentfolder.model import ContentFolder
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
@@ -79,6 +88,15 @@ from nti.externalization.internalization import notify_modified
 from nti.externalization.externalization import to_external_object
 from nti.externalization.externalization import StandardExternalFields
 
+from nti.contentfile.model import ContentBlobFile
+from nti.contentfile.model import ContentBlobImage
+
+from nti.links import Link
+from nti.links.externalization import render_link
+
+from nti.namedfile.file import name_finder
+from nti.namedfile.file import safe_filename 
+
 from nti.ntiids.ntiids import TYPE_UUID
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
@@ -89,8 +107,11 @@ from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
 from nti.site.site import get_component_hierarchy_names
 
+from nti.traversal.traversal import find_interface
+
 from ..utils import get_course_packages
 
+ASSETS_FOLDER = 'assets'
 ITEMS = StandardExternalFields.ITEMS
 MIMETYPE = StandardExternalFields.MIMETYPE
 
@@ -221,6 +242,50 @@ def _component_registry(context, name=None):
 		except KeyError:
 			pass
 	return get_registry()
+
+def _get_assets_folder(context):
+	course = ICourseInstance(context, None)
+	if course is None:
+		course = find_interface(context, ICourseInstance, strict=True)
+	root = ICourseRootFolder(course)
+	if ASSETS_FOLDER not in root:
+		result = ContentFolder(name=ASSETS_FOLDER)
+		root[ASSETS_FOLDER] = result
+	else:
+		result = root[ASSETS_FOLDER]
+	return result
+
+def _get_unique_filename(folder, context, name):
+	name = getattr(context, 'filename', None) or getattr(context, 'name', None) or name
+	name = safe_filename(name_finder(name))
+	uids = set(folder.keys())
+	slugify_unique = UniqueSlugify(uids=uids)
+	slugify_unique.ui.to_lower= True
+	result = slugify_unique(name)
+	return result
+
+def _get_namedfile(filename, source):
+	content_type, _, _ = getImageInfo(source)
+	source.seek(0)  # reset
+	if content_type:  # it's an image
+		result = ContentBlobImage()
+		result.data = source.read() # set content type
+	else:
+		result = ContentBlobFile()
+		result.data = source.read()
+		result.contentType = source.contentType
+	result.name = filename
+	result.filename = filename
+	return result
+
+def _get_render_link(item):
+	try:
+		link = Link(item)
+		href = render_link(link)['href']
+		result =  href + '/@@view'
+	except (KeyError, ValueError, AssertionError):
+		pass  # Nope
+	return result
 
 # GET views
 
@@ -568,11 +633,28 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 			raise hexc.HTTPUnprocessableEntity(_('Unsupported/missing Class'))
 		return contentObject
 
-	def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
+	def parseInput(self, creator, search_owner=False, externalValue=None):
 		externalValue = self.readInput() if not externalValue else externalValue
 		contentObject = create_from_external(externalValue, notify=False)
 		contentObject = self.checkContentObject(contentObject, externalValue)
 		contentObject.creator = getattr(creator, 'username', creator)  # use string
+		return contentObject, externalValue
+
+	def handle_multipart(self, course, contentObject, sources):
+		provided = iface_of_asset(contentObject)
+		assets = _get_assets_folder(self.context)
+		for name, source in sources.items():
+			if name in provided:
+				filename = _get_unique_filename(assets, source, name)
+				namedfile = _get_namedfile(filename, source)
+				assets[filename] = namedfile # add to container
+				setattr(contentObject, name, _get_render_link(namedfile)) # set location
+
+	def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
+		contentObject, externalValue = self.parseInput(creator, search_owner, externalValue)
+		sources = get_all_sources(self.request)
+		if sources: # multi-part data
+			self.handle_multipart(self._course, contentObject, sources)
 		return contentObject, externalValue
 
 	def _do_call(self):
