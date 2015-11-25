@@ -489,7 +489,8 @@ class OutlineNodePutView(OutlineNodeInsertView):
 			raise hexc.HTTPBadRequest('No index supplied')
 		values = CaseInsensitiveDict(self.readInput())
 		old_keys = list(self.context.keys())
-		ntiid = values.get('ntiid')
+		ntiid = values.get( 'ntiid' )
+		old_parent_ntiid = values.get( 'RemovedFromParent' )
 
 		if 		index >= len(old_keys) \
 			or 	index < 0:
@@ -504,10 +505,18 @@ class OutlineNodePutView(OutlineNodeInsertView):
 				raise hexc.HTTPUnprocessableEntity('Object no longer exists (%s)', ntiid)
 			self.context.append(obj)
 
+		if old_parent_ntiid:
+			# Delete from our old parent
+			old_parent = find_object_with_ntiid( old_parent_ntiid )
+			if old_parent is None:
+				raise hexc.HTTPUnprocessableEntity('Node parent no longer exists (%s)',
+													old_parent_ntiid)
+			del old_parent[ntiid]
+
 		principal = self.remoteUser.username
 		self._reorder_for_ntiid(ntiid, index, old_keys)
 		notify(CourseOutlineNodeMovedEvent(self.context, principal, index))
-		logger.info('Moved node (%s) to index (%s)', ntiid, index)
+		logger.info('Moved node (%s) to index (%s) (from=%s)', ntiid, index, old_parent_ntiid)
 		return hexc.HTTPOk()
 
 @view_config(route_name='objects.generic.traversal',
@@ -558,7 +567,7 @@ class OutlineNodeFieldPutView(UGDPutView):
 class OutlineNodeGetView( AbstractAuthenticatedView ):
 
 	def _is_visible(self, item):
-		return 	not IPublishable.providedBy(item) \
+		return 		not IPublishable.providedBy(item) \
 				or 	item.is_published() \
 				or	has_permission( nauth.ACT_CONTENT_EDIT, item, self.request )
 
