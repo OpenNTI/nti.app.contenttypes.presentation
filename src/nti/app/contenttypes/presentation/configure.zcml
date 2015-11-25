@@ -34,6 +34,7 @@
 	<adapter factory=".adapters._surveyref_to_survey" />
 	<adapter factory=".adapters._inquiryref_to_inquiry" />
 	<adapter factory=".adapters._questionref_to_question" />
+	<adapter factory=".adapters._mediarollref_to_mediaroll" />
 	<adapter factory=".adapters._assignmentref_to_assignment" />
 	<adapter factory=".adapters._questionsetref_to_questionset" />
 	<adapter factory=".adapters._course_overview_group_to_course" />

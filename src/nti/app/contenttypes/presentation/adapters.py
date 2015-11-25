@@ -29,9 +29,11 @@ from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTIPollRef
 from nti.contenttypes.presentation.interfaces import INTIAudioRef
 from nti.contenttypes.presentation.interfaces import INTIVideoRef
+from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import INTIInquiryRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionRef
+from nti.contenttypes.presentation.interfaces import INTIMediaRollRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -66,6 +68,13 @@ def _audioref_to_audio(context):
 def _videoref_to_video(context):
 	name = context.target or context.ntiid
 	result = component.queryUtility(INTIVideo, name=name)
+	return result
+
+@component.adapter(INTIMediaRollRef)
+@interface.implementer(INTIMediaRoll)
+def _mediarollref_to_mediaroll(context):
+	name = context.target or context.ntiid
+	result = component.queryUtility(INTIMediaRoll, name=name)
 	return result
 
 @interface.implementer(IQuestion)
