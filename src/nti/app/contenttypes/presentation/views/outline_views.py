@@ -505,8 +505,9 @@ class OutlineNodePutView(OutlineNodeInsertView):
 				raise hexc.HTTPUnprocessableEntity('Object no longer exists (%s)', ntiid)
 			self.context.append(obj)
 
-		if old_parent_ntiid:
-			# Delete from our old parent
+		# Make sure they don't move the object within the same node and
+		# attempt to delete from that node.
+		if old_parent_ntiid and old_parent_ntiid != self.context.ntiid:
 			old_parent = find_object_with_ntiid( old_parent_ntiid )
 			if old_parent is None:
 				raise hexc.HTTPUnprocessableEntity('Node parent no longer exists (%s)',

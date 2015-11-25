@@ -423,6 +423,22 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that(target_child_ntiids2, contains(*target_child_ntiids))
 		self._check_obj_state( moved_ntiid, is_published=True )
 
+		# Move back in one call
+		unit_url = '/dataserver2/NTIIDs/%s/contents/index/0' % src_unit_ntiid
+		ntiid_data = {'ntiid': moved_ntiid,
+					'RemovedFromParent': target_unit_ntiid}
+		self.testapp.put_json(unit_url, ntiid_data,
+							  extra_environ=instructor_environ)
+
+		res = _get_unit_node(0)
+		src_child_ntiids = [x.get('NTIID') for x in res.get('contents')]
+		assert_that(src_child_ntiids[0], is_(moved_ntiid))
+		assert_that(src_child_ntiids, contains(*original_src_child_ntiids))
+
+		res = _get_unit_node(1)
+		target_child_ntiids2 = [x.get('NTIID') for x in res.get('contents')]
+		assert_that(target_child_ntiids2, contains(*original_target_child_ntiids))
+
 	def _test_unit_node_inserts(self):
 		"""
 		Test inserting/appending unit nodes to an outline, with fields.
