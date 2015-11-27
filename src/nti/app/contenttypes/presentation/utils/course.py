@@ -19,6 +19,7 @@ from zope.container.contained import Contained
 
 from zope.security.interfaces import IPrincipal
 
+from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.indexed_data import get_catalog
 
 from nti.contenttypes.courses.interfaces import ES_ALL
@@ -87,7 +88,6 @@ def get_containers(ntiids=()):
 
 def get_courses(ntiids=()):
 	result = set()
-	catalog = component.getUtility(ICourseCatalog)
 	for ntiid in ntiids or ():
 		course = None
 		context = find_object_with_ntiid(ntiid)
@@ -95,12 +95,8 @@ def get_courses(ntiids=()):
 			course = ICourseInstance(context, None)
 		elif ICourseInstance.providedBy(context):
 			course = context
-		elif context is None:
-			try:
-				entry = catalog.getCatalogEntry(ntiid)
-				course = ICourseInstance(entry, None)
-			except KeyError:
-				pass
+		elif not IContentUnit.providedBy(context): # ignore content units
+			course = ICourseInstance(context, None)
 		if course is not None:
 			result.add(course)
 	return result
