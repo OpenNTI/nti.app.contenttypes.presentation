@@ -20,7 +20,7 @@ from zope import component
 from ZODB.interfaces import IConnection
 
 from nti.coremetadata.interfaces import IRecordable
-from nti.coremetadata.interfaces import IPublishable 
+from nti.coremetadata.interfaces import IPublishable
 
 from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
@@ -29,6 +29,7 @@ from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import get_course_packages
 from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
 
+from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
@@ -175,6 +176,35 @@ def _remove_registered_lesson_overview(name, registry=None, course=None, force=F
 										   			 	 course=course))
 	return result
 
+def _register_media_rolls(roll, registry=None, validate=False):
+	idx = 0
+	items = roll.Items
+	registry = get_registry(registry)
+
+	while idx < len(items):
+		item = items[idx]
+		# check for weak refs in case has been canonicalized
+		item = item() if IWeakRef.providedBy(item) else item
+		if item is None:
+			del items[idx]
+			continue
+
+		item_iface = iface_of_thing(item)
+		result, registered = _register_utility(item,
+										 	   ntiid=item.ntiid,
+										  	   registry=registry,
+										  	   provided=item_iface)
+
+		validator = IItemRefValidator(item, None)
+		is_valid = (not validate or validator is None or validator.validate())
+		if not is_valid:  # don't include in the roll
+			del items[idx]
+			continue
+		elif not result:  # replace if registered before
+			items[idx] = registered
+		idx += 1
+	return roll
+
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 											validate=False, course=None):
 	registry = get_registry(registry)
@@ -210,6 +240,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 		# canonicalize item refs
 		while idx < len(items):
 			item = items[idx]
+
 			# check for weak refs in case has been canonicalized
 			item = item() if IWeakRef.providedBy(item) else item
 			if item is None:
@@ -222,6 +253,8 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 				if provider:  # check for safety
 					new_ntiid = make_ntiid(provider=provider, base=item.ntiid)
 					item.ntiid = new_ntiid
+			elif INTIMediaRoll.providedBy(item):
+				_register_media_rolls(item, registry=registry, validate=validate)
 
 			item_iface = iface_of_thing(item)
 			result, registered = _register_utility(item,
@@ -230,10 +263,8 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 											  	   provided=item_iface)
 
 			validator = IItemRefValidator(item, None)
-			is_valid = (not validate or validator is None or \
-						validator.validate())
-
-			if not is_valid:  # don't include in the ovewview
+			is_valid = (not validate or validator is None or validator.validate())
+			if not is_valid:  # don't include in the group
 				del items[idx]
 				continue
 			elif not result:  # replace if registered before
@@ -358,9 +389,12 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 			item.__parent__ = node  # lineage
 			node.LessonOverviewNTIID = item.ntiid
 
-		# for lesson and groups overviews index all fields
 		if 	INTILessonOverview.providedBy(item) or \
-			INTICourseOverviewGroup.providedBy(item):
+			INTICourseOverviewGroup.providedBy(item) or \
+			INTIMediaRoll.providedBy(item):
+
+			# for lesson and groups overviews index all fields
+			namespace = None if INTIMediaRoll.providedBy(item) else namespace
 
 			catalog.index(item,
 						  sites=sites,
@@ -378,8 +412,7 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 								  parent=item)
 		else:
 			# CS: We don't index items in groups with the namespace
-			# because and item can be in different groups with different
-			# namespace
+			# because and item can be in different groups with different namespace
 			catalog.index(item,
 						  sites=sites,
 						  intids=intids,
@@ -490,9 +523,8 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 								  node=node,
 								  course=course)
 
-			
 			if IPublishable.providedBy(overview):
-				overview.publish() # by default
+				overview.publish()  # by default
 
 			_set_source_lastModified(namespace, sibling_lastModified, catalog)
 
@@ -510,7 +542,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 	_copy_remove_transactions(removed, registry=registry)
 
 	_index_pacakge_assets(course, catalog=catalog)
-	
+
 	logger.info('Lessons overviews for %s have been synchronized in %s(s)',
 				 name, time.time() - now)
 	return result
