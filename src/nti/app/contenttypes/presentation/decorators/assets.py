@@ -140,9 +140,8 @@ class _NTIAssetOrderedContentsLinkDecorator(AbstractAuthenticatedRequestAwareDec
 		link.__parent__ = context
 		links.append(link)
 
-@component.adapter(INTICourseOverviewGroup)
 @interface.implementer(IExternalObjectDecorator)
-class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorator):
+class _VisibleMixinDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	_record = None
 
@@ -163,6 +162,19 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 		result = is_item_visible(item, user=self.remoteUser,
 								 context=context, record=record)
 		return result
+
+	def _decorate_external_impl(self, context, result):
+		pass
+
+	def _do_decorate_external(self, context, result):
+		try:
+			__traceback_info__ = context
+			self._decorate_external_impl(context, result)
+		except Exception:
+			logger.exception("Error while decorating asset")
+
+@component.adapter(INTICourseOverviewGroup)
+class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 
 	def _is_legacy_discussion(self, item):
 		nttype = get_type(item.target)
@@ -251,13 +263,6 @@ class _NTICourseOverviewGroupDecorator(AbstractAuthenticatedRequestAwareDecorato
 		# remove disallowed items
 		if removal:
 			result[ITEMS] = [x for idx, x in enumerate(items) if idx not in removal]
-
-	def _do_decorate_external(self, context, result):
-		try:
-			__traceback_info__ = context
-			self._decorate_external_impl(context, result)
-		except Exception:
-			logger.exception("Error while decorating course overview group")
 
 @interface.implementer(IExternalMappingDecorator)
 @component.adapter(INTIRelatedWorkRef, IRequest)
