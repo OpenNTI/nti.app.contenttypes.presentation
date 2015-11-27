@@ -24,8 +24,12 @@ from nti.contenttypes.presentation.interfaces import INTISlide
 from nti.contenttypes.presentation.interfaces import INTIAudioRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIVideoRef
+from nti.contenttypes.presentation.interfaces import INTIAudioRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
+from nti.contenttypes.presentation.interfaces import INTIVideoRoll
 from nti.contenttypes.presentation.interfaces import INTISlideVideo
+from nti.contenttypes.presentation.interfaces import INTIAudioRollRef
+from nti.contenttypes.presentation.interfaces import INTIVideoRollRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import IGroupOverViewable
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -58,6 +62,18 @@ class _NTIVideoRefResolver(_PresentationResolver):
 
 class _NTIVideoResolver(_PresentationResolver):
 	_ext_iface = INTIVideo
+
+class _NTIAudioRollRefResolver(_PresentationResolver):
+	_ext_iface = INTIAudioRollRef
+	
+class _NTIAudioRollResolver(_PresentationResolver):
+	_ext_iface = INTIAudioRoll
+
+class _NTIVideoRollRefResolver(_PresentationResolver):
+	_ext_iface = INTIVideoRollRef
+
+class _NTIVideoRollResolver(_PresentationResolver):
+	_ext_iface = INTIVideoRoll
 
 class _NTISlideResolver(_PresentationResolver):
 	_ext_iface = INTISlide

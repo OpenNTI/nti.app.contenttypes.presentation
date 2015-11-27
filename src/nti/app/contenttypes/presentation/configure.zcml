@@ -58,8 +58,14 @@
 	<utility factory=".ntiids._NTIAudioRefResolver" name="NTIAudioRef" />
 	<utility factory=".ntiids._NTIVideoRefResolver" name="NTIVideoRef" />
 
+	<utility factory=".ntiids._NTIAudioRollRefResolver" name="NTIAudioRollRef" />
+	<utility factory=".ntiids._NTIVideoRollRefResolver" name="NTIVideoRollRef" />
+	
 	<utility factory=".ntiids._NTIAudioResolver" name="NTIAudio" />
 	<utility factory=".ntiids._NTIVideoResolver" name="NTIVideo" />
+
+	<utility factory=".ntiids._NTIAudioRollResolver" name="NTIAudioRoll" />
+	<utility factory=".ntiids._NTIVideoRollResolver" name="NTIVideoRoll" />
 
 	<utility factory=".ntiids._NTITimeLineResolver" name="Timeline" />
 	<utility factory=".ntiids._NTITimeLineResolver" name="NTITimeline" />
