@@ -17,10 +17,13 @@ from .. import VIEW_OVERVIEW_SUMMARY
 
 ORDERED_CONTENTS = 'ordered-contents'
 
-LEGACY_UAS_40 = ("NTIFoundation DataLoader NextThought/1.0",
-				 "NTIFoundation DataLoader NextThought/1.1.",
-				 "NTIFoundation DataLoader NextThought/1.2.",
-				 "NTIFoundation DataLoader NextThought/1.3.",
+LEGACY_UAS_20 = ("NTIFoundation DataLoader NextThought/1.0",
+				 "NTIFoundation DataLoader NextThought/1.1",
+				 "NTIFoundation DataLoader NextThought/1.1.1",
+				 "NTIFoundation DataLoader NextThought/1.2.")
+	
+LEGACY_UAS_40 = LEGACY_UAS_20 + \
+				("NTIFoundation DataLoader NextThought/1.3.",
 				 "NTIFoundation DataLoader NextThought/1.4.0")
 
 def is_legacy_uas(request, legacy_uas):

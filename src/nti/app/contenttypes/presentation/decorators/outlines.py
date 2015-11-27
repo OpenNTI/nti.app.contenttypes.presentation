@@ -48,6 +48,7 @@ from nti.externalization.singleton import SingletonDecorator
 from nti.links.links import Link
 from nti.links.externalization import render_link
 
+from . import LEGACY_UAS_20
 from . import ORDERED_CONTENTS
 from . import VIEW_OVERVIEW_CONTENT
 from . import VIEW_OVERVIEW_SUMMARY
@@ -159,13 +160,8 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 @interface.implementer(IExternalMappingDecorator)
 class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
-	LEGACY_UAS = ("NTIFoundation DataLoader NextThought/1.0",
-				  "NTIFoundation DataLoader NextThought/1.1.0",
-				  "NTIFoundation DataLoader NextThought/1.1.1",
-				  "NTIFoundation DataLoader NextThought/1.2.")
-
 	def _predicate(self, context, result):
-		result = is_legacy_uas(self.request, self.LEGACY_UAS)
+		result = is_legacy_uas(self.request, LEGACY_UAS_20)
 		return result
 
 	def _overview_decorate_external(self, context, result):
