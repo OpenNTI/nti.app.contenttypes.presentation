@@ -47,6 +47,7 @@ from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTITimeline
+from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTIQuestionRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
@@ -173,6 +174,22 @@ class _VisibleMixinDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		except Exception:
 			logger.exception("Error while decorating asset")
 
+@component.adapter(INTIMediaRoll)
+class _NTIMediaRollDecorator(_VisibleMixinDecorator):
+
+	def _decorate_external_impl(self, context, result):
+		removal = set()
+		items = result[ITEMS]
+		# loop through sources
+		for idx, item in enumerate(context):
+			if IVisible.providedBy(item) and not self._allow_visible(context, item):
+				removal.add(idx)
+			elif IMediaRef.providedBy(item):
+				self._handle_media_ref(items, item, idx)
+		# remove disallowed items
+		if removal:
+			result[ITEMS] = [x for idx, x in enumerate(items) if idx not in removal]
+
 @component.adapter(INTICourseOverviewGroup)
 class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 
@@ -283,7 +300,7 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		library = component.queryUtility(IContentPackageLibrary)
 		if library is not None:
 			units = get_item_content_units(context)
-			# pick first content unit avaiable; clients
+			# FIXME: pick first content unit avaiable; clients
 			# should try to give us context
 			paths = library.pathToNTIID(units[0].ntiid) if units else None
 			package = paths[0] if paths else None

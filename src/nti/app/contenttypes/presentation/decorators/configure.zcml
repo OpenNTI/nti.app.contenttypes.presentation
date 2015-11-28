@@ -57,6 +57,11 @@
 				for="nti.contenttypes.presentation.interfaces.INTICourseOverviewGroup
 					 pyramid.interfaces.IRequest" />
 
+	<subscriber factory=".assets._NTIMediaRollDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTIMediaRoll
+					 pyramid.interfaces.IRequest" />
+
 	<subscriber factory=".assets._PresentationAssetEditLinkDecorator"
 				provides="nti.externalization.interfaces.IExternalMappingDecorator"
 				for="nti.contenttypes.presentation.interfaces.IPresentationAsset
