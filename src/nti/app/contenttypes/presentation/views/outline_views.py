@@ -169,6 +169,9 @@ class OutlineLessonOverviewSummaryView(RecursiveUGDView,
 	_DEFAULT_BATCH_SIZE = None
 	_DEFAULT_BATCH_START = 0
 
+	def __init__(self, request, the_user=None, the_ntiid=None):
+		super(OutlineLessonOverviewSummaryView, self).__init__(request, self.remoteUser)
+
 	def _do_count(self, item):
 		# With older content, we're not sure where the UGD
 		# may hang; so summarize per item.
@@ -266,7 +269,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 
 			for item in group.Items:
 				# ignore non media items
-				if 	(	 not IMediaRef.providedBy(item)
+				if 	(not IMediaRef.providedBy(item)
 					 and not INTIMedia.providedBy(item)
 					 and not INTISlideDeck.providedBy(item)):
 					continue
@@ -489,8 +492,8 @@ class OutlineNodePutView(OutlineNodeInsertView):
 			raise hexc.HTTPBadRequest('No index supplied')
 		values = CaseInsensitiveDict(self.readInput())
 		old_keys = list(self.context.keys())
-		ntiid = values.get( 'ntiid' )
-		old_parent_ntiid = values.get( 'RemovedFromParent' )
+		ntiid = values.get('ntiid')
+		old_parent_ntiid = values.get('RemovedFromParent')
 
 		if 		index >= len(old_keys) \
 			or 	index < 0:
@@ -508,7 +511,7 @@ class OutlineNodePutView(OutlineNodeInsertView):
 		# Make sure they don't move the object within the same node and
 		# attempt to delete from that node.
 		if old_parent_ntiid and old_parent_ntiid != self.context.ntiid:
-			old_parent = find_object_with_ntiid( old_parent_ntiid )
+			old_parent = find_object_with_ntiid(old_parent_ntiid)
 			if old_parent is None:
 				raise hexc.HTTPUnprocessableEntity('Node parent no longer exists (%s)',
 													old_parent_ntiid)
@@ -565,14 +568,14 @@ class OutlineNodeFieldPutView(UGDPutView):
 			 request_method='GET',
 			 permission=nauth.ACT_READ,
 			 renderer='rest')
-class OutlineNodeGetView( AbstractAuthenticatedView ):
+class OutlineNodeGetView(AbstractAuthenticatedView):
 
 	def _is_visible(self, item):
 		return 		not IPublishable.providedBy(item) \
 				or 	item.is_published() \
-				or	has_permission( nauth.ACT_CONTENT_EDIT, item, self.request )
+				or	has_permission(nauth.ACT_CONTENT_EDIT, item, self.request)
 
 	def __call__(self):
-		if self._is_visible( self.context ):
+		if self._is_visible(self.context):
 			return self.context
 		raise hexc.HTTPForbidden()
