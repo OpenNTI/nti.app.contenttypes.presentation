@@ -166,11 +166,13 @@ class OutlineLessonOverviewView(AbstractAuthenticatedView,
 class OutlineLessonOverviewSummaryView(RecursiveUGDView,
 									   OutlineLessonOverviewMixin):
 
-	_DEFAULT_BATCH_SIZE = None
 	_DEFAULT_BATCH_START = 0
+	_DEFAULT_BATCH_SIZE = None
 
-	def __init__(self, request, the_user=None, the_ntiid=None):
-		super(OutlineLessonOverviewSummaryView, self).__init__(request, self.remoteUser)
+	def _set_user_and_ntiid(self, request, the_user, the_ntiid):
+		if request.context is not None:
+			self.user = the_user or self.remoteUser
+			self.ntiid = the_ntiid or request.context.ntiid
 
 	def _do_count(self, item):
 		# With older content, we're not sure where the UGD
