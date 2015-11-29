@@ -71,8 +71,8 @@ def _lesson_overview_links(context):
 		pass
 	return None
 
-@interface.implementer(IExternalMappingDecorator)
 @component.adapter(ICourseOutline)
+@interface.implementer(IExternalMappingDecorator)
 class _CourseOutlineSharedDecorator(object):
 	"""
 	For course outline editors, display contextual information
@@ -109,7 +109,8 @@ class _CourseOutlineSharedDecorator(object):
 class _CourseOutlineEditLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	def _predicate(self, context, result):
-		return has_permission(ACT_CONTENT_EDIT, context, self.request)
+		return 		self._is_authenticated \
+				and has_permission(ACT_CONTENT_EDIT, context, self.request)
 
 	def _do_decorate_external(self, context, result):
 		links = result.setdefault(LINKS, [])
@@ -185,8 +186,8 @@ class _MediaByOutlineNodeDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	def _predicate(self, context, result_map):
 		course = ICourseInstance(context, None)
-		result = is_course_instructor(course, self.remoteUser) or \
-				 get_enrollment_record(course, self.remoteUser) is not None
+		result = 	is_course_instructor(course, self.remoteUser) \
+				 or get_enrollment_record(course, self.remoteUser) is not None
 		return result
 
 	def _do_decorate_external(self, context, result_map):

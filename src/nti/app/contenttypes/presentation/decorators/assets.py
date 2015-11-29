@@ -106,7 +106,7 @@ class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecor
 
 	def _predicate(self, context, result):
 		return 		self._acl_decoration \
-				and bool(self._is_authenticated) \
+				and self._is_authenticated \
 				and	not self._has_edit_link(result) \
 				and has_permission(ACT_UPDATE, context, self.request)
 
@@ -124,13 +124,13 @@ class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecor
 class _NTIAssetOrderedContentsLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	@Lazy
-	def _no_acl_decoration(self):
-		result = getattr(self.request, 'no_acl_decoration', False)
+	def _acl_decoration(self):
+		result = getattr(self.request, 'acl_decoration', True)
 		return result
 
 	def _predicate(self, context, result):
-		return 	not self._no_acl_decoration \
-				and bool(self._is_authenticated) \
+		return 		self._acl_decoration \
+				and self._is_authenticated \
 				and has_permission(ACT_CONTENT_EDIT, context, self.request)
 
 	def _do_decorate_external(self, context, result):
@@ -292,7 +292,7 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		return result
 
 	def _predicate(self, context, result):
-		result = bool(self._is_authenticated)
+		result = self._is_authenticated
 		return result
 
 	def _do_decorate_external(self, context, result):
