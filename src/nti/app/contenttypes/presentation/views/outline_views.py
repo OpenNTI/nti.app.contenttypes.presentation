@@ -70,6 +70,7 @@ from nti.contenttypes.presentation.lesson import NTILessonOverView
 from nti.coremetadata.interfaces import IPublishable
 
 from nti.dataserver import authorization as nauth
+from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
@@ -138,6 +139,11 @@ class OutlineLessonOverviewMixin(object):
 			raise hexc.HTTPServerError(
 						_("Outline does not have a lesson overview attribute."))
 
+	def _can_edit_lesson(self, lesson=None):
+		lesson = self._get_lesson() if lesson is None else lesson
+		result = has_permission(ACT_CONTENT_EDIT, lesson, self.request)
+		return result
+
 @view_config(route_name='objects.generic.traversal',
 			 context=ICourseOutlineContentNode,
 			 request_method='GET',
@@ -150,6 +156,7 @@ class OutlineLessonOverviewView(AbstractAuthenticatedView,
 	def __call__(self):
 		lesson = self._get_lesson()
 		if not IPublishable.providedBy(lesson) or lesson.is_published():
+			self.request.acl_decoration = self._can_edit_lesson(lesson)
 			external = to_external_object(lesson, name="render")
 			external.lastModified = external[LAST_MODIFIED] = lesson.lastModified
 		else:
@@ -319,7 +326,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		if record is None:
 			raise hexc.HTTPForbidden(_("Must be enrolled in a course."))
 
-		self.request.no_acl_decoration = True  # at all times
+		self.request.acl_decoration = False # avoid acl decoration
 
 		if ILegacyCourseInstance.providedBy(course):
 			result = self._do_legacy(course, record)

@@ -93,8 +93,8 @@ IN_CLASS_SAFE = make_provider_safe(IN_CLASS)
 class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	@Lazy
-	def _no_acl_decoration(self):
-		result = getattr(self.request, 'no_acl_decoration', False)
+	def _acl_decoration(self):
+		result = getattr(self.request, 'acl_decoration', True)
 		return result
 
 	def _has_edit_link(self, result):
@@ -105,7 +105,7 @@ class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecor
 		return False
 
 	def _predicate(self, context, result):
-		return 	not self._no_acl_decoration \
+		return 		self._acl_decoration \
 				and bool(self._is_authenticated) \
 				and	not self._has_edit_link(result) \
 				and has_permission(ACT_UPDATE, context, self.request)
