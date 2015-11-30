@@ -10,12 +10,15 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 import os
+from urllib import unquote
+from urlparse import urlparse
 
 from zope import lifecycleevent
 
 from ZODB.interfaces import IConnection
 
 from plone.namedfile.file import getImageInfo
+from plone.namedfile.interfaces import INamed
 
 from slugify import slugify_filename
 
@@ -34,6 +37,9 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.links import Link
 from nti.links.externalization import render_link
+
+from nti.ntiids.ntiids import find_object_with_ntiid
+from nti.ntiids.ntiids import is_valid_ntiid_string as is_valid_ntiid
 
 from nti.traversal.traversal import find_interface
 
@@ -86,6 +92,20 @@ def get_render_link(item):
 		pass  # Nope
 	return result
 
+def get_file_from_link(link):
+	result = None
+	try:
+		if link.endswith('view') or link.endswith('download'):
+			path = urlparse(link).path
+			path = os.path.split(path)[0]
+		ntiid = unquote(os.path.split(path)[1] or u'')
+		result = find_object_with_ntiid(ntiid) if is_valid_ntiid(ntiid) else None
+		if INamed.providedBy(result):
+			return result
+	except Exception:
+		pass # Nope
+	return None
+		
 def get_assets_folder(context, strict=True):
 	course = ICourseInstance(context, None)
 	if course is None:

@@ -47,6 +47,8 @@ from nti.common.time import time_to_64bit_int
 from nti.coremetadata.interfaces import IRecordable
 from nti.coremetadata.interfaces import IPublishable
 
+from nti.contentfolder.interfaces import IContentFolder
+
 from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
@@ -100,6 +102,7 @@ from .view_mixins import get_namedfile
 from .view_mixins import intid_register
 from .view_mixins import get_render_link
 from .view_mixins import get_assets_folder
+from .view_mixins import get_file_from_link
 
 ITEMS = StandardExternalFields.ITEMS
 MIMETYPE = StandardExternalFields.MIMETYPE
@@ -225,11 +228,19 @@ def _get_unique_filename(folder, context, name):
 	result = slugify(name, folder)
 	return result
 
+def _remove_file(href):
+	named = get_file_from_link(href) if href and isinstance(href, six.string_types) else None
+	container = getattr(named, '__parent__', None)
+	if IContentFolder.providedBy(container):
+		return container.remove(named)
+	return False
+	
 def _handle_multipart(context, contentObject, sources, provided=None):
 	provided = iface_of_asset(contentObject) if provided is None else provided
 	assets = get_assets_folder(context)
 	for name, source in sources.items():
 		if name in provided:
+			_remove_file(getattr(contentObject, name, None))
 			filename = _get_unique_filename(assets, source, name)
 			namedfile = get_namedfile(source, filename)
 			assets[filename] = namedfile # add to container
