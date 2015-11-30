@@ -290,9 +290,9 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 		if removal:
 			result[ITEMS] = [x for idx, x in enumerate(items) if idx not in removal]
 
-@interface.implementer(IExternalMappingDecorator)
-@component.adapter(INTIRelatedWorkRef, IRequest)
 @component.adapter(INTITimeline, IRequest)
+@component.adapter(INTIRelatedWorkRef, IRequest)
+@interface.implementer(IExternalMappingDecorator)
 class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	@Lazy
