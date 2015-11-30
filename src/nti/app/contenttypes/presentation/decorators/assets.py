@@ -177,6 +177,11 @@ class _VisibleMixinDecorator(AbstractAuthenticatedRequestAwareDecorator):
 @component.adapter(INTIMediaRoll)
 class _NTIMediaRollDecorator(_VisibleMixinDecorator):
 
+	@Lazy
+	def is_legacy_ipad(self):
+		result = is_legacy_uas(self.request, LEGACY_UAS_40)
+		return result
+
 	def _decorate_external_impl(self, context, result):
 		removal = set()
 		items = result[ITEMS]
@@ -189,6 +194,10 @@ class _NTIMediaRollDecorator(_VisibleMixinDecorator):
 		# remove disallowed items
 		if removal:
 			result[ITEMS] = [x for idx, x in enumerate(items) if idx not in removal]
+			
+		if self.is_legacy_ipad:
+			result['collectionItems'] = result[ITEMS]
+			del result[ITEMS]
 
 @component.adapter(INTICourseOverviewGroup)
 class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
