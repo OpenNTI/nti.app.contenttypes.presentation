@@ -60,6 +60,7 @@ from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import COURSE_OVERVIEW_GROUP_MIMETYES
 
 from nti.contenttypes.presentation.interfaces import INTITimeline
+from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import IGroupOverViewable
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
@@ -330,6 +331,23 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin, AbstractAuthentic
 		item_extended = list(extended or ()) + containers
 		self._catalog.index(item, container_ntiids=item_extended, namespace=namespace)
 
+	def _handle_media_roll(self, provided, item, creator, extended=None):
+		containers = _add_2_container(self._course, item, pacakges=False)
+
+		# register unique copies
+		_canonicalize(item.Items, creator, base=item.ntiid, registry=self._registry)
+		
+		# add media roll ntiid
+		item_extended = tuple(extended or ()) + tuple(containers or ()) + (item.ntiid,)
+		item_extended = set(item_extended)
+		for x in item.Items:
+			_add_2_container(self._course, x, pacakges=False)
+			self._catalog.index(x, container_ntiids=item_extended)
+
+		# index item
+		item_extended = tuple(extended or ()) + tuple(containers or ())
+		self._catalog.index(item, container_ntiids=item_extended)
+
 	def _handle_overview_group(self, group, creator, extended=None):
 		# add to course container
 		containers = _add_2_container(self._course, group, pacakges=False)
@@ -339,14 +357,18 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin, AbstractAuthentic
 
 		# include group ntiid in containers
 		item_extended = list(extended or ()) + containers + [group.ntiid]
-
+		item_extended = set(item_extended)
 		# process group items
 		for x in group.Items:
-			_add_2_container(self._course, x, pacakges=False)
-			self._catalog.index(x, container_ntiids=item_extended)
+			if INTIMediaRoll.providedBy(x):
+				provided = iface_of_asset(x)
+				self._handle_media_roll(provided, x, creator, item_extended)
+			else:
+				_add_2_container(self._course, x, pacakges=False)
+				self._catalog.index(x, container_ntiids=item_extended)
 
 		# index group
-		item_extended = list(extended or ()) + containers
+		item_extended = tuple(extended or ()) + tuple(containers or ())
 		self._catalog.index(group, container_ntiids=item_extended)
 
 	def _handle_lesson_overview(self, lesson, creator, extended=None):
@@ -373,17 +395,19 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin, AbstractAuthentic
 										extended=item_extended)
 
 		# index lesson item
-		item_extended = list(extended or ()) + containers
+		item_extended = tuple(extended or ()) + tuple(containers or ())
 		self._catalog.index(lesson, container_ntiids=item_extended)
 
 	def _handle_other_asset(self, item, creator, extended=None):
 		containers = _add_2_container(self._course, item, pacakges=False)
-		item_extended = list(extended or ()) + containers
+		item_extended = tuple(extended or ()) + tuple(containers or ())
 		self._catalog.index(item, container_ntiids=item_extended)
 
 	def _handle_asset(self, provided, item, creator, extended=()):
 		if provided in PACKAGE_CONTAINER_INTERFACES:
 			self._handle_package_asset(provided, item, creator, extended)
+		elif INTIMediaRoll.providedBy(item):
+			self._handle_media_roll(provided, item, creator, extended)
 		elif provided == INTICourseOverviewGroup:
 			self._handle_overview_group(item, creator, extended)
 		elif provided == INTILessonOverview:
