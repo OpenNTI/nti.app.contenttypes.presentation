@@ -57,7 +57,6 @@ from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
-from nti.dataserver.authorization import ACT_UPDATE
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.externalization.interfaces import StandardExternalFields
@@ -108,7 +107,7 @@ class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecor
 		return 		self._acl_decoration \
 				and self._is_authenticated \
 				and	not self._has_edit_link(result) \
-				and has_permission(ACT_UPDATE, context, self.request)
+				and has_permission(ACT_CONTENT_EDIT, context, self.request)
 
 	def _do_decorate_external(self, context, result):
 		_links = result.setdefault(LINKS, [])
