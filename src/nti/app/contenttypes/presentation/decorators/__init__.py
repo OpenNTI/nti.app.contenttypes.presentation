@@ -26,7 +26,7 @@ LEGACY_UAS_40 = LEGACY_UAS_20 + \
 				("NTIFoundation DataLoader NextThought/1.3.",
 				 "NTIFoundation DataLoader NextThought/1.4.0")
 
-def is_legacy_uas(request, legacy_uas):
+def is_legacy_uas(request, legacy_uas=LEGACY_UAS_40):
 	ua = request.environ.get(b'HTTP_USER_AGENT', '')
 	if not ua:
 		return False
