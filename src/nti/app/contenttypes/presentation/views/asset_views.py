@@ -15,6 +15,7 @@ import six
 import time
 import uuid
 from itertools import chain
+from urlparse import urlparse
 
 import transaction
 
@@ -91,6 +92,7 @@ from ..utils import get_course_packages
 from ..utils import get_presentation_asset_courses
 
 from .view_mixins import slugify
+from .view_mixins import hexdigest
 from .view_mixins import remove_asset
 from .view_mixins import get_namedfile
 from .view_mixins import intid_register
@@ -312,6 +314,15 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 	def _handle_related_work(self, provided, item, creator, extended=None):
 		self._handle_package_asset(provided, item, creator, extended)
+		if not item.target:
+			parsed = urlparse(item.href)
+			if parsed.scheme or parsed.netloc: # full url
+				ntiid = make_ntiid(nttype=TYPE_UUID,
+								   provider='NTI',
+								   specific=hexdigest(item.href))
+			else:
+				pass
+			item.target = ntiid
 
 	def _handle_media_roll(self, provided, item, creator, extended=None):
 		containers = _add_2_container(self._course, item, pacakges=False)
@@ -472,7 +483,7 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin, UGDPutView):
 	@Lazy
 	def _registry(self):
 		provided = iface_of_asset(self.context)
-		return component_registry(self.context, 
+		return component_registry(self.context,
 								  provided=provided,
 								  name=self.context.ntiid)
 
@@ -528,7 +539,7 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 	@Lazy
 	def _registry(self):
 		provided = iface_of_asset(self.context)
-		return component_registry(self.context, 
+		return component_registry(self.context,
 								  provided=provided,
 								  name=self.context.ntiid)
 

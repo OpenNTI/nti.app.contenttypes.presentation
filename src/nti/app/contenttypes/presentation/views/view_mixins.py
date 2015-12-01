@@ -10,6 +10,7 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 import os
+import hashlib
 from urllib import unquote
 from urlparse import urlparse
 
@@ -58,6 +59,12 @@ from nti.site.site import get_component_hierarchy_names
 from nti.traversal.traversal import find_interface
 
 from . import ASSETS_FOLDER
+
+def hexdigest(data, hasher=None):
+	hasher = hashlib.sha256() if hasher is None else hasher
+	hasher.update(data)
+	result = hasher.hexdigest()
+	return result
 
 def slugify(text, container):
 	separator = '_'
