@@ -23,7 +23,7 @@ from plone.namedfile.interfaces import INamed
 from nti.app.contenttypes.presentation.views.view_mixins import get_file_from_link
 
 class TestMixins(unittest.TestCase):
-	
+
 	@fudge.patch('nti.app.contenttypes.presentation.views.view_mixins.find_object_with_ntiid')
 	def test_get_file_from_link(self, mock_fon):
 		class Foo(object):
@@ -36,9 +36,13 @@ class TestMixins(unittest.TestCase):
 
 		n = get_file_from_link('/dataserver2/Objects/tag:nextthought.com,2011-10:NTI-CourseInfo-Fall2015_CS_1323/@@view')
 		assert_that(n, is_(foo))
-		
+
 		n = get_file_from_link('/dataserver2/Objects/xxx')
 		assert_that(n, is_(none()))
-		
+
 		n = get_file_from_link('http://x.org/tag:nextthought.com,2011-10:NTI-CourseInfo-Fall2015_CS_1323/@@view')
 		assert_that(n, is_not(none()))
+
+		interface.noLongerProvides(foo, INamed)
+		n = get_file_from_link('http://x.org/tag:nextthought.com,2011-10:NTI-CourseInfo-Fall2015_CS_1323/@@view')
+		assert_that(n, is_(none()))
