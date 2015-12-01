@@ -293,7 +293,8 @@ class PresentationAssetMixin(object):
 	def _registry(self):
 		return get_registry()
 
-class PresentationAssetSubmitViewMixin(PresentationAssetMixin, AbstractAuthenticatedView):
+class PresentationAssetSubmitViewMixin(PresentationAssetMixin, 
+									   AbstractAuthenticatedView):
 
 	@Lazy
 	def _course(self):
@@ -307,7 +308,8 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin, AbstractAuthentic
 
 	def _get_ntiid(self, item):
 		ntiid = item.ntiid
-		if INTICourseOverviewGroup.providedBy(item) and TYPE_UUID in get_specific(ntiid):
+		if 		INTICourseOverviewGroup.providedBy(item) \
+			and TYPE_UUID in get_specific(ntiid):
 			ntiid = None
 		return ntiid
 
@@ -331,12 +333,13 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin, AbstractAuthentic
 			_canonicalize(item.Videos, creator, base=base, registry=self._registry)
 
 			# add slidedeck ntiid
-			item_extended = tuple(extended or ()) + tuple(containers or ()) + (item.ntiid,)
+			item_extended = tuple(extended or ()) + tuple(containers) + (item.ntiid,)
 
 			# register in containers and index
 			for x in chain(item.Slides, item.Videos):
 				_add_2_container(self._course, x, pacakges=True)
-				self._catalog.index(x, container_ntiids=item_extended, namespace=namespace)
+				self._catalog.index(x, container_ntiids=item_extended,
+								    namespace=namespace)
 
 		# index item
 		item_extended = list(extended or ()) + containers
