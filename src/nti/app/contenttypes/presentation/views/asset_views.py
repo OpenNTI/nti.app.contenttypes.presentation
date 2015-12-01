@@ -310,6 +310,9 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		item_extended = list(extended or ()) + containers
 		self._catalog.index(item, container_ntiids=item_extended, namespace=namespace)
 
+	def _handle_related_work(self, provided, item, creator, extended=None):
+		self._handle_package_asset(provided, item, creator, extended)
+
 	def _handle_media_roll(self, provided, item, creator, extended=None):
 		containers = _add_2_container(self._course, item, pacakges=False)
 
@@ -389,7 +392,10 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 	def _handle_asset(self, provided, item, creator, extended=()):
 		if provided in PACKAGE_CONTAINER_INTERFACES:
-			self._handle_package_asset(provided, item, creator, extended)
+			if INTIRelatedWorkRef.providedBy(item):
+				self._handle_related_work(provided, item, creator, extended)
+			else:
+				self._handle_package_asset(provided, item, creator, extended)
 		elif INTIMediaRoll.providedBy(item):
 			self._handle_media_roll(provided, item, creator, extended)
 		elif provided == INTICourseOverviewGroup:
