@@ -436,9 +436,9 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 			node.ContentNTIID = lesson_ntiid
 		# XXX: set src and lesson ntiid (see MediaByOutlineView)
 		# at his point is very likely that LessonOverviewNTIID,
-		# ContentNTIID and src are simply alias fields. All of them
+		# ContentNTIID are simply alias fields. All of them
 		# are kept so long as we have manual sync and BWC
-		node.LessonOverviewNTIID = node.src = lesson_ntiid
+		node.LessonOverviewNTIID = lesson_ntiid
 		return new_lesson
 
 	def _get_new_node(self):
@@ -452,7 +452,9 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 			lifecycleevent.created(new_lesson)
 			_intid_register(new_lesson)
 			self._register_obj(new_lesson)
-			new_node.src = to_external_ntiid_oid(new_lesson) # see MediaByOutline
+			# XXX: set the src field to be unique for indexing
+			# see MediaByOutlineNode
+			new_node.src = to_external_ntiid_oid(new_lesson)
 		self._register_obj(new_node)
 		new_node.locked = True
 		return new_node

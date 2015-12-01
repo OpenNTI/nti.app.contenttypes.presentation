@@ -26,6 +26,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
+from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -83,6 +84,7 @@ def _on_outlinenode_unregistered(node, event):
 		lesson = find_object_with_ntiid(node.LessonOverviewNTIID)
 		if lesson is not None:
 			lesson.__parent__ = None
+			logger.warn("%s is an orphan lesson overview object", lesson.ntiid)
 
 # Presentation assets
 
@@ -101,9 +103,9 @@ def _on_will_remove_presentation_asset(asset, event):
 		else:
 			containers = (context,)
 		for container in containers:
-			if INTICourseOverviewGroup.providedBy(container):
-				container.remove(asset)
-			elif INTISlideDeck.providedBy(container):
+			if 		INTICourseOverviewGroup.providedBy(container) \
+				and INTIMediaRoll.providedBy(container) \
+				and INTISlideDeck.providedBy(container):
 				container.remove(asset)
 			else:
 				mapping = IPresentationAssetContainer(container, None)
