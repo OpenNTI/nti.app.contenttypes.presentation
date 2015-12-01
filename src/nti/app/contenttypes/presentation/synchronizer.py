@@ -64,8 +64,10 @@ def prepare_json_text(s):
 	return result
 
 def _can_be_removed(registered, force=False):
-	result = registered is not None and \
-			 (force or not IRecordable.providedBy(registered) or not registered.locked)
+	result = 	registered is not None \
+			and (	force 
+				 or not IRecordable.providedBy(registered) 
+				 or not registered.locked)
 	return result
 can_be_removed = _can_be_removed
 
