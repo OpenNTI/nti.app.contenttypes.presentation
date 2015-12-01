@@ -71,17 +71,20 @@ def slugify(text, container):
 	return newtext
 
 def get_namedfile(source, filename=None):
-	content_type, _, _ = getImageInfo(source)
-	source.seek(0)  # reset
-	if content_type:  # it's an image
-		result = ContentBlobImage()
-		result.data = source.read()  # set content type
+	contentType = getattr(source, 'contentType', None)
+	if contentType:
+		factory = ContentBlobFile
 	else:
-		result = ContentBlobFile()
-		result.data = source.read()
-		result.contentType = source.contentType
+		contentType, _, _ = getImageInfo(source)
+		source.seek(0)  # reset
+		factory = ContentBlobImage if contentType else ContentBlobFile
+	contentType = contentType or u'application/octet-stream'
+
+	result = factory()
 	result.name = filename
 	result.filename = filename
+	result.data = source.read()
+	result.contentType = contentType
 	return result
 
 def db_connection(registry=None):
@@ -99,7 +102,7 @@ def intid_register(item, registry=None, connection=None):
 
 def get_render_link(item):
 	try:
-		result = to_external_href(item) # adds @@view
+		result = to_external_href(item)  # adds @@view
 	except Exception:
 		pass  # Nope
 	return result
@@ -112,7 +115,7 @@ def get_file_from_link(link):
 			path = os.path.split(path)[0]
 		else:
 			path = link
-		ntiid = unquote(os.path.split(path)[1] or u'') # last part of path
+		ntiid = unquote(os.path.split(path)[1] or u'')  # last part of path
 		result = find_object_with_ntiid(ntiid) if is_valid_ntiid(ntiid) else None
 		if INamed.providedBy(result):
 			return result
