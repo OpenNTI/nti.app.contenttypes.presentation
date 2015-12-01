@@ -18,13 +18,8 @@ from itertools import chain
 
 import transaction
 
-from zope import component
 from zope import interface
 from zope import lifecycleevent
-
-from zope.event import notify
-
-from zope.traversing.interfaces import IEtcNamespace
 
 from pyramid.view import view_config
 from pyramid.view import view_defaults
@@ -70,7 +65,6 @@ from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
-from nti.contenttypes.presentation.interfaces import WillRemovePresentationAssetEvent
 
 from nti.contenttypes.presentation.utils import create_from_external
 from nti.contenttypes.presentation.utils import get_external_pre_hook
@@ -83,7 +77,7 @@ from nti.externalization.externalization import to_external_object
 from nti.externalization.externalization import StandardExternalFields
 
 from nti.namedfile.file import name_finder
-from nti.namedfile.file import safe_filename 
+from nti.namedfile.file import safe_filename
 
 from nti.ntiids.ntiids import TYPE_UUID
 from nti.ntiids.ntiids import make_ntiid
@@ -92,17 +86,17 @@ from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
 
 from nti.site.utils import registerUtility
-from nti.site.utils import unregisterUtility
-from nti.site.site import get_component_hierarchy_names
 
 from ..utils import get_course_packages
 from ..utils import get_presentation_asset_courses
 
 from .view_mixins import slugify
+from .view_mixins import remove_asset
 from .view_mixins import get_namedfile
 from .view_mixins import intid_register
 from .view_mixins import get_render_link
 from .view_mixins import get_assets_folder
+from .view_mixins import component_registry
 from .view_mixins import get_file_from_link
 
 ITEMS = StandardExternalFields.ITEMS
@@ -140,11 +134,6 @@ def _notify_created(item):
 		item.unpublish()
 	if IRecordable.providedBy(item):
 		item.locked = True
-
-def _notify_removed(item):
-	lifecycleevent.removed(item)
-	if hasattr(item, '__parent__'):
-		item.__parent__ = None
 
 def _add_2_packages(context, item):
 	result = []
@@ -196,33 +185,6 @@ def _canonicalize(items, creator, base=None, registry=None):
 			registerUtility(registry, item, provided, name=item.ntiid)
 	return result
 
-def _remove_item(item, registry=None, catalog=None):
-	notify(WillRemovePresentationAssetEvent(item))
-	# remove utility
-	registry = get_registry(registry)
-	unregisterUtility(registry, provided=iface_of_asset(item), name=item.ntiid)
-	# unindex
-	catalog = get_library_catalog() if catalog is None else catalog
-	catalog.unindex(item)
-	# broadcast removed
-	_notify_removed(item)
-
-def _component_registry(context, name=None):
-	sites_names = list(get_component_hierarchy_names())
-	sites_names.reverse()  # higher sites first
-	name = name or context.ntiid
-	provided = iface_of_asset(context)
-	hostsites = component.getUtility(IEtcNamespace, name='hostsites')
-	for site_name in sites_names:
-		try:
-			folder = hostsites[site_name]
-			registry = folder.getSiteManager()
-			if registry.queryUtility(provided, name=name) == context:
-				return registry
-		except KeyError:
-			pass
-	return get_registry()
-
 def _get_unique_filename(folder, context, name):
 	name = getattr(context, 'filename', None) or getattr(context, 'name', None) or name
 	name = safe_filename(name_finder(name))
@@ -235,7 +197,7 @@ def _remove_file(href):
 	if IContentFolder.providedBy(container):
 		return container.remove(named)
 	return False
-	
+
 def _handle_multipart(context, contentObject, sources, provided=None):
 	provided = iface_of_asset(contentObject) if provided is None else provided
 	assets = get_assets_folder(context)
@@ -244,7 +206,7 @@ def _handle_multipart(context, contentObject, sources, provided=None):
 			_remove_file(getattr(contentObject, name, None))
 			filename = _get_unique_filename(assets, source, name)
 			namedfile = get_namedfile(source, filename)
-			assets[filename] = namedfile # add to container
+			assets[filename] = namedfile  # add to container
 			location = get_render_link(namedfile)
 			setattr(contentObject, name, location)
 
@@ -294,7 +256,7 @@ class PresentationAssetMixin(object):
 	def _registry(self):
 		return get_registry()
 
-class PresentationAssetSubmitViewMixin(PresentationAssetMixin, 
+class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 									   AbstractAuthenticatedView):
 
 	@Lazy
@@ -340,7 +302,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 			for x in chain(item.Slides, item.Videos):
 				_add_2_container(self._course, x, pacakges=True)
 				self._catalog.index(x, container_ntiids=item_extended,
-								    namespace=namespace)
+									namespace=namespace)
 
 		# index item
 		item_extended = list(extended or ()) + containers
@@ -351,7 +313,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 		# register unique copies
 		_canonicalize(item.Items, creator, base=item.ntiid, registry=self._registry)
-		
+
 		# add media roll ntiid
 		item_extended = tuple(extended or ()) + tuple(containers or ()) + (item.ntiid,)
 		item_extended = set(item_extended)
@@ -398,7 +360,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 		# extend but don't add containers
 		item_extended = list(extended or ()) + [lesson.ntiid]
-		
+
 		# process lesson groups
 		for group in lesson.Items:
 			if group.__parent__ is not None and group.__parent__ != lesson:
@@ -467,7 +429,7 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 	def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
 		contentObject = self.parseInput(creator, search_owner, externalValue)
 		sources = get_all_sources(self.request)
-		if sources: # multi-part data
+		if sources:  # multi-part data
 			_handle_multipart(self._course, contentObject, sources)
 		return contentObject
 
@@ -501,7 +463,10 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin, UGDPutView):
 
 	@Lazy
 	def _registry(self):
-		return _component_registry(self.context, name=self.context.ntiid)
+		provided = iface_of_asset(self.context)
+		return component_registry(self.context, 
+								  provided=provided,
+								  name=self.context.ntiid)
 
 	def readInput(self, value=None):
 		result = UGDPutView.readInput(self, value=value)
@@ -530,13 +495,13 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin, UGDPutView):
 			courses = get_presentation_asset_courses(self.context)
 			if courses:  # pick first to store assets
 				_handle_multipart(courses.__iter__().next(), self.context, sources)
-			
+
 		# unregister any old data
 		if data and provided == INTILessonOverview:
 			updated = {x.ntiid for x in contentObject.Items}
 			for ntiid, group in data.items():
 				if ntiid not in updated:  # group removed
-					_remove_item(group, self._registry, self._catalog)
+					remove_asset(group, self._registry, self._catalog)
 
 		return result
 
@@ -554,10 +519,13 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 
 	@Lazy
 	def _registry(self):
-		return _component_registry(self.context, name=self.context.ntiid)
+		provided = iface_of_asset(self.context)
+		return component_registry(self.context, 
+								  provided=provided,
+								  name=self.context.ntiid)
 
 	def _do_delete_object(self, theObject):
-		_remove_item(theObject, self._registry, self._catalog)
+		remove_asset(theObject, self._registry, self._catalog)
 		return theObject
 
 @view_config(context=INTILessonOverview)
@@ -608,7 +576,7 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 						provided=provided,
 						component=contentObject,
 						name=contentObject.ntiid)
-		
+
 		self.context.append(contentObject)
 		self._handle_overview_group(contentObject,
 									creator=creator,
@@ -647,7 +615,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 	def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
 		contentObject, externalValue = self.parseInput(creator, search_owner, externalValue)
 		sources = get_all_sources(self.request)
-		if sources: # multi-part data
+		if sources:  # multi-part data
 			_handle_multipart(self._course, contentObject, sources)
 		return contentObject, externalValue
 
@@ -666,11 +634,11 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 						provided=provided,
 						component=contentObject,
 						name=contentObject.ntiid)
-		
+
 		parent = self.context.__parent__
 		extended = (self.context.ntiid,) + ((parent.ntiid,) if parent is not None else ())
 		self.context.append(contentObject)
-		self._handle_asset(provided, 
+		self._handle_asset(provided,
 						   contentObject,
 						   creator=creator,
 						   extended=extended)

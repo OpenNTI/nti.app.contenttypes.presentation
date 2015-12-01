@@ -177,6 +177,7 @@ def _remove_registered_lesson_overview(name, registry=None, course=None, force=F
 										   			 	 registry=registry,
 										   			 	 course=course))
 	return result
+remove_registered_lesson_overview = _remove_registered_lesson_overview
 
 def _register_media_rolls(roll, registry=None, validate=False):
 	idx = 0

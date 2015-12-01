@@ -94,6 +94,9 @@ from nti.traversal.traversal import find_interface
 from ..utils import is_item_visible
 from ..utils import get_enrollment_record
 
+from .view_mixins import remove_asset
+from .view_mixins import component_registry
+
 from . import VIEW_NODE_CONTENTS
 from . import VIEW_OVERVIEW_CONTENT
 from . import VIEW_OVERVIEW_SUMMARY
@@ -326,7 +329,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		if record is None:
 			raise hexc.HTTPForbidden(_("Must be enrolled in a course."))
 
-		self.request.acl_decoration = False # avoid acl decoration
+		self.request.acl_decoration = False  # avoid acl decoration
 
 		if ILegacyCourseInstance.providedBy(course):
 			result = self._do_legacy(course, record)
@@ -546,6 +549,14 @@ class OutlineNodeDeleteView(OutlineNodeInsertView):
 	Delete the given ntiid in our context.
 	"""
 
+	def _remove_lesson(self, ntiid):
+		lesson = component.queryUtility(INTILessonOverview, name=ntiid)
+		if lesson is not None:
+			registry = component_registry(lesson, provided=INTILessonOverview, name=ntiid)
+			for group in lesson or ():
+				remove_asset(group, registry=registry)
+			remove_asset(lesson, registry=registry)
+
 	def __call__(self):
 		values = CaseInsensitiveDict(self.readInput())
 		old_keys = list(self.context.keys())
@@ -556,9 +567,14 @@ class OutlineNodeDeleteView(OutlineNodeInsertView):
 		# TODO: Can we tell when to unregister nodes (no longer contained)
 		# to avoid orphans?
 
+		# TODO: Do we remove lesson overview?
+		if False and self.context.LessonOverviewNTIID:
+			self._remove_lesson(self.context.LessonOverviewNTIID)
+
 		# TODO: Do we want to permanently delete nodes, or delete placeholder
 		# mark them (to undo and save transaction history)?
 		del self.context[ntiid]
+
 		logger.info('Deleted entity in outline %s', ntiid)
 		return hexc.HTTPOk()
 
