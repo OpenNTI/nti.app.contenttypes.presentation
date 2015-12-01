@@ -72,9 +72,9 @@ from nti.coremetadata.interfaces import IPublishable
 from nti.dataserver import authorization as nauth
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
+from nti.externalization.oids import to_external_ntiid_oid
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
-
 from nti.externalization.externalization import to_external_object
 
 from nti.mimetype.mimetype import MIME_BASE
@@ -452,6 +452,7 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 			lifecycleevent.created(new_lesson)
 			_intid_register(new_lesson)
 			self._register_obj(new_lesson)
+			new_node.src = to_external_ntiid_oid(new_lesson) # see MediaByOutline
 		self._register_obj(new_node)
 		new_node.locked = True
 		return new_node

@@ -77,6 +77,7 @@ from nti.contenttypes.presentation.utils import get_external_pre_hook
 
 from nti.dataserver import authorization as nauth
 
+from nti.externalization.oids import to_external_ntiid_oid
 from nti.externalization.internalization import notify_modified
 from nti.externalization.externalization import to_external_object
 from nti.externalization.externalization import StandardExternalFields
@@ -382,8 +383,11 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 				self._catalog.index(x, container_ntiids=item_extended)
 
 		# index group
+		lesson = group.__parent__
+		namespace = to_external_ntiid_oid(lesson) if lesson is not None else None
 		item_extended = tuple(extended or ()) + tuple(containers or ())
-		self._catalog.index(group, container_ntiids=item_extended)
+		self._catalog.index(group, container_ntiids=item_extended,
+							namespace=namespace)
 
 	def _handle_lesson_overview(self, lesson, creator, extended=None):
 		# add to course container
@@ -409,8 +413,10 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 										extended=item_extended)
 
 		# index lesson item
+		namespace = to_external_ntiid_oid(lesson)
 		item_extended = tuple(extended or ()) + tuple(containers or ())
-		self._catalog.index(lesson, container_ntiids=item_extended)
+		self._catalog.index(lesson, container_ntiids=item_extended,
+							namespace=namespace)
 
 	def _handle_other_asset(self, item, creator, extended=None):
 		containers = _add_2_container(self._course, item, pacakges=False)
