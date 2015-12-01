@@ -203,7 +203,9 @@ def _handle_multipart(context, contentObject, sources, provided=None):
 	assets = get_assets_folder(context)
 	for name, source in sources.items():
 		if name in provided:
+			# remove existing
 			_remove_file(getattr(contentObject, name, None))
+			# save a new file
 			filename = _get_unique_filename(assets, source, name)
 			namedfile = get_namedfile(source, filename)
 			assets[filename] = namedfile  # add to container

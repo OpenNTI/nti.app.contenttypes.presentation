@@ -30,6 +30,8 @@ from plone.namedfile.interfaces import INamed
 
 from slugify import slugify_filename
 
+from nti.app.contentfile import to_external_href
+
 from nti.app.products.courseware.interfaces import ICourseRootFolder
 
 from nti.common.random import generate_random_hex_string
@@ -46,9 +48,6 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation.interfaces import WillRemovePresentationAssetEvent
-
-from nti.links import Link
-from nti.links.externalization import render_link
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 from nti.ntiids.ntiids import is_valid_ntiid_string as is_valid_ntiid
@@ -100,20 +99,20 @@ def intid_register(item, registry=None, connection=None):
 
 def get_render_link(item):
 	try:
-		link = Link(item)
-		href = render_link(link)['href']
-		result = href + '/@@view'
-	except (KeyError, ValueError, AssertionError):
+		result = to_external_href(item) # adds @@view
+	except Exception:
 		pass  # Nope
 	return result
 
 def get_file_from_link(link):
 	result = None
 	try:
-		if link.endswith('view') or link.endswith('download'):
+		if '@@view' in link or '@@download' in link:
 			path = urlparse(link).path
 			path = os.path.split(path)[0]
-		ntiid = unquote(os.path.split(path)[1] or u'')
+		else:
+			path = link
+		ntiid = unquote(os.path.split(path)[1] or u'') # last part of path
 		result = find_object_with_ntiid(ntiid) if is_valid_ntiid(ntiid) else None
 		if INamed.providedBy(result):
 			return result
