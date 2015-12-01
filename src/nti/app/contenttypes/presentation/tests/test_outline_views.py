@@ -559,7 +559,8 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that(unit_ntiids[1], is_(first_ntiid))
 
 		# Move original first object to last index
-		move_data = self._get_move_json(first_ntiid, outline_ntiid, 10)
+		last_index = len( unit_ntiids ) - 1
+		move_data = self._get_move_json(first_ntiid, outline_ntiid, last_index)
 		self.testapp.post_json(self.move_url, move_data,
 							  extra_environ=instructor_environ)
 

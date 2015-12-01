@@ -341,15 +341,19 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 class _AbstractOutlineNodeView(AbstractAuthenticatedView,
 								ModeledContentUploadRequestUtilsMixin):
 
-	def _reorder_for_ntiid(self, node, ntiid, index, old_keys):
+	def _reorder_children(self, node, ntiid, index):
 		"""
 		For a given ntiid and index, insert the ntiid into
-		the `index` slot, reordering the parent.
+		the `index` slot and reorder the parent's children.
 		"""
-		new_keys = old_keys[:index]
-		new_keys.append(ntiid)
-		new_keys.extend(old_keys[index:])
-		node.updateOrder(new_keys)
+		old_keys = list( node.keys() )
+		# An index outside our boundary acts as a no-op/append.
+		if index is not None and index < len( old_keys ):
+			old_keys.remove( ntiid )
+			new_keys = old_keys[:index]
+			new_keys.append(ntiid)
+			new_keys.extend(old_keys[index:])
+			node.updateOrder(new_keys)
 
 @view_config(route_name='objects.generic.traversal',
 			 context=ICourseOutlineNode,
@@ -477,16 +481,12 @@ class OutlineNodeInsertView(_AbstractOutlineNodeView):
 		index = self._get_index()
 		index = index if index is None else max(index, 0)
 		new_node = self._get_new_node()
-		old_keys = list(self.context.keys())
-		children_size = len(old_keys)
+
 		self.context.append(new_node)
+		self._reorder_children( self.context, new_node.ntiid, index )
 
-		self.request.response.status_int = 201
-
-		if index is not None and index < children_size:
-			self._reorder_for_ntiid( self.context, new_node.ntiid, index, old_keys )
 		logger.info('Created new outline node (%s)', new_node.ntiid)
-
+		self.request.response.status_int = 201
 		return new_node
 
 @view_config(route_name='objects.generic.traversal',
@@ -517,10 +517,8 @@ class OutlineNodeMoveView(_AbstractOutlineNodeView):
 		node.
 	"""
 
-	def _get_outline_ntiids(self):
+	def _get_outline_ntiids(self, outline_ntiid):
 		result = set()
-		# We externalize an OID for our outline NTIID.
-		outline_ntiid = to_external_ntiid_oid( self.context )
 		result.add( outline_ntiid )
 		def _recur(node):
 			val = getattr(node, 'ntiid', None)
@@ -538,29 +536,28 @@ class OutlineNodeMoveView(_AbstractOutlineNodeView):
 		ntiid = values.get( 'ObjectNTIID' )
 		new_parent_ntiid = values.get( 'ParentNTIID' )
 		old_parent_ntiid = values.get( 'OldParentNTIID' )
+		# We externalize an OID for our outline NTIID.
+		outline_ntiid = to_external_ntiid_oid( self.context )
 
-		outline_ntiids = self._get_outline_ntiids()
+		outline_ntiids = self._get_outline_ntiids( outline_ntiid )
 		if 		new_parent_ntiid not in outline_ntiids \
 			or ( 	old_parent_ntiid
 				and old_parent_ntiid not in outline_ntiids ):
 			raise hexc.HTTPUnprocessableEntity( _('Cannot move between outlines.') )
 
-		new_parent = find_object_with_ntiid( new_parent_ntiid )
+		if new_parent_ntiid == outline_ntiid:
+			new_parent = self.context
+		else:
+			new_parent = find_object_with_ntiid( new_parent_ntiid )
+
 		if new_parent is None:
 			# Really shouldn't happen if we validate this object is in our outline.
 			raise hexc.HTTPUnprocessableEntity(_('New node parent does not exist.'))
 
-		# FIXME Is this right? What if they want to append on node?
-		old_keys = list( new_parent.keys() )
-		if 		index is None \
-			or	index >= len(old_keys) \
-			or 	index < 0:
-			raise hexc.HTTPConflict(_('Invalid index or ntiid state.'))
+		if index < 0:
+			raise hexc.HTTPConflict(_('Invalid index.'))
 
-		if ntiid in old_keys:
-			# Moving within our new parent.
-			old_keys.remove(ntiid)
-		else:
+		if ntiid not in list( new_parent.keys() ):
 			# It's a move, append to our context.
 			obj = find_object_with_ntiid(ntiid)
 			if obj is None:
@@ -575,9 +572,10 @@ class OutlineNodeMoveView(_AbstractOutlineNodeView):
 				raise hexc.HTTPUnprocessableEntity(_('Old node parent no longer exists.'))
 			del old_parent[ntiid]
 
-		self._reorder_for_ntiid( new_parent, ntiid, index, old_keys )
+		self._reorder_children( new_parent, ntiid, index )
 		notify(CourseOutlineNodeMovedEvent( new_parent, self.remoteUser.username, index ))
-		logger.info('Moved node (%s) to index (%s) (to=%s) (from=%s)', ntiid, index, new_parent_ntiid, old_parent_ntiid)
+		logger.info('Moved node (%s) to index (%s) (to=%s) (from=%s)',
+					ntiid, index, new_parent_ntiid, old_parent_ntiid)
 		return hexc.HTTPOk()
 
 @view_config(route_name='objects.generic.traversal',
