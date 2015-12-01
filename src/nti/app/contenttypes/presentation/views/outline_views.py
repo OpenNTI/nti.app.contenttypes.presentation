@@ -76,6 +76,7 @@ from nti.externalization.oids import to_external_ntiid_oid
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.externalization import to_external_object
+from nti.externalization.externalization import to_external_ntiid_oid
 
 from nti.mimetype.mimetype import MIME_BASE
 
@@ -97,6 +98,7 @@ from ..utils import get_enrollment_record
 from .view_mixins import remove_asset
 from .view_mixins import component_registry
 
+from . import VIEW_NODE_MOVE
 from . import VIEW_NODE_CONTENTS
 from . import VIEW_OVERVIEW_CONTENT
 from . import VIEW_OVERVIEW_SUMMARY
@@ -337,7 +339,33 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 			result = self._do_current(course, record)
 		return result
 
-class _AbstractOutlineNodeIndexView(AbstractAuthenticatedView):
+class _AbstractOutlineNodeView(AbstractAuthenticatedView,
+								ModeledContentUploadRequestUtilsMixin):
+
+	def _reorder_for_ntiid(self, node, ntiid, index, old_keys):
+		"""
+		For a given ntiid and index, insert the ntiid into
+		the `index` slot, reordering the parent.
+		"""
+		new_keys = old_keys[:index]
+		new_keys.append(ntiid)
+		new_keys.extend(old_keys[index:])
+		node.updateOrder(new_keys)
+
+@view_config(route_name='objects.generic.traversal',
+			 context=ICourseOutlineNode,
+			 request_method='POST',
+			 permission=nauth.ACT_CONTENT_EDIT,
+			 renderer='rest',
+			 name=VIEW_NODE_CONTENTS)
+class OutlineNodeInsertView(_AbstractOutlineNodeView):
+	"""
+	Creates an outline node at the given index path, if supplied.
+	Otherwise, append to our context.
+
+	We could generalize this and the index views for
+	all IOrderedContainers.
+	"""
 
 	def _get_index(self):
 		"""
@@ -354,22 +382,6 @@ class _AbstractOutlineNodeIndexView(AbstractAuthenticatedView):
 			except (TypeError, IndexError):
 				raise hexc.HTTPUnprocessableEntity('Invalid index %s' % index)
 		return index
-
-@view_config(route_name='objects.generic.traversal',
-			 context=ICourseOutlineNode,
-			 request_method='POST',
-			 permission=nauth.ACT_CONTENT_EDIT,
-			 renderer='rest',
-			 name=VIEW_NODE_CONTENTS)
-class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
-							ModeledContentUploadRequestUtilsMixin):
-	"""
-	Creates an outline node at the given index path, if supplied.
-	Otherwise, append to our context.
-
-	We could generalize this and the index views for
-	all IOrderedContainers.
-	"""
 
 	def _get_catalog_entry(self, outline):
 		course = find_interface(outline, ICourseInstance, strict=False)
@@ -462,16 +474,6 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 		new_node.locked = True
 		return new_node
 
-	def _reorder_for_ntiid(self, ntiid, index, old_keys):
-		"""
-		For a given ntiid and index, insert the ntiid into
-		the `index` slot, reordering the parent.
-		"""
-		new_keys = old_keys[:index]
-		new_keys.append(ntiid)
-		new_keys.extend(old_keys[index:])
-		self.context.updateOrder(new_keys)
-
 	def __call__(self):
 		index = self._get_index()
 		index = index if index is None else max(index, 0)
@@ -483,59 +485,104 @@ class OutlineNodeInsertView(_AbstractOutlineNodeIndexView,
 		self.request.response.status_int = 201
 
 		if index is not None and index < children_size:
-			self._reorder_for_ntiid(new_node.ntiid, index, old_keys)
+			self._reorder_for_ntiid( self.context, new_node.ntiid, index, old_keys )
 		logger.info('Created new outline node (%s)', new_node.ntiid)
 
 		return new_node
 
 @view_config(route_name='objects.generic.traversal',
-			 context=ICourseOutlineNode,
-			 request_method='PUT',
+			 context=ICourseOutline,
+			 request_method='POST',
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest',
-			 name=VIEW_NODE_CONTENTS)
-class OutlineNodePutView(OutlineNodeInsertView):
+			 name=VIEW_NODE_MOVE)
+class OutlineNodeMoveView(_AbstractOutlineNodeView):
 	"""
-	Put the given ntiid to the given context. We allow moves (copies)
-	between nodes, if the object exists. We expect the client to then
-	DELETE from the old node if moving.
+	Move the given object between outline nodes in a course
+	outline. The source, target NTIIDs must exist in the outline (no
+	nodes are allowed to move between courses).
+
+	Body elements:
+
+	ObjectNTIID
+		The NTIID of the object being moved.
+
+	ParentNTIID
+		The NTIID of the new parent node of the object being moved.
+
+	Index
+		The index at which to insert the node in our parent.
+
+	OldParentNTIID
+		(Optional) The NTIID of the old parent of our moved
+		node.
 	"""
+	# FIXME: MessageFactory
+
+	def _get_outline_ntiids(self):
+		result = set()
+		# We externalize an OID for our outline NTIID.
+		outline_ntiid = to_external_ntiid_oid( self.context )
+		result.add( outline_ntiid )
+		def _recur(node):
+			val = getattr(node, 'ntiid', None)
+			if val:
+				result.add(val)
+			for child in node.values():
+				_recur(child)
+
+		_recur( self.context )
+		return result
 
 	def __call__(self):
-		index = self._get_index()
-		if index is None:
-			raise hexc.HTTPBadRequest('No index supplied')
-		values = CaseInsensitiveDict(self.readInput())
-		old_keys = list(self.context.keys())
-		ntiid = values.get('ntiid')
-		old_parent_ntiid = values.get('RemovedFromParent')
+		values = CaseInsensitiveDict( self.readInput() )
+		index = values.get( 'Index' )
+		ntiid = values.get( 'ObjectNTIID' )
+		new_parent_ntiid = values.get( 'ParentNTIID' )
+		old_parent_ntiid = values.get( 'OldParentNTIID' )
 
-		if 		index >= len(old_keys) \
+		outline_ntiids = self._get_outline_ntiids()
+		if 		new_parent_ntiid not in outline_ntiids \
+			or ( 	old_parent_ntiid
+				and old_parent_ntiid not in outline_ntiids ):
+			raise hexc.HTTPUnprocessableEntity( 'Cannot move between outlines (old=%s) (ntiid=%s)' \
+											% (old_parent_ntiid, new_parent_ntiid) )
+
+		new_parent = find_object_with_ntiid( new_parent_ntiid )
+		if new_parent is None:
+			# Really shouldn't happen if we validate this object is in our outline.
+			raise hexc.HTTPUnprocessableEntity('Node parent no longer exists (%s)',
+												new_parent_ntiid)
+
+		# FIXME Is this right? What if they want to append on node?
+		old_keys = list( new_parent.keys() )
+		if 		index is None \
+			or	index >= len(old_keys) \
 			or 	index < 0:
 			raise hexc.HTTPConflict('Invalid index or ntiid (%s) (%s)' % (ntiid, index))
 
 		if ntiid in old_keys:
+			# Moving within our new parent.
 			old_keys.remove(ntiid)
 		else:
 			# It's a move, append to our context.
 			obj = find_object_with_ntiid(ntiid)
 			if obj is None:
 				raise hexc.HTTPUnprocessableEntity('Object no longer exists (%s)', ntiid)
-			self.context.append(obj)
+			new_parent.append(obj)
 
 		# Make sure they don't move the object within the same node and
 		# attempt to delete from that node.
-		if old_parent_ntiid and old_parent_ntiid != self.context.ntiid:
-			old_parent = find_object_with_ntiid(old_parent_ntiid)
+		if old_parent_ntiid and old_parent_ntiid != new_parent_ntiid:
+			old_parent = find_object_with_ntiid( old_parent_ntiid )
 			if old_parent is None:
 				raise hexc.HTTPUnprocessableEntity('Node parent no longer exists (%s)',
 													old_parent_ntiid)
 			del old_parent[ntiid]
 
-		principal = self.remoteUser.username
-		self._reorder_for_ntiid(ntiid, index, old_keys)
-		notify(CourseOutlineNodeMovedEvent(self.context, principal, index))
-		logger.info('Moved node (%s) to index (%s) (from=%s)', ntiid, index, old_parent_ntiid)
+		self._reorder_for_ntiid( new_parent, ntiid, index, old_keys )
+		notify(CourseOutlineNodeMovedEvent( new_parent, self.remoteUser.username, index ))
+		logger.info('Moved node (%s) to index (%s) (to=%s) (from=%s)', ntiid, index, new_parent_ntiid, old_parent_ntiid)
 		return hexc.HTTPOk()
 
 @view_config(route_name='objects.generic.traversal',
@@ -544,7 +591,7 @@ class OutlineNodePutView(OutlineNodeInsertView):
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest',
 			 name=VIEW_NODE_CONTENTS)
-class OutlineNodeDeleteView(OutlineNodeInsertView):
+class OutlineNodeDeleteView( _AbstractOutlineNodeView ):
 	"""
 	Delete the given ntiid in our context.
 	"""

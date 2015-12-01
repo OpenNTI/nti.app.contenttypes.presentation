@@ -11,6 +11,7 @@ logger = __import__('logging').getLogger(__name__)
 
 from .. import MessageFactory
 
+from .. import VIEW_NODE_MOVE
 from .. import VIEW_NODE_CONTENTS
 from .. import VIEW_OVERVIEW_CONTENT
 from .. import VIEW_OVERVIEW_SUMMARY
@@ -21,7 +22,7 @@ LEGACY_UAS_20 = ("NTIFoundation DataLoader NextThought/1.0",
 				 "NTIFoundation DataLoader NextThought/1.1",
 				 "NTIFoundation DataLoader NextThought/1.1.1",
 				 "NTIFoundation DataLoader NextThought/1.2.")
-	
+
 LEGACY_UAS_40 = LEGACY_UAS_20 + \
 				("NTIFoundation DataLoader NextThought/1.3.",
 				 "NTIFoundation DataLoader NextThought/1.4.0")

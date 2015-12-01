@@ -14,6 +14,11 @@
 				for="nti.contenttypes.courses.interfaces.ICourseOutline
 					 pyramid.interfaces.IRequest" />
 
+	<subscriber factory=".outlines._CourseOutlineMoveLinkDecorator"
+				provides="nti.externalization.interfaces.IExternalMappingDecorator"
+				for="nti.contenttypes.courses.interfaces.ICourseOutline
+					 pyramid.interfaces.IRequest" />
+
 	<subscriber factory=".outlines._CourseOutlineEditLinkDecorator"
 				provides="nti.externalization.interfaces.IExternalMappingDecorator"
 				for="nti.contenttypes.courses.interfaces.ICourseOutlineNode
