@@ -76,7 +76,6 @@ from nti.externalization.oids import to_external_ntiid_oid
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.externalization import to_external_object
-from nti.externalization.externalization import to_external_ntiid_oid
 
 from nti.mimetype.mimetype import MIME_BASE
 
@@ -517,7 +516,6 @@ class OutlineNodeMoveView(_AbstractOutlineNodeView):
 		(Optional) The NTIID of the old parent of our moved
 		node.
 	"""
-	# FIXME: MessageFactory
 
 	def _get_outline_ntiids(self):
 		result = set()
@@ -545,21 +543,19 @@ class OutlineNodeMoveView(_AbstractOutlineNodeView):
 		if 		new_parent_ntiid not in outline_ntiids \
 			or ( 	old_parent_ntiid
 				and old_parent_ntiid not in outline_ntiids ):
-			raise hexc.HTTPUnprocessableEntity( 'Cannot move between outlines (old=%s) (ntiid=%s)' \
-											% (old_parent_ntiid, new_parent_ntiid) )
+			raise hexc.HTTPUnprocessableEntity( _('Cannot move between outlines.') )
 
 		new_parent = find_object_with_ntiid( new_parent_ntiid )
 		if new_parent is None:
 			# Really shouldn't happen if we validate this object is in our outline.
-			raise hexc.HTTPUnprocessableEntity('Node parent no longer exists (%s)',
-												new_parent_ntiid)
+			raise hexc.HTTPUnprocessableEntity(_('New node parent does not exist.'))
 
 		# FIXME Is this right? What if they want to append on node?
 		old_keys = list( new_parent.keys() )
 		if 		index is None \
 			or	index >= len(old_keys) \
 			or 	index < 0:
-			raise hexc.HTTPConflict('Invalid index or ntiid (%s) (%s)' % (ntiid, index))
+			raise hexc.HTTPConflict(_('Invalid index or ntiid state.'))
 
 		if ntiid in old_keys:
 			# Moving within our new parent.
@@ -568,7 +564,7 @@ class OutlineNodeMoveView(_AbstractOutlineNodeView):
 			# It's a move, append to our context.
 			obj = find_object_with_ntiid(ntiid)
 			if obj is None:
-				raise hexc.HTTPUnprocessableEntity('Object no longer exists (%s)', ntiid)
+				raise hexc.HTTPUnprocessableEntity(_('Object no longer exists.'))
 			new_parent.append(obj)
 
 		# Make sure they don't move the object within the same node and
@@ -576,8 +572,7 @@ class OutlineNodeMoveView(_AbstractOutlineNodeView):
 		if old_parent_ntiid and old_parent_ntiid != new_parent_ntiid:
 			old_parent = find_object_with_ntiid( old_parent_ntiid )
 			if old_parent is None:
-				raise hexc.HTTPUnprocessableEntity('Node parent no longer exists (%s)',
-													old_parent_ntiid)
+				raise hexc.HTTPUnprocessableEntity(_('Old node parent no longer exists.'))
 			del old_parent[ntiid]
 
 		self._reorder_for_ntiid( new_parent, ntiid, index, old_keys )
@@ -610,7 +605,7 @@ class OutlineNodeDeleteView( _AbstractOutlineNodeView ):
 		ntiid = values.get('ntiid')
 
 		if ntiid not in old_keys:
-			raise hexc.HTTPConflict('Invalid ntiid (%s)' % ntiid)
+			raise hexc.HTTPConflict(_('NTIID no longer present'))
 		# TODO: Can we tell when to unregister nodes (no longer contained)
 		# to avoid orphans?
 
