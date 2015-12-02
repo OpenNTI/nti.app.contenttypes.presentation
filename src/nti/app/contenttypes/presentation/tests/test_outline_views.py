@@ -574,6 +574,10 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		first_ntiid = unit_ntiids[0]
 		last_ntiid = unit_ntiids[-1]
 
+		# Direct deletes are not allowed.
+		self.testapp.delete( '/dataserver2/Objects/%s' % first_ntiid,
+							extra_environ=instructor_environ, status=404 )
+
 		# One
 		unit_data = {'ntiid': first_ntiid}
 		self.testapp.delete_json(self.outline_url, unit_data,

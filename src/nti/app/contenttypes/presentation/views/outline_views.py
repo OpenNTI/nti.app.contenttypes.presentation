@@ -510,7 +510,7 @@ class OutlineNodeMoveView(_AbstractOutlineNodeView):
 		The NTIID of the new parent node of the object being moved.
 
 	Index
-		The index at which to insert the node in our parent.
+		(Optional) The index at which to insert the node in our parent.
 
 	OldParentNTIID
 		(Optional) The NTIID of the old parent of our moved
