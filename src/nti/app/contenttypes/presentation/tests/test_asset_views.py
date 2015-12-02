@@ -83,6 +83,12 @@ class TestAssetViews(ApplicationLayerTest):
 				assert_that(container, has_key(ntiid))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
+	def test_all_assets(self):
+		res = self.testapp.get(self.assets_url, status=200)
+		assert_that(res.json_body, has_entry('Total', is_(5)))
+		assert_that(res.json_body, has_entry('Items', has_length(5)))
+
+	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_ntivideo(self):
 		source = self._load_resource('ntivideo.json')
 		source.pop('NTIID', None)

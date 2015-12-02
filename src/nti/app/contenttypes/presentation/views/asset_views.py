@@ -5,6 +5,8 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+from nti.appserver.pyramid_authorization import has_permission
+from nti.dataserver.authorization import ACT_CONTENT_EDIT
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -79,6 +81,7 @@ from nti.dataserver import authorization as nauth
 from nti.externalization.oids import to_external_ntiid_oid
 from nti.externalization.internalization import notify_modified
 from nti.externalization.externalization import to_external_object
+from nti.externalization.externalization import LocatedExternalDict
 from nti.externalization.externalization import StandardExternalFields
 
 from nti.namedfile.file import name_finder
@@ -258,6 +261,29 @@ class NoHrefAssetGetView(PresentationAssetGetView):
 		result = PresentationAssetGetView.__call__(self)
 		result = to_external_object(result)
 		interface.alsoProvides(result, INoHrefInResponse)
+		return result
+
+@view_config(context=ICourseInstance)
+@view_config(context=ICourseCatalogEntry)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   name="assets",
+			   request_method='GET',
+			   permission=nauth.ACT_READ)
+class GetCoursePresentationAssetPostView(AbstractAuthenticatedView):
+	
+	def __call__(self):
+		total = 0
+		result = LocatedExternalDict()
+		result[ITEMS] = items = {}
+		course = ICourseInstance(self.context)
+		self.request.acl_decoration = has_permission(ACT_CONTENT_EDIT, course, self.request)
+		for container in chain((course, get_course_packages(course))):
+			container = IPresentationAssetContainer(container, None) or {}
+			for item in container.values():
+				items[item.ntiid] = item
+			total += len(container)
+		result['ItemCount'] = result['Total'] = total
 		return result
 
 # POST/PUT views
