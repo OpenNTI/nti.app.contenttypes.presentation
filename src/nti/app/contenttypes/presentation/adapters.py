@@ -120,8 +120,8 @@ class _PresentationAssetExternalFieldTraverser(_AbstractExternalFieldTraverser):
 	def __init__(self, context, request=None):
 		super(_PresentationAssetExternalFieldTraverser, self).__init__(context, request=request)
 		allowed_fields = set()
-		assest_iface = iface_of_thing(context)
-		for k, v in assest_iface.namesAndDescriptions(all=True):
+		asset_iface = iface_of_thing(context)
+		for k, v in asset_iface.namesAndDescriptions(all=True):
 			__traceback_info__ = k, v
 			if interface.interfaces.IMethod.providedBy(v):
 				continue
