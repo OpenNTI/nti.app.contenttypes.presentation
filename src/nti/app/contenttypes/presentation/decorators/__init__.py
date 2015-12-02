@@ -25,6 +25,7 @@ from nti.links.links import Link
 
 from .. import MessageFactory
 
+from .. import VIEW_ASSETS
 from .. import VIEW_NODE_MOVE
 from .. import VIEW_NODE_CONTENTS
 from .. import VIEW_OVERVIEW_CONTENT

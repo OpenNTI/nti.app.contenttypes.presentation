@@ -111,7 +111,9 @@ from .view_mixins import get_file_from_link
 from .view_mixins import AbstractChildMoveView
 from .view_mixins import PublishVisibilityMixin
 
+from . import VIEW_ASSETS
 from . import VIEW_NODE_MOVE
+from . import VIEW_CONTENTS
 
 ITEMS = StandardExternalFields.ITEMS
 MIMETYPE = StandardExternalFields.MIMETYPE
@@ -267,7 +269,7 @@ class NoHrefAssetGetView(PresentationAssetGetView):
 @view_config(context=ICourseCatalogEntry)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
-			   name="assets",
+			   name=VIEW_ASSETS,
 			   request_method='GET',
 			   permission=nauth.ACT_READ)
 class GetCoursePresentationAssetPostView(AbstractAuthenticatedView):
@@ -504,7 +506,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 @view_config(context=ICourseCatalogEntry)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
-			   name="assets",
+			   name=VIEW_ASSETS,
 			   request_method='POST',
 			   permission=nauth.ACT_CONTENT_EDIT)
 class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
@@ -634,7 +636,7 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   request_method='POST',
-			   name="contents",
+			   name=VIEW_CONTENTS,
 			   permission=nauth.ACT_CONTENT_EDIT)
 class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 										ModeledContentUploadRequestUtilsMixin):
@@ -692,7 +694,7 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   request_method='POST',
-			   name="contents",
+			   name=VIEW_CONTENTS,
 			   permission=nauth.ACT_CONTENT_EDIT)
 class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 											 ModeledContentUploadRequestUtilsMixin):

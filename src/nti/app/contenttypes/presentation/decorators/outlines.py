@@ -27,13 +27,10 @@ from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.courses.interfaces import ICourseOutline
-from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 
 from nti.contenttypes.courses.utils import get_parent_course
-from nti.contenttypes.courses.utils import is_course_instructor
-from nti.contenttypes.courses.utils import get_enrollment_record
 from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -186,20 +183,3 @@ class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwar
 
 	def _do_decorate_external(self, context, result):
 		self._overview_decorate_external(context, result)
-
-@interface.implementer(IExternalMappingDecorator)
-class _MediaByOutlineNodeDecorator(AbstractAuthenticatedRequestAwareDecorator):
-
-	def _predicate(self, context, result_map):
-		course = ICourseInstance(context, None)
-		result = 	is_course_instructor(course, self.remoteUser) \
-				 or get_enrollment_record(course, self.remoteUser) is not None
-		return result
-
-	def _do_decorate_external(self, context, result_map):
-		course = ICourseInstance(context, context)
-		links = result_map.setdefault(LINKS, [])
-		link = Link(course,
-					rel='MediaByOutlineNode',
-					elements=('@@MediaByOutlineNode',))
-		links.append(link)
