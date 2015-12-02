@@ -104,6 +104,7 @@ def _on_will_remove_presentation_asset(asset, event):
 			containers = (context,)
 		for container in containers:
 			if 		INTICourseOverviewGroup.providedBy(container) \
+				and INTILessonOverview.providedBy(container) \
 				and INTIMediaRoll.providedBy(container) \
 				and INTISlideDeck.providedBy(container):
 				container.remove(asset)
