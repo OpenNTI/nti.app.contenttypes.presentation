@@ -20,7 +20,11 @@ from urlparse import urlparse
 import transaction
 
 from zope import interface
-from zope import lifecycleevent
+
+from zope.event import notify
+
+from zope.security.interfaces import NoInteraction
+from zope.security.management import getInteraction
 
 from pyramid.view import view_config
 from pyramid.view import view_defaults
@@ -68,6 +72,7 @@ from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
+from nti.contenttypes.presentation.interfaces import PresentationAssetCreatedEvent
 
 from nti.contenttypes.presentation.utils import create_from_external
 from nti.contenttypes.presentation.utils import get_external_pre_hook
@@ -132,8 +137,15 @@ def _make_asset_ntiid(nttype, creator, base=None, extra=None):
 					   specific=specific)
 	return ntiid
 
-def _notify_created(item):
-	lifecycleevent.created(item)
+def principalId():
+	try:
+		return getInteraction().participations[0].principal.id
+	except (NoInteraction, IndexError, AttributeError):
+		return None
+
+def _notify_created(item, principal=None, externalValue=None):
+	principal = principal or principalId()
+	notify(PresentationAssetCreatedEvent(item, principal, externalValue))
 	if IPublishable.providedBy(item) and item.is_published():
 		item.unpublish()
 	if IRecordable.providedBy(item):
@@ -233,7 +245,7 @@ class PresentationAssetGetView(GenericGetView):
 		accept = self.request.headers.get(b'Accept') or u''
 		if accept == 'application/vnd.nextthought.pageinfo+json':
 			raise hexc.HTTPNotAcceptable()
-		if not self._is_visible( self.context ):
+		if not self._is_visible(self.context):
 			raise hexc.HTTPForbidden(_("Item not visible."))
 		result = GenericGetView.__call__(self)
 		return result
@@ -324,7 +336,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		if not item.target:
 			href = item.href
 			parsed = urlparse(href) if href else None
-			if href and parsed.scheme or parsed.netloc: # full url
+			if href and parsed.scheme or parsed.netloc:  # full url
 				ntiid = make_ntiid(nttype=TYPE_UUID,
 								   provider='NTI',
 								   specific=hexdigest(item.href))
@@ -452,35 +464,35 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 		contentObject = self.checkContentObject(contentObject, externalValue)
 		contentObject.creator = getattr(creator, 'username', creator)  # use string
 		self.updateContentObject(contentObject, externalValue, set_id=True, notify=False)
-		return contentObject
+		return contentObject, externalValue
 
 	def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
-		contentObject = self.parseInput(creator, search_owner, externalValue)
+		contentObject, externalValue = self.parseInput(creator, search_owner, externalValue)
 		sources = get_all_sources(self.request)
 		if sources:  # multi-part data
 			_handle_multipart(self._course, contentObject, sources)
-		return contentObject
+		return contentObject, externalValue
 
 	def _do_call(self):
 		creator = self.remoteUser
-		content_object = self.readCreateUpdateContentObject(creator)
-		content_object.creator = creator.username  # use string
-		provided = iface_of_asset(content_object)
+		contentObject, externalValue = self.readCreateUpdateContentObject(creator)
+		contentObject.creator = creator.username  # use string
+		provided = iface_of_asset(contentObject)
 
 		# check item does not exists and notify
-		self._check_exists(provided, content_object, creator)
-		_notify_created(content_object)
+		self._check_exists(provided, contentObject, creator)
+		_notify_created(contentObject, self.remoteUser.username, externalValue)
 
 		# add to connection and register
-		intid_register(content_object, registry=self._registry)
+		intid_register(contentObject, registry=self._registry)
 		registerUtility(self._registry,
-						component=content_object,
+						component=contentObject,
 						provided=provided,
-						name=content_object.ntiid)
+						name=contentObject.ntiid)
 
 		self.request.response.status_int = 201
-		self._handle_asset(provided, content_object, creator.username)
-		return content_object
+		self._handle_asset(provided, contentObject, creator.username)
+		return contentObject
 
 @view_config(context=IPresentationAsset)
 @view_defaults(route_name='objects.generic.traversal',
@@ -596,7 +608,7 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 
 		# check item does not exists and notify
 		self._check_exists(provided, contentObject, creator)
-		_notify_created(contentObject)
+		_notify_created(contentObject, self.remoteUser.username, externalValue)
 
 		# add to connection and register
 		intid_register(contentObject, registry=self._registry)
@@ -654,7 +666,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 
 		# check item does not exists and notify
 		self._check_exists(provided, contentObject, creator)
-		_notify_created(contentObject)
+		_notify_created(contentObject, self.remoteUser.username, externalValue)
 
 		# add to connection and register
 		intid_register(contentObject, registry=self._registry)
