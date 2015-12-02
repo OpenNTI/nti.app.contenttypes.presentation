@@ -315,13 +315,15 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 	def _handle_related_work(self, provided, item, creator, extended=None):
 		self._handle_package_asset(provided, item, creator, extended)
 		if not item.target:
-			parsed = urlparse(item.href)
-			if parsed.scheme or parsed.netloc: # full url
+			href = item.href
+			parsed = urlparse(href) if href else None
+			if href and parsed.scheme or parsed.netloc: # full url
 				ntiid = make_ntiid(nttype=TYPE_UUID,
 								   provider='NTI',
 								   specific=hexdigest(item.href))
 			else:
-				pass
+				named = get_file_from_link(href) if href else None
+				ntiid = to_external_ntiid_oid(named) if named is not None else None
 			item.target = ntiid
 
 	def _handle_media_roll(self, provided, item, creator, extended=None):
