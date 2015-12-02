@@ -77,8 +77,8 @@ from ..utils import get_enrollment_record as get_any_enrollment_record
 
 from . import LEGACY_UAS_40
 from . import ORDERED_CONTENTS
-
 from . import is_legacy_uas
+from . import _AbstractMoveLinkDecorator
 
 NTIID = StandardExternalFields.NTIID
 LINKS = StandardExternalFields.LINKS
@@ -116,6 +116,11 @@ class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecor
 		link.__name__ = ''
 		link.__parent__ = context
 		_links.append(link)
+
+@component.adapter(INTILessonOverview)
+@interface.implementer(IExternalMappingDecorator)
+class _LessonMoveLinkDecorator( _AbstractMoveLinkDecorator ):
+	pass
 
 @component.adapter(INTILessonOverview)
 @component.adapter(INTICourseOverviewGroup)
@@ -193,7 +198,7 @@ class _NTIMediaRollDecorator(_VisibleMixinDecorator):
 		# remove disallowed items
 		if removal:
 			result[ITEMS] = [x for idx, x in enumerate(items) if idx not in removal]
-			
+
 		if self.is_legacy_ipad:
 			result['collectionItems'] = result[ITEMS]
 			del result[ITEMS]

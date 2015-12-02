@@ -262,14 +262,13 @@ class NoHrefAssetGetView(PresentationAssetGetView):
 
 # POST/PUT views
 
-@view_config(context=INTILessonOverview)
-@view_config(context=INTICourseOverviewGroup)
-@view_defaults(route_name='objects.generic.traversal',
+@view_config(route_name='objects.generic.traversal',
 			 request_method='POST',
+			 context=INTILessonOverview,
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest',
 			 name=VIEW_NODE_MOVE)
-class ObjectMoveView( AbstractChildMoveView ):
+class LessonOverviewMoveView( AbstractChildMoveView ):
 	"""
 	Move the given object between lessons or overview groups.
 	"""

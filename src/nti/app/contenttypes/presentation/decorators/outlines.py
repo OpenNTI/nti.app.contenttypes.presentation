@@ -48,11 +48,11 @@ from nti.externalization.singleton import SingletonDecorator
 from nti.links.links import Link
 from nti.links.externalization import render_link
 
-from . import VIEW_NODE_MOVE
 from . import LEGACY_UAS_20
 from . import ORDERED_CONTENTS
 from . import VIEW_OVERVIEW_CONTENT
 from . import VIEW_OVERVIEW_SUMMARY
+from . import _AbstractMoveLinkDecorator
 
 from . import is_legacy_uas
 
@@ -107,19 +107,8 @@ class _CourseOutlineSharedDecorator(object):
 
 @component.adapter(ICourseOutline)
 @interface.implementer(IExternalMappingDecorator)
-class _CourseOutlineMoveLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
-
-	def _predicate(self, context, result):
-		return 		self._is_authenticated \
-				and has_permission(ACT_CONTENT_EDIT, context, self.request)
-
-	def _do_decorate_external(self, context, result):
-		links = result.setdefault(LINKS, [])
-		link = Link(context, rel=VIEW_NODE_MOVE, elements=(VIEW_NODE_MOVE,))
-		interface.alsoProvides(link, ILocation)
-		link.__name__ = ''
-		link.__parent__ = context
-		links.append(link)
+class _CourseOutlineMoveLinkDecorator( _AbstractMoveLinkDecorator ):
+	pass
 
 @component.adapter(ICourseOutlineNode)
 @interface.implementer(IExternalMappingDecorator)

@@ -47,6 +47,11 @@
 					 pyramid.interfaces.IRequest" />
 
 	<!-- Assets -->
+	<subscriber factory=".assets._LessonMoveLinkDecorator"
+				provides="nti.externalization.interfaces.IExternalMappingDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTILessonOverview
+					 pyramid.interfaces.IRequest" />
+
 	<subscriber factory=".assets._NTIAssetOrderedContentsLinkDecorator"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"
 				for="nti.contenttypes.presentation.interfaces.INTILessonOverview

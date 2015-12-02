@@ -53,6 +53,8 @@ from nti.dataserver.tests import mock_dataserver
 
 from nti.app.products.courseware.tests import InstructedCourseApplicationTestLayer
 
+from nti.app.contenttypes.presentation import VIEW_NODE_MOVE
+
 class TestAssetViews(ApplicationLayerTest):
 
 	layer = InstructedCourseApplicationTestLayer
@@ -229,6 +231,8 @@ class TestAssetViews(ApplicationLayerTest):
 		# post
 		res = self.testapp.post_json(self.assets_url, source, status=201)
 		assert_that(res.json_body, has_entry('ntiid', is_not(none())))
+		self.require_link_href_with_rel(res.json_body, VIEW_NODE_MOVE)
+
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			ntiid = res.json_body['ntiid']
 			href = res.json_body['href']

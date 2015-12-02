@@ -84,7 +84,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 
 	def setUp(self):
 		self.instructor_username = 'tryt3968'
-		self.instructor_environ = self._make_extra_environ(username=self.instructor_username)
+		self.instructor_environ = self._make_extra_environ( username=self.instructor_username )
 
 	def _get_move_json(self, obj_ntiid, new_parent_ntiid, index=None, old_parent_ntiid=None):
 		result = { 'ObjectNTIID': obj_ntiid,
