@@ -9,6 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from .. import MessageFactory as _
+
 import os
 import hashlib
 from urllib import unquote
@@ -273,7 +275,7 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 			# Really shouldn't happen if we validate this object is in our outline.
 			raise hexc.HTTPUnprocessableEntity(_('New parent does not exist.'))
 
-		if index < 0:
+		if index is not None and index < 0:
 			raise hexc.HTTPBadRequest(_('Invalid index.'))
 
 		self._add_to_parent(new_parent, obj, index)

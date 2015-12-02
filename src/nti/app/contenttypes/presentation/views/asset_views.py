@@ -314,7 +314,11 @@ class LessonOverviewMoveView( AbstractChildMoveView ):
 		# TODO: Probably need to add an object level API.
 		# Remove from our list if it exists, and then insert at.
 		parent.remove(obj)
-		parent.items.insert( index, obj )
+		if index is None or index >= len( parent.Items ):
+			# Default to append.
+			parent.append( obj )
+		else:
+			parent.items.insert( index, obj )
 
 	def _get_children_ntiids(self, parent_ntiid):
 		result = set()
@@ -323,8 +327,11 @@ class LessonOverviewMoveView( AbstractChildMoveView ):
 			val = getattr(node, 'ntiid', None)
 			if val:
 				result.add(val)
-			for child in node.items():
-				_recur(child)
+			try:
+				for child in node.Items:
+					_recur(child)
+			except AttributeError:
+				pass
 
 		_recur( self.context )
 		return result
@@ -456,6 +463,9 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		# add to course container
 		containers = _add_2_container(self._course, lesson, pacakges=False)
 
+		# Make sure we validate before canonicalize.
+		for item in lesson.Items:
+			self._check_exists(INTICourseOverviewGroup, item, creator)
 		# have unique copies of lesson groups
 		_canonicalize(lesson.Items, creator, registry=self._registry, base=lesson.ntiid)
 
@@ -470,7 +480,6 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 			# take ownership
 			group.__parent__ = lesson
-			self._check_exists(INTICourseOverviewGroup, group, creator)
 			self._handle_overview_group(group,
 										creator=creator,
 										extended=item_extended)

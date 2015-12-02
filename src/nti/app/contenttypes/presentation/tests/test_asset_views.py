@@ -237,7 +237,6 @@ class TestAssetViews(ApplicationLayerTest):
 		# post
 		res = self.testapp.post_json(self.assets_url, source, status=201)
 		assert_that(res.json_body, has_entry('ntiid', is_not(none())))
-		self.require_link_href_with_rel(res.json_body, VIEW_NODE_MOVE)
 
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			ntiid = res.json_body['ntiid']
@@ -285,3 +284,116 @@ class TestAssetViews(ApplicationLayerTest):
 			catalog = get_library_catalog()
 			containers = catalog.get_containers(obj)
 			assert_that(ntiid, is_in(containers))
+
+	def _get_move_json(self, obj_ntiid, new_parent_ntiid, index=None, old_parent_ntiid=None):
+		result = { 'ObjectNTIID': obj_ntiid,
+					'ParentNTIID': new_parent_ntiid }
+		if index is not None:
+			result['Index'] = index
+		if old_parent_ntiid is not None:
+			result['OldParentNTIID'] = old_parent_ntiid
+		return result
+
+	@WithSharedApplicationMockDS(testapp=True, users=True)
+	def test_moves(self):
+		source = self._load_resource('lesson_overview.json')
+		# Remove all NTIIDs so things get registered.
+		def _remove_ntiids( obj ):
+			obj.pop( 'NTIID', None )
+			for item in obj.get( 'Items', () ):
+				_remove_ntiids( item )
+		_remove_ntiids( source )
+		res = self.testapp.post_json(self.assets_url, source, status=201)
+		res = res.json_body
+
+		move_link = self.require_link_href_with_rel( res, VIEW_NODE_MOVE )
+		lesson_ntiid = res.get( 'NTIID' )
+		lesson_url = '/dataserver2/Objects/%s' % lesson_ntiid
+		groups = res.get( 'Items' )
+		original_group_count = len( groups )
+		first_group_ntiid = groups[0].get( 'NTIID' )
+		last_group_ntiid = groups[-1].get( 'NTIID' )
+
+		# Move our last item to first
+		move_data = self._get_move_json(last_group_ntiid, lesson_ntiid, 0, lesson_ntiid)
+		self.testapp.post_json( move_link, move_data )
+
+		res = self.testapp.get( lesson_url )
+		res = res.json_body
+		groups = res.get( 'Items' )
+		assert_that( groups, has_length( original_group_count ))
+		assert_that( groups[0].get( 'NTIID' ), is_( last_group_ntiid ))
+		assert_that( groups[1].get( 'NTIID' ), is_( first_group_ntiid ))
+		assert_that( groups[-1].get( 'NTIID' ), is_not( first_group_ntiid ))
+
+		# Move the item back to the end
+		move_data = self._get_move_json(last_group_ntiid, lesson_ntiid)
+		self.testapp.post_json( move_link, move_data )
+
+		res = self.testapp.get( lesson_url )
+		res = res.json_body
+		groups = res.get( 'Items' )
+		assert_that( groups, has_length( original_group_count ))
+		assert_that( groups[0].get( 'NTIID' ), is_( first_group_ntiid ))
+		assert_that( groups[-1].get( 'NTIID' ), is_( last_group_ntiid ))
+
+		# Overview groups
+		source_group_index = 0
+		target_group_index = 3
+		source_group = groups[ source_group_index ]
+		source_group_ntiid = source_group.get( 'NTIID' )
+		target_group = groups[ target_group_index ]
+		target_group_ntiid = target_group.get( 'NTIID' )
+		group_items = source_group.get( 'Items' )
+		original_source_group_size = len( group_items )
+		original_target_group_size = len( target_group.get( 'Items' ) )
+		first_asset_ntiid = group_items[0].get( 'NTIID' )
+		last_asset_ntiid = group_items[-1].get( 'NTIID' )
+
+		# Move within an overview group
+		move_data = self._get_move_json(first_asset_ntiid, source_group_ntiid)
+		self.testapp.post_json( move_link, move_data )
+
+		res = self.testapp.get( lesson_url )
+		res = res.json_body
+		groups = res.get( 'Items' )
+		assert_that( len( groups ), is_( original_group_count ))
+		new_source_group = groups[ source_group_index ]
+		new_source_group_items = new_source_group.get( 'Items' )
+		assert_that( new_source_group_items, has_length( original_source_group_size ))
+		assert_that( new_source_group_items[-2].get( 'NTIID' ), is_( last_asset_ntiid ))
+		assert_that( new_source_group_items[-1].get( 'NTIID' ), is_( first_asset_ntiid ))
+
+		# Move between overview groups
+		move_data = self._get_move_json(first_asset_ntiid, target_group_ntiid, 0, source_group_ntiid)
+		self.testapp.post_json( move_link, move_data )
+
+		res = self.testapp.get( lesson_url )
+		res = res.json_body
+		groups = res.get( 'Items' )
+		assert_that( len( groups ), is_( original_group_count ))
+		new_source_group = groups[ source_group_index ]
+		new_target_group = groups[ target_group_index ]
+		new_source_group_items = new_source_group.get( 'Items' )
+		new_target_group_items = new_target_group.get( 'Items' )
+		assert_that( new_source_group_items, has_length( original_source_group_size - 1 ))
+		assert_that( new_target_group_items, has_length( original_target_group_size + 1 ))
+		assert_that( new_source_group_items[-1].get( 'NTIID' ), is_not( first_asset_ntiid ))
+		assert_that( new_target_group_items[0].get( 'NTIID' ), is_( first_asset_ntiid ))
+
+		# Move back to original group
+		move_data = self._get_move_json(first_asset_ntiid, source_group_ntiid, 0, target_group_ntiid )
+		self.testapp.post_json( move_link, move_data )
+
+		res = self.testapp.get( lesson_url )
+		res = res.json_body
+		groups = res.get( 'Items' )
+		assert_that( len( groups ), is_( original_group_count ))
+		new_source_group = groups[ source_group_index ]
+		new_target_group = groups[ target_group_index ]
+		new_source_group_items = new_source_group.get( 'Items' )
+		new_target_group_items = new_target_group.get( 'Items' )
+		assert_that( new_source_group_items, has_length( original_source_group_size ))
+		assert_that( new_target_group_items, has_length( original_target_group_size ))
+		assert_that( new_source_group_items[0].get( 'NTIID' ), is_( first_asset_ntiid ))
+		assert_that( new_target_group_items[0].get( 'NTIID' ), is_not( first_asset_ntiid ))

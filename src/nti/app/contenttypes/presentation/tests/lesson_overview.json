@@ -18,6 +18,32 @@
                     "target-NTIID": "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.reading:Unit_11_TakeAways",
                     "icon": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/51cb5263e124331904368a3bee2a56e54dcc30f6/fd35e23767020999111e1f49239199b4c5eff23e.jpg",
                     "desc": "Top Take-Aways for this unit"
+                },
+                {
+                    "MimeType": "application/vnd.nextthought.relatedworkref",
+                    "targetMimeType": "application/vnd.nextthought.content",
+                    "creator": "Steven M. Gillon",
+                    "section": "required",
+                    "visibility": "everyone",
+                    "label": "Unit 11 Top Take-Aways2",
+                    "NTIID": "tag:nextthought.com,2011-10:OU-RelatedWorkRef-LSTD1153_S_2015_History_United_States_1865_to_Present.relatedworkref.relwk:unit_11_takeaways2",
+                    "href": "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.reading:Unit_11_TakeAways2",
+                    "target-NTIID": "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.reading:Unit_11_TakeAways2",
+                    "icon": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/51cb5263e124331904368a3bee2a56e54dcc30f6/fd35e23767020999111e1f49239199b4c5eff23e.jpg",
+                    "desc": "Top Take-Aways for this unit2"
+                },
+                {
+                    "MimeType": "application/vnd.nextthought.relatedworkref",
+                    "targetMimeType": "application/vnd.nextthought.content",
+                    "creator": "Steven M. Gillon",
+                    "section": "required",
+                    "visibility": "everyone",
+                    "label": "Unit 11 Top Take-Aways3",
+                    "NTIID": "tag:nextthought.com,2011-10:OU-RelatedWorkRef-LSTD1153_S_2015_History_United_States_1865_to_Present.relatedworkref.relwk:unit_11_takeaways3",
+                    "href": "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.reading:Unit_11_TakeAways3",
+                    "target-NTIID": "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.reading:Unit_11_TakeAways3",
+                    "icon": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/51cb5263e124331904368a3bee2a56e54dcc30f6/fd35e23767020999111e1f49239199b4c5eff23e.jpg",
+                    "desc": "Top Take-Aways for this unit3"
                 }
             ],
             "title": "Required Resources"
@@ -77,6 +103,13 @@
                     "visibility": "everyone",
                     "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_ov8bvmqy/width/1280/",
                     "label": "Academic Integrity at OU"
+                },
+                {
+                    "MimeType": "application/vnd.nextthought.ntivideo",
+                    "NTIID": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Integrity2",
+                    "visibility": "everyone",
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_ov8bvmqy/width/1280/",
+                    "label": "Academic Integrity at OU Part 2, The Revenge"
                 }
             ],
             "title": "Additional Resources"

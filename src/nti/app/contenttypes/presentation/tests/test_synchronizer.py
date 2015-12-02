@@ -69,12 +69,12 @@ class TestSynchronizer(ApplicationLayerTest):
 
 		_index_overview_items((result,), container_ntiids='xxx')
 
-		result = _remove_from_registry(container_ntiids='xxx', 
+		result = _remove_from_registry(container_ntiids='xxx',
 									   provided=INTICourseOverviewGroup,
 									   registry=registry)
 		assert_that(result, has_length(4))
 
-		result = _remove_from_registry(container_ntiids='xxx', 
+		result = _remove_from_registry(container_ntiids='xxx',
 									   provided=INTILessonOverview,
 									   registry=registry)
 		assert_that(result, has_length(1))
@@ -91,4 +91,4 @@ class TestSynchronizer(ApplicationLayerTest):
 		_, removed = _load_and_register_lesson_overview_json(source, registry=registry)
 		assert_that(removed, has_length(0))
 		_, removed = _load_and_register_lesson_overview_json(source, registry=registry)
-		assert_that(removed, has_length(10))
+		assert_that(removed, has_length(11))

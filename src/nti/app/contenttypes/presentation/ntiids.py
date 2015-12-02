@@ -53,7 +53,7 @@ class _PresentationResolver(object):
 
 class _NTIAudioRefResolver(_PresentationResolver):
 	_ext_iface = INTIAudioRef
-	
+
 class _NTIAudioResolver(_PresentationResolver):
 	_ext_iface = INTIAudio
 
@@ -65,7 +65,7 @@ class _NTIVideoResolver(_PresentationResolver):
 
 class _NTIAudioRollRefResolver(_PresentationResolver):
 	_ext_iface = INTIAudioRollRef
-	
+
 class _NTIAudioRollResolver(_PresentationResolver):
 	_ext_iface = INTIAudioRoll
 
