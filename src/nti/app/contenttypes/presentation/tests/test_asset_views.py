@@ -197,13 +197,13 @@ class TestAssetViews(ApplicationLayerTest):
 		source = self._load_resource('relatedwork.json')
 		source.pop('NTIID', None)
 		assert_that(source, has_entry('icon','http://bleach.com/aizen.jpg'))
-
+		
 		mc_ri.is_callable().with_args().returns(source)
 		mc_gaf.is_callable().with_args().returns({})
 		mc_lnk.is_callable().with_args().returns('http://bleach.org/ichigo.png')
 
 		contents_url = href + '/@@contents'
-		res = self.testapp.post(contents_url, 
+		res = self.testapp.post(contents_url,
 								upload_files=[('icon', 'ichigo.png', b'ichigo')],
 								status=201)
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
@@ -214,6 +214,12 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj, has_property('Items', has_length(2)))
 			history  = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(2))
+			
+			rel_ntiid = res.json_body['ntiid']
+			obj = find_object_with_ntiid(rel_ntiid)
+			catalog = get_library_catalog()
+			containers = catalog.get_containers(obj)
+			assert_that(ntiid, is_in(containers))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_lesson(self):
@@ -261,5 +267,12 @@ class TestAssetViews(ApplicationLayerTest):
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, has_property('Items', has_length(2)))
-			history  = ITransactionRecordHistory(obj)
+			history = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(2))
+			
+			group_ntiid = res.json_body['ntiid']
+			obj = find_object_with_ntiid(group_ntiid)
+			catalog = get_library_catalog()
+			containers = catalog.get_containers(obj)
+			assert_that(ntiid, is_in(containers))
+			
