@@ -5,8 +5,6 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-from nti.appserver.pyramid_authorization import has_permission
-from nti.dataserver.authorization import ACT_CONTENT_EDIT
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -14,7 +12,6 @@ logger = __import__('logging').getLogger(__name__)
 from .. import MessageFactory as _
 
 import six
-import time
 import uuid
 from itertools import chain
 from urlparse import urlparse
@@ -41,10 +38,10 @@ from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtils
 
 from nti.appserver.ugd_edit_views import UGDPutView
 from nti.appserver.ugd_edit_views import UGDDeleteView
+from nti.appserver.pyramid_authorization import has_permission
 from nti.appserver.dataserver_pyramid_views import GenericGetView
 
 from nti.common.property import Lazy
-from nti.common.time import time_to_64bit_int
 
 from nti.coremetadata.interfaces import IPublishable
 
@@ -77,6 +74,7 @@ from nti.contenttypes.presentation.utils import create_from_external
 from nti.contenttypes.presentation.utils import get_external_pre_hook
 
 from nti.dataserver import authorization as nauth
+from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.externalization.oids import to_external_ntiid_oid
 from nti.externalization.internalization import notify_modified
@@ -89,11 +87,11 @@ from nti.namedfile.file import safe_filename
 
 from nti.ntiids.ntiids import TYPE_UUID
 from nti.ntiids.ntiids import make_ntiid
-from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
-from nti.ntiids.ntiids import make_specific_safe
 
 from nti.site.utils import registerUtility
+
+from ..synchronizer import make_asset_ntiid
 
 from ..utils import get_course_packages
 from ..utils import get_presentation_asset_courses
@@ -119,30 +117,6 @@ ITEMS = StandardExternalFields.ITEMS
 MIMETYPE = StandardExternalFields.MIMETYPE
 
 # helper functions
-
-def _make_asset_ntiid(nttype, creator, base=None, extra=None):
-	if not isinstance(nttype, six.string_types):
-		nttype = nttype.__name__[1:]
-
-	current_time = time_to_64bit_int(time.time())
-	creator = getattr(creator, 'username', creator)
-	provider = get_provider(base) or 'NTI' if base else 'NTI'
-
-	specific_base = get_specific(base) if base else None
-	if specific_base:
-		specific_base += '.%s.%s' % (creator, current_time)
-	else:
-		specific_base = '%s.%s' % (creator, current_time)
-
-	if extra:
-		specific_base = specific_base + ".%s" % extra
-	specific = make_specific_safe(specific_base)
-
-	ntiid = make_ntiid(nttype=nttype,
-					   base=base,
-					   provider=provider,
-					   specific=specific)
-	return ntiid
 
 def principalId():
 	try:
@@ -193,7 +167,7 @@ def _canonicalize(items, creator, base=None, registry=None):
 		created = True
 		provided = iface_of_asset(item)
 		if not item.ntiid:
-			item.ntiid = _make_asset_ntiid(provided, creator, base=base, extra=idx)
+			item.ntiid = make_asset_ntiid(provided, creator, base=base, extra=idx)
 		else:
 			stored = registry.queryUtility(provided, name=item.ntiid)
 			if stored is not None:
@@ -376,7 +350,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 			if self._registry.queryUtility(provided, name=ntiid):
 				raise hexc.HTTPUnprocessableEntity(_("Asset already exists."))
 		else:
-			item.ntiid = _make_asset_ntiid(provided, creator, extra=self._extra)
+			item.ntiid = make_asset_ntiid(provided, creator, extra=self._extra)
 		return item
 
 	def _handle_package_asset(self, provided, item, creator, extended=None):

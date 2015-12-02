@@ -46,7 +46,6 @@ from nti.app.products.courseware.interfaces import ICourseRootFolder
 from nti.appserver.pyramid_authorization import has_permission
 
 from nti.common.maps import CaseInsensitiveDict
-
 from nti.common.random import generate_random_hex_string
 
 from nti.coremetadata.interfaces import IPublishable

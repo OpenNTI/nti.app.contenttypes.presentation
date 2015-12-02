@@ -19,8 +19,11 @@ from zope import component
 
 from ZODB.interfaces import IConnection
 
+from nti.common.time import time_to_64bit_int
+
 from nti.coremetadata.interfaces import IRecordable
 from nti.coremetadata.interfaces import IPublishable
+from nti.coremetadata.interfaces import SYSTEM_USER_ID
 
 from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
@@ -40,8 +43,10 @@ from nti.contenttypes.presentation.utils import create_lessonoverview_from_exter
 from nti.externalization.interfaces import StandardExternalFields
 
 from nti.ntiids.ntiids import make_ntiid
+from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_provider_safe
+from nti.ntiids.ntiids import make_specific_safe
 from nti.ntiids.ntiids import is_valid_ntiid_string
 
 from nti.recorder.record import copy_transaction_history
@@ -121,6 +126,31 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 			return (True, item)
 		return (False, registered)
 	return (False, None)
+
+def _make_asset_ntiid(nttype, creator=SYSTEM_USER_ID, base=None, extra=None):
+	if not isinstance(nttype, six.string_types):
+		nttype = nttype.__name__[1:]
+
+	current_time = time_to_64bit_int(time.time())
+	creator = getattr(creator, 'username', creator)
+	provider = get_provider(base) or 'NTI' if base else 'NTI'
+
+	specific_base = get_specific(base) if base else None
+	if specific_base:
+		specific_base += '.%s.%s' % (creator, current_time)
+	else:
+		specific_base = '%s.%s' % (creator, current_time)
+
+	if extra:
+		specific_base = specific_base + ".%s" % extra
+	specific = make_specific_safe(specific_base)
+
+	ntiid = make_ntiid(nttype=nttype,
+					   base=base,
+					   provider=provider,
+					   specific=specific)
+	return ntiid
+make_asset_ntiid = _make_asset_ntiid
 
 # Courses
 
