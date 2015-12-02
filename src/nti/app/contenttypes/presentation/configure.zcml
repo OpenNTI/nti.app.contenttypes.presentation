@@ -100,6 +100,7 @@
 	<!-- Events -->
 	<subscriber handler=".subscribers._on_outlinenode_unregistered" />
 	<subscriber handler=".subscribers._on_course_instance_available" />
+	<subscriber handler=".subscribers._on_item_asset_containter_modified" />
 	<subscriber handler=".subscribers._on_will_remove_presentation_asset" />
 	<subscriber handler=".subscribers._on_will_remove_course_overview_group" />
 

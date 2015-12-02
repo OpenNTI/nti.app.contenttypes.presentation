@@ -15,7 +15,16 @@ from zope import component
 
 from zope.interface.interfaces import IUnregistered
 
+from zope.event import notify
+
 from zope.lifecycleevent import IObjectRemovedEvent
+
+from zope.security.interfaces import NoInteraction
+from zope.security.management import getInteraction
+
+from ZODB.utils import serial_repr
+
+from nti.coremetadata.interfaces import IRecordable
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
@@ -26,16 +35,23 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
+from nti.contenttypes.presentation.interfaces import TRX_ASSET_REMOVED_FROM_ITEM_ASSET_CONTAINER
+
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
-from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import IPresentationAsset
+from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import IWillRemovePresentationAssetEvent
+from nti.contenttypes.presentation.interfaces import ItemRemovedFromItemAssetContainerEvent
+from nti.contenttypes.presentation.interfaces import IItemRemovedFromItemAssetContainerEvent
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
+from nti.recorder.record import append_records
+from nti.recorder.record import TransactionRecord
 from nti.recorder.record import remove_transaction_history
 
 from .utils import get_course_packages
@@ -45,6 +61,14 @@ from .synchronizer import clear_course_assets
 from .synchronizer import clear_namespace_last_modified
 from .synchronizer import remove_and_unindex_course_assets
 from .synchronizer import synchronize_course_lesson_overview
+
+# interaction
+
+def principal():
+	try:
+		return getInteraction().participations[0].principal
+	except (NoInteraction, IndexError, AttributeError):
+		return None
 
 # courses
 
@@ -94,6 +118,18 @@ def _on_will_remove_course_overview_group(group, event):
 	if INTILessonOverview.providedBy(lesson):
 		lesson.remove(group)
 
+@component.adapter(IItemAssetContainer, IItemRemovedFromItemAssetContainerEvent)
+def _on_item_asset_containter_modified(container, event):
+	principal = principal()
+	if principal is not None and IRecordable.providedBy(container):
+		tid = getattr(container, '_p_serial', None)
+		tid = unicode(serial_repr(tid)) if tid else None
+		record = TransactionRecord(type=TRX_ASSET_REMOVED_FROM_ITEM_ASSET_CONTAINER,
+								   principal=principal.id,
+								   tid=tid)
+		append_records(container, (record,))
+		container.locked = True
+
 @component.adapter(IPresentationAsset, IWillRemovePresentationAssetEvent)
 def _on_will_remove_presentation_asset(asset, event):
 	# remove from containers
@@ -106,8 +142,11 @@ def _on_will_remove_presentation_asset(asset, event):
 			if 		INTICourseOverviewGroup.providedBy(container) \
 				and INTILessonOverview.providedBy(container) \
 				and INTIMediaRoll.providedBy(container) \
-				and INTISlideDeck.providedBy(container):
-				container.remove(asset)
+				and INTISlideDeck.providedBy(container) \
+				and container.remove(asset):
+				# XXX: notify the item asset container has been modified
+				# when an underlying asset has been removed
+				notify(ItemRemovedFromItemAssetContainerEvent(container, asset))
 			else:
 				mapping = IPresentationAssetContainer(container, None)
 				if mapping is not None:
