@@ -41,9 +41,13 @@ from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtils
 
 from nti.app.products.courseware.interfaces import ICourseRootFolder
 
+from nti.appserver.pyramid_authorization import has_permission
+
 from nti.common.maps import CaseInsensitiveDict
 
 from nti.common.random import generate_random_hex_string
+
+from nti.coremetadata.interfaces import IPublishable
 
 from nti.contentfile.model import ContentBlobFile
 from nti.contentfile.model import ContentBlobImage
@@ -57,6 +61,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation.interfaces import WillRemovePresentationAssetEvent
+
+from nti.dataserver import authorization as nauth
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 from nti.ntiids.ntiids import is_valid_ntiid_string as is_valid_ntiid
@@ -280,3 +286,14 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 		logger.info('Moved item (%s) at index (%s) (to=%s) (from=%s)',
 					ntiid, index, new_parent_ntiid, old_parent_ntiid)
 		return hexc.HTTPOk()
+
+class PublishVisibilityMixin(object):
+
+	def _is_visible(self, item):
+		"""
+		Define whether this possibly publishable object is visible to the
+		remote user.
+		"""
+		return 		not IPublishable.providedBy(item) \
+				or 	item.is_published() \
+				or	has_permission(nauth.ACT_CONTENT_EDIT, item, self.request)

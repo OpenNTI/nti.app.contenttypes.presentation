@@ -94,6 +94,7 @@ from ..utils import get_enrollment_record
 from .view_mixins import remove_asset
 from .view_mixins import component_registry
 from .view_mixins import AbstractChildMoveView
+from .view_mixins import PublishVisibilityMixin
 
 from . import VIEW_NODE_MOVE
 from . import VIEW_NODE_CONTENTS
@@ -153,11 +154,12 @@ class OutlineLessonOverviewMixin(object):
 			 renderer='rest',
 			 name=VIEW_OVERVIEW_CONTENT)
 class OutlineLessonOverviewView(AbstractAuthenticatedView,
-								OutlineLessonOverviewMixin):
+								OutlineLessonOverviewMixin,
+								PublishVisibilityMixin):
 
 	def __call__(self):
 		lesson = self._get_lesson()
-		if not IPublishable.providedBy(lesson) or lesson.is_published():
+		if self._is_visible( lesson ):
 			self.request.acl_decoration = self._can_edit_lesson(lesson)
 			external = to_external_object(lesson, name="render")
 			external.lastModified = external[LAST_MODIFIED] = lesson.lastModified
@@ -586,12 +588,7 @@ class OutlineNodeFieldPutView(UGDPutView):
 			 request_method='GET',
 			 permission=nauth.ACT_READ,
 			 renderer='rest')
-class OutlineNodeGetView(AbstractAuthenticatedView):
-
-	def _is_visible(self, item):
-		return 		not IPublishable.providedBy(item) \
-				or 	item.is_published() \
-				or	has_permission(nauth.ACT_CONTENT_EDIT, item, self.request)
+class OutlineNodeGetView(AbstractAuthenticatedView, PublishVisibilityMixin):
 
 	def __call__(self):
 		if self._is_visible(self.context):

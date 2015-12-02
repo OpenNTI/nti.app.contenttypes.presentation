@@ -41,8 +41,6 @@ from nti.appserver.ugd_edit_views import UGDPutView
 from nti.appserver.ugd_edit_views import UGDDeleteView
 from nti.appserver.dataserver_pyramid_views import GenericGetView
 
-from nti.appserver.pyramid_authorization import has_permission
-
 from nti.common.property import Lazy
 from nti.common.time import time_to_64bit_int
 
@@ -107,6 +105,10 @@ from .view_mixins import get_render_link
 from .view_mixins import get_assets_folder
 from .view_mixins import component_registry
 from .view_mixins import get_file_from_link
+from .view_mixins import AbstractChildMoveView
+from .view_mixins import PublishVisibilityMixin
+
+from . import VIEW_NODE_MOVE
 
 ITEMS = StandardExternalFields.ITEMS
 MIMETYPE = StandardExternalFields.MIMETYPE
@@ -230,16 +232,12 @@ def _handle_multipart(context, contentObject, sources, provided=None):
 
 # GET views
 
+# TODO: Don't we need to validate READ access?
 @view_config(context=IPresentationAsset)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   request_method='GET')
-class PresentationAssetGetView(GenericGetView):
-
-	def _is_visible(self, item):
-		return 		not IPublishable.providedBy(item) \
-				or 	item.is_published() \
-				or	has_permission(nauth.ACT_CONTENT_EDIT, item, self.request)
+class PresentationAssetGetView(GenericGetView, PublishVisibilityMixin):
 
 	def __call__(self):
 		accept = self.request.headers.get(b'Accept') or u''
@@ -264,6 +262,46 @@ class NoHrefAssetGetView(PresentationAssetGetView):
 		return result
 
 # POST/PUT views
+
+@view_config(context=INTILessonOverview)
+@view_config(context=INTICourseOverviewGroup)
+@view_defaults(route_name='objects.generic.traversal',
+			 request_method='POST',
+			 permission=nauth.ACT_CONTENT_EDIT,
+			 renderer='rest',
+			 name=VIEW_NODE_MOVE)
+class ObjectMoveView( AbstractChildMoveView ):
+	"""
+	Move the given object between lessons or overview groups.
+	"""
+
+	# TODO
+	notify_type = None
+
+	def _get_context_ntiid(self):
+		return self.context.ntiid
+
+	def _remove_from_parent( self, parent, obj ):
+		parent.remove( obj )
+
+	def _add_to_parent( self, parent, obj, index ):
+		# TODO: Probably need to add an object level API.
+		# Remove from our list if it exists, and then insert at.
+		parent.remove(obj)
+		parent.items.insert( index, obj )
+
+	def _get_children_ntiids(self, parent_ntiid):
+		result = set()
+		result.add( parent_ntiid )
+		def _recur(node):
+			val = getattr(node, 'ntiid', None)
+			if val:
+				result.add(val)
+			for child in node.items():
+				_recur(child)
+
+		_recur( self.context )
+		return result
 
 class PresentationAssetMixin(object):
 

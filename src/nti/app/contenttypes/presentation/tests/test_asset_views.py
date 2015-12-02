@@ -84,7 +84,7 @@ class TestAssetViews(ApplicationLayerTest):
 	def test_ntivideo(self):
 		source = self._load_resource('ntivideo.json')
 		source.pop('NTIID', None)
-		
+
 		# post
 		res = self.testapp.post_json(self.assets_url, source, status=201)
 		assert_that(res.json_body, has_entry('ntiid', is_not(none())))
@@ -96,7 +96,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj, is_not(none()))
 			assert_that(obj, validly_provides(INTIVideo))
 			assert_that(obj, has_property('description', is_('Human')))
-			
+
 			entry = find_object_with_ntiid(self.course_ntiid)
 			course = ICourseInstance(entry)
 			self._check_containers(course, (obj,))
@@ -106,20 +106,20 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(containers, has_length(greater_than(1)))
 
 			source = to_external_object(obj)
-		
-		# put		
+
+		# put
 		source['description'] = 'Human/Quincy'
 		res = self.testapp.put_json(href, source, status=200)
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, has_property('description', is_('Human/Quincy')))
-			
-		# delete		
+
+		# delete
 		res = self.testapp.delete(href, status=204)
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, is_(none()))
-			
+
 			entry = find_object_with_ntiid(self.course_ntiid)
 			course = ICourseInstance(entry)
 			container = IPresentationAssetContainer(course)
@@ -128,7 +128,7 @@ class TestAssetViews(ApplicationLayerTest):
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_slidedeck(self):
 		source = self._load_resource('ntislidedeck.json')
-		
+
 		# post
 		res = self.testapp.post_json(self.assets_url, source, status=201)
 		assert_that(res.json_body, has_entry('ntiid', is_not(none())))
@@ -140,16 +140,16 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj, has_property('locked', is_(True)))
 			assert_that(obj, validly_provides(INTISlideDeck))
 			assert_that(obj, has_property('title', is_('Install Software on a Macintosh')))
-			
+
 			entry = find_object_with_ntiid(self.course_ntiid)
 			course = ICourseInstance(entry)
 
 			items = chain(obj.Slides, obj.Videos, (obj,))
 			self._check_containers(course, items)
-			
+
 			source = to_external_object(obj)
 
-		# put		
+		# put
 		source['title'] = 'Install Software on a MAC'
 		res = self.testapp.put_json(href, source, status=200)
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
@@ -165,7 +165,7 @@ class TestAssetViews(ApplicationLayerTest):
 				 'nti.app.contenttypes.presentation.views.asset_views.get_render_link')
 	def test_overview_group(self, mc_ri, mc_gaf, mc_lnk):
 		source = self._load_resource('nticourseoverviewgroup.json')
-		
+
 		# post
 		res = self.testapp.post_json(self.assets_url, source, status=201)
 		assert_that(res.json_body, has_entry('ntiid', is_not(none())))
@@ -180,11 +180,11 @@ class TestAssetViews(ApplicationLayerTest):
 			entry = find_object_with_ntiid(self.course_ntiid)
 			course = ICourseInstance(entry)
 			self._check_containers(course, False, obj.Items)
-			
+
 			source = to_external_object(obj)
-			
+
 		# put
-		source['Items'] = [source['Items'][1]] 
+		source['Items'] = [source['Items'][1]]
 		res = self.testapp.put_json(href, source, status=200)
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			obj = find_object_with_ntiid(ntiid)
@@ -192,12 +192,12 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj, has_property('Items', has_length(1)))
 			history  = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(1))
-			
+
 		# contents
 		source = self._load_resource('relatedwork.json')
 		source.pop('NTIID', None)
 		assert_that(source, has_entry('icon','http://bleach.com/aizen.jpg'))
-		
+
 		mc_ri.is_callable().with_args().returns(source)
 		mc_gaf.is_callable().with_args().returns({})
 		mc_lnk.is_callable().with_args().returns('http://bleach.org/ichigo.png')
@@ -209,12 +209,12 @@ class TestAssetViews(ApplicationLayerTest):
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			# check returned object
 			assert_that(res.json_body, has_entry('icon', 'http://bleach.org/ichigo.png'))
-						
+
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, has_property('Items', has_length(2)))
 			history  = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(2))
-			
+
 			rel_ntiid = res.json_body['ntiid']
 			obj = find_object_with_ntiid(rel_ntiid)
 			catalog = get_library_catalog()
@@ -225,7 +225,7 @@ class TestAssetViews(ApplicationLayerTest):
 	def test_lesson(self):
 		source = self._load_resource('ntilessonoverview.json')
 		source.pop('NTIID', None)
-		
+
 		# post
 		res = self.testapp.post_json(self.assets_url, source, status=201)
 		assert_that(res.json_body, has_entry('ntiid', is_not(none())))
@@ -237,7 +237,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj, validly_provides(INTILessonOverview))
 			assert_that(obj, has_property('Items', has_length(1)))
 			group_ntiid = obj.Items[0].ntiid
-			
+
 			entry = find_object_with_ntiid(self.course_ntiid)
 			course = ICourseInstance(entry)
 			self._check_containers(course, False, obj.Items)
@@ -247,9 +247,9 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(ntiid, is_in(containers))
 
 			source = to_external_object(obj)
-		
+
 		# remove ntiid to fake a new group
-		source['Items'][0].pop('ntiid', None) 
+		source['Items'][0].pop('ntiid', None)
 		source['Items'][0].pop('NTIID', None)
 		res = self.testapp.put_json(href, source, status=200)
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
@@ -269,10 +269,9 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj, has_property('Items', has_length(2)))
 			history = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(2))
-			
+
 			group_ntiid = res.json_body['ntiid']
 			obj = find_object_with_ntiid(group_ntiid)
 			catalog = get_library_catalog()
 			containers = catalog.get_containers(obj)
 			assert_that(ntiid, is_in(containers))
-			
