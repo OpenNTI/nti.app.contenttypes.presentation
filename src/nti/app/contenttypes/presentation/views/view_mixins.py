@@ -113,10 +113,15 @@ def db_connection(registry=None):
 	result = IConnection(registry, None)
 	return result
 
-def intid_register(item, registry=None, connection=None):
+def add_2_connection(item, registry=None, connection=None):
 	connection = db_connection(registry) if connection is None else connection
-	if connection is not None:
+	if connection is not None and getattr(item, '_p_jar', None) is None:
 		connection.add(item)
+	result = getattr(item, '_p_jar', None) is not None
+	return result
+
+def intid_register(item, registry=None, connection=None):
+	if add_2_connection(item, registry, connection):
 		lifecycleevent.added(item)
 		return True
 	return False
@@ -131,7 +136,7 @@ def get_render_link(item):
 def get_file_from_link(link):
 	result = None
 	try:
-		if '@@view' in link or '@@download' in link:
+		if link.endswith('view') or link.endswith('download'):
 			path = urlparse(link).path
 			path = os.path.split(path)[0]
 		else:
@@ -227,42 +232,42 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 		Subclasses should implement this to define the
 		contextual ntiid.
 		"""
-		return getattr( self.context, 'ntiid', None )
+		return getattr(self.context, 'ntiid', None)
 
-	def _remove_from_parent( self, parent, obj ):
+	def _remove_from_parent(self, parent, obj):
 		"""
 		Define how to remove an item from a parent.
 		"""
 		raise NotImplementedError()
 
-	def _add_to_parent( self, parent, ntiid, index ):
+	def _add_to_parent(self, parent, ntiid, index):
 		"""
 		Define how to add an item to a parent at an index.
 		"""
 		raise NotImplementedError()
 
 	def __call__(self):
-		values = CaseInsensitiveDict( self.readInput() )
-		index = values.get( 'Index' )
-		ntiid = values.get( 'ObjectNTIID' )
-		new_parent_ntiid = values.get( 'ParentNTIID' )
-		old_parent_ntiid = values.get( 'OldParentNTIID' )
+		values = CaseInsensitiveDict(self.readInput())
+		index = values.get('Index')
+		ntiid = values.get('ObjectNTIID')
+		new_parent_ntiid = values.get('ParentNTIID')
+		old_parent_ntiid = values.get('OldParentNTIID')
 		context_ntiid = self._get_context_ntiid()
 
 		obj = find_object_with_ntiid(ntiid)
 		if obj is None:
 			raise hexc.HTTPUnprocessableEntity(_('Object no longer exists.'))
 
-		children_ntiids = self._get_children_ntiids( context_ntiid )
+		children_ntiids = self._get_children_ntiids(context_ntiid)
 		if 		new_parent_ntiid not in children_ntiids \
-			or ( 	old_parent_ntiid
-				and old_parent_ntiid not in children_ntiids ):
-			raise hexc.HTTPUnprocessableEntity( _('Cannot move between root objects.') )
+			or (old_parent_ntiid
+				and old_parent_ntiid not in children_ntiids):
+			raise hexc.HTTPUnprocessableEntity(_('Cannot move between root objects.'))
 
 		if new_parent_ntiid == context_ntiid:
 			new_parent = self.context
 		else:
-			new_parent = find_object_with_ntiid( new_parent_ntiid )
+			new_parent = find_object_with_ntiid(new_parent_ntiid)
 
 		if new_parent is None:
 			# Really shouldn't happen if we validate this object is in our outline.
@@ -271,18 +276,18 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 		if index < 0:
 			raise hexc.HTTPBadRequest(_('Invalid index.'))
 
-		self._add_to_parent( new_parent, obj, index )
+		self._add_to_parent(new_parent, obj, index)
 
 		# Make sure they don't move the object within the same node and
 		# attempt to delete from that node.
 		if old_parent_ntiid and old_parent_ntiid != new_parent_ntiid:
-			old_parent = find_object_with_ntiid( old_parent_ntiid )
+			old_parent = find_object_with_ntiid(old_parent_ntiid)
 			if old_parent is None:
 				raise hexc.HTTPUnprocessableEntity(_('Old node parent no longer exists.'))
-			self._remove_from_parent( old_parent, obj )
+			self._remove_from_parent(old_parent, obj)
 
 		if self.notify_type:
-			notify(self.notify_type( new_parent, self.remoteUser.username, index ))
+			notify(self.notify_type(new_parent, self.remoteUser.username, index))
 		logger.info('Moved item (%s) at index (%s) (to=%s) (from=%s)',
 					ntiid, index, new_parent_ntiid, old_parent_ntiid)
 		return hexc.HTTPOk()

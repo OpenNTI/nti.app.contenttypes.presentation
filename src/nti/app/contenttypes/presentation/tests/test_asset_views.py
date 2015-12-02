@@ -157,7 +157,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj, has_property('locked', is_(True)))
 			assert_that(obj, has_property('title', is_('Install Software on a MAC')))
 			history  = ITransactionRecordHistory(obj)
-			assert_that(history, has_length(1))
+			assert_that(history, has_length(2))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	@fudge.patch('nti.app.contenttypes.presentation.views.asset_views.CourseOverviewGroupOrderedContentsView.readInput',
@@ -191,7 +191,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj, has_property('locked', is_(True)))
 			assert_that(obj, has_property('Items', has_length(1)))
 			history  = ITransactionRecordHistory(obj)
-			assert_that(history, has_length(1))
+			assert_that(history, has_length(2))
 
 		# contents
 		source = self._load_resource('relatedwork.json')
@@ -213,7 +213,7 @@ class TestAssetViews(ApplicationLayerTest):
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, has_property('Items', has_length(2)))
 			history  = ITransactionRecordHistory(obj)
-			assert_that(history, has_length(2))
+			assert_that(history, has_length(3))
 
 			rel_ntiid = res.json_body['ntiid']
 			obj = find_object_with_ntiid(rel_ntiid)
@@ -258,7 +258,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(old_group, is_(none()))
 			assert_that(obj, has_property('Items', has_length(1)))
 			history  = ITransactionRecordHistory(obj)
-			assert_that(history, has_length(1))
+			assert_that(history, has_length(2))
 
 		# contents
 		source = {'title':'mygroup'}
@@ -268,7 +268,7 @@ class TestAssetViews(ApplicationLayerTest):
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, has_property('Items', has_length(2)))
 			history = ITransactionRecordHistory(obj)
-			assert_that(history, has_length(2))
+			assert_that(history, has_length(3))
 
 			group_ntiid = res.json_body['ntiid']
 			obj = find_object_with_ntiid(group_ntiid)

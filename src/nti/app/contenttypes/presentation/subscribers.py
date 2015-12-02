@@ -44,11 +44,14 @@ from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
+from nti.contenttypes.presentation.interfaces import IPresentationAssetCreatedEvent
 from nti.contenttypes.presentation.interfaces import IWillRemovePresentationAssetEvent
 from nti.contenttypes.presentation.interfaces import ItemRemovedFromItemAssetContainerEvent
 from nti.contenttypes.presentation.interfaces import IItemRemovedFromItemAssetContainerEvent
 
 from nti.ntiids.ntiids import find_object_with_ntiid
+
+from nti.recorder.interfaces import TRX_TYPE_CREATE
 
 from nti.recorder.record import append_records
 from nti.recorder.record import TransactionRecord
@@ -129,6 +132,17 @@ def _on_item_asset_containter_modified(container, event):
 								   tid=tid)
 		append_records(container, (record,))
 		container.locked = True
+
+@component.adapter(IPresentationAsset, IPresentationAssetCreatedEvent)
+def _on_presentation_asset_created(asset, event):
+	if IRecordable.providedBy(asset) and event.principal:
+		tid = getattr(asset, '_p_serial', None)
+		tid = unicode(serial_repr(tid)) if tid else None
+		record = TransactionRecord(type=TRX_TYPE_CREATE,
+								   principal=event.principal,
+								   tid=tid)
+		append_records(asset, (record,))
+		asset.locked = True
 
 @component.adapter(IPresentationAsset, IWillRemovePresentationAssetEvent)
 def _on_will_remove_presentation_asset(asset, event):

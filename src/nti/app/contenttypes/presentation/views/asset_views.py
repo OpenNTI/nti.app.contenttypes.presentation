@@ -44,7 +44,6 @@ from nti.appserver.dataserver_pyramid_views import GenericGetView
 from nti.common.property import Lazy
 from nti.common.time import time_to_64bit_int
 
-from nti.coremetadata.interfaces import IRecordable
 from nti.coremetadata.interfaces import IPublishable
 
 from nti.contentfolder.interfaces import IContentFolder
@@ -102,6 +101,7 @@ from .view_mixins import remove_asset
 from .view_mixins import get_namedfile
 from .view_mixins import intid_register
 from .view_mixins import get_render_link
+from .view_mixins import add_2_connection
 from .view_mixins import get_assets_folder
 from .view_mixins import component_registry
 from .view_mixins import get_file_from_link
@@ -146,12 +146,11 @@ def principalId():
 		return None
 
 def _notify_created(item, principal=None, externalValue=None):
-	principal = principal or principalId()
+	add_2_connection(item) # required
+	principal = principal or principalId() # always get a principal
 	notify(PresentationAssetCreatedEvent(item, principal, externalValue))
 	if IPublishable.providedBy(item) and item.is_published():
 		item.unpublish()
-	if IRecordable.providedBy(item):
-		item.locked = True
 
 def _add_2_packages(context, item):
 	result = []
@@ -693,7 +692,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 	def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
 		contentObject, externalValue = self.parseInput(creator, search_owner, externalValue)
 		sources = get_all_sources(self.request)
-		if sources:  # multi-part data
+		if sources: # multi-part data
 			_handle_multipart(self._course, contentObject, sources)
 		return contentObject, externalValue
 
