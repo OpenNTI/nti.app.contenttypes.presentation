@@ -17,8 +17,6 @@ import simplejson
 from zope import component
 from zope import lifecycleevent
 
-from zope.event import notify
-
 from zope.intid import IIntIds
 
 from ZODB.interfaces import IConnection
@@ -83,7 +81,6 @@ from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
-from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.site.site import get_component_hierarchy_names
 
@@ -96,6 +93,7 @@ from ..utils import get_enrollment_record
 
 from .view_mixins import remove_asset
 from .view_mixins import component_registry
+from .view_mixins import AbstractChildMoveView
 
 from . import VIEW_NODE_MOVE
 from . import VIEW_NODE_CONTENTS
@@ -495,29 +493,29 @@ class OutlineNodeInsertView(_AbstractOutlineNodeView):
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest',
 			 name=VIEW_NODE_MOVE)
-class OutlineNodeMoveView(_AbstractOutlineNodeView):
+class OutlineNodeMoveView(AbstractChildMoveView, _AbstractOutlineNodeView):
 	"""
 	Move the given object between outline nodes in a course
 	outline. The source, target NTIIDs must exist in the outline (no
 	nodes are allowed to move between courses).
-
-	Body elements:
-
-	ObjectNTIID
-		The NTIID of the object being moved.
-
-	ParentNTIID
-		The NTIID of the new parent node of the object being moved.
-
-	Index
-		(Optional) The index at which to insert the node in our parent.
-
-	OldParentNTIID
-		(Optional) The NTIID of the old parent of our moved
-		node.
 	"""
 
-	def _get_outline_ntiids(self, outline_ntiid):
+	notify_type = CourseOutlineNodeMovedEvent
+
+	def _get_context_ntiid(self):
+		# Our outline gets an OID NTIID on externalization.
+		return to_external_ntiid_oid( self.context )
+
+	def _remove_from_parent( self, parent, obj ):
+		del parent[obj.ntiid]
+
+	def _add_to_parent( self, parent, obj, index ):
+		if obj.ntiid not in list( parent.keys() ):
+			# It's a move, append to our context.
+			parent.append(obj)
+		self._reorder_children( parent, obj.ntiid, index )
+
+	def _get_children_ntiids(self, outline_ntiid):
 		result = set()
 		result.add( outline_ntiid )
 		def _recur(node):
@@ -529,54 +527,6 @@ class OutlineNodeMoveView(_AbstractOutlineNodeView):
 
 		_recur( self.context )
 		return result
-
-	def __call__(self):
-		values = CaseInsensitiveDict( self.readInput() )
-		index = values.get( 'Index' )
-		ntiid = values.get( 'ObjectNTIID' )
-		new_parent_ntiid = values.get( 'ParentNTIID' )
-		old_parent_ntiid = values.get( 'OldParentNTIID' )
-		# We externalize an OID for our outline NTIID.
-		outline_ntiid = to_external_ntiid_oid( self.context )
-
-		outline_ntiids = self._get_outline_ntiids( outline_ntiid )
-		if 		new_parent_ntiid not in outline_ntiids \
-			or ( 	old_parent_ntiid
-				and old_parent_ntiid not in outline_ntiids ):
-			raise hexc.HTTPUnprocessableEntity( _('Cannot move between outlines.') )
-
-		if new_parent_ntiid == outline_ntiid:
-			new_parent = self.context
-		else:
-			new_parent = find_object_with_ntiid( new_parent_ntiid )
-
-		if new_parent is None:
-			# Really shouldn't happen if we validate this object is in our outline.
-			raise hexc.HTTPUnprocessableEntity(_('New node parent does not exist.'))
-
-		if index < 0:
-			raise hexc.HTTPConflict(_('Invalid index.'))
-
-		if ntiid not in list( new_parent.keys() ):
-			# It's a move, append to our context.
-			obj = find_object_with_ntiid(ntiid)
-			if obj is None:
-				raise hexc.HTTPUnprocessableEntity(_('Object no longer exists.'))
-			new_parent.append(obj)
-
-		# Make sure they don't move the object within the same node and
-		# attempt to delete from that node.
-		if old_parent_ntiid and old_parent_ntiid != new_parent_ntiid:
-			old_parent = find_object_with_ntiid( old_parent_ntiid )
-			if old_parent is None:
-				raise hexc.HTTPUnprocessableEntity(_('Old node parent no longer exists.'))
-			del old_parent[ntiid]
-
-		self._reorder_children( new_parent, ntiid, index )
-		notify(CourseOutlineNodeMovedEvent( new_parent, self.remoteUser.username, index ))
-		logger.info('Moved node (%s) to index (%s) (to=%s) (from=%s)',
-					ntiid, index, new_parent_ntiid, old_parent_ntiid)
-		return hexc.HTTPOk()
 
 @view_config(route_name='objects.generic.traversal',
 			 context=ICourseOutlineNode,
