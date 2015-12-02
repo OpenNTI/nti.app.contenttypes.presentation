@@ -37,6 +37,8 @@ from nti.appserver.ugd_edit_views import UGDPutView
 from nti.appserver.ugd_edit_views import UGDDeleteView
 from nti.appserver.dataserver_pyramid_views import GenericGetView
 
+from nti.appserver.pyramid_authorization import has_permission
+
 from nti.common.property import Lazy
 from nti.common.time import time_to_64bit_int
 
@@ -222,12 +224,17 @@ def _handle_multipart(context, contentObject, sources, provided=None):
 			   request_method='GET')
 class PresentationAssetGetView(GenericGetView):
 
+	def _is_visible(self, item):
+		return 		not IPublishable.providedBy(item) \
+				or 	item.is_published() \
+				or	has_permission(nauth.ACT_CONTENT_EDIT, item, self.request)
+
 	def __call__(self):
 		accept = self.request.headers.get(b'Accept') or u''
 		if accept == 'application/vnd.nextthought.pageinfo+json':
 			raise hexc.HTTPNotAcceptable()
-		if IPublishable.providedBy(self.context) and not self.context.is_published():
-			raise hexc.HTTPForbidden(_("Item not published."))
+		if not self._is_visible( self.context ):
+			raise hexc.HTTPForbidden(_("Item not visible."))
 		result = GenericGetView.__call__(self)
 		return result
 
