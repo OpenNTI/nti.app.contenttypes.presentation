@@ -300,7 +300,7 @@ def _remove_source_lastModified(source, catalog=None):
 def _outline_nodes(outline):
 	result = []
 	def _recur(node):
-		if ICourseOutlineCalendarNode.providedBy(node):
+		if ICourseOutlineCalendarNode.providedBy(node) and not node.locked:
 			result.append(node)
 
 		# parse children
