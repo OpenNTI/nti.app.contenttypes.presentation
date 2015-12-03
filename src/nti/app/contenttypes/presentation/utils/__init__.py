@@ -40,7 +40,9 @@ from nti.contenttypes.presentation.interfaces import IPresentationVisibility
 from .asset import remove_asset
 from .asset import intid_register
 from .asset import add_2_connection
+from .asset import make_asset_ntiid
 from .asset import component_registry
+from .asset import create_lesson_4_node
 from .asset import notify_removed as notify_asset_removed
 
 # re-export
