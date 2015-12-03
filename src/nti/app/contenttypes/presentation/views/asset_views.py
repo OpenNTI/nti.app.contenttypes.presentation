@@ -91,11 +91,10 @@ from nti.ntiids.ntiids import get_specific
 
 from nti.site.utils import registerUtility
 
-from ..synchronizer import make_asset_ntiid
-
 from ..utils import remove_asset
 from ..utils import intid_register
 from ..utils import add_2_connection
+from ..utils import make_asset_ntiid
 from ..utils import component_registry
 from ..utils import get_course_packages
 from ..utils import get_presentation_asset_courses
