@@ -378,8 +378,9 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 	def _handle_related_work(self, provided, item, creator, extended=None):
 		self._handle_package_asset(provided, item, creator, extended)
-		if not item.target:
+		if not item.target or not item.type:
 			href = item.href
+			contentType = u'application/octet-stream' # default
 			parsed = urlparse(href) if href else None
 			if href and parsed.scheme or parsed.netloc:  # full url
 				ntiid = make_ntiid(nttype=TYPE_UUID,
@@ -387,8 +388,12 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 								   specific=hexdigest(item.href))
 			else:
 				named = get_file_from_link(href) if href else None
+				contentType = named.contentType if named else None
 				ntiid = to_external_ntiid_oid(named) if named is not None else None
-			item.target = ntiid
+			if not item.target:
+				item.target = ntiid
+			if not item.type and contentType:
+				item.type = contentType
 
 	def _handle_media_roll(self, provided, item, creator, extended=None):
 		containers = _add_2_container(self._course, item, pacakges=False)
