@@ -393,7 +393,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 			if not item.target:
 				item.target = ntiid
 			if not item.type and contentType:
-				item.type = contentType
+				item.type = unicode(contentType)
 
 	def _handle_media_roll(self, provided, item, creator, extended=None):
 		containers = _add_2_container(self._course, item, pacakges=False)
