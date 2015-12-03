@@ -9,6 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import six
+
 from zope import component
 from zope import lifecycleevent
 
@@ -25,6 +27,7 @@ from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.presentation import iface_of_asset
+from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import WillRemovePresentationAssetEvent
 
 from nti.site.utils import unregisterUtility
@@ -71,10 +74,27 @@ def notify_removed(item):
 def remove_asset(item, registry=None, catalog=None):
 	notify(WillRemovePresentationAssetEvent(item))
 	# remove utility
-	registry = get_registry(registry)
-	unregisterUtility(registry, provided=iface_of_asset(item), name=item.ntiid)
+	name = item.ntiid
+	provided = iface_of_asset(item)
+	if registry is None:
+		registry = component_registry(item, provided, name=name)
+	unregisterUtility(registry, provided=provided, name=name)
 	# unindex
 	catalog = get_library_catalog() if catalog is None else catalog
 	catalog.unindex(item)
 	# broadcast removed
 	notify_removed(item)
+
+def remove_lesson(item, registry=None, catalog=None):
+	if isinstance(item, six.string_types):
+		item = component.queryUtility(INTILessonOverview, name=item)
+	if item is None:
+		return
+	if registry is None:
+		registry = component_registry(item, INTILessonOverview, name=item.ntiid)
+	catalog = get_library_catalog() if catalog is None else catalog
+	# remove groups first
+	for group in list(item):  # mutating
+		remove_asset(group, registry, catalog)
+	# remove asset
+	remove_asset(item, registry, catalog)
