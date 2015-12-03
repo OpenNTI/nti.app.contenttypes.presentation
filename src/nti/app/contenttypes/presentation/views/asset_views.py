@@ -378,17 +378,26 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 	def _handle_related_work(self, provided, item, creator, extended=None):
 		self._handle_package_asset(provided, item, creator, extended)
-		href, contentType = item.href, item.type or u'application/octet-stream' # default
+
+		# capture updated/previous data
+		ntiid, href = item.target, item.href
+		contentType = item.type or u'application/octet-stream' # default
+
+		# if client has uploaded a file, capture contentType and target ntiid
+		if self.request.POST and 'href' in self.request.POST: 
+			named = get_file_from_link(href) if href else None
+			contentType = unicode(named.contentType or u'') if named else contentType
+			ntiid = to_external_ntiid_oid(named) if named is not None else ntiid
+
+		# parse href 
 		parsed = urlparse(href) if href else None
 		if href and parsed.scheme or parsed.netloc:  # full url
 			ntiid = make_ntiid(nttype=TYPE_UUID,
 							   provider='NTI',
-							   specific=hexdigest(href))
-		else:
-			named = get_file_from_link(href) if href else None
-			ntiid = to_external_ntiid_oid(named) if named is not None else None
-			contentType = unicode(named.contentType or u'') if named else contentType
-		if not item.target:
+							   specific=hexdigest(href.lower()))
+		
+		# replace if needed
+		if item.target != ntiid:
 			item.target = ntiid
 		if item.type != contentType:
 			item.type = contentType
