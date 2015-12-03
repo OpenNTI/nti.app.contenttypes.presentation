@@ -15,7 +15,6 @@ import time
 import simplejson
 
 from zope import component
-from zope import lifecycleevent
 
 from zope.intid import IIntIds
 
@@ -39,13 +38,13 @@ from nti.common.maps import CaseInsensitiveDict
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
+from nti.contenttypes.courses.interfaces import iface_of_node
 from nti.contenttypes.courses.interfaces import NTI_COURSE_OUTLINE_NODE
 
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
-from nti.contenttypes.courses.interfaces import ICourseOutlineCalendarNode
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 from nti.contenttypes.courses.interfaces import CourseOutlineNodeMovedEvent
 
@@ -59,8 +58,6 @@ from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
-
-from nti.contenttypes.presentation.lesson import NTILessonOverView
 
 from nti.coremetadata.interfaces import IPublishable
 
@@ -86,9 +83,9 @@ from nti.site.utils import registerUtility
 from nti.traversal.traversal import find_interface
 
 from ..utils import remove_asset
-from ..utils import intid_register
 from ..utils import is_item_visible
 from ..utils import component_registry
+from ..utils import create_lesson_4_node
 from ..utils import get_enrollment_record
 
 from .view_mixins import AbstractChildMoveView
@@ -139,7 +136,7 @@ class OutlineLessonOverviewView(AbstractAuthenticatedView,
 
 	def __call__(self):
 		lesson = self._get_lesson()
-		if self._is_visible( lesson ):
+		if self._is_visible(lesson):
 			self.request.acl_decoration = self._can_edit_lesson(lesson)
 			external = to_external_object(lesson, name="render")
 			external.lastModified = external[LAST_MODIFIED] = lesson.lastModified
@@ -326,10 +323,10 @@ class _AbstractOutlineNodeView(AbstractAuthenticatedView,
 		For a given ntiid and index, insert the ntiid into
 		the `index` slot and reorder the parent's children.
 		"""
-		old_keys = list( node.keys() )
+		old_keys = list(node.keys())
 		# An index outside our boundary acts as a no-op/append.
-		if index is not None and index < len( old_keys ):
-			old_keys.remove( ntiid )
+		if index is not None and index < len(old_keys):
+			old_keys.remove(ntiid)
 			new_keys = old_keys[:index]
 			new_keys.append(ntiid)
 			new_keys.extend(old_keys[index:])
@@ -402,14 +399,7 @@ class OutlineNodeInsertView(_AbstractOutlineNodeView):
 		return ntiid
 
 	def iface_of_obj(self, obj):
-		for iface in (ICourseOutlineContentNode,
-					  ICourseOutlineCalendarNode,
-					  ICourseOutlineNode,
-					  ICourseOutline,
-			   	   	  INTILessonOverview):  # order matters
-			if iface.providedBy(obj):
-				return iface
-		return None
+		return iface_of_node(obj)
 
 	def _set_node_ntiid(self, new_node):
 		ntiid = self._create_node_ntiid()
@@ -423,21 +413,10 @@ class OutlineNodeInsertView(_AbstractOutlineNodeView):
 						provided=self.iface_of_obj(obj))
 
 	def _make_lesson_node(self, node):
-		lesson_ntiid = make_ntiid(nttype=NTI_LESSON_OVERVIEW, base=node.ntiid)
-		new_lesson = NTILessonOverView()
-		new_lesson.ntiid = lesson_ntiid
-		new_lesson.__parent__ = node
-		new_lesson.title = node.title
-		new_lesson.creator = node.creator
-		# XXX If there is no lesson set it to the overview
-		if not node.ContentNTIID:
-			node.ContentNTIID = lesson_ntiid
-		# XXX: set src and lesson ntiid (see MediaByOutlineView)
-		# at his point is very likely that LessonOverviewNTIID,
-		# ContentNTIID are simply alias fields. All of them
-		# are kept so long as we have manual sync and BWC
-		node.LessonOverviewNTIID = lesson_ntiid
-		return new_lesson
+		registry = component.getSiteManager()
+		ntiid = make_ntiid(nttype=NTI_LESSON_OVERVIEW, base=node.ntiid)
+		result = create_lesson_4_node(node, ntiid=ntiid, registry=registry)
+		return result
 
 	def _get_new_node(self):
 		# TODO: We could support auto-publishing based on type here.
@@ -446,13 +425,7 @@ class OutlineNodeInsertView(_AbstractOutlineNodeView):
 		self._set_node_ntiid(new_node)
 		if ICourseOutlineContentNode.providedBy(new_node):
 			new_lesson = self._make_lesson_node(new_node)
-			new_lesson.locked = True
-			lifecycleevent.created(new_lesson)
-			intid_register(new_lesson)
-			self._register_obj(new_lesson)
-			# XXX: set the src field to be unique for indexing
-			# see MediaByOutlineNode
-			new_node.src = to_external_ntiid_oid(new_lesson)
+			new_lesson.locked = True  # locked
 		self._register_obj(new_node)
 		new_node.locked = True
 		return new_node
@@ -463,7 +436,7 @@ class OutlineNodeInsertView(_AbstractOutlineNodeView):
 		new_node = self._get_new_node()
 
 		self.context.append(new_node)
-		self._reorder_children( self.context, new_node.ntiid, index )
+		self._reorder_children(self.context, new_node.ntiid, index)
 
 		logger.info('Created new outline node (%s)', new_node.ntiid)
 		self.request.response.status_int = 201
@@ -486,20 +459,20 @@ class OutlineNodeMoveView(AbstractChildMoveView, _AbstractOutlineNodeView):
 
 	def _get_context_ntiid(self):
 		# Our outline gets an OID NTIID on externalization.
-		return to_external_ntiid_oid( self.context )
+		return to_external_ntiid_oid(self.context)
 
-	def _remove_from_parent( self, parent, obj ):
+	def _remove_from_parent(self, parent, obj):
 		del parent[obj.ntiid]
 
-	def _add_to_parent( self, parent, obj, index ):
-		if obj.ntiid not in list( parent.keys() ):
+	def _add_to_parent(self, parent, obj, index):
+		if obj.ntiid not in list(parent.keys()):
 			# It's a move, append to our context.
 			parent.append(obj)
-		self._reorder_children( parent, obj.ntiid, index )
+		self._reorder_children(parent, obj.ntiid, index)
 
 	def _get_children_ntiids(self, outline_ntiid):
 		result = set()
-		result.add( outline_ntiid )
+		result.add(outline_ntiid)
 		def _recur(node):
 			val = getattr(node, 'ntiid', None)
 			if val:
@@ -507,7 +480,7 @@ class OutlineNodeMoveView(AbstractChildMoveView, _AbstractOutlineNodeView):
 			for child in node.values():
 				_recur(child)
 
-		_recur( self.context )
+		_recur(self.context)
 		return result
 
 @view_config(route_name='objects.generic.traversal',
@@ -516,7 +489,7 @@ class OutlineNodeMoveView(AbstractChildMoveView, _AbstractOutlineNodeView):
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest',
 			 name=VIEW_NODE_CONTENTS)
-class OutlineNodeDeleteView( _AbstractOutlineNodeView ):
+class OutlineNodeDeleteView(_AbstractOutlineNodeView):
 	"""
 	Delete the given ntiid in our context.
 	"""
@@ -536,6 +509,7 @@ class OutlineNodeDeleteView( _AbstractOutlineNodeView ):
 
 		if ntiid not in old_keys:
 			raise hexc.HTTPConflict(_('NTIID no longer present'))
+
 		# TODO: Can we tell when to unregister nodes (no longer contained)
 		# to avoid orphans?
 
