@@ -378,22 +378,20 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 	def _handle_related_work(self, provided, item, creator, extended=None):
 		self._handle_package_asset(provided, item, creator, extended)
-		if not item.target or not item.type:
-			href = item.href
-			contentType = u'application/octet-stream' # default
-			parsed = urlparse(href) if href else None
-			if href and parsed.scheme or parsed.netloc:  # full url
-				ntiid = make_ntiid(nttype=TYPE_UUID,
-								   provider='NTI',
-								   specific=hexdigest(item.href))
-			else:
-				named = get_file_from_link(href) if href else None
-				ntiid = to_external_ntiid_oid(named) if named is not None else None
-				contentType = unicode(named.contentType or u'') if named else contentType
-			if not item.target:
-				item.target = ntiid
-			if item.type != contentType:
-				item.type = contentType
+		href, contentType = item.href, item.type or u'application/octet-stream' # default
+		parsed = urlparse(href) if href else None
+		if href and parsed.scheme or parsed.netloc:  # full url
+			ntiid = make_ntiid(nttype=TYPE_UUID,
+							   provider='NTI',
+							   specific=hexdigest(href))
+		else:
+			named = get_file_from_link(href) if href else None
+			ntiid = to_external_ntiid_oid(named) if named is not None else None
+			contentType = unicode(named.contentType or u'') if named else contentType
+		if not item.target:
+			item.target = ntiid
+		if item.type != contentType:
+			item.type = contentType
 
 	def _handle_media_roll(self, provided, item, creator, extended=None):
 		containers = _add_2_container(self._course, item, pacakges=False)
