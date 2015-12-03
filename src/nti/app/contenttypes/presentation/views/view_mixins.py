@@ -18,17 +18,7 @@ from urlparse import urlparse
 
 from pyramid import httpexceptions as hexc
 
-from zope import component
-from zope import lifecycleevent
-
 from zope.event import notify
-
-from zope.location.location import locate
-from zope.location.interfaces import ILocation
-
-from zope.traversing.interfaces import IEtcNamespace
-
-from ZODB.interfaces import IConnection
 
 from plone.namedfile.file import getImageInfo
 from plone.namedfile.interfaces import INamed
@@ -55,21 +45,12 @@ from nti.contentfile.model import ContentBlobImage
 
 from nti.contentfolder.model import ContentFolder
 
-from nti.contentlibrary.indexed_data import get_registry
-from nti.contentlibrary.indexed_data import get_library_catalog
-
 from nti.contenttypes.courses.interfaces import ICourseInstance
-
-from nti.contenttypes.presentation import iface_of_asset
-from nti.contenttypes.presentation.interfaces import WillRemovePresentationAssetEvent
 
 from nti.dataserver import authorization as nauth
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 from nti.ntiids.ntiids import is_valid_ntiid_string as is_valid_ntiid
-
-from nti.site.utils import unregisterUtility
-from nti.site.site import get_component_hierarchy_names
 
 from nti.traversal.traversal import find_interface
 
@@ -109,24 +90,6 @@ def get_namedfile(source, filename=None):
 	result.contentType = contentType
 	return result
 
-def db_connection(registry=None):
-	registry = get_registry(registry)
-	result = IConnection(registry, None)
-	return result
-
-def add_2_connection(item, registry=None, connection=None):
-	connection = db_connection(registry) if connection is None else connection
-	if connection is not None and getattr(item, '_p_jar', None) is None:
-		connection.add(item)
-	result = getattr(item, '_p_jar', None) is not None
-	return result
-
-def intid_register(item, registry=None, connection=None):
-	if add_2_connection(item, registry, connection):
-		lifecycleevent.added(item)
-		return True
-	return False
-
 def get_render_link(item):
 	try:
 		result = to_external_href(item)  # adds @@view
@@ -163,37 +126,6 @@ def get_assets_folder(context, strict=True):
 			result = root[ASSETS_FOLDER]
 		return result
 	return None
-
-def component_registry(context, provided, name=None):
-	sites_names = list(get_component_hierarchy_names())
-	sites_names.reverse()  # higher sites first
-	name = name or getattr(context, 'ntiid', None)
-	hostsites = component.getUtility(IEtcNamespace, name='hostsites')
-	for site_name in sites_names:
-		try:
-			folder = hostsites[site_name]
-			registry = folder.getSiteManager()
-			if registry.queryUtility(provided, name=name) == context:
-				return registry
-		except KeyError:
-			pass
-	return get_registry()
-
-def notify_removed(item):
-	lifecycleevent.removed(item)
-	if ILocation.providedBy(item):
-		locate(item, None, None)
-
-def remove_asset(item, registry=None, catalog=None):
-	notify(WillRemovePresentationAssetEvent(item))
-	# remove utility
-	registry = get_registry(registry)
-	unregisterUtility(registry, provided=iface_of_asset(item), name=item.ntiid)
-	# unindex
-	catalog = get_library_catalog() if catalog is None else catalog
-	catalog.unindex(item)
-	# broadcast removed
-	notify_removed(item)
 
 class AbstractChildMoveView(AbstractAuthenticatedView,
 							ModeledContentUploadRequestUtilsMixin):

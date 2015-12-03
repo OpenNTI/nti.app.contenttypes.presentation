@@ -93,18 +93,18 @@ from nti.site.utils import registerUtility
 
 from ..synchronizer import make_asset_ntiid
 
+from ..utils import remove_asset
+from ..utils import intid_register
+from ..utils import add_2_connection
+from ..utils import component_registry
 from ..utils import get_course_packages
 from ..utils import get_presentation_asset_courses
 
 from .view_mixins import slugify
 from .view_mixins import hexdigest
-from .view_mixins import remove_asset
 from .view_mixins import get_namedfile
-from .view_mixins import intid_register
 from .view_mixins import get_render_link
-from .view_mixins import add_2_connection
 from .view_mixins import get_assets_folder
-from .view_mixins import component_registry
 from .view_mixins import get_file_from_link
 from .view_mixins import AbstractChildMoveView
 from .view_mixins import PublishVisibilityMixin

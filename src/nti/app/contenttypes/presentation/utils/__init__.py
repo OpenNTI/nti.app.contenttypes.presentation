@@ -37,6 +37,13 @@ from nti.contenttypes.presentation.interfaces import PURCHASED
 from nti.contenttypes.presentation.interfaces import IPresentationVisibility
 
 # re-export
+from .asset import remove_asset
+from .asset import intid_register
+from .asset import add_2_connection
+from .asset import component_registry
+from .asset import notify_removed as notify_asset_removed
+
+# re-export
 from .course import get_courses
 from .course import get_course_packages
 from .course import get_enrollment_record

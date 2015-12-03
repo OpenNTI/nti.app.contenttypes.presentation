@@ -17,8 +17,6 @@ from zope.intid import IIntIds
 
 from zope import component
 
-from ZODB.interfaces import IConnection
-
 from nti.common.time import time_to_64bit_int
 
 from nti.coremetadata.interfaces import IRecordable
@@ -60,6 +58,8 @@ from nti.wref.interfaces import IWeakRef
 
 from .interfaces import IItemRefValidator
 
+from .utils import add_2_connection
+
 from . import iface_of_thing
 
 ITEMS = StandardExternalFields.ITEMS
@@ -95,19 +95,9 @@ def _removed_registered(provided, name, intids=None, registry=None,
 		registered = None  # set to None since it was not removed
 	return registered
 
-def _db_connection(registry=None):
-	registry = get_registry(registry)
-	if registry == component.getGlobalSiteManager():
-		result = None
-	else:
-		result = IConnection(registry, None)
-	return result
-
 def intid_register(item, registry, intids=None, connection=None):
 	intids = component.getUtility(IIntIds) if intids is None else intids
-	connection = _db_connection(registry) if connection is None else connection
-	if connection is not None:
-		connection.add(item)
+	if add_2_connection(item, registry, connection):
 		intids.register(item, event=False)
 		return True
 	return False

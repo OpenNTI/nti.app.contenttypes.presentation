@@ -19,8 +19,6 @@ from zope import lifecycleevent
 
 from zope.intid import IIntIds
 
-from ZODB.interfaces import IConnection
-
 from pyramid.view import view_config
 from pyramid.view import view_defaults
 from pyramid import httpexceptions as hexc
@@ -39,7 +37,6 @@ from nti.appserver.pyramid_authorization import has_permission
 from nti.common.time import time_to_64bit_int
 from nti.common.maps import CaseInsensitiveDict
 
-from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import NTI_COURSE_OUTLINE_NODE
@@ -88,11 +85,12 @@ from nti.site.utils import registerUtility
 
 from nti.traversal.traversal import find_interface
 
+from ..utils import remove_asset
+from ..utils import intid_register
 from ..utils import is_item_visible
+from ..utils import component_registry
 from ..utils import get_enrollment_record
 
-from .view_mixins import remove_asset
-from .view_mixins import component_registry
 from .view_mixins import AbstractChildMoveView
 from .view_mixins import PublishVisibilityMixin
 
@@ -105,24 +103,6 @@ CLASS = StandardExternalFields.CLASS
 ITEMS = StandardExternalFields.ITEMS
 MIMETYPE = StandardExternalFields.MIMETYPE
 LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
-
-def _db_connection(registry=None):
-	registry = get_registry(registry)
-	if registry == component.getGlobalSiteManager():
-		result = None
-	else:
-		result = IConnection(registry, None)
-	return result
-
-def _intid_register(item, registry=None, intids=None, connection=None):
-	registry = get_registry(registry)
-	intids = component.getUtility(IIntIds) if intids is None else intids
-	connection = _db_connection(registry) if connection is None else connection
-	if connection is not None:
-		connection.add(item)
-		lifecycleevent.added(item)
-		return True
-	return False
 
 class OutlineLessonOverviewMixin(object):
 
@@ -468,7 +448,7 @@ class OutlineNodeInsertView(_AbstractOutlineNodeView):
 			new_lesson = self._make_lesson_node(new_node)
 			new_lesson.locked = True
 			lifecycleevent.created(new_lesson)
-			_intid_register(new_lesson)
+			intid_register(new_lesson)
 			self._register_obj(new_lesson)
 			# XXX: set the src field to be unique for indexing
 			# see MediaByOutlineNode
