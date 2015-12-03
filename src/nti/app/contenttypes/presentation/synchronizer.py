@@ -17,18 +17,17 @@ from zope.intid import IIntIds
 
 from zope import component
 
-from nti.common.time import time_to_64bit_int
-
 from nti.coremetadata.interfaces import IRecordable
 from nti.coremetadata.interfaces import IPublishable
-from nti.coremetadata.interfaces import SYSTEM_USER_ID
 
 from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import get_course_packages
+
 from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import	ICourseOutlineCalendarNode
 
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
@@ -40,11 +39,11 @@ from nti.contenttypes.presentation.utils import create_lessonoverview_from_exter
 
 from nti.externalization.interfaces import StandardExternalFields
 
+from nti.ntiids.ntiids import TYPE_OID
 from nti.ntiids.ntiids import make_ntiid
-from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
+from nti.ntiids.ntiids import is_ntiid_of_type
 from nti.ntiids.ntiids import make_provider_safe
-from nti.ntiids.ntiids import make_specific_safe
 from nti.ntiids.ntiids import is_valid_ntiid_string
 
 from nti.recorder.record import copy_transaction_history
@@ -59,6 +58,7 @@ from nti.wref.interfaces import IWeakRef
 from .interfaces import IItemRefValidator
 
 from .utils import add_2_connection
+from .utils import create_lesson_4_node
 
 from . import iface_of_thing
 
@@ -70,8 +70,8 @@ def prepare_json_text(s):
 
 def _can_be_removed(registered, force=False):
 	result = 	registered is not None \
-			and (	force 
-				 or not IRecordable.providedBy(registered) 
+			and (force
+				 or not IRecordable.providedBy(registered)
 				 or not registered.locked)
 	return result
 can_be_removed = _can_be_removed
@@ -116,31 +116,6 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 			return (True, item)
 		return (False, registered)
 	return (False, None)
-
-def _make_asset_ntiid(nttype, creator=SYSTEM_USER_ID, base=None, extra=None):
-	if not isinstance(nttype, six.string_types):
-		nttype = nttype.__name__[1:]
-
-	current_time = time_to_64bit_int(time.time())
-	creator = getattr(creator, 'username', creator)
-	provider = get_provider(base) or 'NTI' if base else 'NTI'
-
-	specific_base = get_specific(base) if base else None
-	if specific_base:
-		specific_base += '.%s.%s' % (creator, current_time)
-	else:
-		specific_base = '%s.%s' % (creator, current_time)
-
-	if extra:
-		specific_base = specific_base + ".%s" % extra
-	specific = make_specific_safe(specific_base)
-
-	ntiid = make_ntiid(nttype=nttype,
-					   base=base,
-					   provider=provider,
-					   specific=specific)
-	return ntiid
-make_asset_ntiid = _make_asset_ntiid
 
 # Courses
 
@@ -325,8 +300,7 @@ def _remove_source_lastModified(source, catalog=None):
 def _outline_nodes(outline):
 	result = []
 	def _recur(node):
-		src = getattr(node, 'src', None)
-		if src:
+		if ICourseOutlineCalendarNode.providedBy(node):
 			result.append(node)
 
 		# parse children
@@ -335,6 +309,11 @@ def _outline_nodes(outline):
 
 	if outline is not None:
 		_recur(outline)
+	return result
+
+def _create_lesson_4_node(node, registry=None, catalog=None):
+	result = create_lesson_4_node(node, registry=registry, catalog=catalog)
+	result.locked = True
 	return result
 
 def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
@@ -490,8 +469,13 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 	removed = []
 	nodes = _outline_nodes(course.Outline)
 	for node in nodes:
-		namespace = node.src  # this is ntiid based file (unique)
-		namespaces.add(namespace)
+		namespace = node.src
+		if not namespace:
+			_create_lesson_4_node(node, registry, catalog)
+			continue
+		elif is_ntiid_of_type(namespace, TYPE_OID):  # ignore
+			continue
+		namespaces.add(namespace)  # this is ntiid based file (unique)
 		for content_package in course_packages:
 			sibling_key = content_package.does_sibling_entry_exist(namespace)
 			if not sibling_key:
