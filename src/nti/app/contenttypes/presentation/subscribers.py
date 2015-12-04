@@ -22,8 +22,6 @@ from zope.lifecycleevent import IObjectRemovedEvent
 from zope.security.interfaces import NoInteraction
 from zope.security.management import getInteraction
 
-from ZODB.utils import serial_repr
-
 from nti.coremetadata.interfaces import IRecordable
 
 from nti.contentlibrary.indexed_data import get_library_catalog
@@ -49,12 +47,13 @@ from nti.contenttypes.presentation.interfaces import IWillRemovePresentationAsse
 from nti.contenttypes.presentation.interfaces import ItemRemovedFromItemAssetContainerEvent
 from nti.contenttypes.presentation.interfaces import IItemRemovedFromItemAssetContainerEvent
 
+from nti.externalization.interfaces import StandardExternalFields
+
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.recorder.interfaces import TRX_TYPE_CREATE
 
-from nti.recorder.record import append_records
-from nti.recorder.record import TransactionRecord
+from nti.recorder.utils import record_transaction
 from nti.recorder.record import remove_transaction_history
 
 from .utils import get_course_packages
@@ -64,6 +63,8 @@ from .synchronizer import clear_course_assets
 from .synchronizer import clear_namespace_last_modified
 from .synchronizer import remove_and_unindex_course_assets
 from .synchronizer import synchronize_course_lesson_overview
+
+ITEMS = StandardExternalFields.ITEMS
 
 # interaction
 
@@ -125,24 +126,13 @@ def _on_will_remove_course_overview_group(group, event):
 def _on_item_asset_containter_modified(container, event):
 	principal = principal()
 	if principal is not None and IRecordable.providedBy(container):
-		tid = getattr(container, '_p_serial', None)
-		tid = unicode(serial_repr(tid)) if tid else None
-		record = TransactionRecord(type=TRX_ASSET_REMOVED_FROM_ITEM_ASSET_CONTAINER,
-								   principal=principal.id,
-								   tid=tid)
-		append_records(container, (record,))
-		container.locked = True
+		record_transaction(container, principal=principal, descriptions=(ITEMS,),
+						   type_=TRX_ASSET_REMOVED_FROM_ITEM_ASSET_CONTAINER)
 
 @component.adapter(IPresentationAsset, IPresentationAssetCreatedEvent)
 def _on_presentation_asset_created(asset, event):
 	if IRecordable.providedBy(asset) and event.principal:
-		tid = getattr(asset, '_p_serial', None)
-		tid = unicode(serial_repr(tid)) if tid else None
-		record = TransactionRecord(type=TRX_TYPE_CREATE,
-								   principal=event.principal,
-								   tid=tid)
-		append_records(asset, (record,))
-		asset.locked = True
+		record_transaction(asset, principal=event.principal, type_=TRX_TYPE_CREATE)
 
 @component.adapter(IPresentationAsset, IWillRemovePresentationAssetEvent)
 def _on_will_remove_presentation_asset(asset, event):
