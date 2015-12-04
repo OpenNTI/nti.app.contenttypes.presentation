@@ -34,6 +34,7 @@ from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import IGroupOverViewable
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
+from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.ntiids.ntiids import get_parts
@@ -45,7 +46,7 @@ from .utils import get_course_by_relative_path_parts
 @interface.implementer(INTIIDResolver)
 class _PresentationResolver(object):
 
-	_ext_iface = None
+	_ext_iface = IPresentationAsset
 
 	def resolve(self, key):
 		result = component.queryUtility(self._ext_iface, name=key)
