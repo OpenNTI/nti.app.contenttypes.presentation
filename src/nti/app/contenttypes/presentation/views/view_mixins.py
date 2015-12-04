@@ -223,7 +223,7 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 			notify(self.notify_type(new_parent, self.remoteUser.username, index))
 		logger.info('Moved item (%s) at index (%s) (to=%s) (from=%s)',
 					ntiid, index, new_parent_ntiid, old_parent_ntiid)
-		return hexc.HTTPOk()
+		return self.context
 
 class PublishVisibilityMixin(object):
 
