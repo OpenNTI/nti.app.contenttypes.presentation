@@ -300,7 +300,10 @@ def _remove_source_lastModified(source, catalog=None):
 def _outline_nodes(outline):
 	result = []
 	def _recur(node):
-		if ICourseOutlineCalendarNode.providedBy(node) and not node.locked:
+		# Strangely, in alpha, we've seen nodes without ntiids.
+		if 		ICourseOutlineCalendarNode.providedBy(node) \
+			and not node.locked \
+			and hasattr( node, 'ntiid' ):
 			result.append(node)
 
 		# parse children
