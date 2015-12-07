@@ -27,7 +27,7 @@ from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import get_course_packages
 
 from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
-from nti.contenttypes.courses.interfaces import	ICourseOutlineCalendarNode
+from nti.contenttypes.courses.interfaces import	ICourseOutlineContentNode
 
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
@@ -300,11 +300,11 @@ def _remove_source_lastModified(source, catalog=None):
 def _outline_nodes(outline):
 	result = []
 	def _recur(node):
-		# Strangely, in alpha, we've seen nodes without ntiids.
-		if 		ICourseOutlineCalendarNode.providedBy(node) \
-			and not node.locked \
-			and hasattr( node, 'ntiid' ):
-			result.append(node)
+		# We only want leaf nodes here; tather any content nodes or
+		# nodes with sources.
+		if 		getattr( node, 'src', None ) \
+			or 	ICourseOutlineContentNode.providedBy( node ):
+			result.append( node )
 
 		# parse children
 		for child in node.values():
@@ -474,6 +474,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 	for node in nodes:
 		namespace = node.src
 		if not namespace:
+			# User created content node without a source.
 			_create_lesson_4_node(node, registry, catalog)
 			continue
 		elif is_ntiid_of_type(namespace, TYPE_OID):  # ignore
