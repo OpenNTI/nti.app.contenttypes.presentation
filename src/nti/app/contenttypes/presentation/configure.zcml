@@ -43,6 +43,9 @@
 			 for="nti.contenttypes.courses.interfaces.ICourseInstance"
 			 provides="nti.contenttypes.presentation.interfaces.IPresentationAssetContainer" />
 
+	<adapter factory=".adapters._MediaFileConstraints" />
+	<adapter factory=".adapters._RelatedWorkRefFileConstraints" />
+
 	<!-- ACLs -->
 	<adapter factory=".acl.NTIAudioACLProvider" />
 	<adapter factory=".acl.NTIVideoACLProvider" />

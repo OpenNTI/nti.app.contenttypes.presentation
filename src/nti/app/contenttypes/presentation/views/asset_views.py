@@ -26,6 +26,7 @@ from zope.security.interfaces import NoInteraction
 from zope.security.management import getInteraction
 
 from pyramid.view import view_config
+
 from pyramid.view import view_defaults
 from pyramid import httpexceptions as hexc
 
@@ -33,6 +34,8 @@ from nti.app.renderers.interfaces import INoHrefInResponse
 
 from nti.app.base.abstract_views import get_all_sources
 from nti.app.base.abstract_views import AbstractAuthenticatedView
+
+from nti.app.contentfile import validate_sources
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
@@ -124,8 +127,8 @@ def principalId():
 		return None
 
 def _notify_created(item, principal=None, externalValue=None):
-	add_2_connection(item) # required
-	principal = principal or principalId() # always get a principal
+	add_2_connection(item)  # required
+	principal = principal or principalId()  # always get a principal
 	notify(PresentationAssetCreatedEvent(item, principal, externalValue))
 	if IPublishable.providedBy(item) and item.is_published():
 		item.unpublish()
@@ -162,7 +165,7 @@ def _add_2_container(context, item, pacakges=False):
 def _canonicalize(items, creator, base=None, registry=None):
 	result = []
 	registry = get_registry(registry)
-	for idx, item in enumerate(items):
+	for idx, item in enumerate(items or ()):
 		created = True
 		provided = iface_of_asset(item)
 		if not item.ntiid:
@@ -246,7 +249,7 @@ class NoHrefAssetGetView(PresentationAssetGetView):
 			   request_method='GET',
 			   permission=nauth.ACT_READ)
 class GetCoursePresentationAssetPostView(AbstractAuthenticatedView):
-	
+
 	def __call__(self):
 		total = 0
 		result = LocatedExternalDict()
@@ -269,7 +272,7 @@ class GetCoursePresentationAssetPostView(AbstractAuthenticatedView):
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest',
 			 name=VIEW_NODE_MOVE)
-class LessonOverviewMoveView( AbstractChildMoveView ):
+class LessonOverviewMoveView(AbstractChildMoveView):
 	"""
 	Move the given object between lessons or overview groups.
 	"""
@@ -280,33 +283,33 @@ class LessonOverviewMoveView( AbstractChildMoveView ):
 	def _get_context_ntiid(self):
 		return self.context.ntiid
 
-	def _remove_from_parent( self, parent, obj ):
-		parent.remove( obj )
+	def _remove_from_parent(self, parent, obj):
+		parent.remove(obj)
 
-	def _add_to_parent( self, parent, obj, index ):
+	def _add_to_parent(self, parent, obj, index):
 		# TODO: Probably need to add an object level API.
 		# Remove from our list if it exists, and then insert at.
 		parent.remove(obj)
-		if index is None or index >= len( parent.Items ):
+		if index is None or index >= len(parent.Items or ()):
 			# Default to append.
-			parent.append( obj )
+			parent.append(obj)
 		else:
-			parent.items.insert( index, obj )
+			parent.items.insert(index, obj)
 
 	def _get_children_ntiids(self, parent_ntiid):
 		result = set()
-		result.add( parent_ntiid )
+		result.add(parent_ntiid)
 		def _recur(node):
 			val = getattr(node, 'ntiid', None)
 			if val:
 				result.add(val)
 			try:
-				for child in node.Items:
+				for child in node.Items or ():
 					_recur(child)
 			except AttributeError:
 				pass
 
-		_recur( self.context )
+		_recur(self.context)
 		return result
 
 class PresentationAssetMixin(object):
@@ -380,21 +383,21 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 		# capture updated/previous data
 		ntiid, href = item.target, item.href
-		contentType = item.type or u'application/octet-stream' # default
+		contentType = item.type or u'application/octet-stream'  # default
 
 		# if client has uploaded a file, capture contentType and target ntiid
-		if self.request.POST and 'href' in self.request.POST: 
+		if self.request.POST and 'href' in self.request.POST:
 			named = get_file_from_link(href) if href else None
 			contentType = unicode(named.contentType or u'') if named else contentType
 			ntiid = to_external_ntiid_oid(named) if named is not None else ntiid
 
-		# parse href 
+		# parse href
 		parsed = urlparse(href) if href else None
 		if href and parsed.scheme or parsed.netloc:  # full url
 			ntiid = make_ntiid(nttype=TYPE_UUID,
 							   provider='NTI',
 							   specific=hexdigest(href.lower()))
-		
+
 		# replace if needed
 		if item.target != ntiid:
 			item.target = ntiid
@@ -410,7 +413,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		# add media roll ntiid
 		item_extended = tuple(extended or ()) + tuple(containers or ()) + (item.ntiid,)
 		item_extended = set(item_extended)
-		for x in item.Items:
+		for x in item.Items or ():
 			_add_2_container(self._course, x, pacakges=False)
 			self._catalog.index(x, container_ntiids=item_extended)
 
@@ -429,7 +432,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		item_extended = list(extended or ()) + containers + [group.ntiid]
 		item_extended = set(item_extended)
 		# process group items
-		for x in group.Items:
+		for x in group.Items or ():
 			if INTIMediaRoll.providedBy(x):
 				provided = iface_of_asset(x)
 				self._handle_media_roll(provided, x, creator, item_extended)
@@ -449,7 +452,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		containers = _add_2_container(self._course, lesson, pacakges=False)
 
 		# Make sure we validate before canonicalize.
-		for item in lesson.Items:
+		for item in lesson.Items or ():
 			self._check_exists(INTICourseOverviewGroup, item, creator)
 		# have unique copies of lesson groups
 		_canonicalize(lesson.Items, creator, registry=self._registry, base=lesson.ntiid)
@@ -458,7 +461,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		item_extended = list(extended or ()) + [lesson.ntiid]
 
 		# process lesson groups
-		for group in lesson.Items:
+		for group in lesson.Items or ():
 			if group.__parent__ is not None and group.__parent__ != lesson:
 				msg = _("Overview group has been used by another lesson")
 				raise hexc.HTTPUnprocessableEntity(msg)
@@ -528,6 +531,7 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 		contentObject, externalValue = self.parseInput(creator, search_owner, externalValue)
 		sources = get_all_sources(self.request)
 		if sources:  # multi-part data
+			validate_sources(contentObject, sources)
 			_handle_multipart(self._course, contentObject, sources)
 		return contentObject, externalValue
 
@@ -575,7 +579,7 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin, UGDPutView):
 	def updateContentObject(self, contentObject, externalValue, set_id=False, notify=True):
 		provided = iface_of_asset(contentObject)
 		if provided == INTILessonOverview:
-			data = {x.ntiid:x for x in contentObject.Items}  # save groups
+			data = {x.ntiid:x for x in contentObject.Items or ()}  # save groups
 		else:
 			data = None
 
@@ -592,11 +596,12 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin, UGDPutView):
 		if sources:
 			courses = get_presentation_asset_courses(self.context)
 			if courses:  # pick first to store assets
+				validate_sources(result, sources)
 				_handle_multipart(courses.__iter__().next(), self.context, sources)
 
 		# unregister any old data
 		if data and provided == INTILessonOverview:
-			updated = {x.ntiid for x in contentObject.Items}
+			updated = {x.ntiid for x in contentObject.Items or ()}
 			for ntiid, group in data.items():
 				if ntiid not in updated:  # group removed
 					remove_asset(group, self._registry, self._catalog)
@@ -713,7 +718,8 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 	def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
 		contentObject, externalValue = self.parseInput(creator, search_owner, externalValue)
 		sources = get_all_sources(self.request)
-		if sources: # multi-part data
+		if sources:  # multi-part data
+			validate_sources(contentObject, sources)
 			_handle_multipart(self._course, contentObject, sources)
 		return contentObject, externalValue
 

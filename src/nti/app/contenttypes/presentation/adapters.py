@@ -25,6 +25,7 @@ from nti.assessment.interfaces import IQAssignment
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.presentation.interfaces import INTIAudio
+from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTIPollRef
 from nti.contenttypes.presentation.interfaces import INTIAudioRef
@@ -37,8 +38,11 @@ from nti.contenttypes.presentation.interfaces import INTIMediaRollRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+
+from nti.namedfile.file import FileConstraints
 
 from nti.schema.jsonschema import TAG_HIDDEN_IN_UI
 
@@ -130,3 +134,13 @@ class _PresentationAssetExternalFieldTraverser(_AbstractExternalFieldTraverser):
 				continue
 			allowed_fields.add(k)
 		self._allowed_fields = allowed_fields
+
+# constraints
+
+@component.adapter(INTIRelatedWorkRef)
+class _RelatedWorkRefFileConstraints(FileConstraints):
+	max_file_size = 52428800 # 50 MB
+
+@component.adapter(INTIMedia)
+class _MediaFileConstraints(FileConstraints):
+	max_file_size = 209715200 # 200 MB
