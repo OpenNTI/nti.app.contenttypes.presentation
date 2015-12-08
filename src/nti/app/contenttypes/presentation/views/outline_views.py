@@ -510,13 +510,15 @@ class OutlineNodeDeleteView(_AbstractOutlineNodeView):
 		if ntiid not in old_keys:
 			raise hexc.HTTPConflict(_('NTIID no longer present'))
 
+		# 12.2015 - We currently do not delete the underlying lesson
+		# and assets tied to this node. Potentially, we could allow
+		# the user to recover/undo these deleted lesson nodes, or
+		# through administrative action.
+		#if self.context.LessonOverviewNTIID:
+		#	self._remove_lesson(self.context.LessonOverviewNTIID)
+
 		# TODO: Can we tell when to unregister nodes (no longer contained)
 		# to avoid orphans?
-
-		# TODO: Do we remove lesson overview?
-		if False and self.context.LessonOverviewNTIID:
-			self._remove_lesson(self.context.LessonOverviewNTIID)
-
 		# TODO: Do we want to permanently delete nodes, or delete placeholder
 		# mark them (to undo and save transaction history)?
 		del self.context[ntiid]
