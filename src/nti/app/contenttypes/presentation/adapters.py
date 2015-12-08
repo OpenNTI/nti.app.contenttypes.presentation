@@ -143,4 +143,4 @@ class _RelatedWorkRefFileConstraints(FileConstraints):
 					
 @component.adapter(INTIMedia)
 class _MediaFileConstraints(FileConstraints):
-	max_file_size = 209715200 # 200 MB
+	max_file_size = 104857600 # 200 MB
