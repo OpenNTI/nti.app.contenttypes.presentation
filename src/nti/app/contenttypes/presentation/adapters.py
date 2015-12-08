@@ -139,8 +139,8 @@ class _PresentationAssetExternalFieldTraverser(_AbstractExternalFieldTraverser):
 
 @component.adapter(INTIRelatedWorkRef)
 class _RelatedWorkRefFileConstraints(FileConstraints):
-	max_file_size = 52428800 # 50 MB
-
+	max_file_size = 104857600 # 100 MB
+					
 @component.adapter(INTIMedia)
 class _MediaFileConstraints(FileConstraints):
 	max_file_size = 209715200 # 200 MB
