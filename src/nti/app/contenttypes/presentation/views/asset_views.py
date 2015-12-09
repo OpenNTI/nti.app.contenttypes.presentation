@@ -44,6 +44,10 @@ from nti.appserver.ugd_edit_views import UGDDeleteView
 from nti.appserver.pyramid_authorization import has_permission
 from nti.appserver.dataserver_pyramid_views import GenericGetView
 
+from nti.assessment.interfaces import IQSurvey 
+from nti.assessment.interfaces import IQAssignment 
+from nti.assessment.interfaces import IQuestionSet
+
 from nti.common.property import Lazy
 
 from nti.coremetadata.interfaces import IPublishable
@@ -65,8 +69,11 @@ from nti.contenttypes.presentation import COURSE_OVERVIEW_GROUP_MIMETYES
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
+from nti.contenttypes.presentation.interfaces import INTISurveyRef
+from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import IGroupOverViewable
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
+from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
@@ -152,10 +159,10 @@ def _add_2_courses(context, item):
 	for subinstance in get_course_subinstances(context):
 		_add_2_course(subinstance, item)
 
-def _add_2_container(context, item, pacakges=False):
+def _add_2_container(context, item, packages=False):
 	result = []
 	_add_2_courses(context, item)
-	if pacakges:
+	if packages:
 		result.extend(_add_2_packages(context, item))
 	entry = ICourseCatalogEntry(context, None)
 	if entry is not None:
@@ -356,7 +363,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		return item
 
 	def _handle_package_asset(self, provided, item, creator, extended=None):
-		containers = _add_2_container(self._course, item, pacakges=True)
+		containers = _add_2_container(self._course, item, packages=True)
 		namespace = containers[0] if containers else None  # first pkg
 		if provided == INTISlideDeck:
 			base = item.ntiid
@@ -370,7 +377,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 			# register in containers and index
 			for x in chain(item.Slides, item.Videos):
-				_add_2_container(self._course, x, pacakges=True)
+				_add_2_container(self._course, x, packages=True)
 				self._catalog.index(x, container_ntiids=item_extended,
 									namespace=namespace)
 
@@ -405,7 +412,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 			item.type = contentType
 
 	def _handle_media_roll(self, provided, item, creator, extended=None):
-		containers = _add_2_container(self._course, item, pacakges=False)
+		containers = _add_2_container(self._course, item, packages=False)
 
 		# register unique copies
 		_canonicalize(item.Items, creator, base=item.ntiid, registry=self._registry)
@@ -414,16 +421,31 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		item_extended = tuple(extended or ()) + tuple(containers or ()) + (item.ntiid,)
 		item_extended = set(item_extended)
 		for x in item.Items or ():
-			_add_2_container(self._course, x, pacakges=False)
+			_add_2_container(self._course, x, packages=False)
 			self._catalog.index(x, container_ntiids=item_extended)
 
 		# index item
 		item_extended = tuple(extended or ()) + tuple(containers or ())
 		self._catalog.index(item, container_ntiids=item_extended)
 
+	def _handle_group_over_viewable(self, provided, item, creator, extended=None):
+		containers = _add_2_container(self._course, item, packages=False)
+		item_extended = tuple(extended or ()) + tuple(containers or ())
+		self._catalog.index(item, container_ntiids=item_extended)
+		
+		if INTIAssignmentRef.providedBy(item) and not item.title:
+			assignment = self._registry.queryUtility(IQAssignment, name=item.target or '')
+			item.title = assignment.title if assignment is not None else item.title
+		elif INTIQuestionSetRef.providedBy(item):
+			qset = self._registry.queryUtility(IQuestionSet, name=item.target or '')
+			item.question_count = len(qset) if qset is not None else item.question_count
+		elif INTISurveyRef.providedBy(item):
+			survey = self._registry.queryUtility(IQSurvey, name=item.target or '')
+			item.question_count = len(survey) if survey is not None else item.question_count
+			
 	def _handle_overview_group(self, group, creator, extended=None):
 		# add to course container
-		containers = _add_2_container(self._course, group, pacakges=False)
+		containers = _add_2_container(self._course, group, packages=False)
 
 		# have unique copies of group items
 		_canonicalize(group.Items, creator, registry=self._registry, base=group.ntiid)
@@ -431,14 +453,11 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		# include group ntiid in containers
 		item_extended = list(extended or ()) + containers + [group.ntiid]
 		item_extended = set(item_extended)
+
 		# process group items
-		for x in group.Items or ():
-			if INTIMediaRoll.providedBy(x):
-				provided = iface_of_asset(x)
-				self._handle_media_roll(provided, x, creator, item_extended)
-			else:
-				_add_2_container(self._course, x, pacakges=False)
-				self._catalog.index(x, container_ntiids=item_extended)
+		for item in group or ():
+			provided = iface_of_asset(item)
+			self._handle_group_over_viewable(provided, item, creator, item_extended)
 
 		# index group
 		lesson = group.__parent__
@@ -449,7 +468,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 	def _handle_lesson_overview(self, lesson, creator, extended=None):
 		# add to course container
-		containers = _add_2_container(self._course, lesson, pacakges=False)
+		containers = _add_2_container(self._course, lesson, packages=False)
 
 		# Make sure we validate before canonicalize.
 		for item in lesson.Items or ():
@@ -461,7 +480,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		item_extended = list(extended or ()) + [lesson.ntiid]
 
 		# process lesson groups
-		for group in lesson.Items or ():
+		for group in lesson or ():
 			if group.__parent__ is not None and group.__parent__ != lesson:
 				msg = _("Overview group has been used by another lesson")
 				raise hexc.HTTPUnprocessableEntity(msg)
@@ -478,8 +497,8 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		self._catalog.index(lesson, container_ntiids=item_extended,
 							namespace=namespace)
 
-	def _handle_other_asset(self, item, creator, extended=None):
-		containers = _add_2_container(self._course, item, pacakges=False)
+	def _handle_other_asset(self, provided, item, creator, extended=None):
+		containers = _add_2_container(self._course, item, packages=False)
 		item_extended = tuple(extended or ()) + tuple(containers or ())
 		self._catalog.index(item, container_ntiids=item_extended)
 
@@ -489,14 +508,16 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 				self._handle_related_work(provided, item, creator, extended)
 			else:
 				self._handle_package_asset(provided, item, creator, extended)
+		elif IGroupOverViewable.providedBy(item):
+			self._handle_group_over_viewable(provided, item, creator, extended)
 		elif INTIMediaRoll.providedBy(item):
 			self._handle_media_roll(provided, item, creator, extended)
-		elif provided == INTICourseOverviewGroup:
+		elif INTICourseOverviewGroup.providedBy(item):
 			self._handle_overview_group(item, creator, extended)
-		elif provided == INTILessonOverview:
+		elif INTILessonOverview.providedBy(item):
 			self._handle_lesson_overview(item, creator, extended)
 		else:
-			self._handle_other_asset(item, creator, extended)
+			self._handle_other_asset(provided, item, creator, extended)
 		return item
 
 @view_config(context=ICourseInstance)
