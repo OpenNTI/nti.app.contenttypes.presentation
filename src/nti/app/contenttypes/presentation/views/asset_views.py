@@ -44,8 +44,8 @@ from nti.appserver.ugd_edit_views import UGDDeleteView
 from nti.appserver.pyramid_authorization import has_permission
 from nti.appserver.dataserver_pyramid_views import GenericGetView
 
-from nti.assessment.interfaces import IQSurvey 
-from nti.assessment.interfaces import IQAssignment 
+from nti.assessment.interfaces import IQSurvey
+from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQuestionSet
 
 from nti.common.property import Lazy
@@ -348,7 +348,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 	def _get_ntiid(self, item):
 		ntiid = item.ntiid
-		# for overview groups we auto-generate NTIIDs, 
+		# for overview groups we auto-generate NTIIDs,
 		# if that is the case null it out to force a new one
 		if 		INTICourseOverviewGroup.providedBy(item) \
 			and TYPE_UUID in get_specific(ntiid):
@@ -434,17 +434,24 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		containers = _add_2_container(self._course, item, packages=False)
 		item_extended = tuple(extended or ()) + tuple(containers or ())
 		self._catalog.index(item, container_ntiids=item_extended)
-		
+
+		content_unit = None
 		if INTIAssignmentRef.providedBy(item) and not item.title:
 			assignment = self._registry.queryUtility(IQAssignment, name=item.target or '')
 			item.title = assignment.title if assignment is not None else item.title
+			content_unit = assignment.__parent__ if assignment is not None else None
 		elif INTIQuestionSetRef.providedBy(item):
 			qset = self._registry.queryUtility(IQuestionSet, name=item.target or '')
 			item.question_count = len(qset) if qset is not None else item.question_count
+			content_unit = qset.__parent__ if qset is not None else None
 		elif INTISurveyRef.providedBy(item):
 			survey = self._registry.queryUtility(IQSurvey, name=item.target or '')
 			item.question_count = len(survey) if survey is not None else item.question_count
-			
+			content_unit = survey.__parent__ if survey is not None else None
+
+		if content_unit is not None:
+			item.containerId = content_unit.ntiid
+
 	def _handle_overview_group(self, group, creator, extended=None):
 		# add to course container
 		containers = _add_2_container(self._course, group, packages=False)
@@ -528,7 +535,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 			result.pop('ntiid', None)
 			result.pop('NTIID', None)
 		return result
-		
+
 @view_config(context=ICourseInstance)
 @view_config(context=ICourseCatalogEntry)
 @view_defaults(route_name='objects.generic.traversal',
@@ -537,7 +544,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 			   request_method='POST',
 			   permission=nauth.ACT_CONTENT_EDIT)
 class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
-								ModeledContentUploadRequestUtilsMixin): # order matters
+								ModeledContentUploadRequestUtilsMixin):  # order matters
 
 	content_predicate = IPresentationAsset.providedBy
 
@@ -592,7 +599,7 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 			   request_method='PUT',
 			   permission=nauth.ACT_CONTENT_EDIT)
 class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
-							   UGDPutView): # order matters
+							   UGDPutView):  # order matters
 
 	@Lazy
 	def _registry(self):
@@ -663,7 +670,7 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 			   name=VIEW_CONTENTS,
 			   permission=nauth.ACT_CONTENT_EDIT)
 class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
-										ModeledContentUploadRequestUtilsMixin): # order matters
+										ModeledContentUploadRequestUtilsMixin):  # order matters
 
 	content_predicate = INTICourseOverviewGroup.providedBy
 
@@ -721,7 +728,7 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 			   name=VIEW_CONTENTS,
 			   permission=nauth.ACT_CONTENT_EDIT)
 class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
-											 ModeledContentUploadRequestUtilsMixin): # order matters
+											 ModeledContentUploadRequestUtilsMixin):  # order matters
 
 	content_predicate = IGroupOverViewable.providedBy
 
