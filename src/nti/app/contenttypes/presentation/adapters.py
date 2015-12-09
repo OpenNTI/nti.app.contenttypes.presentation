@@ -24,7 +24,8 @@ from nti.assessment.interfaces import IQAssignment
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
-from nti.contenttypes.presentation.interfaces import INTIAudio
+from nti.contenttypes.presentation.interfaces import INTIAudio,\
+	INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTIPollRef
@@ -137,6 +138,10 @@ class _PresentationAssetExternalFieldTraverser(_AbstractExternalFieldTraverser):
 
 # constraints
 
+@component.adapter(INTIDiscussionRef)
+class _DiscussionRefFileConstraints(FileConstraints):
+	max_file_size = 10485760 # 10 MB
+	
 @component.adapter(INTIRelatedWorkRef)
 class _RelatedWorkRefFileConstraints(FileConstraints):
 	max_file_size = 104857600 # 100 MB
