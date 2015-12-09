@@ -348,6 +348,8 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 	def _get_ntiid(self, item):
 		ntiid = item.ntiid
+		# for overview groups we auto-generate NTIIDs, 
+		# if that is the case null it out to force a new one
 		if 		INTICourseOverviewGroup.providedBy(item) \
 			and TYPE_UUID in get_specific(ntiid):
 			ntiid = None
@@ -520,6 +522,13 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 			self._handle_other_asset(provided, item, creator, extended)
 		return item
 
+	def readInput(self, no_ntiids=True):
+		result = super(PresentationAssetSubmitViewMixin, self).readInput()
+		if no_ntiids:
+			result.pop('ntiid', None)
+			result.pop('NTIID', None)
+		return result
+		
 @view_config(context=ICourseInstance)
 @view_config(context=ICourseCatalogEntry)
 @view_defaults(route_name='objects.generic.traversal',
@@ -528,7 +537,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 			   request_method='POST',
 			   permission=nauth.ACT_CONTENT_EDIT)
 class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
-								ModeledContentUploadRequestUtilsMixin):
+								ModeledContentUploadRequestUtilsMixin): # order matters
 
 	content_predicate = IPresentationAsset.providedBy
 
@@ -582,7 +591,8 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 			   renderer='rest',
 			   request_method='PUT',
 			   permission=nauth.ACT_CONTENT_EDIT)
-class PresentationAssetPutView(PresentationAssetSubmitViewMixin, UGDPutView):
+class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
+							   UGDPutView): # order matters
 
 	@Lazy
 	def _registry(self):
@@ -590,12 +600,6 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin, UGDPutView):
 		return component_registry(self.context,
 								  provided=provided,
 								  name=self.context.ntiid)
-
-	def readInput(self, value=None):
-		result = UGDPutView.readInput(self, value=value)
-		result.pop('ntiid', None)
-		result.pop('NTIID', None)
-		return result
 
 	def updateContentObject(self, contentObject, externalValue, set_id=False, notify=True):
 		provided = iface_of_asset(contentObject)
@@ -659,7 +663,7 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 			   name=VIEW_CONTENTS,
 			   permission=nauth.ACT_CONTENT_EDIT)
 class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
-										ModeledContentUploadRequestUtilsMixin):
+										ModeledContentUploadRequestUtilsMixin): # order matters
 
 	content_predicate = INTICourseOverviewGroup.providedBy
 
@@ -717,7 +721,7 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 			   name=VIEW_CONTENTS,
 			   permission=nauth.ACT_CONTENT_EDIT)
 class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
-											 ModeledContentUploadRequestUtilsMixin):
+											 ModeledContentUploadRequestUtilsMixin): # order matters
 
 	content_predicate = IGroupOverViewable.providedBy
 
