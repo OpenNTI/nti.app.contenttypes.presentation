@@ -57,26 +57,26 @@ class BasePresentationAssetACLProvider(object):
 
 	@property
 	def __acl__(self):
-		instructors = set()
 		editors = set()
+		instructors = set()
 		aces = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
 				ace_allowing(ROLE_CONTENT_EDITOR, ALL_PERMISSIONS, type(self))]
 		courses = get_presentation_asset_courses(self.context)
 		for course in courses or ():
+			# scopes get read access
 			for scope in course.SharingScopes.values():
 				aces.append(ace_allowing(IPrincipal(scope), ACT_READ, type(self)))
 
-			for i in course.instructors or (): # get special powers
-				instructors.add(ace_allowing(i, ALL_PERMISSIONS, type(self)))
-				instructors.add(ace_allowing(i, ACT_CONTENT_EDIT, type(self)))
+			for i in course.instructors or ():
+				instructors.add(ace_allowing(i, ACT_READ, type(self)))
 
 			# Now our course content admins
-			for editor in get_course_editors( course ):
-				editors.add( ace_allowing(editor, ACT_READ, type(self)) )
-				editors.add( ace_allowing(editor, ACT_CONTENT_EDIT, type(self)) )
+			for editor in get_course_editors(course):
+				editors.add(ace_allowing(editor, ACT_READ, type(self)))
+				editors.add(ace_allowing(editor, ACT_CONTENT_EDIT, type(self)))
 
-		aces.extend(instructors)
 		aces.extend(editors)
+		aces.extend(instructors)
 		result = acl_from_aces(aces)
 		return result
 
