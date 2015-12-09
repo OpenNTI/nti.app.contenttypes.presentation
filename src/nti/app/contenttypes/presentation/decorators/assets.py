@@ -77,6 +77,7 @@ from ..utils import get_enrollment_record as get_any_enrollment_record
 
 from . import LEGACY_UAS_40
 from . import ORDERED_CONTENTS
+
 from . import is_legacy_uas
 from . import _AbstractMoveLinkDecorator
 
@@ -119,7 +120,7 @@ class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecor
 
 @component.adapter(INTILessonOverview)
 @interface.implementer(IExternalMappingDecorator)
-class _LessonMoveLinkDecorator( _AbstractMoveLinkDecorator ):
+class _LessonMoveLinkDecorator(_AbstractMoveLinkDecorator):
 	pass
 
 @component.adapter(INTILessonOverview)
