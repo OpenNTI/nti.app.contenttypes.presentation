@@ -240,6 +240,8 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		result = LocatedExternalDict()
 		result.__name__ = self.request.view_name
 		result.__parent__ = self.request.context
+
+		lastModified = 0
 		catalog = get_library_catalog()
 		intids = component.getUtility(IIntIds)
 
@@ -282,6 +284,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 						containers.setdefault(ntiid, set())
 						containers[ntiid].add(item.ntiid)
 				items[item.ntiid] = to_external_object(item)
+				lastModified = max(lastModified, item.lastModified)
 
 		for item in catalog.search_objects(
 								container_ntiids=ntiids,
@@ -294,10 +297,12 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 					containers.setdefault(ntiid, set())
 					containers[ntiid].add(item.ntiid)
 			items[item.ntiid] = to_external_object(item)
+			lastModified = max(lastModified, item.lastModified)
 
 		# make json ready
 		for k, v in list(containers.items()):
 			containers[k] = list(v)
+		result[LAST_MODIFIED] = lastModified
 		result['Total'] = result['ItemCount'] = len(items)
 		return result
 
@@ -514,8 +519,8 @@ class OutlineNodeDeleteView(_AbstractOutlineNodeView):
 		# and assets tied to this node. Potentially, we could allow
 		# the user to recover/undo these deleted lesson nodes, or
 		# through administrative action.
-		#if self.context.LessonOverviewNTIID:
-		#	self._remove_lesson(self.context.LessonOverviewNTIID)
+		# if self.context.LessonOverviewNTIID:
+		# 	self._remove_lesson(self.context.LessonOverviewNTIID)
 
 		# TODO: Can we tell when to unregister nodes (no longer contained)
 		# to avoid orphans?
