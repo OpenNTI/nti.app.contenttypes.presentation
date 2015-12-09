@@ -300,11 +300,11 @@ def _remove_source_lastModified(source, catalog=None):
 def _outline_nodes(outline):
 	result = []
 	def _recur(node):
-		# We only want leaf nodes here; tather any content nodes or
+		# We only want leaf nodes here; rather any content nodes or
 		# nodes with sources.
-		if 		getattr( node, 'src', None ) \
-			or 	ICourseOutlineContentNode.providedBy( node ):
-			result.append( node )
+		if 		getattr(node, 'src', None) \
+			or 	ICourseOutlineContentNode.providedBy(node):
+			result.append(node)
 
 		# parse children
 		for child in node.values():
@@ -465,7 +465,6 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 	ref_ntiid = parent.ntiid if parent is not None else ntiid
 
 	now = time.time()
-	cataloged = get_cataloged_namespaces(ntiid, catalog)
 	logger.info('Synchronizing lessons overviews for %s', name)
 
 	# parse and register
@@ -479,6 +478,9 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 			continue
 		elif is_ntiid_of_type(namespace, TYPE_OID):  # ignore
 			continue
+		elif IRecordable.providedBy(node) and node.locked:  # ignore locked
+			continue
+		# ready to sync
 		namespaces.add(namespace)  # this is ntiid based file (unique)
 		for content_package in course_packages:
 			sibling_key = content_package.does_sibling_entry_exist(namespace)
@@ -539,15 +541,6 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 
 			_set_source_lastModified(namespace, sibling_lastModified, catalog)
 
-	# remove any lesson overview items that were dropped
-	difference = cataloged.difference(namespaces)
-	if difference:
-		_remove_and_unindex_course_assets(namespace=difference,
-										  container_ntiids=ntiid,
-										  registry=registry,
-										  catalog=catalog,
-										  intids=intids,
-										  course=course)
 
 	# finally copy transactions from removed to new objects
 	_copy_remove_transactions(removed, registry=registry)
