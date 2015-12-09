@@ -104,7 +104,7 @@ class _CourseOutlineSharedDecorator(object):
 
 @component.adapter(ICourseOutline)
 @interface.implementer(IExternalMappingDecorator)
-class _CourseOutlineMoveLinkDecorator( _AbstractMoveLinkDecorator ):
+class _CourseOutlineMoveLinkDecorator(_AbstractMoveLinkDecorator):
 	pass
 
 @component.adapter(ICourseOutlineNode)

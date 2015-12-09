@@ -17,6 +17,8 @@ from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecora
 
 from nti.appserver.pyramid_authorization import has_permission
 
+from nti.common.property import Lazy
+
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.externalization.interfaces import StandardExternalFields
@@ -54,10 +56,16 @@ def is_legacy_uas(request, legacy_uas=LEGACY_UAS_40):
 			return True
 	return False
 
-class _AbstractMoveLinkDecorator( AbstractAuthenticatedRequestAwareDecorator ):
+class _AbstractMoveLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
+	@Lazy
+	def _acl_decoration(self):
+		result = getattr(self.request, 'acl_decoration', True)
+		return result
+	
 	def _predicate(self, context, result):
 		return 		self._is_authenticated \
+				and self._acl_decoration \
 				and has_permission(ACT_CONTENT_EDIT, context, self.request)
 
 	def _do_decorate_external(self, context, result):
