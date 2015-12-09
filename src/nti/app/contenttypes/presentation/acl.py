@@ -18,6 +18,8 @@ from nti.common.property import Lazy
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
+from nti.contenttypes.courses.utils import get_course_editors
+
 from nti.contenttypes.presentation.interfaces import INTIAudio
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTITimeline
@@ -56,6 +58,7 @@ class BasePresentationAssetACLProvider(object):
 	@property
 	def __acl__(self):
 		instructors = set()
+		editors = set()
 		aces = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
 				ace_allowing(ROLE_CONTENT_EDITOR, ALL_PERMISSIONS, type(self))]
 		courses = get_presentation_asset_courses(self.context)
@@ -67,7 +70,13 @@ class BasePresentationAssetACLProvider(object):
 				instructors.add(ace_allowing(i, ALL_PERMISSIONS, type(self)))
 				instructors.add(ace_allowing(i, ACT_CONTENT_EDIT, type(self)))
 
+			# Now our course content admins
+			for editor in get_course_editors( course ):
+				editors.add( ace_allowing(editor, ACT_READ, type(self)) )
+				editors.add( ace_allowing(editor, ACT_CONTENT_EDIT, type(self)) )
+
 		aces.extend(instructors)
+		aces.extend(editors)
 		result = acl_from_aces(aces)
 		return result
 
