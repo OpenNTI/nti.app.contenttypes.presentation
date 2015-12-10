@@ -467,7 +467,11 @@ class OutlineNodeMoveView(AbstractChildMoveView, _AbstractOutlineNodeView):
 		return to_external_ntiid_oid(self.context)
 
 	def _remove_from_parent(self, parent, obj):
-		del parent[obj.ntiid]
+		try:
+			del parent[obj.ntiid]
+			return True
+		except KeyError:
+			return False
 
 	def _add_to_parent(self, parent, obj, index):
 		if obj.ntiid not in list(parent.keys()):

@@ -208,7 +208,6 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 
 		if index is not None and index < 0:
 			raise hexc.HTTPBadRequest(_('Invalid index.'))
-
 		self._add_to_parent(new_parent, obj, index)
 
 		# Make sure they don't move the object within the same node and
@@ -217,9 +216,9 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 			old_parent = find_object_with_ntiid(old_parent_ntiid)
 			if old_parent is None:
 				raise hexc.HTTPUnprocessableEntity(_('Old node parent no longer exists.'))
-			if old_parent.get( ntiid, None ) is None:
+			did_remove = self._remove_from_parent(old_parent, obj)
+			if not did_remove:
 				raise hexc.HTTPUnprocessableEntity(_('Moved node does not exist in old parent.'))
-			self._remove_from_parent(old_parent, obj)
 
 		if self.notify_type:
 			notify(self.notify_type(new_parent, self.remoteUser.username, index))

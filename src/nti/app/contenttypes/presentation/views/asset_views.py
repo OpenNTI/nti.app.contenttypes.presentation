@@ -291,7 +291,7 @@ class LessonOverviewMoveView(AbstractChildMoveView):
 		return self.context.ntiid
 
 	def _remove_from_parent(self, parent, obj):
-		parent.remove(obj)
+		return parent.remove(obj)
 
 	def _add_to_parent(self, parent, obj, index):
 		# TODO: Probably need to add an object level API.
