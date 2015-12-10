@@ -88,6 +88,7 @@ from ..utils import component_registry
 from ..utils import create_lesson_4_node
 from ..utils import get_enrollment_record
 
+from .view_mixins import IndexedRequestMixin
 from .view_mixins import AbstractChildMoveView
 from .view_mixins import PublishVisibilityMixin
 
@@ -320,30 +321,15 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 			result = self._do_current(course, record)
 		return result
 
-class _AbstractOutlineNodeView(AbstractAuthenticatedView,
-								ModeledContentUploadRequestUtilsMixin):
-
-	def _reorder_children(self, node, ntiid, index):
-		"""
-		For a given ntiid and index, insert the ntiid into
-		the `index` slot and reorder the parent's children.
-		"""
-		old_keys = list(node.keys())
-		# An index outside our boundary acts as a no-op/append.
-		if index is not None and index < len(old_keys):
-			old_keys.remove(ntiid)
-			new_keys = old_keys[:index]
-			new_keys.append(ntiid)
-			new_keys.extend(old_keys[index:])
-			node.updateOrder(new_keys)
-
 @view_config(route_name='objects.generic.traversal',
 			 context=ICourseOutlineNode,
 			 request_method='POST',
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest',
 			 name=VIEW_NODE_CONTENTS)
-class OutlineNodeInsertView(_AbstractOutlineNodeView):
+class OutlineNodeInsertView(AbstractAuthenticatedView,
+							ModeledContentUploadRequestUtilsMixin,
+							IndexedRequestMixin):
 	"""
 	Creates an outline node at the given index path, if supplied.
 	Otherwise, append to our context.
@@ -351,22 +337,6 @@ class OutlineNodeInsertView(_AbstractOutlineNodeView):
 	We could generalize this and the index views for
 	all IOrderedContainers.
 	"""
-
-	def _get_index(self):
-		"""
-		If the user supplies an index, we expect it to exist on the
-		path: '.../index/<index_number>'
-		"""
-		index = None
-		if 		self.request.subpath \
-			and self.request.subpath[0] == 'index' \
-			and len(self.request.subpath) > 1:
-			try:
-				index = self.request.subpath[1]
-				index = int(index)
-			except (TypeError, IndexError):
-				raise hexc.HTTPUnprocessableEntity('Invalid index %s' % index)
-		return index
 
 	def _get_catalog_entry(self, outline):
 		course = find_interface(outline, ICourseInstance, strict=False)
@@ -437,11 +407,8 @@ class OutlineNodeInsertView(_AbstractOutlineNodeView):
 
 	def __call__(self):
 		index = self._get_index()
-		index = index if index is None else max(index, 0)
 		new_node = self._get_new_node()
-
-		self.context.append(new_node)
-		self._reorder_children(self.context, new_node.ntiid, index)
+		self.context.insert( index, new_node )
 
 		logger.info('Created new outline node (%s)', new_node.ntiid)
 		self.request.response.status_int = 201
@@ -453,7 +420,9 @@ class OutlineNodeInsertView(_AbstractOutlineNodeView):
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest',
 			 name=VIEW_NODE_MOVE)
-class OutlineNodeMoveView(AbstractChildMoveView, _AbstractOutlineNodeView):
+class OutlineNodeMoveView(AbstractChildMoveView,
+						AbstractAuthenticatedView,
+						ModeledContentUploadRequestUtilsMixin):
 	"""
 	Move the given object between outline nodes in a course
 	outline. The source, target NTIIDs must exist in the outline (no
@@ -472,12 +441,6 @@ class OutlineNodeMoveView(AbstractChildMoveView, _AbstractOutlineNodeView):
 			return True
 		except KeyError:
 			return False
-
-	def _add_to_parent(self, parent, obj, index):
-		if obj.ntiid not in list(parent.keys()):
-			# It's a move, append to our context.
-			parent.append(obj)
-		self._reorder_children(parent, obj.ntiid, index)
 
 	def _get_children_ntiids(self, outline_ntiid):
 		result = set()
@@ -498,7 +461,8 @@ class OutlineNodeMoveView(AbstractChildMoveView, _AbstractOutlineNodeView):
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest',
 			 name=VIEW_NODE_CONTENTS)
-class OutlineNodeDeleteView(_AbstractOutlineNodeView):
+class OutlineNodeDeleteView(AbstractAuthenticatedView,
+							ModeledContentUploadRequestUtilsMixin):
 	"""
 	Delete the given ntiid in our context.
 	"""

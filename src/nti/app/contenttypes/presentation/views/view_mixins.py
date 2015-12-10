@@ -173,12 +173,6 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 		"""
 		raise NotImplementedError()
 
-	def _add_to_parent(self, parent, ntiid, index):
-		"""
-		Define how to add an item to a parent at an index.
-		"""
-		raise NotImplementedError()
-
 	def __call__(self):
 		values = CaseInsensitiveDict(self.readInput())
 		index = values.get('Index')
@@ -193,7 +187,7 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 
 		children_ntiids = self._get_children_ntiids(context_ntiid)
 		if 		new_parent_ntiid not in children_ntiids \
-			or (old_parent_ntiid
+			or (	old_parent_ntiid
 				and old_parent_ntiid not in children_ntiids):
 			raise hexc.HTTPUnprocessableEntity(_('Cannot move between root objects.'))
 
@@ -208,7 +202,7 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 
 		if index is not None and index < 0:
 			raise hexc.HTTPBadRequest(_('Invalid index.'))
-		self._add_to_parent(new_parent, obj, index)
+		new_parent.insert( index, obj )
 
 		# Make sure they don't move the object within the same node and
 		# attempt to delete from that node.
@@ -236,3 +230,22 @@ class PublishVisibilityMixin(object):
 		return 		not IPublishable.providedBy(item) \
 				or 	item.is_published() \
 				or	has_permission(nauth.ACT_CONTENT_EDIT, item, self.request)
+
+class IndexedRequestMixin(object):
+
+	def _get_index(self):
+		"""
+		If the user supplies an index, we expect it to exist on the
+		path: '.../index/<index_number>'
+		"""
+		index = None
+		if 		self.request.subpath \
+			and self.request.subpath[0] == 'index' \
+			and len(self.request.subpath) > 1:
+			try:
+				index = self.request.subpath[1]
+				index = int(index)
+			except (TypeError, IndexError):
+				raise hexc.HTTPUnprocessableEntity('Invalid index %s' % index)
+		index = index if index is None else max(index, 0)
+		return index

@@ -116,6 +116,7 @@ from .view_mixins import get_namedfile
 from .view_mixins import get_render_link
 from .view_mixins import get_assets_folder
 from .view_mixins import get_file_from_link
+from .view_mixins import IndexedRequestMixin
 from .view_mixins import AbstractChildMoveView
 from .view_mixins import PublishVisibilityMixin
 
@@ -294,16 +295,6 @@ class LessonOverviewMoveView(AbstractChildMoveView):
 	def _remove_from_parent(self, parent, obj):
 		return parent.remove(obj)
 
-	def _add_to_parent(self, parent, obj, index):
-		# TODO: Probably need to add an object level API.
-		# Remove from our list if it exists, and then insert at.
-		parent.remove(obj)
-		if index is None or index >= len(parent.Items or ()):
-			# Default to append.
-			parent.append(obj)
-		else:
-			parent.items.insert(index, obj)
-
 	def _get_children_ntiids(self, parent_ntiid):
 		result = set()
 		result.add(parent_ntiid)
@@ -350,7 +341,8 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 	def _get_ntiid(self, item):
 		ntiid = item.ntiid
 		# for return None for auto-generate NTIIDs,
-		if 		(INTICourseOverviewGroup.providedBy(item) or IAssetRef.providedBy(item)) \
+		if 		ntiid \
+			and	(INTICourseOverviewGroup.providedBy(item) or IAssetRef.providedBy(item)) \
 			and TYPE_UUID in get_specific(ntiid):
 			ntiid = None
 		return ntiid
@@ -670,7 +662,8 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 			   name=VIEW_CONTENTS,
 			   permission=nauth.ACT_CONTENT_EDIT)
 class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
-										ModeledContentUploadRequestUtilsMixin):  # order matters
+										ModeledContentUploadRequestUtilsMixin,
+										IndexedRequestMixin):  # order matters
 
 	content_predicate = INTICourseOverviewGroup.providedBy
 
@@ -694,6 +687,7 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 		return contentObject, externalValue
 
 	def _do_call(self):
+		index = self._get_index()
 		creator = self.remoteUser
 		provided = INTICourseOverviewGroup
 		contentObject, externalValue = self.readCreateUpdateContentObject(creator)
@@ -712,7 +706,7 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 						component=contentObject,
 						name=contentObject.ntiid)
 
-		self.context.append(contentObject)
+		self.context.insert( index, contentObject )
 		self._handle_overview_group(contentObject,
 									creator=creator,
 									extended=(self.context.ntiid,))
@@ -728,7 +722,8 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 			   name=VIEW_CONTENTS,
 			   permission=nauth.ACT_CONTENT_EDIT)
 class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
-											 ModeledContentUploadRequestUtilsMixin):  # order matters
+											 ModeledContentUploadRequestUtilsMixin,
+											 IndexedRequestMixin):  # order matters
 
 	content_predicate = IGroupOverViewable.providedBy
 
@@ -756,6 +751,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		return contentObject, externalValue
 
 	def _do_call(self):
+		index = self._get_index()
 		creator = self.remoteUser
 		contentObject, externalValue = self.readCreateUpdateContentObject(creator)
 		provided = iface_of_asset(contentObject)
@@ -773,7 +769,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 
 		parent = self.context.__parent__
 		extended = (self.context.ntiid,) + ((parent.ntiid,) if parent is not None else ())
-		self.context.append(contentObject)
+		self.context.insert( index, contentObject )
 		self._handle_asset(provided,
 						   contentObject,
 						   creator=creator,

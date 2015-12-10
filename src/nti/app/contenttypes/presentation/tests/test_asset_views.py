@@ -203,7 +203,7 @@ class TestAssetViews(ApplicationLayerTest):
 
 		# contents
 		source = self._load_resource('relatedwork.json')
-		source.pop('NTIID', None)
+		source.pop('ntiid', None)
 		assert_that(source, has_entry('icon','http://bleach.com/aizen.jpg'))
 
 		mc_ri.is_callable().with_args().returns(source)
@@ -219,11 +219,29 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(res.json_body, has_entry('icon', 'http://bleach.org/ichigo.png'))
 
 			obj = find_object_with_ntiid(ntiid)
+			rel_ntiid = res.json_body['ntiid']
 			assert_that(obj, has_property('Items', has_length(2)))
+			assert_that( obj.Items[-1].ntiid, is_( rel_ntiid ))
 			history  = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(3))
 
+			obj = find_object_with_ntiid(rel_ntiid)
+			catalog = get_library_catalog()
+			containers = catalog.get_containers(obj)
+			assert_that(ntiid, is_in(containers))
+
+		# Insert at index 0
+		res = self.testapp.post_json(contents_url + '/index/0',
+									upload_files=[('icon', 'ichigo.png', b'ichigo')],
+									status=201)
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			obj = find_object_with_ntiid(ntiid)
 			rel_ntiid = res.json_body['ntiid']
+			assert_that(obj, has_property('Items', has_length(3)))
+			assert_that( obj.Items[0].ntiid, is_( rel_ntiid ))
+			history  = ITransactionRecordHistory(obj)
+			assert_that(history, has_length(4))
+
 			obj = find_object_with_ntiid(rel_ntiid)
 			catalog = get_library_catalog()
 			containers = catalog.get_containers(obj)
@@ -269,17 +287,31 @@ class TestAssetViews(ApplicationLayerTest):
 			history  = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(2))
 
-		# contents
+		# contents, insert group at end
 		source = {'title':'mygroup'}
 		contents_url = href + '/@@contents'
 		res = self.testapp.post_json(contents_url, source, status=201)
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			obj = find_object_with_ntiid(ntiid)
+			group_ntiid = res.json_body['ntiid']
 			assert_that(obj, has_property('Items', has_length(2)))
+			assert_that( obj.Items[-1].ntiid, is_( group_ntiid ))
 			history = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(3))
 
+			obj = find_object_with_ntiid(group_ntiid)
+			catalog = get_library_catalog()
+			containers = catalog.get_containers(obj)
+			assert_that(ntiid, is_in(containers))
+
+		# Insert group at index 0
+		res = self.testapp.post_json(contents_url + '/index/0', source, status=201)
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			obj = find_object_with_ntiid(ntiid)
 			group_ntiid = res.json_body['ntiid']
+			assert_that(obj, has_property('Items', has_length(3)))
+			assert_that( obj.Items[0].ntiid, is_( group_ntiid ))
+
 			obj = find_object_with_ntiid(group_ntiid)
 			catalog = get_library_catalog()
 			containers = catalog.get_containers(obj)
