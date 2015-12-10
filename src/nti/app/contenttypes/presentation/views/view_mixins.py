@@ -217,6 +217,8 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 			old_parent = find_object_with_ntiid(old_parent_ntiid)
 			if old_parent is None:
 				raise hexc.HTTPUnprocessableEntity(_('Old node parent no longer exists.'))
+			if old_parent.get( ntiid, None ) is None:
+				raise hexc.HTTPUnprocessableEntity(_('Moved node does not exist in old parent.'))
 			self._remove_from_parent(old_parent, obj)
 
 		if self.notify_type:
