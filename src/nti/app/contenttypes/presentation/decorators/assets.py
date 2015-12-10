@@ -27,6 +27,7 @@ from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecora
 
 from nti.appserver.pyramid_authorization import has_permission
 
+from nti.assessment.interfaces import IQSurvey
 from nti.assessment.interfaces import IQAssignment
 
 from nti.common.property import Lazy
@@ -43,7 +44,7 @@ from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
 
 from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_for_user
 
-from nti.contenttypes.presentation.interfaces import IVisible
+from nti.contenttypes.presentation.interfaces import IVisible, INTISurveyRef
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTITimeline
@@ -253,9 +254,9 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 		ext_item[NTIID] = ext_item['target'] = topic.NTIID
 		return True
 
-	def allow_assignmentref(self, context, item):
+	def _allow_assessmentref(self, iface, context, item):
 		record = self.record(context)
-		assg = IQAssignment(item, None)
+		assg = iface(item, None)
 		if assg is None or record is None:
 			return False
 		if record.Scope == ES_ALL:  # instructor
@@ -265,6 +266,14 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 		result = predicate is not None and predicate(assg)
 		return result
 
+	def allow_assignmentref(self, context, item):
+		result = self._allow_assessmentref(IQAssignment, context, item)
+		return result
+
+	def allow_surveyref(self, context, item):
+		result = self._allow_assessmentref(IQSurvey, context, item)
+		return result
+	
 	def _decorate_external_impl(self, context, result):
 		idx = 0
 		removal = set()
@@ -285,6 +294,9 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 				self._handle_media_ref(items, item, idx)
 			elif INTIAssignmentRef.providedBy(item) and \
 				not self.allow_assignmentref(context, item):
+				removal.add(idx)
+			elif INTISurveyRef.providedBy(item) and \
+				not self.allow_surveyref(context, item):
 				removal.add(idx)
 
 		# filter legacy discussions
