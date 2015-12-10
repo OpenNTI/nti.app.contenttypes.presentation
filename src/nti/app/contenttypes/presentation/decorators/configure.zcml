@@ -85,7 +85,7 @@
 					 pyramid.interfaces.IRequest" />
 
 	<subscriber factory=".assets._PresentationAssetEditLinkDecorator"
-				provides="nti.externalization.interfaces.IExternalMappingDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
 				for="nti.contenttypes.presentation.interfaces.IPresentationAsset
 					 pyramid.interfaces.IRequest" />
 
