@@ -66,6 +66,7 @@ from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import COURSE_OVERVIEW_GROUP_MIMETYES
 
+from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
@@ -348,9 +349,8 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 	def _get_ntiid(self, item):
 		ntiid = item.ntiid
-		# for overview groups we auto-generate NTIIDs,
-		# if that is the case null it out to force a new one
-		if 		INTICourseOverviewGroup.providedBy(item) \
+		# for return None for auto-generate NTIIDs,
+		if 		(INTICourseOverviewGroup.providedBy(item) or IAssetRef.providedBy(item)) \
 			and TYPE_UUID in get_specific(ntiid):
 			ntiid = None
 		return ntiid
