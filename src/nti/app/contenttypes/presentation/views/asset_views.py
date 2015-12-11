@@ -396,7 +396,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 		# parse href
 		parsed = urlparse(href) if href else None
-		if href and parsed.scheme or parsed.netloc:  # full url
+		if parsed is not None and (parsed.scheme or parsed.netloc):  # full url
 			ntiid = make_ntiid(nttype=TYPE_UUID,
 							   provider='NTI',
 							   specific=hexdigest(href.lower()))
