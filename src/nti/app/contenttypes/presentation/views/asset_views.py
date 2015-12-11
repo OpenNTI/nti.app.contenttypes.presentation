@@ -15,6 +15,7 @@ import six
 import uuid
 from itertools import chain
 from urlparse import urlparse
+from collections import Mapping
 
 import transaction
 
@@ -63,14 +64,19 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation import iface_of_asset
+from nti.contenttypes.presentation import ALL_MEDIA_ROLL_MIME_TYPES
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import COURSE_OVERVIEW_GROUP_MIMETYES
 
 from nti.contenttypes.presentation.interfaces import IAssetRef
+from nti.contenttypes.presentation.interfaces import INTIMedia
+from nti.contenttypes.presentation.interfaces import INTIMediaRef 
 from nti.contenttypes.presentation.interfaces import INTITimeline
+from nti.contenttypes.presentation.interfaces import INTIAudioRoll
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
+from nti.contenttypes.presentation.interfaces import INTIVideoRoll
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import IGroupOverViewable
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
@@ -96,7 +102,7 @@ from nti.externalization.externalization import StandardExternalFields
 from nti.namedfile.file import name_finder
 from nti.namedfile.file import safe_filename
 
-from nti.ntiids.ntiids import TYPE_UUID
+from nti.ntiids.ntiids import TYPE_UUID, find_object_with_ntiid
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_specific
 
@@ -127,6 +133,7 @@ from . import VIEW_NODE_MOVE
 from . import VIEW_CONTENTS
 
 ITEMS = StandardExternalFields.ITEMS
+NTIID = StandardExternalFields.NTIID
 MIMETYPE = StandardExternalFields.MIMETYPE
 
 # helper functions
@@ -358,7 +365,14 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 			item.ntiid = make_asset_ntiid(provided, creator, extra=self._extra)
 		return item
 
+	def _set_creator(self, item, creator):
+		creator = getattr(creator,'username', creator)
+		if not getattr(item, 'creator', None):
+			item.creator = creator
+
 	def _handle_package_asset(self, provided, item, creator, extended=None):
+		self._set_creator(item, creator)
+
 		containers = _add_2_container(self._course, item, packages=True)
 		namespace = containers[0] if containers else None  # first pkg
 		if provided == INTISlideDeck:
@@ -373,6 +387,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 			# register in containers and index
 			for x in chain(item.Slides, item.Videos):
+				self._set_creator(x, creator)
 				_add_2_container(self._course, x, packages=True)
 				self._catalog.index(x, container_ntiids=item_extended,
 									namespace=namespace)
@@ -382,6 +397,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		self._catalog.index(item, container_ntiids=item_extended, namespace=namespace)
 
 	def _handle_related_work(self, provided, item, creator, extended=None):
+		self._set_creator(item, creator)
 		self._handle_package_asset(provided, item, creator, extended)
 
 		# capture updated/previous data
@@ -408,15 +424,20 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 			item.type = contentType
 
 	def _handle_media_roll(self, provided, item, creator, extended=None):
+		# set creator
+		self._set_creator(item, creator)
+
+		# add to course container
 		containers = _add_2_container(self._course, item, packages=False)
 
 		# register unique copies
-		_canonicalize(item.Items, creator, base=item.ntiid, registry=self._registry)
+		_canonicalize(item.Items or (), creator, base=item.ntiid, registry=self._registry)
 
 		# add media roll ntiid
 		item_extended = tuple(extended or ()) + tuple(containers or ()) + (item.ntiid,)
 		item_extended = set(item_extended)
 		for x in item.Items or ():
+			self._set_creator(x, creator)
 			_add_2_container(self._course, x, packages=False)
 			self._catalog.index(x, container_ntiids=item_extended)
 
@@ -425,10 +446,15 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		self._catalog.index(item, container_ntiids=item_extended)
 
 	def _handle_group_over_viewable(self, provided, item, creator, extended=None):
+		# set creator
+		self._set_creator(item, creator)
+
+		# add to course container
 		containers = _add_2_container(self._course, item, packages=False)
 		item_extended = tuple(extended or ()) + tuple(containers or ())
 		self._catalog.index(item, container_ntiids=item_extended)
 
+		# find a content unit
 		content_unit = None
 		if INTIAssignmentRef.providedBy(item) and not item.title:
 			assignment = self._registry.queryUtility(IQAssignment, name=item.target or '')
@@ -443,10 +469,14 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 			item.question_count = len(survey) if survey is not None else item.question_count
 			content_unit = survey.__parent__ if survey is not None else None
 
+		# set container id
 		if content_unit is not None:
 			item.containerId = content_unit.ntiid
 
 	def _handle_overview_group(self, group, creator, extended=None):
+		# set creator
+		self._set_creator(group, creator)
+
 		# add to course container
 		containers = _add_2_container(self._course, group, packages=False)
 
@@ -470,12 +500,16 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 							namespace=namespace)
 
 	def _handle_lesson_overview(self, lesson, creator, extended=None):
+		# set creator
+		self._set_creator(lesson, creator)
+
 		# add to course container
 		containers = _add_2_container(self._course, lesson, packages=False)
 
 		# Make sure we validate before canonicalize.
 		for item in lesson.Items or ():
 			self._check_exists(INTICourseOverviewGroup, item, creator)
+
 		# have unique copies of lesson groups
 		_canonicalize(lesson.Items, creator, registry=self._registry, base=lesson.ntiid)
 
@@ -527,8 +561,38 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		result = super(PresentationAssetSubmitViewMixin, self).readInput()
 		if no_ntiids:
 			result.pop('ntiid', None)
-			result.pop('NTIID', None)
+			result.pop(NTIID, None)
 		return result
+
+# preflight routines
+
+def preflight_mediaroll(externalValue):
+	# parse through items and find valid references for media[ref] objects
+	items = externalValue.get(ITEMS) or ()
+	for idx, item in enumerate(items):
+		if isinstance(item, six.string_types):
+			item = items[idx] = {'ntiid': item}
+		if isinstance(item, Mapping) and MIMETYPE not in item:
+			ntiid = item.get('ntiid') or item.get(NTIID)
+			__traceback_info__ = ntiid
+			if not ntiid:
+				raise hexc.HTTPUnprocessableEntity(_('Missing media roll item NTIID'))
+			resolved = find_object_with_ntiid(ntiid)
+			if resolved is None:
+				raise hexc.HTTPUnprocessableEntity(_('Missing media roll item'))					
+			if (INTIMedia.providedBy(resolved) or INTIMediaRef.providedBy(resolved)):
+				item[MIMETYPE] = resolved.mimeType
+			else:
+				raise hexc.HTTPUnprocessableEntity(_('Invalid media roll item'))
+		else:
+			raise hexc.HTTPUnprocessableEntity(_('Invalid media roll item input'))
+	return externalValue
+	
+def preflight_input(externalValue):
+	mimeType = externalValue.get(MIMETYPE) or externalValue.get('mimeType')
+	if mimeType in ALL_MEDIA_ROLL_MIME_TYPES:
+		return preflight_mediaroll(externalValue)
+	return externalValue
 
 @view_config(context=ICourseInstance)
 @view_config(context=ICourseCatalogEntry)
@@ -551,10 +615,15 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 		return contentObject
 
 	def parseInput(self, creator, search_owner=False, externalValue=None):
+		# process input
 		externalValue = self.readInput() if not externalValue else externalValue
+		externalValue = preflight_input(externalValue) 
+		# create and validate
 		contentObject = create_from_external(externalValue, notify=False)
 		contentObject = self.checkContentObject(contentObject, externalValue)
-		contentObject.creator = getattr(creator, 'username', creator)  # use string
+		# set creator
+		self._set_creator(contentObject, creator)
+		# update with external
 		self.updateContentObject(contentObject, externalValue, set_id=True, notify=False)
 		return contentObject, externalValue
 
@@ -605,7 +674,7 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 								  name=self.context.ntiid)
 
 	def preflight(self, contentObject, externalValue):
-		return None
+		preflight_input(externalValue)
 
 	def postflight(self, updatedObject, externalValue, preflight=None):
 		return None
@@ -647,12 +716,30 @@ class LessonOverviewPutView(PresentationAssetPutView):
 		data = {x.ntiid:x for x in contentObject}  # save groups
 		return data
 
-	def postflight(self, updatedObject, externalValue, preflight=None):
-		if preflight:
-			updated = {x.ntiid for x in updatedObject}
-			for ntiid, group in preflight.items():
-				if ntiid not in updated:  # group removed
-					remove_group(group, self._registry, self._catalog)
+	def postflight(self, updatedObject, externalValue, preflight):
+		updated = {x.ntiid for x in updatedObject}
+		for ntiid, group in preflight.items():
+			if ntiid not in updated:  # group removed
+				remove_group(group, self._registry, self._catalog)
+
+@view_config(context=INTIAudioRoll)
+@view_config(context=INTIVideoRoll)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='PUT',
+			   permission=nauth.ACT_CONTENT_EDIT)
+class MediaRollPutView(PresentationAssetPutView):
+
+	def preflight(self, contentObject, externalValue):
+		preflight_mediaroll(externalValue)
+		data = {x.ntiid:x for x in contentObject}
+		return data
+	
+	def postflight(self, updatedObject, externalValue, preflight):
+		updated = {x.ntiid for x in updatedObject}
+		for ntiid, item in preflight.items():
+			if ntiid not in updated:  # ref removed
+				remove_asset(item, self._registry, self._catalog)
 
 # delete views
 
@@ -719,14 +806,16 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 		return contentObject
 
 	def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
+		# process input
 		externalValue = self.readInput() if not externalValue else externalValue
-		# check for mimeType
 		if MIMETYPE not in externalValue:
 			externalValue[MIMETYPE] = COURSE_OVERVIEW_GROUP_MIMETYES[0]
+		externalValue = preflight_input(externalValue)
 		# create object
 		contentObject = create_from_external(externalValue, notify=False)
 		contentObject = self.checkContentObject(contentObject, externalValue)
-		contentObject.creator = getattr(creator, 'username', creator)  # use string
+		# set creator
+		self._set_creator(contentObject, creator)
 		return contentObject, externalValue
 
 	def _do_call(self):
@@ -779,10 +868,14 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		return contentObject
 
 	def parseInput(self, creator, search_owner=False, externalValue=None):
+		# process input
 		externalValue = self.readInput() if not externalValue else externalValue
+		externalValue = preflight_input(externalValue)
+		# create object
 		contentObject = create_from_external(externalValue, notify=False)
 		contentObject = self.checkContentObject(contentObject, externalValue)
-		contentObject.creator = getattr(creator, 'username', creator)  # use string
+		# set creator
+		self._set_creator(contentObject, creator)
 		return contentObject, externalValue
 
 	def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
