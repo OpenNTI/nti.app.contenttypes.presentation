@@ -45,7 +45,8 @@ from nti.externalization.singleton import SingletonDecorator
 from nti.links.links import Link
 from nti.links.externalization import render_link
 
-from nti.ntiids.ntiids import is_valid_ntiid_string
+from nti.ntiids.ntiids import TYPE_OID
+from nti.ntiids.ntiids import is_ntiid_of_type
 
 from . import LEGACY_UAS_20
 from . import ORDERED_CONTENTS
@@ -133,7 +134,7 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 		return True
 
 	def _legacy_decorate_external(self, context, result):
-		if context.src and not is_valid_ntiid_string(context.src):
+		if context.src and not is_ntiid_of_type(context.src, TYPE_OID):
 			library = component.queryUtility(IContentPackageLibrary)
 			paths = library.pathToNTIID(context.ContentNTIID) if library else ()
 			if paths:
