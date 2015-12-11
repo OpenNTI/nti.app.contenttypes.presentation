@@ -197,8 +197,8 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None):
 	if hasattr(node, 'ContentNTIID') and not node.ContentNTIID:
 		node.ContentNTIID = ntiid
 
-	# XXX: set src and lesson ntiid (see MediaByOutlineView)
-	# at his point is very likely that LessonOverviewNTIID,
+	# XXX: set lesson overview ntiid
+	# At his point is very likely that LessonOverviewNTIID,
 	# ContentNTIID are simply alias fields. All of them
 	# are kept so long as we have manual sync and BWC
 	node.LessonOverviewNTIID = ntiid
