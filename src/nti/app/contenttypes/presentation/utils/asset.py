@@ -175,15 +175,9 @@ def make_asset_ntiid(nttype, creator=SYSTEM_USER_ID, base=None, extra=None):
 					   specific=specific)
 	return ntiid
 
-
 def course_for_node(node):
 	course = find_interface(node, ICourseInstance, strict=False)
 	return course
-
-def catalog_entry_for_node(node):
-	course = course_for_node(node)
-	entry = ICourseCatalogEntry(course, None)
-	return entry
 
 def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None):
 	creator = getattr(node, 'creator', None) or SYSTEM_USER_ID
@@ -226,7 +220,7 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None):
 		# XXX index lesson
 		course = course_for_node(node)
 		if course is not None:
-			entry = ICourseCatalogEntry(node)
+			entry = ICourseCatalogEntry(course)
 			container = IPresentationAssetContainer(course)
 			ntiids = (entry.ntiid,)  # container ntiid
 			container[ntiid] = result  # add to container
