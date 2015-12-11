@@ -45,6 +45,7 @@ from .asset import add_2_connection
 from .asset import make_asset_ntiid
 from .asset import component_registry
 from .asset import create_lesson_4_node
+from .asset import remove_presentation_asset
 from .asset import notify_removed as notify_asset_removed
 
 # re-export

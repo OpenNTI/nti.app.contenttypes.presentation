@@ -64,6 +64,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation import iface_of_asset
+from nti.contenttypes.presentation import LESSON_OVERVIEW_MIMETYES
 from nti.contenttypes.presentation import ALL_MEDIA_ROLL_MIME_TYPES
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import COURSE_OVERVIEW_GROUP_MIMETYES
@@ -108,14 +109,12 @@ from nti.ntiids.ntiids import get_specific
 
 from nti.site.utils import registerUtility
 
-from ..utils import remove_asset
-from ..utils import remove_group
-from ..utils import remove_lesson
 from ..utils import intid_register
 from ..utils import add_2_connection
 from ..utils import make_asset_ntiid
 from ..utils import component_registry
 from ..utils import get_course_packages
+from ..utils import remove_presentation_asset
 from ..utils import get_presentation_asset_courses
 
 from .view_mixins import slugify
@@ -567,9 +566,11 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 # preflight routines
 
 def preflight_mediaroll(externalValue):
-	# parse through items and find valid references for media[ref] objects
-	items = externalValue.get(ITEMS) or ()
-	for idx, item in enumerate(items):
+	if not isinstance(externalValue, Mapping):
+		return externalValue
+
+	items = externalValue.get(ITEMS)
+	for idx, item in enumerate(items or ()):
 		if isinstance(item, six.string_types):
 			item = items[idx] = {'ntiid': item}
 		if isinstance(item, Mapping) and MIMETYPE not in item:
@@ -584,14 +585,52 @@ def preflight_mediaroll(externalValue):
 				item[MIMETYPE] = resolved.mimeType
 			else:
 				raise hexc.HTTPUnprocessableEntity(_('Invalid media roll item'))
-		else:
-			raise hexc.HTTPUnprocessableEntity(_('Invalid media roll item input'))
 	return externalValue
 	
+def preflight_overview_group(externalValue):
+	if not isinstance(externalValue, Mapping):
+		return externalValue
+
+	items = externalValue.get(ITEMS)
+	for idx, item in enumerate(items or ()):
+		if isinstance(item, six.string_types):
+			item = items[idx] = {'ntiid': item}
+		if isinstance(item, Mapping) and MIMETYPE not in item:
+			ntiid = item.get('ntiid') or item.get(NTIID)
+			__traceback_info__ = ntiid
+			if not ntiid:
+				raise hexc.HTTPUnprocessableEntity(_('Missing overview group item NTIID'))
+			resolved = find_object_with_ntiid(ntiid)
+			if resolved is None:
+				raise hexc.HTTPUnprocessableEntity(_('Missing overview group item'))
+			if not IGroupOverViewable.providedBy(resolved):
+				logger.warn("Coercing %s,%s into overview group", resolved.mimeType, ntiid)
+			item[MIMETYPE] = resolved.mimeType
+		else:
+			preflight_input(item)
+
+	return externalValue
+
+def preflight_lesson_overview(externalValue):
+	if not isinstance(externalValue, Mapping):
+		return externalValue
+
+	items = externalValue.get(ITEMS)
+	for item in items or ():
+		preflight_overview_group(item)
+	return externalValue
+
 def preflight_input(externalValue):
+	if not isinstance(externalValue, Mapping):
+		return externalValue
+	
 	mimeType = externalValue.get(MIMETYPE) or externalValue.get('mimeType')
 	if mimeType in ALL_MEDIA_ROLL_MIME_TYPES:
 		return preflight_mediaroll(externalValue)
+	elif mimeType in COURSE_OVERVIEW_GROUP_MIMETYES:
+		return preflight_overview_group(externalValue)
+	elif mimeType in LESSON_OVERVIEW_MIMETYES:
+		return preflight_lesson_overview(externalValue)
 	return externalValue
 
 @view_config(context=ICourseInstance)
@@ -713,6 +752,7 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 class LessonOverviewPutView(PresentationAssetPutView):
 
 	def preflight(self, contentObject, externalValue):
+		preflight_lesson_overview(externalValue)
 		data = {x.ntiid:x for x in contentObject}  # save groups
 		return data
 
@@ -720,7 +760,25 @@ class LessonOverviewPutView(PresentationAssetPutView):
 		updated = {x.ntiid for x in updatedObject}
 		for ntiid, group in preflight.items():
 			if ntiid not in updated:  # group removed
-				remove_group(group, self._registry, self._catalog)
+				remove_presentation_asset(group, self._registry, self._catalog)
+
+@view_config(context=INTICourseOverviewGroup)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='PUT',
+			   permission=nauth.ACT_CONTENT_EDIT)
+class CourseOverviewGroupPutView(PresentationAssetPutView):
+
+	def preflight(self, contentObject, externalValue):
+		preflight_overview_group(externalValue)
+		data = {x.ntiid:x for x in contentObject}
+		return data
+	
+	def postflight(self, updatedObject, externalValue, preflight):
+		updated = {x.ntiid for x in updatedObject}
+		for ntiid, item in preflight.items():
+			if ntiid not in updated:  # ref removed
+				remove_presentation_asset(item, self._registry, self._catalog)
 
 @view_config(context=INTIAudioRoll)
 @view_config(context=INTIVideoRoll)
@@ -739,7 +797,7 @@ class MediaRollPutView(PresentationAssetPutView):
 		updated = {x.ntiid for x in updatedObject}
 		for ntiid, item in preflight.items():
 			if ntiid not in updated:  # ref removed
-				remove_asset(item, self._registry, self._catalog)
+				remove_presentation_asset(item, self._registry, self._catalog)
 
 # delete views
 
@@ -758,29 +816,7 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 								  name=self.context.ntiid)
 
 	def _do_delete_object(self, theObject):
-		remove_asset(theObject, self._registry, self._catalog)
-		return theObject
-
-@view_config(context=INTILessonOverview)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   request_method='DELETE',
-			   permission=nauth.ACT_CONTENT_EDIT)
-class LessonOverviewDeleteView(PresentationAssetDeleteView):
-
-	def _do_delete_object(self, theObject):
-		remove_lesson(theObject, self._registry, self._catalog)
-		return theObject
-
-@view_config(context=INTICourseOverviewGroup)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   request_method='DELETE',
-			   permission=nauth.ACT_CONTENT_EDIT)
-class CourseOverviewGroupDeleteView(PresentationAssetDeleteView):
-
-	def _do_delete_object(self, theObject):
-		remove_group(theObject, self._registry, self._catalog)
+		remove_presentation_asset(theObject, self._registry, self._catalog)
 		return theObject
 	
 # ordered contents

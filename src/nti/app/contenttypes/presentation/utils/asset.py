@@ -142,6 +142,14 @@ def remove_lesson(item, registry=None, catalog=None):
 	# remove asset
 	remove_asset(item, registry, catalog)
 	
+def remove_presentation_asset(item, registry=None, catalog=None):
+	if INTILessonOverview.providedBy(item):
+		remove_lesson(item, registry, catalog)
+	elif INTICourseOverviewGroup.providedBy(item):
+		remove_group(item, registry, catalog)
+	else:
+		remove_asset(item, registry, catalog)
+
 def make_asset_ntiid(nttype, creator=SYSTEM_USER_ID, base=None, extra=None):
 	if type(nttype) == InterfaceClass:
 		nttype = nttype.__name__[1:]
