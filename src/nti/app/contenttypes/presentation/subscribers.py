@@ -68,7 +68,7 @@ ITEMS = StandardExternalFields.ITEMS
 
 # interaction
 
-def principal():
+def current_principal():
 	try:
 		return getInteraction().participations[0].principal
 	except (NoInteraction, IndexError, AttributeError):
@@ -124,7 +124,7 @@ def _on_will_remove_course_overview_group(group, event):
 
 @component.adapter(IItemAssetContainer, IItemRemovedFromItemAssetContainerEvent)
 def _on_item_asset_containter_modified(container, event):
-	principal = principal()
+	principal = current_principal()
 	if principal is not None and IRecordable.providedBy(container):
 		record_transaction(container, principal=principal, descriptions=(ITEMS,),
 						   type_=TRX_ASSET_REMOVED_FROM_ITEM_ASSET_CONTAINER)
