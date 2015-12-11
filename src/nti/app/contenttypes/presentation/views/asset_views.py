@@ -42,7 +42,6 @@ from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtils
 
 from nti.appserver.ugd_edit_views import UGDPutView
 from nti.appserver.ugd_edit_views import UGDDeleteView
-from nti.appserver.pyramid_authorization import has_permission
 from nti.appserver.dataserver_pyramid_views import GenericGetView
 
 from nti.assessment.interfaces import IQSurvey
@@ -92,7 +91,6 @@ from nti.contenttypes.presentation.utils import create_from_external
 from nti.contenttypes.presentation.utils import get_external_pre_hook
 
 from nti.dataserver import authorization as nauth
-from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.externalization.oids import to_external_ntiid_oid
 from nti.externalization.internalization import notify_modified
@@ -264,7 +262,7 @@ class NoHrefAssetGetView(PresentationAssetGetView):
 			   renderer='rest',
 			   name=VIEW_ASSETS,
 			   request_method='GET',
-			   permission=nauth.ACT_READ)
+			   permission=nauth.ACT_CONTENT_EDIT)
 class GetCoursePresentationAssetPostView(AbstractAuthenticatedView):
 
 	def __call__(self):
@@ -272,7 +270,6 @@ class GetCoursePresentationAssetPostView(AbstractAuthenticatedView):
 		result = LocatedExternalDict()
 		result[ITEMS] = items = {}
 		course = ICourseInstance(self.context)
-		self.request.acl_decoration = has_permission(ACT_CONTENT_EDIT, course, self.request)
 		for container in chain((course, get_course_packages(course))):
 			container = IPresentationAssetContainer(container, None) or {}
 			for item in container.values():
