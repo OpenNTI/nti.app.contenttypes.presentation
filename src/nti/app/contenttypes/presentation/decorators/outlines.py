@@ -156,16 +156,13 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 		if overview_links:
 			links = result.setdefault(LINKS, [])
 			links.extend(overview_links)
+			result['LessonOverviewNTIID'] = context.LessonOverviewNTIID
 			return True
 		return False
 
 	def _do_decorate_external(self, context, result):
 		if not self._overview_decorate_external(context, result):
 			self._legacy_decorate_external(context, result)
-		else:
-			ntiid = getattr(context, 'LessonOverviewNTIID', None)
-			if ntiid:
-				result['LessonOverviewNTIID'] = ntiid
 
 @component.adapter(ICourseOutlineContentNode)
 @interface.implementer(IExternalMappingDecorator)
