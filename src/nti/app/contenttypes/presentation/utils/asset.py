@@ -41,8 +41,9 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation.lesson import NTILessonOverView
-from nti.contenttypes.presentation.interfaces import INTILessonOverview,\
-	INTICourseOverviewGroup, IPresentationAssetContainer
+from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import WillRemovePresentationAssetEvent
 
 from nti.externalization.oids import to_external_ntiid_oid
@@ -141,7 +142,7 @@ def remove_lesson(item, registry=None, catalog=None):
 		remove_group(group, registry, catalog)
 	# remove asset
 	remove_asset(item, registry, catalog)
-	
+
 def remove_presentation_asset(item, registry=None, catalog=None):
 	if INTILessonOverview.providedBy(item):
 		remove_lesson(item, registry, catalog)
@@ -227,8 +228,8 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None):
 		if course is not None:
 			entry = ICourseCatalogEntry(node)
 			container = IPresentationAssetContainer(course)
-			ntiids = (entry.ntiid,)   # container ntiid 
-			container[ntiid] = result # add to container
+			ntiids = (entry.ntiid,)  # container ntiid
+			container[ntiid] = result  # add to container
 		else:
 			ntiids = None
 		catalog = get_library_catalog() if catalog is None else catalog
