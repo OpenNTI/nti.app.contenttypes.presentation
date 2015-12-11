@@ -41,7 +41,8 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation.lesson import NTILessonOverView
-from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import INTILessonOverview,\
+	INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import WillRemovePresentationAssetEvent
 
 from nti.externalization.oids import to_external_ntiid_oid
@@ -113,6 +114,20 @@ def remove_asset(item, registry=None, catalog=None):
 	# broadcast removed
 	notify_removed(item)
 
+def remove_group(group, registry=None, catalog=None):
+	if isinstance(group, six.string_types):
+		group = component.queryUtility(INTICourseOverviewGroup, name=group)
+	if group is None:
+		return
+	if registry is None:
+		registry = component_registry(group, INTICourseOverviewGroup, name=group.ntiid)
+	catalog = get_library_catalog() if catalog is None else catalog
+	# remove items first
+	for item in list(group):  # mutating
+		remove_asset(item, registry, catalog)
+	# remove groups
+	remove_asset(group, registry, catalog)
+
 def remove_lesson(item, registry=None, catalog=None):
 	if isinstance(item, six.string_types):
 		item = component.queryUtility(INTILessonOverview, name=item)
@@ -123,10 +138,10 @@ def remove_lesson(item, registry=None, catalog=None):
 	catalog = get_library_catalog() if catalog is None else catalog
 	# remove groups first
 	for group in list(item):  # mutating
-		remove_asset(group, registry, catalog)
+		remove_group(group, registry, catalog)
 	# remove asset
 	remove_asset(item, registry, catalog)
-
+	
 def make_asset_ntiid(nttype, creator=SYSTEM_USER_ID, base=None, extra=None):
 	if type(nttype) == InterfaceClass:
 		nttype = nttype.__name__[1:]

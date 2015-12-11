@@ -103,6 +103,8 @@ from nti.ntiids.ntiids import get_specific
 from nti.site.utils import registerUtility
 
 from ..utils import remove_asset
+from ..utils import remove_group
+from ..utils import remove_lesson
 from ..utils import intid_register
 from ..utils import add_2_connection
 from ..utils import make_asset_ntiid
@@ -585,6 +587,8 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 		self._handle_asset(provided, contentObject, creator.username)
 		return contentObject
 
+# put views
+
 @view_config(context=IPresentationAsset)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
@@ -600,14 +604,15 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 								  provided=provided,
 								  name=self.context.ntiid)
 
-	def updateContentObject(self, contentObject, externalValue, set_id=False, notify=True):
-		provided = iface_of_asset(contentObject)
-		if provided == INTILessonOverview:
-			data = {x.ntiid:x for x in contentObject.Items or ()}  # save groups
-		else:
-			data = None
+	def preflight(self, contentObject, externalValue):
+		return None
 
-		# update object
+	def postflight(self, updatedObject, externalValue, preflight=None):
+		return None
+	
+	def updateContentObject(self, contentObject, externalValue, set_id=False, notify=True):
+		data = self.preflight(contentObject, externalValue)
+		
 		pre_hook = get_external_pre_hook(externalValue)
 		result = UGDPutView.updateContentObject(self,
 												contentObject,
@@ -623,19 +628,33 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 				validate_sources(result, sources)
 				_handle_multipart(courses.__iter__().next(), self.context, sources)
 
-		# unregister any old data
-		if data and provided == INTILessonOverview:
-			updated = {x.ntiid for x in contentObject.Items or ()}
-			for ntiid, group in data.items():
-				if ntiid not in updated:  # group removed
-					remove_asset(group, self._registry, self._catalog)
-
+		self.postflight(contentObject, externalValue, data)
 		return result
 
 	def __call__(self):
 		result = UGDPutView.__call__(self)
 		self._handle_asset(iface_of_asset(result), result, result.creator)
 		return result
+
+@view_config(context=INTILessonOverview)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='PUT',
+			   permission=nauth.ACT_CONTENT_EDIT)
+class LessonOverviewPutView(PresentationAssetPutView):
+
+	def preflight(self, contentObject, externalValue):
+		data = {x.ntiid:x for x in contentObject}  # save groups
+		return data
+
+	def postflight(self, updatedObject, externalValue, preflight=None):
+		if preflight:
+			updated = {x.ntiid for x in updatedObject}
+			for ntiid, group in preflight.items():
+				if ntiid not in updated:  # group removed
+					remove_group(group, self._registry, self._catalog)
+
+# delete views
 
 @view_config(context=IPresentationAsset)
 @view_defaults(route_name='objects.generic.traversal',
@@ -654,6 +673,30 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 	def _do_delete_object(self, theObject):
 		remove_asset(theObject, self._registry, self._catalog)
 		return theObject
+
+@view_config(context=INTILessonOverview)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='DELETE',
+			   permission=nauth.ACT_CONTENT_EDIT)
+class LessonOverviewDeleteView(PresentationAssetDeleteView):
+
+	def _do_delete_object(self, theObject):
+		remove_lesson(theObject, self._registry, self._catalog)
+		return theObject
+
+@view_config(context=INTICourseOverviewGroup)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='DELETE',
+			   permission=nauth.ACT_CONTENT_EDIT)
+class CourseOverviewGroupDeleteView(PresentationAssetDeleteView):
+
+	def _do_delete_object(self, theObject):
+		remove_group(theObject, self._registry, self._catalog)
+		return theObject
+	
+# ordered contents
 
 @view_config(context=INTILessonOverview)
 @view_defaults(route_name='objects.generic.traversal',

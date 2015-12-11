@@ -38,6 +38,8 @@ from nti.contenttypes.presentation.interfaces import IPresentationVisibility
 
 # re-export
 from .asset import remove_asset
+from .asset import remove_group
+from .asset import remove_lesson
 from .asset import intid_register
 from .asset import add_2_connection
 from .asset import make_asset_ntiid
