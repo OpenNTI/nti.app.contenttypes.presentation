@@ -42,7 +42,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation.lesson import NTILessonOverView
 from nti.contenttypes.presentation.interfaces import INTILessonOverview,\
-	INTICourseOverviewGroup
+	INTICourseOverviewGroup, IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import WillRemovePresentationAssetEvent
 
 from nti.externalization.oids import to_external_ntiid_oid
@@ -174,8 +174,13 @@ def make_asset_ntiid(nttype, creator=SYSTEM_USER_ID, base=None, extra=None):
 					   specific=specific)
 	return ntiid
 
-def catalog_entry_for_node(node):
+
+def course_for_node(node):
 	course = find_interface(node, ICourseInstance, strict=False)
+	return course
+
+def catalog_entry_for_node(node):
+	course = course_for_node(node)
 	entry = ICourseCatalogEntry(course, None)
 	return entry
 
@@ -218,9 +223,15 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None):
 			node.src = to_external_ntiid_oid(result)
 
 		# XXX index lesson
+		course = course_for_node(node)
+		if course is not None:
+			entry = ICourseCatalogEntry(node)
+			container = IPresentationAssetContainer(course)
+			ntiids = (entry.ntiid,)   # container ntiid 
+			container[ntiid] = result # add to container
+		else:
+			ntiids = None
 		catalog = get_library_catalog() if catalog is None else catalog
-		entry = catalog_entry_for_node(node)
-		ntiids = (entry.ntiid,) if entry is not None else None
 		catalog.index(result, container_ntiids=ntiids, namespace=node.src)
 
 	# lesson is ready
