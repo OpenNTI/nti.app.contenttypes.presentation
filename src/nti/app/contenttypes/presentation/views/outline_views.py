@@ -471,8 +471,6 @@ class OutlineNodeDeleteView(AbstractAuthenticatedView,
 		lesson = component.queryUtility(INTILessonOverview, name=ntiid)
 		if lesson is not None:
 			registry = component_registry(lesson, provided=INTILessonOverview, name=ntiid)
-			for group in lesson or ():
-				remove_presentation_asset(group, registry=registry)
 			remove_presentation_asset(lesson, registry=registry)
 
 	def __call__(self):
