@@ -38,6 +38,8 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
+
+from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.dataserver import authorization as nauth
@@ -49,11 +51,12 @@ from nti.externalization.interfaces import StandardExternalFields
 from nti.recorder.record import remove_transaction_history
 
 from nti.site.utils import unregisterUtility
+from nti.site.site import get_component_hierarchy_names
+
+from ..synchronizer import synchronize_course_lesson_overview
 
 from ..utils import component_registry
 from ..utils import yield_sync_courses
-
-from ..synchronizer import synchronize_course_lesson_overview
 
 from .. import iface_of_thing
 
@@ -197,6 +200,27 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 				})
 			else:
 				registered += 1
+
+		# unindex invalid entries in catalog
+		sites = get_component_hierarchy_names()
+		references = catalog.get_references(sites=sites,
+										 	provided=_course_asset_interfaces())
+		for uid in references or ():
+			asset = intids.queryObject(uid)
+			if asset is None or not IPresentationAsset.providedBy(asset):
+				catalog.unindex(uid)
+			else:
+				ntiid = asset.ntiid
+				provided = iface_of_thing(asset)
+				if component.queryUtility(provided, name=ntiid) is None:
+					catalog.unindex(uid)
+					intids.unregister(asset)
+					remove_transaction_history(asset)
+					items.append({
+						'IntId':uid,
+						NTIID:ntiid,
+						MIMETYPE:asset.mimeType,
+					})
 
 		items.sort(key=lambda x:x[NTIID])
 		result['TotalContainedAssets'] = contained
