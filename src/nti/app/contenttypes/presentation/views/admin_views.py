@@ -17,8 +17,6 @@ from zope import component
 from zope.security.management import endInteraction
 from zope.security.management import restoreInteraction
 
-from zope.traversing.interfaces import IEtcNamespace
-
 from zope.intid import IIntIds
 
 from pyramid.view import view_config
@@ -51,19 +49,17 @@ from nti.externalization.interfaces import StandardExternalFields
 from nti.recorder.record import remove_transaction_history
 
 from nti.site.utils import unregisterUtility
-from nti.site.site import get_component_hierarchy_names
 
-from ..utils.common import yield_sync_courses
+from ..utils import component_registry
+from ..utils import yield_sync_courses
 
-from ..synchronizer import can_be_removed
-from ..synchronizer import clear_course_assets
-from ..synchronizer import clear_namespace_last_modified
-from ..synchronizer import remove_and_unindex_course_assets
 from ..synchronizer import synchronize_course_lesson_overview
 
 from .. import iface_of_thing
 
 ITEMS = StandardExternalFields.ITEMS
+NTIID = StandardExternalFields.NTIID
+MIMETYPE = StandardExternalFields.MIMETYPE
 
 def _course_asset_interfaces():
 	result = []
@@ -125,54 +121,6 @@ class GetCoursePresentationAssetsView(AbstractAuthenticatedView,
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   permission=nauth.ACT_NTI_ADMIN,
-			   name='ResetCoursePresentationAssets')
-class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
-							  	  		ModeledContentUploadRequestUtilsMixin):
-
-	def readInput(self, value=None):
-		return _read_input(self.request)
-
-	def _do_call(self, result):
-		values = self.readInput()
-		ntiids = _get_course_ntiids(values)
-		force = _is_true(values.get('force'))
-		courses = list(yield_sync_courses(ntiids))
-
-		total = 0
-		items = result[ITEMS] = {}
-		catalog = get_library_catalog()
-		sites = get_component_hierarchy_names()
-		for course in courses:
-			entry = ICourseCatalogEntry(course)
-			removed = remove_and_unindex_course_assets(container_ntiids=entry.ntiid,
-											 		   course=course,
-											 		   catalog=catalog,
-											 		   force=force,
-											 		   sites=sites)
-			items[entry.ntiid] = removed
-			clear_namespace_last_modified(course, catalog)
-			for obj in removed:
-				remove_transaction_history(obj)
-
-		result['Total'] = total
-		return result
-
-	def __call__(self):
-		now = time.time()
-		result = LocatedExternalDict()
-		endInteraction()
-		try:
-			self._do_call(result)
-		finally:
-			restoreInteraction()
-			result['TimeElapsed'] = time.time() - now
-		return result
-
-@view_config(context=IDataserverFolder)
-@view_config(context=CourseAdminPathAdapter)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   permission=nauth.ACT_NTI_ADMIN,
 			   name='RemoveCourseInaccessibleAssets')
 class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 							  	   		 ModeledContentUploadRequestUtilsMixin):
@@ -180,21 +128,14 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 	def readInput(self, value=None):
 		return _read_input(self.request)
 
-	def _unregister(self, sites_names, provided, name):
-		result = False
-		reverse = list(sites_names)
-		reverse.reverse()
-		hostsites = component.getUtility(IEtcNamespace, name='hostsites')
-		for site_name in reverse:
-			try:
-				folder = hostsites[site_name]
-				registry = folder.getSiteManager()
-				result = unregisterUtility(registry,
-										   provided=provided,
-										   name=name) or result
-			except KeyError:
-				pass
-		return result
+	def _unregister(self, context, provided, name):
+		registry = component_registry(context, provided, name)
+		if registry is not None:
+			result = unregisterUtility(registry,
+									   provided=provided,
+									   name=name)
+			return result
+		return False
 
 	def _registered_assets(self, registry):
 		for iface in _course_asset_interfaces():
@@ -202,129 +143,73 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 				yield ntiid, asset
 
 	def _contained_assets(self):
-		result = []
-		asset_interfaces = _course_asset_interfaces()
+		result = {}
+		ifaces = _course_asset_interfaces()
 		for course in yield_sync_courses():
-			container = IPresentationAssetContainer(course, None) or {}
+			container = IPresentationAssetContainer(course)
 			for key, value in container.items():
 				provided = iface_of_thing(value)
-				if provided in asset_interfaces:
-					result.append((container, key, value))
+				if provided in ifaces:
+					result[key] = (value, container)
 		return result
 
 	def _do_call(self, result):
 		registry = get_registry()
 		catalog = get_library_catalog()
-		sites = get_component_hierarchy_names()
 		intids = component.getUtility(IIntIds)
 
+		contained = 0
 		registered = 0
 		items = result[ITEMS] = []
-		references = catalog.get_references(sites=sites,
-										 	provided=_course_asset_interfaces())
+		master = self._contained_assets()
 
-		for ntiid, asset in self._registered_assets(registry):
+		# clean containers by removing those assets that either
+		# don't have an intid or cannot be found in the registry
+		for ntiid, data in list(master.items()):
+			asset, container = data
 			uid = intids.queryId(asset)
 			provided = iface_of_thing(asset)
-			if uid is None:
-				items.append(repr((provided.__name__, ntiid)))
-				self._unregister(sites, provided=provided, name=ntiid)
-			elif uid not in references:
-				items.append(repr((provided.__name__, ntiid, uid)))
-				self._unregister(sites, provided=provided, name=ntiid)
-				intids.unregister(asset)
-			registered += 1
-
-		contained = set()
-		for container, ntiid, asset in self._contained_assets():
-			uid = intids.queryId(asset)
-			provided = iface_of_thing(asset)
-			if 	uid is None or uid not in references or \
-				component.queryUtility(provided, name=ntiid) is None:
+			if uid is None or component.queryUtility(provided, name=ntiid) is None:
 				container.pop(ntiid, None)
-				self._unregister(sites, provided=provided, name=ntiid)
+				remove_transaction_history(asset)
 				if uid is not None:
 					catalog.unindex(uid)
 					intids.unregister(asset)
-				remove_transaction_history(asset)
-			contained.add(ntiid)
+				master.pop(ntiid)
+			else:
+				contained += 1
 
-		result['TotalRemoved'] = len(items)
-		result['TotalRegisteredAssets'] = registered
-		result['TotalContainedAssets'] = len(contained)
-		result['TotalCatalogedAssets'] = len(references)
-		return result
-
-	def __call__(self):
-		now = time.time()
-		result = LocatedExternalDict()
-		endInteraction()
-		try:
-			self._do_call(result)
-		finally:
-			restoreInteraction()
-			result['TimeElapsed'] = time.time() - now
-		return result
-
-@view_config(context=IDataserverFolder)
-@view_config(context=CourseAdminPathAdapter)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   permission=nauth.ACT_NTI_ADMIN,
-			   name='RemoveAllCoursesPresentationAssets')
-class RemoveAllCoursesPresentationAssetsView(RemoveCourseInaccessibleAssetsView):
-
-	def _do_call(self, result):
-		values = self.readInput()
-		registry = get_registry()
-		catalog = get_library_catalog()
-		force = _is_true(values.get('force'))
-		sites = get_component_hierarchy_names()
-		intids = component.getUtility(IIntIds)
-
-		registered = 0
-		references = set()
-		result_set = catalog.search_objects(sites=sites,
-										 	provided=_course_asset_interfaces())
-		for uid, asset in result_set.iter_pairs():
-			if can_be_removed(asset, force=force):
-				catalog.unindex(uid)
-				references.add(uid)
-
+		# unregister those utilities that cannot be found
+		# in the course containers
 		for ntiid, asset in self._registered_assets(registry):
-			if not can_be_removed(asset, force=force):
-				continue
-			# remove trax
-			remove_transaction_history(asset)
-			# unregister utility
-			provided = iface_of_thing(asset)
-			self._unregister(sites, provided=provided, name=ntiid)
-			# unregister fron intid
 			uid = intids.queryId(asset)
-			if uid is not None:
-				intids.unregister(asset)
-			# ground if possible
-			if hasattr('asset', '__parent__'):
-				asset.__parent__ = None
-			registered += 1
+			provided = iface_of_thing(asset)
+			if uid is None or ntiid not in master:
+				remove_transaction_history(asset)
+				self._unregister(asset, provided=provided, name=ntiid)
+				if uid is not None:
+					catalog.unindex(uid)
+					intids.unregister(asset)
+				items.append({
+					'IntId':uid,
+					NTIID:ntiid,
+					MIMETYPE:asset.mimeType,
+				})
+			else:
+				registered += 1
 
-		for course in yield_sync_courses():
-			clear_course_assets(course)
-			clear_namespace_last_modified(course, catalog)
-
+		result['TotalContainedAssets'] = contained
 		result['TotalRegisteredAssets'] = registered
-		result['TotalCatalogedAssets'] = len(references)
+		result['Total'] = result['ItemCount'] = len(items)
 		return result
 
 	def __call__(self):
-		now = time.time()
 		result = LocatedExternalDict()
 		endInteraction()
 		try:
 			self._do_call(result)
 		finally:
 			restoreInteraction()
-			result['TimeElapsed'] = time.time() - now
 		return result
 
 @view_config(context=IDataserverFolder)
