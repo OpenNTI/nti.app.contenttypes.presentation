@@ -11,6 +11,7 @@ logger = __import__('logging').getLogger(__name__)
 
 import six
 import time
+from collections import defaultdict
 
 from zope import component
 
@@ -146,15 +147,21 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 				yield ntiid, asset
 
 	def _contained_assets(self):
-		result = {}
+		result = defaultdict(list)
+		containers = defaultdict(list)
 		ifaces = _course_asset_interfaces()
 		for course in yield_sync_courses():
 			container = IPresentationAssetContainer(course)
 			for key, value in container.items():
 				provided = iface_of_thing(value)
 				if provided in ifaces:
-					result[key] = (value, container)
-		return result
+					result[key].append(value)
+					containers[key].append(container)
+		return result, containers
+
+	def _pop(self, container, ntiid):
+		if ntiid in container:
+			del container[ntiid]
 
 	def _do_call(self, result):
 		registry = get_registry()
@@ -164,21 +171,34 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 		contained = 0
 		registered = 0
 		items = result[ITEMS] = []
-		master = self._contained_assets()
+		master, storages = self._contained_assets()
 
 		# clean containers by removing those assets that either
 		# don't have an intid or cannot be found in the registry
-		for ntiid, data in list(master.items()):
-			asset, container = data
-			uid = intids.queryId(asset)
-			provided = iface_of_thing(asset)
-			if uid is None or component.queryUtility(provided, name=ntiid) is None:
-				container.pop(ntiid, None)
-				remove_transaction_history(asset)
-				if uid is not None:
-					catalog.unindex(uid)
-					intids.unregister(asset)
-				master.pop(ntiid)
+		for ntiid, assets in list(master.items()):
+			provided = None
+			containers = storages[ntiid]
+			# check every object in the storage containers to look for
+			# invalid objects
+			for idx, asset in enumerate(assets):
+				uid = intids.queryId(asset)
+				provided = iface_of_thing(asset)
+				if uid is None:
+					self._pop(containers[idx], ntiid)
+					remove_transaction_history(asset)
+			# check registration
+			if component.queryUtility(provided, name=ntiid) is None:
+				# unindex and remove from containers
+				for idx, asset in enumerate(assets):
+					uid = intids.queryId(asset)
+					if uid is not None:
+						catalog.unindex(uid)
+						intids.unregister(asset)
+					self._pop(containers[idx], ntiid)
+					remove_transaction_history(asset)
+				# update master list
+				master.pop(ntiid, None)
+				storages.pop(ntiid, None)
 			else:
 				contained += 1
 
