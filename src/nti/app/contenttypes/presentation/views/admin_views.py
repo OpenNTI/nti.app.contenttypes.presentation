@@ -198,6 +198,7 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 			else:
 				registered += 1
 
+		items.sort(key=lambda x:x[NTIID])
 		result['TotalContainedAssets'] = contained
 		result['TotalRegisteredAssets'] = registered
 		result['Total'] = result['ItemCount'] = len(items)
