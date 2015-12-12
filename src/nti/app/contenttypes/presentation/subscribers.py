@@ -108,11 +108,12 @@ def _clear_data_when_course_removed(course, event):
 
 @component.adapter(ICourseOutlineNode, IUnregistered)
 def _on_outlinenode_unregistered(node, event):
-	if hasattr(node, 'LessonOverviewNTIID'):
+	try:
 		lesson = find_object_with_ntiid(node.LessonOverviewNTIID)
 		if lesson is not None:
 			lesson.__parent__ = None
-			logger.warn("%s is an orphan lesson overview object", lesson.ntiid)
+	except AttributeError:
+		pass
 
 # Presentation assets
 
