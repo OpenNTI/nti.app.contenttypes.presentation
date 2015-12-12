@@ -16,6 +16,8 @@ from zope.location.interfaces import ILocation
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
+
+from nti.contenttypes.courses.utils import is_course_editor
 from nti.contenttypes.courses.utils import is_course_instructor
 from nti.contenttypes.courses.utils import get_enrollment_record
 
@@ -32,7 +34,7 @@ LINKS = StandardExternalFields.LINKS
 class _CourseAssetsLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	def _predicate(self, context, result):
-		return self._is_authenticated and is_course_instructor(context, self.remoteUser)
+		return self._is_authenticated and is_course_editor(context, self.remoteUser)
 
 	def _do_decorate_external(self, context, result):
 		_links = result.setdefault(LINKS, [])
