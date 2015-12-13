@@ -62,7 +62,7 @@ class _AbstractMoveLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 	def _acl_decoration(self):
 		result = getattr(self.request, 'acl_decoration', True)
 		return result
-	
+
 	def _predicate(self, context, result):
 		return 		self._is_authenticated \
 				and self._acl_decoration \

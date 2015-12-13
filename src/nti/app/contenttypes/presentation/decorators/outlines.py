@@ -35,6 +35,8 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 
+from nti.coremetadata.interfaces import IPublishable
+
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.externalization.interfaces import StandardExternalFields
@@ -58,11 +60,16 @@ from . import is_legacy_uas
 
 LINKS = StandardExternalFields.LINKS
 
-def _lesson_overview_links(context):
+def _is_visible( item, request ):
+	return 	not IPublishable.providedBy(item) \
+		or 	item.is_published() \
+		or	has_permission(ACT_CONTENT_EDIT, item, request)
+
+def _lesson_overview_links(context, request):
 	try:
 		name = context.LessonOverviewNTIID
 		lesson = component.queryUtility(INTILessonOverview, name=name) if name else None
-		if lesson is not None:
+		if lesson is not None and _is_visible( lesson, request ):
 			overview_link = Link(context, rel=VIEW_OVERVIEW_CONTENT,
 								 elements=(VIEW_OVERVIEW_CONTENT,))
 			summary_link = Link(context, rel=VIEW_OVERVIEW_SUMMARY,
@@ -152,7 +159,7 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 		return False
 
 	def _overview_decorate_external(self, context, result):
-		overview_links = _lesson_overview_links(context)
+		overview_links = _lesson_overview_links(context, self.request)
 		if overview_links:
 			links = result.setdefault(LINKS, [])
 			links.extend(overview_links)
@@ -174,7 +181,7 @@ class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwar
 
 	def _overview_decorate_external(self, context, result):
 		try:
-			overview_links = _lesson_overview_links(context)
+			overview_links = _lesson_overview_links(context, self.request)
 			link = overview_links[0] if overview_links else None
 			if link is not None:
 				href = render_link(link)['href']
