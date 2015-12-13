@@ -139,7 +139,7 @@ class OutlineLessonOverviewView(AbstractAuthenticatedView,
 		lesson = self._get_lesson()
 		if self._is_visible(lesson):
 			self.request.acl_decoration = self._can_edit_lesson(lesson)
-			external = to_external_object(lesson, name="render")
+			external = to_external_object( lesson )
 			external.lastModified = external[LAST_MODIFIED] = lesson.lastModified
 		else:
 			external = LocatedExternalDict()

@@ -317,6 +317,8 @@ def _outline_nodes(outline):
 def _create_lesson_4_node(node, registry=None, catalog=None):
 	result = create_lesson_4_node(node, registry=registry, catalog=catalog)
 	result.locked = node.locked
+	if IPublishable.providedBy( result ):
+		result.publish()
 	return result
 
 def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
