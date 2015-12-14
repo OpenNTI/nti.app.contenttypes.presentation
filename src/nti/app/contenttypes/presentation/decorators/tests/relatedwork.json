@@ -1,0 +1,12 @@
+{
+    "MimeType": "application/vnd.nextthought.relatedworkref",
+ 	"ntiid": "tag:nextthought.com,2011-10:OU-RelatedWork-LSTD1153_S_2015_History_United_States_1865_to_Present.relatedwork.relwk:12.3_1_Critical_Year_1968",
+	"href": "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.reading:12.3_1",
+	"target-ntiid": "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.reading:12.3_1",
+	"creator": "Steven M. Gillon",
+	"desc": "A look at how the U.S. came to a crossroads in 1968, when faced with the Vietnam War, political partisanship, racial violence, and social upheaval.",
+	"icon": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/420c90cea830984c7260c255692e6cd794e2b281/fd35e23767020999111e1f49239199b4c5eff23e.jpg",
+	"type": "application/vnd.nextthought.content",
+	"visibility": "everyone",
+	"label": "The Critical Year: 1968"
+}

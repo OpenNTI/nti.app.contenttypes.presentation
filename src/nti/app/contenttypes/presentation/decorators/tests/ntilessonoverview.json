@@ -1,0 +1,100 @@
+{
+    "MimeType": "application/vnd.nextthought.ntilessonoverview",
+    "NTIID": "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:11.06_LESSON",
+    "Items": [
+        {
+            "MimeType": "application/vnd.nextthought.nticourseoverviewgroup",
+            "accentColor": "f11824e",
+            "Items": [
+                {
+                    "MimeType": "application/vnd.nextthought.relatedworkref",
+                    "targetMimeType": "application/vnd.nextthought.content",
+                    "creator": "Steven M. Gillon",
+                    "section": "required",
+                    "visibility": "everyone",
+                    "label": "Unit 11 Top Take-Aways",
+                    "NTIID": "tag:nextthought.com,2011-10:OU-RelatedWorkRef-LSTD1153_S_2015_History_United_States_1865_to_Present.relatedworkref.relwk:unit_11_takeaways",
+                    "href": "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.reading:Unit_11_TakeAways",
+                    "target-NTIID": "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.reading:Unit_11_TakeAways",
+                    "icon": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/51cb5263e124331904368a3bee2a56e54dcc30f6/fd35e23767020999111e1f49239199b4c5eff23e.jpg",
+                    "desc": "Top Take-Aways for this unit"
+                }
+            ],
+            "title": "Required Resources"
+        },
+        {
+            "MimeType": "application/vnd.nextthought.nticourseoverviewgroup",
+            "accentColor": "81c8dc",
+            "Items": [
+                {
+                    "MimeType": "application/vnd.nextthought.assessment.assignment",
+                    "ContainerId": "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.discussions:_the_liberal_hour",
+                    "title": "Discussions: The Liberal Hour",
+                    "label": "Discussions: The Liberal Hour",
+                    "NTIID": "tag:nextthought.com,2011-10:OU-NAQ-LSTD1153_S_2015_History_United_States_1865_to_Present.naq.asg.assignment:11.6_discussions",
+                    "Target-NTIID": "tag:nextthought.com,2011-10:OU-NAQ-LSTD1153_S_2015_History_United_States_1865_to_Present.naq.asg.assignment:11.6_discussions"
+                },
+                {
+                    "MimeType": "application/vnd.nextthought.assessment.assignment",
+                    "ContainerId": "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.quiz:_the_liberal_hour",
+                    "title": "Quiz: The Liberal Hour",
+                    "label": "Quiz: The Liberal Hour",
+                    "NTIID": "tag:nextthought.com,2011-10:OU-NAQ-LSTD1153_S_2015_History_United_States_1865_to_Present.naq.asg.assignment:11_6_GradedQuiz_pt1",
+                    "Target-NTIID": "tag:nextthought.com,2011-10:OU-NAQ-LSTD1153_S_2015_History_United_States_1865_to_Present.naq.asg.assignment:11_6_GradedQuiz_pt1"
+                },
+                {
+                    "MimeType": "application/vnd.nextthought.assessment.assignment",
+                    "ContainerId": "tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.quiz:_the_liberal_hour_(continued)",
+                    "title": "Quiz: The Liberal Hour (Continued)",
+                    "label": "Quiz: The Liberal Hour (Continued)",
+                    "NTIID": "tag:nextthought.com,2011-10:OU-NAQ-LSTD1153_S_2015_History_United_States_1865_to_Present.naq.asg.assignment:11_6_GradedQuiz_pt2",
+                    "Target-NTIID": "tag:nextthought.com,2011-10:OU-NAQ-LSTD1153_S_2015_History_United_States_1865_to_Present.naq.asg.assignment:11_6_GradedQuiz_pt2"
+                }
+            ],
+            "title": "Assignments"
+        },
+        {
+            "MimeType": "application/vnd.nextthought.nticourseoverviewgroup",
+            "accentColor": "f6d420",
+            "Items": [
+                {
+                    "MimeType": "application/vnd.nextthought.discussion",
+                    "NTIID": "tag:nextthought.com,2011-10:LSTD_1153-Topic:EnrolledCourseRoot-Open_Discussions.11_6_Perspectives",
+                    "label": "",
+                    "title": "11.6 Perspectives",
+                    "icon": "resources/LSTD1153_S_2015_History_United_States_1865_to_Present/8c9c6e901a7884087d71ccf46941ad258121abce/fd35e23767020999111e1f49239199b4c5eff23e.jpg"
+                }
+            ],
+            "title": "Discussions"
+        },
+        {
+            "MimeType": "application/vnd.nextthought.nticourseoverviewgroup",
+            "accentColor": "ce78e0",
+            "Items": [
+                {
+                    "MimeType": "application/vnd.nextthought.ntivideo",
+                    "NTIID": "tag:nextthought.com,2011-10:OU-NTIVideo-LSTD1153_S_2015_History_United_States_1865_to_Present.ntivideo.video_Integrity",
+                    "visibility": "everyone",
+                    "poster": "//www.kaltura.com/p/1500101/thumbnail/entry_id/0_ov8bvmqy/width/1280/",
+                    "label": "Academic Integrity at OU"
+                }
+            ],
+            "title": "Additional Resources"
+        },
+		{
+            "MimeType": "application/vnd.nextthought.nticourseoverviewgroup",
+            "accentColor": "f5d420",
+            "Items": [
+                {
+                    "MimeType": "application/vnd.nextthought.discussion",
+                    "NTIID": "",
+                    "label": "",
+                    "title": "10.1 Help on Algorithms: Functions",
+                    "icon": "resources/CS1303_S_2015_Power_and_Elegance_of_Computational_Thinking/471b848d64d66bc38b0ed6f6e8690f8cc1f683d4/fd35e23767020999111e1f49239199b4c5eff23e.png"
+                }
+            ],
+            "title": "Extra Discussions"
+        }
+    ],
+    "title": "11.6 Apply Your Knowledge"
+}

@@ -70,7 +70,7 @@ from nti.contenttypes.presentation import COURSE_OVERVIEW_GROUP_MIMETYES
 
 from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
-from nti.contenttypes.presentation.interfaces import INTIMediaRef 
+from nti.contenttypes.presentation.interfaces import INTIMediaRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIAudioRoll
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
@@ -577,13 +577,13 @@ def preflight_mediaroll(externalValue):
 				raise hexc.HTTPUnprocessableEntity(_('Missing media roll item NTIID'))
 			resolved = find_object_with_ntiid(ntiid)
 			if resolved is None:
-				raise hexc.HTTPUnprocessableEntity(_('Missing media roll item'))					
+				raise hexc.HTTPUnprocessableEntity(_('Missing media roll item'))
 			if (INTIMedia.providedBy(resolved) or INTIMediaRef.providedBy(resolved)):
 				item[MIMETYPE] = resolved.mimeType
 			else:
 				raise hexc.HTTPUnprocessableEntity(_('Invalid media roll item'))
 	return externalValue
-	
+
 def preflight_overview_group(externalValue):
 	if not isinstance(externalValue, Mapping):
 		return externalValue
@@ -620,7 +620,7 @@ def preflight_lesson_overview(externalValue):
 def preflight_input(externalValue):
 	if not isinstance(externalValue, Mapping):
 		return externalValue
-	
+
 	mimeType = externalValue.get(MIMETYPE) or externalValue.get('mimeType')
 	if mimeType in ALL_MEDIA_ROLL_MIME_TYPES:
 		return preflight_mediaroll(externalValue)
@@ -653,7 +653,7 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 	def parseInput(self, creator, search_owner=False, externalValue=None):
 		# process input
 		externalValue = self.readInput() if not externalValue else externalValue
-		externalValue = preflight_input(externalValue) 
+		externalValue = preflight_input(externalValue)
 		# create and validate
 		contentObject = create_from_external(externalValue, notify=False)
 		contentObject = self.checkContentObject(contentObject, externalValue)
@@ -714,10 +714,10 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 
 	def postflight(self, updatedObject, externalValue, preflight=None):
 		return None
-	
+
 	def updateContentObject(self, contentObject, externalValue, set_id=False, notify=True):
 		data = self.preflight(contentObject, externalValue)
-		
+
 		pre_hook = get_external_pre_hook(externalValue)
 		result = UGDPutView.updateContentObject(self,
 												contentObject,
@@ -770,7 +770,7 @@ class CourseOverviewGroupPutView(PresentationAssetPutView):
 		preflight_overview_group(externalValue)
 		data = {x.ntiid:x for x in contentObject}
 		return data
-	
+
 	def postflight(self, updatedObject, externalValue, preflight):
 		updated = {x.ntiid for x in updatedObject}
 		for ntiid, item in preflight.items():
@@ -789,7 +789,7 @@ class MediaRollPutView(PresentationAssetPutView):
 		preflight_mediaroll(externalValue)
 		data = {x.ntiid:x for x in contentObject}
 		return data
-	
+
 	def postflight(self, updatedObject, externalValue, preflight):
 		updated = {x.ntiid for x in updatedObject}
 		for ntiid, item in preflight.items():
@@ -815,7 +815,7 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 	def _do_delete_object(self, theObject):
 		remove_presentation_asset(theObject, self._registry, self._catalog)
 		return theObject
-	
+
 # ordered contents
 
 @view_config(context=INTILessonOverview)

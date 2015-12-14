@@ -104,4 +104,65 @@
 				for="nti.contenttypes.presentation.interfaces.IPresentationAsset
 					 pyramid.interfaces.IRequest" />
 
+	<!-- Asset decorators -->
+	<subscriber factory=".assets._OverviewGroupDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTICourseOverviewGroup" />
+
+	<subscriber factory=".assets._NTIQuestionRefDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTIQuestionRef" />
+
+	<subscriber factory=".assets._NTIQuestionSetRefDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTIQuestionSetRef" />
+
+	<subscriber factory=".assets._NTISurveyRefDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTISurveyRef" />
+
+	<subscriber factory=".assets._NTIAssignmentRefDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTIAssignmentRef" />
+
+	<subscriber factory=".assets._NTIDiscussionRefDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTIDiscussionRef" />
+
+	<subscriber factory=".assets._NTIRelatedWorkRefDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef" />
+
+	<subscriber factory=".assets._NTITimelineDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTITimeline" />
+
+	<subscriber factory=".assets._NTISlideDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTISlide" />
+
+	<subscriber factory=".assets._NTISlideVideoDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTISlideVideo" />
+
+	<subscriber factory=".assets._NTISlideDeckDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTISlideDeck" />
+
+	<subscriber factory=".assets._NTIAudioRefDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTIAudioRef" />
+
+	<subscriber factory=".assets._NTIVideoRefDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTIVideoRef" />
+
+	<subscriber factory=".assets._NTIVideoDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTIVideo" />
+
+	<subscriber factory=".assets._NTIAudioDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTIAudio" />
+
 </configure>

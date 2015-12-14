@@ -9,6 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import six
+
 from urlparse import urljoin
 
 from zope import component
@@ -47,9 +49,16 @@ from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_
 from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
+from nti.contenttypes.presentation.interfaces import INTISlide
+from nti.contenttypes.presentation.interfaces import INTIVideo
+from nti.contenttypes.presentation.interfaces import INTIAudio
+from nti.contenttypes.presentation.interfaces import INTIVideoRef
+from nti.contenttypes.presentation.interfaces import INTIAudioRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
+from nti.contenttypes.presentation.interfaces import INTISlideDeck
+from nti.contenttypes.presentation.interfaces import INTISlideVideo
 from nti.contenttypes.presentation.interfaces import INTIQuestionRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
@@ -66,6 +75,8 @@ from nti.externalization.interfaces import IExternalObjectDecorator
 from nti.externalization.interfaces import IExternalMappingDecorator
 
 from nti.externalization.externalization import to_external_object
+
+from nti.externalization.singleton import SingletonDecorator
 
 from nti.links.links import Link
 
@@ -88,6 +99,8 @@ LINKS = StandardExternalFields.LINKS
 ITEMS = StandardExternalFields.ITEMS
 CLASS = StandardExternalFields.CLASS
 MIMETYPE = StandardExternalFields.MIMETYPE
+CREATED_TIME = StandardExternalFields.CREATED_TIME
+LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 IN_CLASS_SAFE = make_provider_safe(IN_CLASS)
 
 @component.adapter(IPresentationAsset)
@@ -161,7 +174,7 @@ class _VisibleMixinDecorator(AbstractAuthenticatedRequestAwareDecorator):
 	def _handle_media_ref(self, items, item, idx):
 		source = INTIMedia(item, None)
 		if source is not None:
-			items[idx] = to_external_object(source, name="render")
+			items[idx] = to_external_object(source)
 			return True
 		return False
 
@@ -274,7 +287,7 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 	def allow_surveyref(self, context, item):
 		result = self._allow_assessmentref(IQSurvey, context, item)
 		return result
-	
+
 	def _decorate_external_impl(self, context, result):
 		idx = 0
 		removal = set()
@@ -360,3 +373,224 @@ class _IPADLegacyReferenceDecorator(AbstractAuthenticatedRequestAwareDecorator):
 			result_map[MIMETYPE] = 'application/vnd.nextthought.naquestion'
 		elif INTIDiscussionRef.providedBy(context):
 			result_map[MIMETYPE] = 'application/vnd.nextthought.discussion'
+
+@component.adapter(INTICourseOverviewGroup)
+@interface.implementer(IExternalObjectDecorator)
+class _OverviewGroupDecorator(object):
+
+	__metaclass__ = SingletonDecorator
+
+	def decorateExternalObject(self, original, external):
+		external['accentColor'] = original.color
+
+@interface.implementer(IExternalObjectDecorator)
+class _BaseAssetDecorator(object):
+
+	__metaclass__ = SingletonDecorator
+
+	def decorateExternalObject(self, original, external):
+		if 'ntiid' in external:
+			external[NTIID] = external.pop('ntiid')
+		if 'target' in external:
+			external[u'Target-NTIID'] = external.pop('target')
+
+@component.adapter(INTIQuestionRef)
+@interface.implementer(IExternalObjectDecorator)
+class _NTIQuestionRefDecorator(_BaseAssetDecorator):
+	pass
+
+@interface.implementer(IExternalObjectDecorator)
+class _BaseAssessmentRefDecorator(_BaseAssetDecorator):
+
+	__metaclass__ = SingletonDecorator
+
+	def decorateExternalObject(self, original, external):
+		super(_BaseAssessmentRefDecorator, self).decorateExternalObject(original, external)
+		if 'question_count' in external:
+			external[u'question-count'] = str(external.pop('question_count'))
+
+@component.adapter(INTIQuestionSetRef)
+@interface.implementer(IExternalObjectDecorator)
+class _NTIQuestionSetRefDecorator(_BaseAssessmentRefDecorator):
+	pass
+
+@component.adapter(INTISurveyRef)
+@interface.implementer(IExternalObjectDecorator)
+class _NTISurveyRefDecorator(_BaseAssessmentRefDecorator):
+	pass
+
+@component.adapter(INTIAssignmentRef)
+@interface.implementer(IExternalObjectDecorator)
+class _NTIAssignmentRefDecorator(_BaseAssetDecorator):
+
+	__metaclass__ = SingletonDecorator
+
+	def decorateExternalObject(self, original, external):
+		super(_NTIAssignmentRefDecorator, self).decorateExternalObject(original, external)
+		if 'containerId' in external:
+			external[u'ContainerId'] = external.pop('containerId')
+
+@component.adapter(INTIDiscussionRef)
+@interface.implementer(IExternalObjectDecorator)
+class _NTIDiscussionRefDecorator(_BaseAssetDecorator):
+
+	__metaclass__ = SingletonDecorator
+
+	def decorateExternalObject(self, original, external):
+		super(_NTIDiscussionRefDecorator, self).decorateExternalObject(original, external)
+		if 'target' in external:
+			external[NTIID] = external.pop('target')
+		if 'Target-NTIID' in external:
+			external[NTIID] = external.pop('Target-NTIID')
+
+@component.adapter(INTIRelatedWorkRef)
+@interface.implementer(IExternalObjectDecorator)
+class _NTIRelatedWorkRefDecorator(object):
+
+	__metaclass__ = SingletonDecorator
+
+	def decorateExternalObject(self, original, external):
+		if 'byline' in external:
+			external[u'creator'] = external['byline'] # legacy
+		description = external.get('description')
+		if description:
+			external[u'desc'] = external['description'] = description.strip() # legacy
+		if 'target' in external:
+			external[u'target-NTIID'] = external[u'target-ntiid'] = external['target'] # legacy
+		if 'type' in external:
+			external[u'targetMimeType'] = external['type']
+
+@component.adapter(INTITimeline)
+@interface.implementer(IExternalObjectDecorator)
+class _NTITimelineDecorator(_BaseAssetDecorator):
+
+	__metaclass__ = SingletonDecorator
+
+	def decorateExternalObject(self, original, external):
+		super(_NTITimelineDecorator, self).decorateExternalObject(original, external)
+		if 'description' in external:
+			external[u'desc'] = external['description']
+		inline = external.pop( 'suggested_inline', None )
+		if inline is not None:
+			external['suggested-inline'] = inline
+
+@interface.implementer(IExternalObjectDecorator)
+class _NTIBaseSlideDecorator(_BaseAssetDecorator):
+
+	__metaclass__ = SingletonDecorator
+
+	def decorateExternalObject(self, original, external):
+		super(_NTIBaseSlideDecorator, self).decorateExternalObject(original, external)
+		if 'byline' in external:
+			external[u'creator'] = external['byline']
+		if CLASS in external:
+			external[u'class'] = (external.get(CLASS) or u'').lower() # legacy
+		if 'description' in external and not external['description']:
+			external.pop('description')
+		external[u'ntiid'] = external[NTIID] = original.ntiid
+
+@component.adapter(INTISlide)
+@interface.implementer(IExternalObjectDecorator)
+class _NTISlideDecorator(_NTIBaseSlideDecorator):
+
+	__metaclass__ = SingletonDecorator
+
+	def decorateExternalObject(self, original, external):
+		super(_NTISlideDecorator, self).decorateExternalObject(original, external)
+		for name in ("slidevideostart", "slidevideoend", "slidenumber"):
+			value = external.get(name)
+			if value is not None and not isinstance(value, six.string_types):
+				external[name] = str(value)
+
+@component.adapter(INTISlideVideo)
+@interface.implementer(IExternalObjectDecorator)
+class _NTISlideVideoDecorator(_NTIBaseSlideDecorator):
+
+	__metaclass__ = SingletonDecorator
+
+	def decorateExternalObject(self, original, external):
+		super(_NTISlideVideoDecorator, self).decorateExternalObject(original, external)
+		if 'video_ntiid' in external:
+			external[u'video-ntiid'] = external['video_ntiid'] # legacy
+
+@component.adapter(INTISlideDeck)
+@interface.implementer(IExternalObjectDecorator)
+class _NTISlideDeckDecorator(_NTIBaseSlideDecorator):
+
+	__metaclass__ = SingletonDecorator
+
+	def decorateExternalObject(self, original, external):
+		super(_NTISlideDeckDecorator, self).decorateExternalObject(original, external)
+		external[u'creator'] = original.byline
+
+@component.adapter(INTIAudioRef)
+@interface.implementer(IExternalObjectDecorator)
+class _NTIAudioRefDecorator(_BaseAssetDecorator):
+
+	__metaclass__ = SingletonDecorator
+
+	def decorateExternalObject(self, original, external):
+		super(_NTIAudioRefDecorator, self).decorateExternalObject(original, external)
+		if MIMETYPE in external:
+			external[MIMETYPE] = u"application/vnd.nextthought.ntiaudio"
+
+@component.adapter(INTIVideoRef)
+@interface.implementer(IExternalObjectDecorator)
+class _NTIVideoRefDecorator(_BaseAssetDecorator):
+
+	__metaclass__ = SingletonDecorator
+
+	def decorateExternalObject(self, original, external):
+		super(_NTIVideoRefDecorator, self).decorateExternalObject(original, external)
+		if MIMETYPE in external:
+			external[MIMETYPE] = u"application/vnd.nextthought.ntivideo"
+
+@interface.implementer(IExternalObjectDecorator)
+class _BaseMediaDecorator(object):
+
+	__metaclass__ = SingletonDecorator
+
+	def decorateExternalObject(self, original, external):
+		if MIMETYPE in external:
+			external[StandardExternalFields.CTA_MIMETYPE] = external[MIMETYPE]  # legacy
+
+		if 'byline' in external:
+			external[u'creator'] = external['byline'] # legacy
+
+		if 'ntiid' in external and NTIID not in external:
+			external[NTIID] = external['ntiid'] # alias
+
+		for name in (u'DCDescription', u'DCTitle'):
+			external.pop(name, None)
+
+		for source in external.get('sources') or ():
+			source.pop(CREATED_TIME, None)
+			source.pop(LAST_MODIFIED, None)
+
+		for transcript in external.get('transcripts') or ():
+			transcript.pop(CREATED_TIME, None)
+			transcript.pop(LAST_MODIFIED, None)
+
+@component.adapter(INTIVideo)
+@interface.implementer(IExternalObjectDecorator)
+class _NTIVideoDecorator(_BaseMediaDecorator):
+
+	__metaclass__ = SingletonDecorator
+
+	def decorateExternalObject(self, original, external):
+		super(_NTIVideoDecorator, self).decorateExternalObject(original, external)
+		if 'closed_caption' in external:
+			external[u'closedCaptions'] = external['closed_caption'] # legacy
+
+		for name in ('poster', 'label', 'subtitle'):
+			if name in external and not external[name]:
+				del external[name]
+
+		title = external.get('title')
+		if title and not external.get('label'):
+			external['label'] = title
+
+@component.adapter(INTIAudio)
+@interface.implementer(IExternalObjectDecorator)
+class _NTIAudioDecorator(_BaseMediaDecorator):
+	pass

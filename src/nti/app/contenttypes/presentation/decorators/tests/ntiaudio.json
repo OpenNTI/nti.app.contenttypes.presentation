@@ -1,0 +1,22 @@
+{
+    "mimeType": "application/vnd.nextthought.ntiaudio",
+    "description": "",
+    "creator": "Alibra",
+    "title": "audio",
+    "ntiid": "tag:nextthought.com,2011-10:Alibra-NTIAudio-Alibra_Unit7.ntiaudio.audio_90how",
+    "sources": [
+        {
+            "source": [
+                "//s3.amazonaws.com/media.nextthought.com/Alibra/Unit07/90+how.mp3",
+                "//s3.amazonaws.com/media.nextthought.com/Alibra/Unit07/90+how.wav"
+            ],
+            "type": [
+                "audio/mp3",
+                "audio/wav"
+            ],
+            "thumbnail": "//s3.amazonaws.com/media.nextthought.com/Alibra/Unit07/90+how-thumb.jpg",
+            "service": "html5"
+        }
+    ],
+    "transcripts": []
+}
