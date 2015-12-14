@@ -12,6 +12,8 @@ from hamcrest import none
 from hamcrest import is_in
 from hamcrest import is_not
 from hamcrest import has_key
+from hamcrest import contains
+from hamcrest import not_none
 from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
@@ -33,6 +35,7 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.presentation.interfaces import INTIVideo
+from nti.contenttypes.presentation.interfaces import INTIVideoRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
@@ -123,6 +126,73 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj, has_property('description', is_('Human/Quincy')))
 
 		# delete
+		res = self.testapp.delete(href, status=204)
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			obj = find_object_with_ntiid(ntiid)
+			assert_that(obj, is_(none()))
+
+			entry = find_object_with_ntiid(self.course_ntiid)
+			course = ICourseInstance(entry)
+			container = IPresentationAssetContainer(course)
+			assert_that(container, does_not(has_key(ntiid)))
+
+	@WithSharedApplicationMockDS(testapp=True, users=True)
+	def test_video_roll(self):
+		# A video
+		video_source = self._load_resource('ntivideo.json')
+		video_source.pop('NTIID', None)
+		res = self.testapp.post_json(self.assets_url, video_source, status=201)
+		res = res.json_body
+		video_ntiid = res.get( 'ntiid' )
+
+		source = self._load_resource('video_roll.json')
+
+		# Upload roll
+		res = self.testapp.post_json(self.assets_url, source, status=201)
+		res = res.json_body
+		ntiid = res.get( 'ntiid' )
+		href = res.get( 'href' )
+		assert_that( ntiid, not_none() )
+		assert_that( href, not_none() )
+		assert_that( res.get( 'MimeType' ), is_( 'application/vnd.nextthought.ntivideoroll' ))
+		assert_that( res.get( 'Items' ), has_length( 1 ))
+		video_ntiid2 = res.get( 'Items' )[0].get( 'ntiid' )
+		assert_that( res.get( 'Creator' ), is_( 'sjohnson@nextthought.com'))
+
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			# Check our objects are locked and are actually video(roll)
+			# objects that can be found in course.
+			obj = find_object_with_ntiid(ntiid)
+			assert_that(obj, not_none())
+			assert_that(obj, validly_provides(INTIVideoRoll))
+
+			entry = find_object_with_ntiid(self.course_ntiid)
+			course = ICourseInstance(entry)
+			self._check_containers(course, (obj,))
+
+			catalog = get_library_catalog()
+			containers = catalog.get_containers(obj)
+			assert_that(containers, contains( self.course_ntiid ))
+			self._check_containers(course, False, obj.Items)
+
+			assert_that( obj.locked, is_( True ))
+			assert_that( obj.Items[0].locked, is_( True ))
+
+			source = to_external_object(obj)
+
+		# Now add a video ntiid
+		items = source.get( 'Items' )
+		items.append( video_ntiid )
+		source['Items'] = items
+		res = self.testapp.put_json(href, source, status=200)
+		res = res.json_body
+
+		assert_that( res.get( 'ntiid' ), is_( ntiid ))
+		assert_that( res.get( 'Items' ), has_length( 2 ))
+		video_ntiids = [x.get( 'ntiid' ) for x in res.get( 'Items' )]
+		assert_that( video_ntiids, contains( video_ntiid2, video_ntiid ))
+
+		# Delete
 		res = self.testapp.delete(href, status=204)
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			obj = find_object_with_ntiid(ntiid)
