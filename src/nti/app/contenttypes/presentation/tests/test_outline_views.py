@@ -138,12 +138,15 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		data = None
 		start = start and _calendar_timegm( start.timetuple() )
 		end = end and _calendar_timegm( end.timetuple() )
-		publish = 'unpublish' if unpublish else 'publish'
+		rel = 'unpublish' if unpublish else 'publish'
 
 		if start or end:
 			data = { 'publishBeginning': start,
 					'publishEnding': end }
-		url = '/dataserver2/Objects/%s/@@%s' % ( ntiid, publish )
+		url = '/dataserver2/Objects/%s' % ntiid
+		res = self.testapp.get( url, extra_environ=self.editor_environ )
+		res = res.json_body
+		url = self.require_link_href_with_rel( res, rel )
 		if data:
 			self.testapp.post_json( url, data, extra_environ=self.editor_environ )
 		else:

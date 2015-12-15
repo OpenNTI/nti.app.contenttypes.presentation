@@ -180,7 +180,7 @@ class TestAssetViews(ApplicationLayerTest):
 
 			source = to_external_object(obj)
 
-		# Now add a video ntiid
+		# Now append a video ntiid
 		items = source.get( 'Items' )
 		items.append( video_ntiid )
 		source['Items'] = items
