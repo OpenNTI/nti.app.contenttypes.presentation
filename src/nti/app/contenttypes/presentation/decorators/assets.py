@@ -178,6 +178,13 @@ class _VisibleMixinDecorator(AbstractAuthenticatedRequestAwareDecorator):
 			return True
 		return False
 
+	def _handle_mediaroll_ref(self, items, item, idx):
+		source = INTIMediaRoll(item, None)
+		if source is not None:
+			items[idx] = to_external_object(source)
+			return True
+		return False
+
 	def _allow_visible(self, context, item):
 		record = self.record(context)
 		result = is_item_visible(item, user=self.remoteUser,
@@ -451,12 +458,12 @@ class _NTIRelatedWorkRefDecorator(object):
 
 	def decorateExternalObject(self, original, external):
 		if 'byline' in external:
-			external[u'creator'] = external['byline'] # legacy
+			external[u'creator'] = external['byline']  # legacy
 		description = external.get('description')
 		if description:
-			external[u'desc'] = external['description'] = description.strip() # legacy
+			external[u'desc'] = external['description'] = description.strip()  # legacy
 		if 'target' in external:
-			external[u'target-NTIID'] = external[u'target-ntiid'] = external['target'] # legacy
+			external[u'target-NTIID'] = external[u'target-ntiid'] = external['target']  # legacy
 		if 'type' in external:
 			external[u'targetMimeType'] = external['type']
 
@@ -470,7 +477,7 @@ class _NTITimelineDecorator(_BaseAssetDecorator):
 		super(_NTITimelineDecorator, self).decorateExternalObject(original, external)
 		if 'description' in external:
 			external[u'desc'] = external['description']
-		inline = external.pop( 'suggested_inline', None )
+		inline = external.pop('suggested_inline', None)
 		if inline is not None:
 			external['suggested-inline'] = inline
 
@@ -484,7 +491,7 @@ class _NTIBaseSlideDecorator(_BaseAssetDecorator):
 		if 'byline' in external:
 			external[u'creator'] = external['byline']
 		if CLASS in external:
-			external[u'class'] = (external.get(CLASS) or u'').lower() # legacy
+			external[u'class'] = (external.get(CLASS) or u'').lower()  # legacy
 		if 'description' in external and not external['description']:
 			external.pop('description')
 		external[u'ntiid'] = external[NTIID] = original.ntiid
@@ -511,7 +518,7 @@ class _NTISlideVideoDecorator(_NTIBaseSlideDecorator):
 	def decorateExternalObject(self, original, external):
 		super(_NTISlideVideoDecorator, self).decorateExternalObject(original, external)
 		if 'video_ntiid' in external:
-			external[u'video-ntiid'] = external['video_ntiid'] # legacy
+			external[u'video-ntiid'] = external['video_ntiid']  # legacy
 
 @component.adapter(INTISlideDeck)
 @interface.implementer(IExternalObjectDecorator)
@@ -555,10 +562,10 @@ class _BaseMediaDecorator(object):
 			external[StandardExternalFields.CTA_MIMETYPE] = external[MIMETYPE]  # legacy
 
 		if 'byline' in external:
-			external[u'creator'] = external['byline'] # legacy
+			external[u'creator'] = external['byline']  # legacy
 
 		if 'ntiid' in external and NTIID not in external:
-			external[NTIID] = external['ntiid'] # alias
+			external[NTIID] = external['ntiid']  # alias
 
 		for name in (u'DCDescription', u'DCTitle'):
 			external.pop(name, None)
@@ -580,7 +587,7 @@ class _NTIVideoDecorator(_BaseMediaDecorator):
 	def decorateExternalObject(self, original, external):
 		super(_NTIVideoDecorator, self).decorateExternalObject(original, external)
 		if 'closed_caption' in external:
-			external[u'closedCaptions'] = external['closed_caption'] # legacy
+			external[u'closedCaptions'] = external['closed_caption']  # legacy
 
 		for name in ('poster', 'label', 'subtitle'):
 			if name in external and not external[name]:
