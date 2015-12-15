@@ -66,7 +66,7 @@
 
 	<utility factory=".ntiids._NTIAudioRollRefResolver" name="NTIAudioRollRef" />
 	<utility factory=".ntiids._NTIVideoRollRefResolver" name="NTIVideoRollRef" />
-	
+
 	<utility factory=".ntiids._NTIAudioResolver" name="NTIAudio" />
 	<utility factory=".ntiids._NTIVideoResolver" name="NTIVideo" />
 
@@ -117,8 +117,5 @@
 
 	<!-- Decorators -->
 	<include package=".decorators" />
-
-	<!-- Weak refs -->
-	<adapter factory=".wref.GroupOverViewableWeakRef" />
 
 </configure>
