@@ -53,8 +53,6 @@ from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
 from nti.site.site import get_component_hierarchy_names
 
-from nti.wref.interfaces import IWeakRef
-
 from .interfaces import IItemRefValidator
 
 from .utils import add_2_connection
@@ -181,12 +179,6 @@ def _register_media_rolls(roll, registry=None, validate=False):
 
 	while idx < len(items):
 		item = items[idx]
-		# check for weak refs in case has been canonicalized
-		item = item() if IWeakRef.providedBy(item) else item
-		if item is None:
-			del items[idx]
-			continue
-
 		item_iface = iface_of_thing(item)
 		result, registered = _register_utility(item,
 										 	   ntiid=item.ntiid,
@@ -238,13 +230,6 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 		# canonicalize item refs
 		while idx < len(items):
 			item = items[idx]
-
-			# check for weak refs in case has been canonicalized
-			item = item() if IWeakRef.providedBy(item) else item
-			if item is None:
-				del items[idx]
-				continue
-
 			if INTIDiscussionRef.providedBy(item) and item.isCourseBundle() and ntiid:
 				specific = get_specific(ntiid)
 				provider = make_provider_safe(specific) if specific else None
@@ -317,7 +302,7 @@ def _outline_nodes(outline):
 def _create_lesson_4_node(node, registry=None, catalog=None):
 	result = create_lesson_4_node(node, registry=registry, catalog=catalog)
 	result.locked = node.locked
-	if IPublishable.providedBy( result ):
+	if IPublishable.providedBy(result):
 		result.publish()
 	return result
 
@@ -384,9 +369,6 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 		to_index = container_ntiids
 
 	for item in items:
-		item = item() if IWeakRef.providedBy(item) else item
-		if item is None:
-			continue
 
 		if container is not None:
 			container[item.ntiid] = item
