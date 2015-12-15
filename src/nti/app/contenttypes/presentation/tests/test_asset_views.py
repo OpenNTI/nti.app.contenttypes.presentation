@@ -192,6 +192,10 @@ class TestAssetViews(ApplicationLayerTest):
 		video_ntiids = [x.get( 'ntiid' ) for x in res.get( 'Items' )]
 		assert_that( video_ntiids, contains( video_ntiid2, video_ntiid ))
 
+		# Try to insert non-existant ntiid
+		items.append( video_ntiid + 'xxx' )
+		self.testapp.put_json(href, source, status=422)
+
 		# Delete
 		res = self.testapp.delete(href, status=204)
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
