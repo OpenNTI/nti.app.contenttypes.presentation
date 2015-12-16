@@ -213,13 +213,13 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 	# canonicalize group
 	groups = overview.Items
 	for gdx, group in enumerate(groups):
-		# register course overview roup
+		# register course overview group
 		result, registered = _register_utility(group,
 											   INTICourseOverviewGroup,
 											   group.ntiid,
 											   registry)
 		if not result:  # replace if registered before
-			groups[gdx] = registered
+			groups[gdx] = group = registered
 
 		# set lineage
 		registered.__parent__ = overview
