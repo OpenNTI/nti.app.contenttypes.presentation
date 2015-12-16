@@ -89,9 +89,9 @@ from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import PresentationAssetCreatedEvent
 
+from nti.contenttypes.presentation.internalization import internalization_mediaroll_pre_hook
 from nti.contenttypes.presentation.internalization import internalization_ntiaudioref_pre_hook
 from nti.contenttypes.presentation.internalization import internalization_ntivideoref_pre_hook
-from nti.contenttypes.presentation.internalization import internalization_mediaroll_pre_hook
 
 from nti.contenttypes.presentation.utils import create_from_external
 from nti.contenttypes.presentation.utils import get_external_pre_hook
@@ -368,7 +368,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		return item
 
 	def _set_creator(self, item, creator):
-		creator = getattr(creator,'username', creator)
+		creator = getattr(creator, 'username', creator)
 		if not getattr(item, 'creator', None):
 			item.creator = creator
 
@@ -566,7 +566,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 	def readInput(self, no_ntiids=True):
 		result = super(PresentationAssetSubmitViewMixin, self).readInput()
-		self._remove_ntiids( result, no_ntiids )
+		self._remove_ntiids(result, no_ntiids)
 		return result
 
 # preflight routines
@@ -883,7 +883,7 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 						component=contentObject,
 						name=contentObject.ntiid)
 
-		self.context.insert( index, contentObject )
+		self.context.insert(index, contentObject)
 		self._handle_overview_group(contentObject,
 									creator=creator,
 									extended=(self.context.ntiid,))
@@ -907,9 +907,9 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 	def _remove_ntiids(self, ext_obj, do_remove):
 		# Do not remove our media ntiids, these will be our ref targets.
 		mimeType = ext_obj.get(MIMETYPE) or ext_obj.get('mimeType')
-		is_media = bool( mimeType in VIDEO_MIMETYES or mimeType in AUDIO_MIMETYES )
+		is_media = bool(mimeType in VIDEO_MIMETYES or mimeType in AUDIO_MIMETYES)
 		if not is_media:
-			super( CourseOverviewGroupOrderedContentsView, self )._remove_ntiids( ext_obj, do_remove )
+			super(CourseOverviewGroupOrderedContentsView, self)._remove_ntiids(ext_obj, do_remove)
 
 	def preflight_video(self, externalValue):
 		"""
@@ -971,7 +971,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 
 		parent = self.context.__parent__
 		extended = (self.context.ntiid,) + ((parent.ntiid,) if parent is not None else ())
-		self.context.insert( index, contentObject )
+		self.context.insert(index, contentObject)
 		self._handle_asset(provided,
 						   contentObject,
 						   creator=creator,
