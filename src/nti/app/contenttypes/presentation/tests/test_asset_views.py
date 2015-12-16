@@ -19,7 +19,6 @@ from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import greater_than
 from hamcrest import has_property
-from hamcrest import contains_inanyorder
 does_not = is_not
 
 import fudge
@@ -224,7 +223,6 @@ class TestAssetViews(ApplicationLayerTest):
 			#self._check_containers(course, False, roll_obj.Items)
 
 			assert_that( roll_obj.locked, is_( True ))
-			assert_that( roll_obj.locked, is_( True ))
 			assert_that( roll_obj.Items[0], validly_provides( INTIVideoRef ))
 			# TODO: This is broke
 			#assert_that( roll_obj.Items[0].locked, is_( True ))
@@ -241,6 +239,28 @@ class TestAssetViews(ApplicationLayerTest):
 		assert_that( res.get( 'Items' ), has_length( 2 ))
 		video_ntiids = [x.get( 'ntiid' ) for x in res.get( 'Items' )]
 		assert_that( video_ntiids, contains( roll_item_zero_ntiid, video_ntiid ))
+
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			roll_obj = find_object_with_ntiid( video_roll_ntiid )
+			assert_that( roll_obj.locked, is_( True ))
+			assert_that( roll_obj.Items[0], validly_provides( INTIVideoRef ))
+			assert_that( roll_obj.Items[1], validly_provides( INTIVideoRef ))
+
+		# Insert video ntiid into overview group
+		res = self.testapp.post_json( contents_link, {'ntiid':video_ntiid}, status=201 )
+		res = res.json_body
+		assert_that( res.get( 'ntiid'), is_( video_ntiid ) )
+		assert_that( res.get( 'MimeType' ), is_( 'application/vnd.nextthought.ntivideo' ))
+
+		group_res = self.testapp.get( group_href )
+		group_res = group_res.json_body
+		assert_that( group_res.get( 'Items' ), has_length( 5 ) )
+		item_zero = group_res.get( 'Items' )[0]
+		item_roll = group_res.get( 'Items' )[-2]
+		item_last = group_res.get( 'Items' )[-1]
+		assert_that( item_zero.get( 'ntiid' ), is_( video_ntiid ) )
+		assert_that( item_roll.get( 'ntiid' ), is_( video_roll_ntiid ) )
+		assert_that( item_last.get( 'ntiid' ), is_( video_ntiid ) )
 
 		# Try to insert non-existant ntiid
 		items.append( video_ntiid + 'xxx' )

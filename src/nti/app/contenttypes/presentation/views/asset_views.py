@@ -89,7 +89,6 @@ from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import PresentationAssetCreatedEvent
 
-from nti.contenttypes.presentation.internalization import internalization_mediaroll_pre_hook
 from nti.contenttypes.presentation.internalization import internalization_ntiaudioref_pre_hook
 from nti.contenttypes.presentation.internalization import internalization_ntivideoref_pre_hook
 
@@ -576,8 +575,6 @@ def preflight_mediaroll(externalValue):
 		return externalValue
 
 	items = externalValue.get(ITEMS)
-	# Swizzle audio/videos into refs for overview groups.
-	internalization_mediaroll_pre_hook(ITEMS, items)
 
 	for idx, item in enumerate(items or ()):
 		if isinstance(item, six.string_types):
@@ -906,15 +903,30 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 
 	def _remove_ntiids(self, ext_obj, do_remove):
 		# Do not remove our media ntiids, these will be our ref targets.
+		# If we don't have a mimeType, we need the ntiid to fetch the (video) object.
 		mimeType = ext_obj.get(MIMETYPE) or ext_obj.get('mimeType')
 		is_media = bool(mimeType in VIDEO_MIMETYES or mimeType in AUDIO_MIMETYES)
-		if not is_media:
+		if mimeType and not is_media:
 			super(CourseOverviewGroupOrderedContentsView, self)._remove_ntiids(ext_obj, do_remove)
 
 	def preflight_video(self, externalValue):
 		"""
-		Swizzle media into refs for overview groups.
+		Swizzle media into refs for overview groups. If we're missing a mimetype, the given
+		ntiid *must* resolve to a video. All other types should be fully defined (ref) objects.
 		"""
+		if isinstance(externalValue, Mapping) and MIMETYPE not in externalValue:
+			ntiid = externalValue.get('ntiid') or externalValue.get(NTIID)
+			__traceback_info__ = ntiid
+			if not ntiid:
+				raise hexc.HTTPUnprocessableEntity(_('Missing overview group item NTIID'))
+			resolved = find_object_with_ntiid(ntiid)
+			if resolved is None:
+				raise hexc.HTTPUnprocessableEntity(_('Missing overview group  item'))
+			if (INTIMedia.providedBy(resolved) or INTIMediaRef.providedBy(resolved)):
+				externalValue[MIMETYPE] = resolved.mimeType
+			else:
+				raise hexc.HTTPUnprocessableEntity(_('Invalid overview group item'))
+
 		mimeType = externalValue.get(MIMETYPE) or externalValue.get('mimeType')
 		if mimeType in VIDEO_MIMETYES or mimeType in AUDIO_MIMETYES:
 			if not isinstance(externalValue, Mapping):
