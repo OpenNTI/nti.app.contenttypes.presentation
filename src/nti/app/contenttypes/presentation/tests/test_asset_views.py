@@ -156,105 +156,106 @@ class TestAssetViews(ApplicationLayerTest):
 		res = self.testapp.post_json(self.assets_url, video_source, status=201)
 		res = res.json_body
 		video_ntiid = res.get( 'ntiid' )
-		source = self._load_resource('video_roll.json')
-		res = self.testapp.post_json(self.assets_url, source, status=201)
-		res = res.json_body
-		video_roll_ntiid = res.get( 'ntiid' )
 
 		# Post video to our ordered contents link
-		# FIXME: This should return the actual video object.
 		video_source['ntiid'] = video_ntiid
 		res = self.testapp.post_json( contents_link + '/index/0', video_source, status=201)
 		res = res.json_body
-		video_ref_ntiid = res.get( 'NTIID' )
-		video_obj_ntiid = res.get( 'Target-NTIID' )
-		assert_that( video_ref_ntiid, not_none() )
-		assert_that( video_ref_ntiid, is_not( video_obj_ntiid ) )
+		assert_that( res.get( 'MimeType' ), is_( 'application/vnd.nextthought.ntivideo' ) )
+		assert_that( res.get( 'NTIID' ), is_( video_ntiid ) )
 
 		group_res = self.testapp.get( group_href )
 		group_res = group_res.json_body
 		assert_that( group_res.get( 'Items' ), has_length( 3 ) )
-		assert_that( group_res.get( 'Items' )[0].get( 'ntiid' ), is_( video_ntiid ) )
+		item_zero = group_res.get( 'Items' )[0]
+		assert_that( item_zero.get( 'ntiid' ), is_( video_ntiid ) )
+		assert_that( item_zero.get( 'MimeType' ), is_( 'application/vnd.nextthought.ntivideo' ) )
 
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
-			ref_obj = find_object_with_ntiid( video_ref_ntiid )
-			assert_that(ref_obj, validly_provides(INTIVideoRef))
-			video_obj = find_object_with_ntiid( video_obj_ntiid )
-			assert_that(video_obj, validly_provides(INTIVideo))
+			group = find_object_with_ntiid( group_ntiid )
+			ref_obj = group.Items[0]
+			assert_that( ref_obj.locked, is_( True ))
+			assert_that( ref_obj, validly_provides(INTIVideoRef) )
+			target_ntiid = ref_obj.target
+			assert_that( target_ntiid, video_ntiid )
+			video_obj = find_object_with_ntiid( target_ntiid )
+			assert_that( video_obj, validly_provides(INTIVideo) )
 
-		# Upload roll
-# 		source['NTIID'] = video_roll_ntiid
-# 		res = self.testapp.post_json( contents_link + '/index/0', source, status=201)
-# 		res = res.json_body
-# 		video_roll_ref_ntiid2 = res.get( 'ntiid' )
-# 		href = res.get( 'href' )
-# 		assert_that( video_roll_ref_ntiid2, not_none() )
-# 		assert_that( href, not_none() )
-# 		# TODO: Now a video roll ref...
-# 		assert_that( res.get( 'MimeType' ), is_( 'application/vnd.nextthought.ntivideorollref' ))
-# 		#assert_that( res.get( 'Items' ), has_length( 1 ))
-# 		#video_ntiid2 = res.get( 'Items' )[0].get( 'ntiid' )
-# 		assert_that( res.get( 'Creator' ), is_( 'sjohnson@nextthought.com'))
-#
-# 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
-# 			# Check our objects are locked and are actually video(roll)
-# 			# objects that can be found in course.
-# 			ref_obj = find_object_with_ntiid( video_roll_ref_ntiid2 )
-# 			assert_that(ref_obj, not_none())
-# 			assert_that(ref_obj, validly_provides(INTIVideoRollRef))
-#
-# 			entry = find_object_with_ntiid(self.course_ntiid)
-# 			course = ICourseInstance(entry)
-# 			self._check_containers(course, (ref_obj,))
-#
-# 			catalog = get_library_catalog()
-# 			containers = catalog.get_containers(ref_obj)
-# 			# No course?
-# 			assert_that(containers, contains( group_ntiid ))
-# 			#self._check_containers(course, False, obj.Items)
-#
-# 			video_obj = find_object_with_ntiid( ref_obj.target )
-# 			assert_that( video_obj, not_none() )
-# 			assert_that( ref_obj.locked, is_( True ))
-# 			assert_that( video_obj.locked, is_( True ))
-# 			assert_that( video_obj.Items[0].locked, is_( True ))
-#
-# 			to_external_object(ref_obj)
-# 			video_roll_ntiid2 = video_obj.ntiid
-# 			source = to_external_object( video_obj )
-#
-# 		# Check our overview group; our first object should be our new
-# 		# video ntiid (not ref).
-# 		group_res = self.testapp.get( group_href )
-# 		group_res = group_res.json_body
-# 		assert_that( group_res.get( 'Items' ), has_length( 3 ) )
-# 		assert_that( group_res.get( 'Items' )[0].get( 'ntiid' ), is_( video_roll_ntiid2 ) )
+		# Upload/append roll into group
+		roll_source = self._load_resource('video_roll.json')
+		res = self.testapp.post_json( contents_link, roll_source, status=201)
+		res = res.json_body
+		roll_href = res.get( 'href' )
+		video_roll_ntiid = res.get( 'ntiid' )
+		assert_that( roll_href, not_none() )
+		assert_that( res.get( 'MimeType' ), is_( 'application/vnd.nextthought.ntivideoroll' ))
+		assert_that( res.get( 'Items' ), has_length( 1 ))
+		assert_that( res.get( 'Creator' ), is_( 'sjohnson@nextthought.com'))
+		roll_item_zero = res.get( 'Items' )[0]
+		roll_item_zero_ntiid = roll_item_zero.get( 'ntiid' )
+		assert_that( roll_item_zero.get( 'MimeType' ),
+					is_( 'application/vnd.nextthought.ntivideo' ) )
 
-		# Now append a video ntiid
-# 		items = source.get( 'Items' )
-# 		items.append( video_ntiid )
-# 		source['Items'] = items
-# 		res = self.testapp.put_json(href, source, status=200)
-# 		res = res.json_body
-#
-# 		assert_that( res.get( 'Items' ), has_length( 2 ))
-# 		video_ntiids = [x.get( 'ntiid' ) for x in res.get( 'Items' )]
-# 		assert_that( video_ntiids, contains( video_roll_ntiid2, video_ntiid ))
-#
-# 		# Try to insert non-existant ntiid
-# 		items.append( video_ntiid + 'xxx' )
-# 		self.testapp.put_json(href, source, status=422)
+		group_res = self.testapp.get( group_href )
+		group_res = group_res.json_body
+		assert_that( group_res.get( 'Items' ), has_length( 4 ) )
+		item_zero = group_res.get( 'Items' )[0]
+		item_last = group_res.get( 'Items' )[-1]
+		assert_that( item_zero.get( 'ntiid' ), is_( video_ntiid ) )
+		assert_that( item_last.get( 'ntiid' ), is_( video_roll_ntiid ) )
+		assert_that( item_last.get( 'MimeType' ), is_( 'application/vnd.nextthought.ntivideoroll' ) )
 
-# 		# Delete
-# 		res = self.testapp.delete(href, status=204)
-# 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
-# 			obj = find_object_with_ntiid(ntiid)
-# 			assert_that(obj, is_(none()))
-#
-# 			entry = find_object_with_ntiid(self.course_ntiid)
-# 			course = ICourseInstance(entry)
-# 			container = IPresentationAssetContainer(course)
-# 			assert_that(container, does_not(has_key(ntiid)))
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			# Check our objects are locked and are actually video(roll)
+			# objects that can be found in course.
+			roll_obj = find_object_with_ntiid( video_roll_ntiid )
+			assert_that(roll_obj, not_none())
+			assert_that(roll_obj, validly_provides(INTIVideoRoll))
+
+			entry = find_object_with_ntiid(self.course_ntiid)
+			course = ICourseInstance(entry)
+			self._check_containers(course, (roll_obj,))
+
+			catalog = get_library_catalog()
+			containers = catalog.get_containers(roll_obj)
+			# TODO: No course?
+			assert_that(containers, contains( group_ntiid ))
+			# TODO: This is broke, video not in course asset container?
+			#self._check_containers(course, False, roll_obj.Items)
+
+			assert_that( roll_obj.locked, is_( True ))
+			assert_that( roll_obj.locked, is_( True ))
+			assert_that( roll_obj.Items[0], validly_provides( INTIVideoRef ))
+			# TODO: This is broke
+			#assert_that( roll_obj.Items[0].locked, is_( True ))
+
+			source = to_external_object( roll_obj )
+
+		# Now append a video ntiid to video roll
+		items = source.get( 'Items' )
+		items.append( video_ntiid )
+		source['Items'] = items
+		res = self.testapp.put_json(roll_href, source, status=200)
+		res = res.json_body
+
+		assert_that( res.get( 'Items' ), has_length( 2 ))
+		video_ntiids = [x.get( 'ntiid' ) for x in res.get( 'Items' )]
+		assert_that( video_ntiids, contains( roll_item_zero_ntiid, video_ntiid ))
+
+		# Try to insert non-existant ntiid
+		items.append( video_ntiid + 'xxx' )
+		self.testapp.put_json(roll_href, source, status=422)
+
+		# Delete roll
+		res = self.testapp.delete(roll_href, status=204)
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			obj = find_object_with_ntiid( video_roll_ntiid )
+			assert_that(obj, is_(none()))
+
+			entry = find_object_with_ntiid(self.course_ntiid)
+			course = ICourseInstance(entry)
+			container = IPresentationAssetContainer(course)
+			assert_that(container, does_not(has_key( video_roll_ntiid )))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_slidedeck(self):

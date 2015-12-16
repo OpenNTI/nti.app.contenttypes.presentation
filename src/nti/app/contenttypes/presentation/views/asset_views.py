@@ -979,4 +979,9 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 
 		notify_modified(self.context, externalValue, external_keys=(ITEMS,))
 		self.request.response.status_int = 201
+
+		# We don't return media refs in the overview group.
+		# So don't here either.
+		if INTIMediaRef.providedBy( contentObject ):
+			contentObject = INTIMedia( contentObject )
 		return contentObject
