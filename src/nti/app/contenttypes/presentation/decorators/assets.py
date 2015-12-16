@@ -89,7 +89,7 @@ from ..utils import resolve_discussion_course_bundle
 from ..utils import get_enrollment_record as get_any_enrollment_record
 
 from . import LEGACY_UAS_40
-from . import ORDERED_CONTENTS
+from . import VIEW_ORDERED_CONTENTS
 
 from . import is_legacy_uas
 from . import _AbstractMoveLinkDecorator
@@ -155,7 +155,7 @@ class _NTIAssetOrderedContentsLinkDecorator(AbstractAuthenticatedRequestAwareDec
 
 	def _do_decorate_external(self, context, result):
 		links = result.setdefault(LINKS, [])
-		link = Link(context, rel=ORDERED_CONTENTS, elements=('contents',))
+		link = Link(context, rel=VIEW_ORDERED_CONTENTS, elements=('contents',))
 		interface.alsoProvides(link, ILocation)
 		link.__name__ = ''
 		link.__parent__ = context
@@ -173,13 +173,6 @@ class _VisibleMixinDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	def _handle_media_ref(self, items, item, idx):
 		source = INTIMedia(item, None)
-		if source is not None:
-			items[idx] = to_external_object(source)
-			return True
-		return False
-
-	def _handle_mediaroll_ref(self, items, item, idx):
-		source = INTIMediaRoll(item, None)
 		if source is not None:
 			items[idx] = to_external_object(source)
 			return True

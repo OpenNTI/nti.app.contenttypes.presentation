@@ -51,7 +51,7 @@ from nti.ntiids.ntiids import TYPE_OID
 from nti.ntiids.ntiids import is_ntiid_of_type
 
 from . import LEGACY_UAS_20
-from . import ORDERED_CONTENTS
+from . import VIEW_ORDERED_CONTENTS
 from . import VIEW_OVERVIEW_CONTENT
 from . import VIEW_OVERVIEW_SUMMARY
 from . import _AbstractMoveLinkDecorator
@@ -127,7 +127,7 @@ class _CourseOutlineEditLinkDecorator(AbstractAuthenticatedRequestAwareDecorator
 
 	def _do_decorate_external(self, context, result):
 		links = result.setdefault(LINKS, [])
-		link = Link(context, rel=ORDERED_CONTENTS, elements=('contents',))
+		link = Link(context, rel=VIEW_ORDERED_CONTENTS, elements=('contents',))
 		interface.alsoProvides(link, ILocation)
 		link.__name__ = ''
 		link.__parent__ = context

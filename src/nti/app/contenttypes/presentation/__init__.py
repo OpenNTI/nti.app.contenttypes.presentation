@@ -26,3 +26,4 @@ VIEW_CONTENTS = 'contents'
 VIEW_NODE_CONTENTS = 'contents'
 VIEW_OVERVIEW_CONTENT = "overview-content"
 VIEW_OVERVIEW_SUMMARY = "overview-summary"
+VIEW_ORDERED_CONTENTS = 'ordered-contents'

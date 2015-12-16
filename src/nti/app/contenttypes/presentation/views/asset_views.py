@@ -63,6 +63,8 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation import iface_of_asset
+from nti.contenttypes.presentation import AUDIO_MIMETYES
+from nti.contenttypes.presentation import VIDEO_MIMETYES
 from nti.contenttypes.presentation import LESSON_OVERVIEW_MIMETYES
 from nti.contenttypes.presentation import ALL_MEDIA_ROLL_MIME_TYPES
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
@@ -86,6 +88,10 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import PresentationAssetCreatedEvent
+
+from nti.contenttypes.presentation.internalization import internalization_ntiaudioref_pre_hook
+from nti.contenttypes.presentation.internalization import internalization_ntivideoref_pre_hook
+from nti.contenttypes.presentation.internalization import internalization_mediaroll_pre_hook
 
 from nti.contenttypes.presentation.utils import create_from_external
 from nti.contenttypes.presentation.utils import get_external_pre_hook
@@ -553,11 +559,14 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 			self._handle_other_asset(provided, item, creator, extended)
 		return item
 
+	def _remove_ntiids(self, ext_obj, do_remove):
+		if do_remove:
+			ext_obj.pop('ntiid', None)
+			ext_obj.pop(NTIID, None)
+
 	def readInput(self, no_ntiids=True):
 		result = super(PresentationAssetSubmitViewMixin, self).readInput()
-		if no_ntiids:
-			result.pop('ntiid', None)
-			result.pop(NTIID, None)
+		self._remove_ntiids( result, no_ntiids )
 		return result
 
 # preflight routines
@@ -567,6 +576,9 @@ def preflight_mediaroll(externalValue):
 		return externalValue
 
 	items = externalValue.get(ITEMS)
+	# Swizzle audio/videos into refs for overview groups.
+	internalization_mediaroll_pre_hook(ITEMS, items)
+
 	for idx, item in enumerate(items or ()):
 		if isinstance(item, six.string_types):
 			item = items[idx] = {'ntiid': item}
@@ -892,6 +904,26 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 
 	content_predicate = IGroupOverViewable.providedBy
 
+	def _remove_ntiids(self, ext_obj, do_remove):
+		# Do not remove our media ntiids, these will be our ref targets.
+		mimeType = ext_obj.get(MIMETYPE) or ext_obj.get('mimeType')
+		is_media = bool( mimeType in VIDEO_MIMETYES or mimeType in AUDIO_MIMETYES )
+		if not is_media:
+			super( CourseOverviewGroupOrderedContentsView, self )._remove_ntiids( ext_obj, do_remove )
+
+	def preflight_video(self, externalValue):
+		"""
+		Swizzle media into refs for overview groups.
+		"""
+		mimeType = externalValue.get(MIMETYPE) or externalValue.get('mimeType')
+		if mimeType in VIDEO_MIMETYES or mimeType in AUDIO_MIMETYES:
+			if not isinstance(externalValue, Mapping):
+				return externalValue
+
+			internalization_ntiaudioref_pre_hook(None, externalValue)
+			internalization_ntivideoref_pre_hook(None, externalValue)
+		return externalValue
+
 	def checkContentObject(self, contentObject, externalValue):
 		if contentObject is None or not self.content_predicate(contentObject):
 			transaction.doom()
@@ -903,6 +935,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 	def parseInput(self, creator, search_owner=False, externalValue=None):
 		# process input
 		externalValue = self.readInput() if not externalValue else externalValue
+		externalValue = self.preflight_video(externalValue)
 		externalValue = preflight_input(externalValue)
 		# create object
 		contentObject = create_from_external(externalValue, notify=False)
