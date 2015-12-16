@@ -925,6 +925,8 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 			if (INTIMedia.providedBy(resolved) or INTIMediaRef.providedBy(resolved)):
 				externalValue[MIMETYPE] = resolved.mimeType
 			else:
+				# We did not have a mimetype, and we have an ntiid the resolved
+				# into an unexpected type; blow chunks.
 				raise hexc.HTTPUnprocessableEntity(_('Invalid overview group item'))
 
 		mimeType = externalValue.get(MIMETYPE) or externalValue.get('mimeType')

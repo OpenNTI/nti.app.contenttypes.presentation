@@ -29,6 +29,8 @@ from nti.contenttypes.courses.utils import get_course_packages
 from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import	ICourseOutlineContentNode
 
+from nti.contenttypes.presentation import ALL_MEDIA_ROLL_MIME_TYPES
+
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -59,6 +61,8 @@ from .utils import add_2_connection
 from .utils import create_lesson_4_node
 
 from . import iface_of_thing
+
+from . import PACKAGE_CONTAINER_INTERFACES
 
 ITEMS = StandardExternalFields.ITEMS
 
@@ -117,8 +121,6 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 
 # Courses
 
-from . import PACKAGE_CONTAINER_INTERFACES
-
 def _remove_registered_course_overview(name=None, registry=None,
 									   course=None, force=False):
 	result = []
@@ -133,20 +135,28 @@ def _remove_registered_course_overview(name=None, registry=None,
 	else:
 		group = ()
 
-	# For each group remove anything that is not synced in the content pacakge.
+	def _do_remove( iface, obj ):
+		ntiid = obj.ntiid
+		removed = _removed_registered(iface,
+									name=ntiid,
+								   	registry=registry,
+								  	force=force)
+		if removed is not None:
+			result.append(removed)
+			container.pop(ntiid, None)
+
+	# For each group remove anything that is not synced in the content package.
 	# As of 20150404 we don't have a way to edit and register common group
 	# overview items so we need to remove the old and re-register the new
-	for item in group:  # this shoud resolve weak refs
+	for item in group:  # this should resolve weak refs
 		iface = iface_of_thing(item)
 		if iface not in PACKAGE_CONTAINER_INTERFACES:
-			ntiid = item.ntiid
-			removed = _removed_registered(iface,
-										  name=ntiid,
-								   		  registry=registry,
-								  		  force=force)
-			if removed is not None:
-				result.append(removed)
-				container.pop(item.ntiid, None)
+			_do_remove( iface, item )
+			if iface in ALL_MEDIA_ROLL_MIME_TYPES:
+				# Remove each item in our roll
+				for roll_item in item:
+					iface = iface_of_thing( roll_item )
+					_do_remove( iface, roll_item )
 	return result
 
 def _remove_registered_lesson_overview(name, registry=None, course=None, force=False):
