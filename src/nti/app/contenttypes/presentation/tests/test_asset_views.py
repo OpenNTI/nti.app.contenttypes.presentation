@@ -76,13 +76,13 @@ class TestAssetViews(ApplicationLayerTest):
 			source = simplejson.loads(prepare_json_text(fp.read()))
 		return source
 
-	def _check_containers(self, course, pacakges=True, items=()):
+	def _check_containers(self, course, packages=True, items=()):
 		for item in items or ():
 			ntiid = item.ntiid
 			container = IPresentationAssetContainer(course)
 			assert_that(container, has_key(ntiid))
 
-			if pacakges:
+			if packages:
 				packs = course.ContentPackageBundle.ContentPackages
 				container = IPresentationAssetContainer(packs[0])
 				assert_that(container, has_key(ntiid))
@@ -139,6 +139,30 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(container, does_not(has_key(ntiid)))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
+	def test_video_roll_container(self):
+		roll_source = self._load_resource('video_roll.json')
+
+		res = self.testapp.post_json(self.assets_url, roll_source, status=201)
+		res = res.json_body
+		video_roll_ntiid = res.get( 'ntiid' )
+		assert_that(video_roll_ntiid, not_none())
+		assert_that(res, has_entry('href', not_none()))
+
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			roll_obj = find_object_with_ntiid( video_roll_ntiid )
+			assert_that(roll_obj, not_none())
+			assert_that(roll_obj, validly_provides(INTIVideoRoll))
+
+			entry = find_object_with_ntiid(self.course_ntiid)
+			course = ICourseInstance(entry)
+			self._check_containers(course, packages=False, items=(roll_obj,))
+
+			catalog = get_library_catalog()
+			containers = catalog.get_containers(roll_obj)
+			assert_that(containers, contains( self.course_ntiid ))
+			self._check_containers(course, packages=False, items=roll_obj.Items)
+
+	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_video_roll(self):
 		# Setup overview group
 		source = self._load_resource('nticourseoverviewgroup.json')
@@ -181,7 +205,6 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that( video_obj, validly_provides(INTIVideo) )
 
 		# Upload/append roll into group
-		#roll_source = self._load_resource('video_roll.json')
 		roll_source = {"MimeType": "application/vnd.nextthought.ntivideoroll",
 						"Items": [video_ntiid] }
 		res = self.testapp.post_json( contents_link, roll_source, status=201)
