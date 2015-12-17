@@ -546,10 +546,10 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 				self._handle_related_work(provided, item, creator, extended)
 			else:
 				self._handle_package_asset(provided, item, creator, extended)
-		elif IGroupOverViewable.providedBy(item):
-			self._handle_group_over_viewable(provided, item, creator, extended)
 		elif INTIMediaRoll.providedBy(item):
 			self._handle_media_roll(provided, item, creator, extended)
+		elif IGroupOverViewable.providedBy(item):
+			self._handle_group_over_viewable(provided, item, creator, extended)
 		elif INTICourseOverviewGroup.providedBy(item):
 			self._handle_overview_group(item, creator, extended)
 		elif INTILessonOverview.providedBy(item):
@@ -991,6 +991,10 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 						   creator=creator,
 						   extended=extended)
 
+		# TODO: Surely there's a better way to do this?
+		# The internal roll items are actual objects at this point.
+		if INTIMediaRoll.providedBy( contentObject ):
+			externalValue = to_external_object( externalValue, decorate=False )
 		notify_modified(self.context, externalValue, external_keys=(ITEMS,))
 		self.request.response.status_int = 201
 

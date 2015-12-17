@@ -145,8 +145,8 @@ def _on_will_remove_presentation_asset(asset, event):
 			containers = (context,)
 		for container in containers:
 			if 		(	INTICourseOverviewGroup.providedBy(container)
-					 or INTILessonOverview.providedBy(container) 
-					 or INTIMediaRoll.providedBy(container) 
+					 or INTILessonOverview.providedBy(container)
+					 or INTIMediaRoll.providedBy(container)
 					 or INTISlideDeck.providedBy(container) ) \
 				and container.remove(asset):
 				# XXX: notify the item asset container has been modified

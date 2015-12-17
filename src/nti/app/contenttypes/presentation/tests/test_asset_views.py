@@ -112,7 +112,7 @@ class TestAssetViews(ApplicationLayerTest):
 
 			entry = find_object_with_ntiid(self.course_ntiid)
 			course = ICourseInstance(entry)
-			self._check_containers(course, (obj,))
+			self._check_containers(course, items=(obj,))
 
 			catalog = get_library_catalog()
 			containers = catalog.get_containers(obj)
@@ -176,12 +176,14 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that( ref_obj.locked, is_( True ))
 			assert_that( ref_obj, validly_provides(INTIVideoRef) )
 			target_ntiid = ref_obj.target
-			assert_that( target_ntiid, video_ntiid )
+			assert_that( target_ntiid, is_( video_ntiid ) )
 			video_obj = find_object_with_ntiid( target_ntiid )
 			assert_that( video_obj, validly_provides(INTIVideo) )
 
 		# Upload/append roll into group
-		roll_source = self._load_resource('video_roll.json')
+		#roll_source = self._load_resource('video_roll.json')
+		roll_source = {"MimeType": "application/vnd.nextthought.ntivideoroll",
+						"Items": [video_ntiid] }
 		res = self.testapp.post_json( contents_link, roll_source, status=201)
 		res = res.json_body
 		roll_href = res.get( 'href' )
@@ -211,21 +213,25 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(roll_obj, not_none())
 			assert_that(roll_obj, validly_provides(INTIVideoRoll))
 
-			entry = find_object_with_ntiid(self.course_ntiid)
-			course = ICourseInstance(entry)
-			self._check_containers(course, (roll_obj,))
+			# Since we insert into groups without a course,
+			# containers will not work.
+			#entry = find_object_with_ntiid(self.course_ntiid)
+			#course = ICourseInstance(entry)
+			#self._check_containers(course, items=(roll_obj,))
 
 			catalog = get_library_catalog()
 			containers = catalog.get_containers(roll_obj)
 			# TODO: No course?
 			assert_that(containers, contains( group_ntiid ))
-			# TODO: This is broke, video not in course asset container?
-			#self._check_containers(course, False, roll_obj.Items)
 
 			assert_that( roll_obj.locked, is_( True ))
-			assert_that( roll_obj.Items[0], validly_provides( INTIVideoRef ))
-			# TODO: This is broke
-			#assert_that( roll_obj.Items[0].locked, is_( True ))
+			new_item = roll_obj.Items[0]
+			assert_that( new_item, validly_provides( INTIVideoRef ))
+			assert_that( new_item.ntiid, is_not( new_item.target ))
+			assert_that( new_item.target, is_( video_ntiid ))
+			assert_that( new_item.locked, is_( True ))
+
+			#self._check_containers(course, packages=False, items=roll_obj.Items)
 
 			source = to_external_object( roll_obj )
 
@@ -297,7 +303,7 @@ class TestAssetViews(ApplicationLayerTest):
 			course = ICourseInstance(entry)
 
 			items = chain(obj.Slides, obj.Videos, (obj,))
-			self._check_containers(course, items)
+			self._check_containers(course, items=items)
 
 			source = to_external_object(obj)
 
