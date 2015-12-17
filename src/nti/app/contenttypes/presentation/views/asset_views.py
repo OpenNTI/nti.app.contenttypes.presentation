@@ -12,6 +12,7 @@ logger = __import__('logging').getLogger(__name__)
 from .. import MessageFactory as _
 
 import six
+import copy
 import uuid
 from itertools import chain
 from urlparse import urlparse
@@ -437,7 +438,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		# add media roll ntiid
 		item_extended = tuple(extended or ()) + tuple(containers or ()) + (item.ntiid,)
 		item_extended = set(item_extended)
-		for x in item.Items or ():
+		for x in item or ():
 			self._set_creator(x, creator)
 			_add_2_container(self._course, x, packages=False)
 			self._catalog.index(x, container_ntiids=item_extended)
@@ -663,6 +664,7 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 		# process input
 		externalValue = self.readInput() if not externalValue else externalValue
 		externalValue = preflight_input(externalValue)
+		result = copy.deepcopy(externalValue) # return original input
 		# create and validate
 		contentObject = create_from_external(externalValue, notify=False)
 		contentObject = self.checkContentObject(contentObject, externalValue)
@@ -670,7 +672,7 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 		self._set_creator(contentObject, creator)
 		# update with external
 		self.updateContentObject(contentObject, externalValue, set_id=True, notify=False)
-		return contentObject, externalValue
+		return contentObject, result
 
 	def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
 		contentObject, externalValue = self.parseInput(creator, search_owner, externalValue)
@@ -853,12 +855,13 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 		if MIMETYPE not in externalValue:
 			externalValue[MIMETYPE] = COURSE_OVERVIEW_GROUP_MIMETYES[0]
 		externalValue = preflight_input(externalValue)
+		result = copy.deepcopy(externalValue) # return original input
 		# create object
 		contentObject = create_from_external(externalValue, notify=False)
 		contentObject = self.checkContentObject(contentObject, externalValue)
 		# set creator
 		self._set_creator(contentObject, creator)
-		return contentObject, externalValue
+		return contentObject, result
 
 	def _do_call(self):
 		index = self._get_index()
@@ -951,12 +954,13 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		externalValue = self.readInput() if not externalValue else externalValue
 		externalValue = self.preflight_video(externalValue)
 		externalValue = preflight_input(externalValue)
+		result = copy.deepcopy(externalValue) # return original input
 		# create object
 		contentObject = create_from_external(externalValue, notify=False)
 		contentObject = self.checkContentObject(contentObject, externalValue)
 		# set creator
 		self._set_creator(contentObject, creator)
-		return contentObject, externalValue
+		return contentObject, result
 
 	def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
 		contentObject, externalValue = self.parseInput(creator, search_owner, externalValue)
@@ -991,10 +995,6 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 						   creator=creator,
 						   extended=extended)
 
-		# TODO: Surely there's a better way to do this?
-		# The internal roll items are actual objects at this point.
-		if INTIMediaRoll.providedBy( contentObject ):
-			externalValue = to_external_object( externalValue, decorate=False )
 		notify_modified(self.context, externalValue, external_keys=(ITEMS,))
 		self.request.response.status_int = 201
 
