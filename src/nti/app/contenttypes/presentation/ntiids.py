@@ -129,6 +129,6 @@ class _NTICourseBundleResolver(object):
 			if discussion is not None:
 				result = resolve_discussion_course_bundle(user, discussion, course)
 				if result:
-					discussion, topic = result
+					_, topic = result
 					return topic
 		return None

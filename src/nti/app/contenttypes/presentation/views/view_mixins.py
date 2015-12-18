@@ -84,9 +84,9 @@ def get_namedfile(source, name=None):
 	contentType = contentType or u'application/octet-stream'
 	result = factory()
 	result.name = name
-	#for filename we want to use the filename as originally provided on the source, not
-	#the sluggified internal name. This allows us to give it back in the 
-	#Content-Disposition header on download
+	# for filename we want to use the filename as originally provided on the source, not
+	# the sluggified internal name. This allows us to give it back in the
+	# Content-Disposition header on download
 	result.filename = getattr(source, 'filename', None) or getattr(source, 'name', name)
 	result.data = source.read()
 	result.contentType = contentType
@@ -204,7 +204,7 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 
 		if index is not None and index < 0:
 			raise hexc.HTTPBadRequest(_('Invalid index.'))
-		new_parent.insert( index, obj )
+		new_parent.insert(index, obj)
 
 		# Make sure they don't move the object within the same node and
 		# attempt to delete from that node.
