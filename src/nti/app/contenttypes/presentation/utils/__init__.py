@@ -102,7 +102,7 @@ def get_implied_by_scopes(scopes=()):
 
 def resolve_discussion_course_bundle(user, item, context=None, record=None):
 	"""
-	return the approproate topic according  the discussion ref and user enrollment
+	return a tuple of course discussion and preferred topic according the discussion ref and user enrollment or None
 
 	:param item: A discussion ref object
 	:param context: An object that can be adpated to a course
@@ -149,4 +149,4 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 				topic_key in v:
 				topic = v[topic_key]  # found the topic
 				break
-		return topic
+		return (discussion, topic)

@@ -128,5 +128,7 @@ class _NTICourseBundleResolver(object):
 			discussion = self.get_discussion(splits, course)
 			if discussion is not None:
 				result = resolve_discussion_course_bundle(user, discussion, course)
-				return result
+				if result:
+					discussion, topic = result
+					return topic
 		return None

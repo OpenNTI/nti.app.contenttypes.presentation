@@ -75,6 +75,7 @@ from nti.externalization.interfaces import IExternalObjectDecorator
 from nti.externalization.interfaces import IExternalMappingDecorator
 
 from nti.externalization.externalization import to_external_object
+from nti.externalization.externalization import to_external_ntiid_oid
 
 from nti.externalization.singleton import SingletonDecorator
 
@@ -257,15 +258,25 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 
 	def _allow_discussion_course_bundle(self, context, item, ext_item):
 		record = self.record(context)
-		topic = resolve_discussion_course_bundle(user=self.remoteUser,
-												 item=item,
-												 context=context,
-												 record=record)
-		if topic is None:
+		resolved = resolve_discussion_course_bundle(user=self.remoteUser,
+													item=item,
+													context=context,
+												 	record=record)
+		if resolved is None:
 			return False
 
-		# replace the target to the topic NTIID
-		ext_item[NTIID] = ext_item['target'] = topic.NTIID
+		discussion, topic = resolved
+
+		#For legacy purposes we need NTIID to be the id of the topic
+		#that the user should see when selecting this resource.
+		#As of Dec 2015 all clients are looking at the NTIID field so
+		#the resolved topic id has to go there. We need to get clients migrated
+		#over to target, which is currently safe to change.  We set target
+		#to the course.discussion object and will use a view to resolve it
+		#to the specific topic as necessary. This gets these objects exposed for
+		#editing while maintaining backwards compatibility.
+		ext_item[NTIID] = topic.NTIID
+		ext_item['target'] = to_external_ntiid_oid(discussion)
 		return True
 
 	def _allow_assessmentref(self, iface, context, item):
@@ -438,10 +449,8 @@ class _NTIDiscussionRefDecorator(_BaseAssetDecorator):
 
 	def decorateExternalObject(self, original, external):
 		super(_NTIDiscussionRefDecorator, self).decorateExternalObject(original, external)
-		if 'target' in external:
-			external[NTIID] = external.pop('target')
 		if 'Target-NTIID' in external:
-			external[NTIID] = external.pop('Target-NTIID')
+			external.pop('Target-NTIID')
 
 @component.adapter(INTIRelatedWorkRef)
 @interface.implementer(IExternalObjectDecorator)
