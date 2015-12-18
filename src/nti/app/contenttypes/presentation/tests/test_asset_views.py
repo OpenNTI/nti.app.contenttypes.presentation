@@ -241,39 +241,63 @@ class TestAssetViews(ApplicationLayerTest):
 			#entry = find_object_with_ntiid(self.course_ntiid)
 			#course = ICourseInstance(entry)
 			#self._check_containers(course, items=(roll_obj,))
+			#self._check_containers(course, packages=False, items=roll_obj.Items)
 
 			catalog = get_library_catalog()
 			containers = catalog.get_containers(roll_obj)
-			# TODO: No course?
 			assert_that(containers, contains( group_ntiid ))
 
 			assert_that( roll_obj.locked, is_( True ))
 			new_item = roll_obj.Items[0]
+
 			assert_that( new_item, validly_provides( INTIVideoRef ))
 			assert_that( new_item.ntiid, is_not( new_item.target ))
 			assert_that( new_item.target, is_( video_ntiid ))
 			assert_that( new_item.locked, is_( True ))
 
-			#self._check_containers(course, packages=False, items=roll_obj.Items)
-
-			source = to_external_object( roll_obj )
+			# This doesn't use our request specific externalizer.
+			to_external_object( roll_obj )
 
 		# Now append a video ntiid to video roll
-		items = source.get( 'Items' )
+		items = item_last.get( 'Items' )
 		items.append( video_ntiid )
 		source['Items'] = items
 		res = self.testapp.put_json(roll_href, source, status=200)
 		res = res.json_body
 
-		assert_that( res.get( 'Items' ), has_length( 2 ))
-		video_ntiids = [x.get( 'ntiid' ) for x in res.get( 'Items' )]
+		roll_items = res.get( 'Items' )
+		assert_that( roll_items, has_length( 2 ))
+		video_ntiids = [x.get( 'NTIID' ) for x in roll_items]
 		assert_that( video_ntiids, contains( roll_item_zero_ntiid, video_ntiid ))
+		assert_that( roll_items[0].get( 'NTIID' ), is_( roll_item_zero_ntiid ))
+		assert_that( roll_items[0].get( 'MimeType' ), is_( 'application/vnd.nextthought.ntivideo' ))
+		assert_that( roll_items[1].get( 'NTIID' ), is_( video_ntiid ))
+		assert_that( roll_items[1].get( 'MimeType' ), is_( 'application/vnd.nextthought.ntivideo' ))
 
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			roll_obj = find_object_with_ntiid( video_roll_ntiid )
 			assert_that( roll_obj.locked, is_( True ))
 			assert_that( roll_obj.Items[0], validly_provides( INTIVideoRef ))
 			assert_that( roll_obj.Items[1], validly_provides( INTIVideoRef ))
+
+		# Now append another video ntiid to video roll, just on the ITEMS field.
+		items.append( {"MimeType": "application/vnd.nextthought.ntivideo",
+						"NTIID": video_ntiid} )
+		new_source = {}
+		new_source['Items'] = items
+		res = self.testapp.put_json(roll_href, new_source, status=200)
+		res = res.json_body
+
+		roll_items = res.get( 'Items' )
+		assert_that( roll_items, has_length( 3 ))
+		video_ntiids = [x.get( 'NTIID' ) for x in roll_items]
+		assert_that( video_ntiids, contains( roll_item_zero_ntiid, video_ntiid, video_ntiid ))
+		assert_that( roll_items[0].get( 'NTIID' ), is_( roll_item_zero_ntiid ))
+		assert_that( roll_items[0].get( 'MimeType' ), is_( 'application/vnd.nextthought.ntivideo' ))
+		assert_that( roll_items[1].get( 'NTIID' ), is_( video_ntiid ))
+		assert_that( roll_items[1].get( 'MimeType' ), is_( 'application/vnd.nextthought.ntivideo' ))
+		assert_that( roll_items[2].get( 'NTIID' ), is_( video_ntiid ))
+		assert_that( roll_items[2].get( 'MimeType' ), is_( 'application/vnd.nextthought.ntivideo' ))
 
 		# Insert video ntiid into overview group
 		res = self.testapp.post_json( contents_link, {'ntiid':video_ntiid}, status=201 )

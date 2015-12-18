@@ -592,6 +592,11 @@ def preflight_mediaroll(externalValue):
 				item[MIMETYPE] = resolved.mimeType
 			else:
 				raise hexc.HTTPUnprocessableEntity(_('Invalid media roll item'))
+	# If they're editing a field, make sure we have a mimetype
+	# so our pre-hooks fire.
+	# TOOD: Do we need to do this elsewhere?
+	if MIMETYPE not in externalValue:
+		externalValue[MIMETYPE] = "application/vnd.nextthought.ntivideoroll"
 	return externalValue
 
 def preflight_overview_group(externalValue):
