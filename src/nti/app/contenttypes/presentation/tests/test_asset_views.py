@@ -460,12 +460,15 @@ class TestAssetViews(ApplicationLayerTest):
 
 		# post
 		res = self.testapp.post_json(self.assets_url, source, status=201)
-		assert_that(res.json_body, has_entry('ntiid', is_not(none())))
+		res = res.json_body
+		lesson_ntiid = res.get( 'ntiid' )
+		lesson_href = res.get( 'href' )
+		assert_that( lesson_ntiid, not_none() )
+		assert_that( lesson_href, not_none() )
+		contents_link = self.require_link_href_with_rel( res, VIEW_ORDERED_CONTENTS )
 
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
-			ntiid = res.json_body['ntiid']
-			href = res.json_body['href']
-			obj = find_object_with_ntiid(ntiid)
+			obj = find_object_with_ntiid(lesson_ntiid)
 			assert_that(obj, is_not(none()))
 			assert_that(obj, validly_provides(INTILessonOverview))
 			assert_that(obj, has_property('Items', has_length(1)))
@@ -477,28 +480,27 @@ class TestAssetViews(ApplicationLayerTest):
 
 			catalog = get_library_catalog()
 			containers = catalog.get_containers(obj.Items[0])
-			assert_that(ntiid, is_in(containers))
+			assert_that(lesson_ntiid, is_in(containers))
 
 			source = to_external_object(obj)
 
 		# remove ntiid to fake a new group
 		source['Items'][0].pop('ntiid', None)
 		source['Items'][0].pop('NTIID', None)
-		res = self.testapp.put_json(href, source, status=200)
+		res = self.testapp.put_json(lesson_href, source, status=200)
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
-			obj = find_object_with_ntiid(ntiid)
+			obj = find_object_with_ntiid(lesson_ntiid)
 			old_group = find_object_with_ntiid(group_ntiid)
 			assert_that(old_group, is_(none()))
 			assert_that(obj, has_property('Items', has_length(1)))
 			history  = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(2))
 
-		# contents, insert group at end
+		# Contents, insert group at end
 		source = {'title':'mygroup'}
-		contents_url = href + '/@@contents'
-		res = self.testapp.post_json(contents_url, source, status=201)
+		res = self.testapp.post_json(contents_link, source, status=201)
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
-			obj = find_object_with_ntiid(ntiid)
+			obj = find_object_with_ntiid(lesson_ntiid)
 			group_ntiid = res.json_body['ntiid']
 			assert_that(obj, has_property('Items', has_length(2)))
 			assert_that( obj.Items[-1].ntiid, is_( group_ntiid ))
@@ -508,12 +510,12 @@ class TestAssetViews(ApplicationLayerTest):
 			obj = find_object_with_ntiid(group_ntiid)
 			catalog = get_library_catalog()
 			containers = catalog.get_containers(obj)
-			assert_that(ntiid, is_in(containers))
+			assert_that(lesson_ntiid, is_in(containers))
 
 		# Insert group at index 0
-		res = self.testapp.post_json(contents_url + '/index/0', source, status=201)
+		res = self.testapp.post_json(contents_link + '/index/0', source, status=201)
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
-			obj = find_object_with_ntiid(ntiid)
+			obj = find_object_with_ntiid(lesson_ntiid)
 			group_ntiid = res.json_body['ntiid']
 			assert_that(obj, has_property('Items', has_length(3)))
 			assert_that( obj.Items[0].ntiid, is_( group_ntiid ))
@@ -521,7 +523,18 @@ class TestAssetViews(ApplicationLayerTest):
 			obj = find_object_with_ntiid(group_ntiid)
 			catalog = get_library_catalog()
 			containers = catalog.get_containers(obj)
-			assert_that(ntiid, is_in(containers))
+			assert_that(lesson_ntiid, is_in(containers))
+
+		# Another append
+		utz_special = {'MimeType': "application/vnd.nextthought.nticourseoverviewgroup",
+					'title': 'Discussions',
+					'accentColor': 'b8b8b8'}
+		res = self.testapp.post_json(contents_link, utz_special, status=201)
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			obj = find_object_with_ntiid(lesson_ntiid)
+			group_ntiid = res.json_body['ntiid']
+			assert_that( obj, has_property('Items', has_length(4)))
+			assert_that( obj.Items[-1].ntiid, is_( group_ntiid ))
 
 	def _get_move_json(self, obj_ntiid, new_parent_ntiid, index=None, old_parent_ntiid=None):
 		result = { 'ObjectNTIID': obj_ntiid,
