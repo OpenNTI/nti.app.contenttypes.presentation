@@ -293,7 +293,8 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 
 			if _is_auto_roll_coalesce( item ):
 				# Ok, we have media that we want to auto-coalesce into a roll.
-				video_roll = NTIVideoRoll()
+				# TODO: generalize media type
+				media_roll = NTIVideoRoll()
 				roll_idx = idx
 				roll_item = item
 				while 	roll_idx < len(items) \
@@ -303,14 +304,14 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 					# It should be ok if this is called multiple times on object.
 					_, registered = _do_register( roll_item, registry )
 					if _validate_ref( registered, validate ):
-						video_roll.append( registered )
+						media_roll.append( registered )
 					roll_idx += 1
 
 				# Must have at least two items in our auto-roll; otherwise continue on.
-				if len( video_roll ) > 1:
+				if len( media_roll ) > 1:
 					# Should always be new.
-					_do_register( video_roll, registry )
-					items[idx] = video_roll
+					_do_register( media_roll, registry )
+					items[idx] = media_roll
 					idx += 1
 					# Make sure to update our index/delete contained indexes.
 					while idx < roll_idx:
