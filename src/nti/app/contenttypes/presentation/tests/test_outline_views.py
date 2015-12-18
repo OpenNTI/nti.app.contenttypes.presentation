@@ -37,6 +37,7 @@ from nti.dataserver.tests import mock_dataserver
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.app.contenttypes.presentation import VIEW_NODE_MOVE
+from nti.app.contenttypes.presentation import VIEW_ORDERED_CONTENTS
 from nti.app.contenttypes.presentation import VIEW_OVERVIEW_CONTENT
 from nti.app.contenttypes.presentation import VIEW_OVERVIEW_SUMMARY
 
@@ -82,8 +83,13 @@ class TestOutlineEditViews(ApplicationLayerTest):
 	content_mime_type = "application/vnd.nextthought.courses.courseoutlinecontentnode"
 	content_ntiid_type = 'NTICourseOutlineNode'
 	outline_obj_url = '/dataserver2/%2B%2Betc%2B%2Bhostsites/platform.ou.edu/%2B%2Betc%2B%2Bsite/Courses/Fall2015/CS%201323/SubInstances/995/Outline'
-	outline_url = '%s/%s' % ( outline_obj_url, 'contents' )
 	move_url = '%s/%s' % ( outline_obj_url, VIEW_NODE_MOVE )
+
+	@property
+	def outline_url(self):
+		res = self.testapp.get( self.outline_obj_url, extra_environ=self.editor_environ )
+		res = res.json_body
+		return self.require_link_href_with_rel( res, VIEW_ORDERED_CONTENTS )
 
 	def setUp(self):
 		# This instructor is also a content editor for this course.
@@ -201,6 +207,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 			self.require_link_href_with_rel( obj, 'edit' )
 			self.require_link_href_with_rel( obj, VIEW_PUBLISH )
 			self.require_link_href_with_rel( obj, VIEW_UNPUBLISH )
+			self.require_link_href_with_rel( obj, VIEW_ORDERED_CONTENTS )
 
 		def _to_date( val ):
 			return val and datetime.strptime( val, '%Y-%m-%dT%H:%M:%SZ' )
