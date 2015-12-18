@@ -277,8 +277,9 @@ class TestAssetViews(ApplicationLayerTest):
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			roll_obj = find_object_with_ntiid( video_roll_ntiid )
 			assert_that( roll_obj.locked, is_( True ))
-			assert_that( roll_obj.Items[0], validly_provides( INTIVideoRef ))
-			assert_that( roll_obj.Items[1], validly_provides( INTIVideoRef ))
+			for item in roll_obj.Items:
+				assert_that( item.ntiid, is_not( item.target ))
+				assert_that( item, validly_provides( INTIVideoRef ))
 
 		# Now append another video ntiid to video roll, just on the ITEMS field.
 		items.append( {"MimeType": "application/vnd.nextthought.ntivideo",
@@ -298,6 +299,14 @@ class TestAssetViews(ApplicationLayerTest):
 		assert_that( roll_items[1].get( 'MimeType' ), is_( 'application/vnd.nextthought.ntivideo' ))
 		assert_that( roll_items[2].get( 'NTIID' ), is_( video_ntiid ))
 		assert_that( roll_items[2].get( 'MimeType' ), is_( 'application/vnd.nextthought.ntivideo' ))
+
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			roll_obj = find_object_with_ntiid( video_roll_ntiid )
+			assert_that( roll_obj.locked, is_( True ))
+			for item in roll_obj.Items:
+				assert_that( item.ntiid, is_not( item.target ))
+				assert_that( item, validly_provides( INTIVideoRef ))
+				assert_that( item.locked, is_( True ))
 
 		# Insert video ntiid into overview group
 		res = self.testapp.post_json( contents_link, {'ntiid':video_ntiid}, status=201 )
