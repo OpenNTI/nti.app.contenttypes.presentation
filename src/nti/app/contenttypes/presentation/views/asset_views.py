@@ -225,9 +225,9 @@ def _handle_multipart(context, contentObject, sources, provided=None):
 			# remove existing
 			_remove_file(getattr(contentObject, name, None))
 			# save a new file
-			filename = _get_unique_filename(assets, source, name)
-			namedfile = get_namedfile(source, filename)
-			assets[filename] = namedfile  # add to container
+			file_key = _get_unique_filename(assets, source, name)
+			namedfile = get_namedfile(source, file_key)
+			assets[file_key] = namedfile  # add to container
 			location = get_render_link(namedfile)
 			setattr(contentObject, name, location)
 
