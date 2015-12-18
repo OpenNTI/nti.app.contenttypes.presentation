@@ -276,7 +276,7 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 		#to the specific topic as necessary. This gets these objects exposed for
 		#editing while maintaining backwards compatibility.
 		ext_item[NTIID] = topic.NTIID
-		ext_item['target'] = to_external_ntiid_oid(discussion)
+		ext_item['Target-NTIID'] = to_external_ntiid_oid(discussion)
 		return True
 
 	def _allow_assessmentref(self, iface, context, item):
@@ -449,8 +449,11 @@ class _NTIDiscussionRefDecorator(_BaseAssetDecorator):
 
 	def decorateExternalObject(self, original, external):
 		super(_NTIDiscussionRefDecorator, self).decorateExternalObject(original, external)
+		if 'target' in external:
+			external['Target-NTIID'] = external.pop('target')
 		if 'Target-NTIID' in external:
-			external.pop('Target-NTIID')
+			external[NTIID] = external['Target-NTIID']
+
 
 @component.adapter(INTIRelatedWorkRef)
 @interface.implementer(IExternalObjectDecorator)
