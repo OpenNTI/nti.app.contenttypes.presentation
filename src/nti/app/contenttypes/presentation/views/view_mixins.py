@@ -73,7 +73,7 @@ def slugify(text, container):
 			break
 	return newtext
 
-def get_namedfile(source, filename=None):
+def get_namedfile(source, name=None):
 	contentType = getattr(source, 'contentType', None)
 	if contentType:
 		factory = ContentBlobFile
@@ -82,10 +82,12 @@ def get_namedfile(source, filename=None):
 		source.seek(0)  # reset
 		factory = ContentBlobImage if contentType else ContentBlobFile
 	contentType = contentType or u'application/octet-stream'
-
 	result = factory()
-	result.name = filename
-	result.filename = filename
+	result.name = name
+	#for filename we want to use the filename as originally provided on the source, not
+	#the sluggified internal name. This allows us to give it back in the 
+	#Content-Disposition header on download
+	result.filename = getattr(source, 'filename', None) or getattr(source, 'name', name)
 	result.data = source.read()
 	result.contentType = contentType
 	return result
