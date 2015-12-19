@@ -102,7 +102,8 @@ def get_implied_by_scopes(scopes=()):
 
 def resolve_discussion_course_bundle(user, item, context=None, record=None):
 	"""
-	return a tuple of course discussion and preferred topic according the discussion ref and user enrollment or None
+	return a tuple of course discussion and preferred topic according the discussion ref
+	and user enrollment or None
 
 	:param item: A discussion ref object
 	:param context: An object that can be adpated to a course
