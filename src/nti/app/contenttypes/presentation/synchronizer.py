@@ -13,9 +13,9 @@ import six
 import time
 import simplejson
 
-from zope.intid import IIntIds
-
 from zope import component
+
+from zope.intid import IIntIds
 
 from nti.coremetadata.interfaces import IRecordable
 from nti.coremetadata.interfaces import IPublishable
@@ -38,6 +38,7 @@ from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.contenttypes.presentation.media import NTIVideoRoll
+from nti.contenttypes.presentation.media import media_to_mediaref
 
 from nti.contenttypes.presentation.utils import create_lessonoverview_from_external
 
@@ -77,7 +78,7 @@ def _is_obj_locked(node):
 
 def _can_be_removed(registered, force=False):
 	result = 	registered is not None \
-			and (force or not _is_obj_locked( registered ))
+			and (force or not _is_obj_locked(registered))
 	return result
 can_be_removed = _can_be_removed
 
@@ -124,8 +125,7 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 
 # Courses
 
-def _remove_registered_course_overview(name=None, registry=None,
-									   course=None, force=False):
+def _remove_registered_course_overview(name=None, registry=None, course=None, force=False):
 	result = []
 	container = IPresentationAssetContainer(course, None) or {}
 	group = _removed_registered(INTICourseOverviewGroup,
@@ -138,12 +138,12 @@ def _remove_registered_course_overview(name=None, registry=None,
 	else:
 		group = ()
 
-	def _do_remove( iface, obj ):
+	def _do_remove(iface, obj):
 		ntiid = obj.ntiid
 		removed = _removed_registered(iface,
-									name=ntiid,
-								   	registry=registry,
-								  	force=force)
+									  name=ntiid,
+								   	  registry=registry,
+								  	  force=force)
 		if removed is not None:
 			result.append(removed)
 			container.pop(ntiid, None)
@@ -154,12 +154,12 @@ def _remove_registered_course_overview(name=None, registry=None,
 	for item in group:  # this should resolve weak refs
 		iface = iface_of_thing(item)
 		if iface not in PACKAGE_CONTAINER_INTERFACES:
-			_do_remove( iface, item )
-			if INTIMediaRoll.providedBy( item ):
+			_do_remove(iface, item)
+			if INTIMediaRoll.providedBy(item):
 				# Remove each item in our roll
 				for roll_item in item:
-					iface = iface_of_thing( roll_item )
-					_do_remove( iface, roll_item )
+					iface = iface_of_thing(roll_item)
+					_do_remove(iface, roll_item)
 	return result
 
 def _remove_registered_lesson_overview(name, registry=None, course=None, force=False):
@@ -208,23 +208,23 @@ def _register_media_rolls(roll, registry=None, validate=False):
 		idx += 1
 	return roll
 
-def _is_auto_roll_coalesce( item ):
-	return ( 	INTIMedia.providedBy( item )
-			or 	INTIMediaRef.providedBy( item ) ) \
-		and not _is_obj_locked( item )
+def _is_auto_roll_coalesce(item):
+	return (	INTIMedia.providedBy(item)
+			or 	INTIMediaRef.providedBy(item)) \
+		and not _is_obj_locked(item)
 
-def _validate_ref( item, validate ):
+def _validate_ref(item, validate):
 	validator = IItemRefValidator(item, None)
 	return (not validate or validator is None or validator.validate())
 
-def _do_register( item, registry ):
+def _do_register(item, registry):
 	item_iface = iface_of_thing(item)
 	return  _register_utility(item,
-							ntiid=item.ntiid,
-							registry=registry,
-							provided=item_iface)
+							  ntiid=item.ntiid,
+							  registry=registry,
+							  provided=item_iface)
 
-def _is_lesson_sync_locked( existing_overview ):
+def _is_lesson_sync_locked(existing_overview):
 	"""
 	As an optimization, we say a lesson is sync locked if *any*
 	children (recursively) of the lesson are locked. Without this
@@ -235,17 +235,17 @@ def _is_lesson_sync_locked( existing_overview ):
 	"""
 	# Currently only return first locked item for efficiency.
 	locked_items = []
-	def _recur( item ):
-		if _is_obj_locked( item ):
-			locked_items.append( item.ntiid )
+	def _recur(item):
+		if _is_obj_locked(item):
+			locked_items.append(item.ntiid)
 			return True
-		children = getattr( item, 'Items', None ) or ()
+		children = getattr(item, 'Items', None) or ()
 		for child in children:
-			if _recur( child ):
+			if _recur(child):
 				return True
 		return False
 
-	result = _recur( existing_overview )
+	result = _recur(existing_overview)
 	return result, locked_items
 
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
@@ -257,10 +257,10 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 	overview = create_lessonoverview_from_external(data, notify=False)
 
 	existing_overview = registry.queryUtility(INTILessonOverview, name=overview.ntiid)
-	is_locked, locked_ntiids = _is_lesson_sync_locked( existing_overview )
+	is_locked, locked_ntiids = _is_lesson_sync_locked(existing_overview)
 	if is_locked:
 		# TODO: Event/notification/logging.
-		logger.info( 'Not syncing lesson (%s) (locked=%s)', overview.ntiid, locked_ntiids )
+		logger.info('Not syncing lesson (%s) (locked=%s)', overview.ntiid, locked_ntiids)
 		return existing_overview, ()
 
 	# remove and register
@@ -275,9 +275,9 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 	for gdx, group in enumerate(groups):
 		# register course overview group
 		did_register_new_item, registered = _register_utility(group,
-											   INTICourseOverviewGroup,
-											   group.ntiid,
-											   registry)
+											   				  INTICourseOverviewGroup,
+											   				  group.ntiid,
+											  				  registry)
 		if not did_register_new_item:
 			groups[gdx] = group = registered
 
@@ -291,26 +291,34 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 		while idx < len(items):
 			item = items[idx]
 
-			if _is_auto_roll_coalesce( item ):
+			if _is_auto_roll_coalesce(item):
 				# Ok, we have media that we want to auto-coalesce into a roll.
-				# TODO: generalize media type
-				media_roll = NTIVideoRoll()
 				roll_idx = idx
 				roll_item = item
-				while 	roll_idx < len(items) \
-					and _is_auto_roll_coalesce( roll_item ):
+				# TODO: generalize media type
+				media_roll = NTIVideoRoll()
+				while 	 roll_idx < len(items) \
+					and _is_auto_roll_coalesce(roll_item):
 
 					roll_item = items[roll_idx]
+
 					# It should be ok if this is called multiple times on object.
-					_, registered = _do_register( roll_item, registry )
-					if _validate_ref( registered, validate ):
-						media_roll.append( registered )
+					_, registered = _do_register(roll_item, registry)
+
+					# Transform any media to a media ref since media rolls
+					# only contain refs
+					if INTIMedia.providedBy(registered):
+						media_ref = media_to_mediaref(registered)
+						_, registered = _do_register(media_ref, registry)
+						
+					if _validate_ref(registered, validate):
+						media_roll.append(registered)
 					roll_idx += 1
 
 				# Must have at least two items in our auto-roll; otherwise continue on.
-				if len( media_roll ) > 1:
+				if len(media_roll) > 1:
 					# Should always be new.
-					_do_register( media_roll, registry )
+					_do_register(media_roll, registry)
 					items[idx] = media_roll
 					idx += 1
 					# Make sure to update our index/delete contained indexes.
@@ -327,8 +335,8 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 			elif INTIMediaRoll.providedBy(item):
 				_register_media_rolls(item, registry=registry, validate=validate)
 
-			result, registered = _do_register( item, registry )
-			is_valid = _validate_ref( item, validate )
+			result, registered = _do_register(item, registry)
+			is_valid = _validate_ref(item, validate)
 			if not is_valid:  # don't include in the group
 				del items[idx]
 				continue
