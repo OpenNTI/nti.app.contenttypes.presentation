@@ -471,7 +471,7 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 	else:
 		to_index = container_ntiids
 
-	for item in items:
+	for item in items or ():
 
 		if container is not None:
 			container[item.ntiid] = item
