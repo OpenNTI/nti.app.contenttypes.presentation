@@ -248,11 +248,23 @@ def _is_lesson_sync_locked(existing_overview):
 	result = _recur(existing_overview)
 	return result, locked_items
 
+def _add_2_package_containers(course, catalog, item):
+	ntiids = []
+	packages = get_course_packages(course)
+	for package in packages or ():
+		ntiids.append(package.ntiid)
+		container = IPresentationAssetContainer(package)
+		container[item.ntiid] = item
+	if ntiids:
+		catalog.index(item, container_ntiids=ntiids,
+				  	  namespace=ntiids[0]) # pick first
+
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 											validate=False, course=None):
 	registry = get_registry(registry)
 
 	# read and parse json text
+	catalog = get_library_catalog()
 	data = simplejson.loads(prepare_json_text(jtext))
 	overview = create_lessonoverview_from_external(data, notify=False)
 
@@ -308,6 +320,9 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 					# Transform any media to a media ref since media rolls
 					# only contain refs
 					if INTIMedia.providedBy(registered):
+						# register media w/ course packges
+						_add_2_package_containers(course, catalog, registered)
+						# create mediaref and register it
 						media_ref = media_to_mediaref(registered)
 						_, registered = _do_register(media_ref, registry)
 						
@@ -440,7 +455,7 @@ def _recurse_copy(ntiids, *items):
 	ntiids = ntiids.copy() if ntiids is not None else set()
 	ntiids.update(items)
 	return ntiids
-
+	
 def _index_overview_items(items, container_ntiids=None, namespace=None,
 						  intids=None, catalog=None, node=None, course=None,
 						  parent=None):
