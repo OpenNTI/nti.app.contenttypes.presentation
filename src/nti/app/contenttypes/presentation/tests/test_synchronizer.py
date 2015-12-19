@@ -146,6 +146,8 @@ class TestSynchronizer(ApplicationLayerTest):
 		roll_one = video_group[0]
 		roll_two = video_group[1]
 		assert_that( roll_one, has_length( 2 ))
+		for roll_item in roll_one.items:
+			assert_that( roll_item, validly_provides( INTIVideoRef ))
 		assert_that( roll_two, has_length( 0 ))
 
 		# 2. New video in original roll, index zero.

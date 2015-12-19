@@ -455,12 +455,12 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		# Still in old for now
 		res = _get_unit_node(0)
 		src_child_ntiids = [x.get('NTIID') for x in res.get('contents')]
-		assert_that(src_child_ntiids, is_not(has_item(moved_ntiid)))
-		assert_that(src_child_ntiids, has_length(len(original_src_child_ntiids) - 1))
+		assert_that( src_child_ntiids, is_not(has_item(moved_ntiid)))
+		assert_that( src_child_ntiids, has_length(len(original_src_child_ntiids) - 1))
 
 		res = _get_unit_node(1)
 		target_child_ntiids = [x.get('NTIID') for x in res.get('contents')]
-		assert_that(target_child_ntiids[0], is_(moved_ntiid))
+		assert_that( target_child_ntiids[0], is_(moved_ntiid) )
 
 		# Move back
 		move_data = self._get_move_json(moved_ntiid, src_unit_ntiid, 0, target_unit_ntiid)
@@ -584,30 +584,38 @@ class TestOutlineEditViews(ApplicationLayerTest):
 
 		# Move last object to index 0
 		move_data = self._get_move_json(last_ntiid, outline_ntiid, 0)
-		self.testapp.post_json(self.move_url, move_data,
+		move_res = self.testapp.post_json(self.move_url, move_data,
 							  extra_environ=instructor_environ)
+		move_res = move_res.json_body
 
 		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
-		assert_that(unit_ntiids[0], is_(last_ntiid))
-		assert_that(unit_ntiids[1], is_(first_ntiid))
+		assert_that( unit_ntiids[0], is_(last_ntiid))
+		assert_that( unit_ntiids[1], is_(first_ntiid))
+		assert_that( move_res, has_length( node_count ))
 
 		# Same move is no-op
-		self.testapp.post_json(self.move_url, move_data,
+		move_res = self.testapp.post_json(self.move_url, move_data,
 							  extra_environ=instructor_environ)
+		move_res = move_res.json_body
 
 		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
-		assert_that(unit_ntiids[0], is_(last_ntiid))
-		assert_that(unit_ntiids[1], is_(first_ntiid))
+		assert_that( unit_ntiids[0], is_(last_ntiid))
+		assert_that( unit_ntiids[1], is_(first_ntiid))
+		assert_that( move_res, has_length( node_count ))
 
 		# Move original first object to last index
 		last_index = len( unit_ntiids ) - 1
 		move_data = self._get_move_json(first_ntiid, outline_ntiid, last_index)
-		self.testapp.post_json(self.move_url, move_data,
+		move_res = self.testapp.post_json(self.move_url, move_data,
 							  extra_environ=instructor_environ)
+		move_res = move_res.json_body
+		move_ntiids = [x.get( 'NTIID' ) for x in move_res]
 
 		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
-		assert_that(unit_ntiids[0], is_(last_ntiid))
-		assert_that(unit_ntiids[-1], is_(first_ntiid))
+		assert_that( unit_ntiids[0], is_(last_ntiid))
+		assert_that( unit_ntiids[-1], is_(first_ntiid))
+		assert_that( move_res, has_length( node_count ))
+		assert_that( move_ntiids, is_( unit_ntiids ))
 
 	def _test_deleting_nodes(self, node_count):
 		instructor_environ = self.editor_environ

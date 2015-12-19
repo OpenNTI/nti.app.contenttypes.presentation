@@ -28,6 +28,8 @@ from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtils
 
 from nti.app.products.courseware.interfaces import ICourseInstanceEnrollment
 
+from nti.app.products.courseware.views.course_views import CourseOutlineContentsView
+
 from nti.appserver.ugd_edit_views import UGDPutView
 from nti.appserver.ugd_query_views import RecursiveUGDView
 
@@ -421,7 +423,7 @@ class OutlineNodeInsertView(AbstractAuthenticatedView,
 			 renderer='rest',
 			 name=VIEW_NODE_MOVE)
 class OutlineNodeMoveView(AbstractChildMoveView,
-						AbstractAuthenticatedView,
+						CourseOutlineContentsView,
 						ModeledContentUploadRequestUtilsMixin):
 	"""
 	Move the given object between outline nodes in a course
@@ -453,6 +455,11 @@ class OutlineNodeMoveView(AbstractChildMoveView,
 				_recur(child)
 
 		_recur(self.context)
+		return result
+
+	def __call__(self):
+		super( OutlineNodeMoveView, self ).__call__()
+		result = self._to_external()
 		return result
 
 @view_config(route_name='objects.generic.traversal',
