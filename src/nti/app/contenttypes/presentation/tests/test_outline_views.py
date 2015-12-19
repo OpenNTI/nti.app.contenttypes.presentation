@@ -586,7 +586,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		move_data = self._get_move_json(last_ntiid, outline_ntiid, 0)
 		move_res = self.testapp.post_json(self.move_url, move_data,
 							  extra_environ=instructor_environ)
-		move_res = move_res.json_body
+		move_res = move_res.json_body.get( 'Items' )
 
 		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		assert_that( unit_ntiids[0], is_(last_ntiid))
@@ -596,7 +596,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		# Same move is no-op
 		move_res = self.testapp.post_json(self.move_url, move_data,
 							  extra_environ=instructor_environ)
-		move_res = move_res.json_body
+		move_res = move_res.json_body.get( 'Items' )
 
 		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		assert_that( unit_ntiids[0], is_(last_ntiid))
@@ -608,7 +608,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		move_data = self._get_move_json(first_ntiid, outline_ntiid, last_index)
 		move_res = self.testapp.post_json(self.move_url, move_data,
 							  extra_environ=instructor_environ)
-		move_res = move_res.json_body
+		move_res = move_res.json_body.get( 'Items' )
 		move_ntiids = [x.get( 'NTIID' ) for x in move_res]
 
 		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
