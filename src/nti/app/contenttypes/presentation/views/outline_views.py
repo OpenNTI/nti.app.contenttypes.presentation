@@ -459,7 +459,7 @@ class OutlineNodeMoveView(AbstractChildMoveView,
 
 	def __call__(self):
 		super( OutlineNodeMoveView, self ).__call__()
-		result = self._to_external()
+		result = self.externalize_node_contents( self.context )
 		return result
 
 @view_config(route_name='objects.generic.traversal',
