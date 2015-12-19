@@ -95,9 +95,10 @@ def get_namedfile(source, name=None):
 def get_render_link(item):
 	try:
 		result = to_external_href(item)  # adds @@view
+		return result
 	except Exception:
 		pass  # Nope
-	return result
+	return None
 
 def get_file_from_link(link):
 	result = None

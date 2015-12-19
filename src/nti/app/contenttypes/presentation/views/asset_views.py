@@ -107,9 +107,10 @@ from nti.externalization.externalization import StandardExternalFields
 from nti.namedfile.file import name_finder
 from nti.namedfile.file import safe_filename
 
-from nti.ntiids.ntiids import TYPE_UUID, find_object_with_ntiid
+from nti.ntiids.ntiids import TYPE_UUID
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_specific
+from nti.ntiids.ntiids import find_object_with_ntiid 
 
 from nti.site.utils import registerUtility
 
@@ -132,8 +133,8 @@ from .view_mixins import AbstractChildMoveView
 from .view_mixins import PublishVisibilityMixin
 
 from . import VIEW_ASSETS
-from . import VIEW_NODE_MOVE
 from . import VIEW_CONTENTS
+from . import VIEW_NODE_MOVE
 
 ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID
