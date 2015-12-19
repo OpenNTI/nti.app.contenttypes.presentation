@@ -320,11 +320,8 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 					# Should always be new.
 					_do_register(media_roll, registry)
 					items[idx] = media_roll
-					idx += 1
 					# Make sure to update our index/delete contained indexes.
-					while idx < roll_idx:
-						del items[idx]
-						idx += 1
+					del items[idx+1:roll_idx]
 					continue
 			elif INTIDiscussionRef.providedBy(item) and item.isCourseBundle() and ntiid:
 				specific = get_specific(ntiid)
