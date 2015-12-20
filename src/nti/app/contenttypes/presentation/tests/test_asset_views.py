@@ -42,6 +42,8 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
+from nti.contenttypes.presentation.media import NTIVideoRoll
+
 from nti.contenttypes.presentation.utils import prepare_json_text
 
 from nti.externalization.externalization import to_external_object
@@ -205,14 +207,14 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that( video_obj, validly_provides(INTIVideo) )
 
 		# Upload/append roll into group
-		roll_source = {"MimeType": "application/vnd.nextthought.ntivideoroll",
+		roll_source = {"MimeType": NTIVideoRoll.mime_type,
 						"Items": [video_ntiid] }
 		res = self.testapp.post_json( contents_link, roll_source, status=201)
 		res = res.json_body
 		roll_href = res.get( 'href' )
 		video_roll_ntiid = res.get( 'ntiid' )
 		assert_that( roll_href, not_none() )
-		assert_that( res.get( 'MimeType' ), is_( 'application/vnd.nextthought.ntivideoroll' ))
+		assert_that( res.get( 'MimeType' ), is_( NTIVideoRoll.mime_type ))
 		assert_that( res.get( 'Items' ), has_length( 1 ))
 		assert_that( res.get( 'Creator' ), is_( 'sjohnson@nextthought.com'))
 		roll_item_zero = res.get( 'Items' )[0]
@@ -227,7 +229,7 @@ class TestAssetViews(ApplicationLayerTest):
 		item_last = group_res.get( 'Items' )[-1]
 		assert_that( item_zero.get( 'ntiid' ), is_( video_ntiid ) )
 		assert_that( item_last.get( 'ntiid' ), is_( video_roll_ntiid ) )
-		assert_that( item_last.get( 'MimeType' ), is_( 'application/vnd.nextthought.ntivideoroll' ) )
+		assert_that( item_last.get( 'MimeType' ), is_( NTIVideoRoll.mime_type ) )
 
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			# Check our objects are locked and are actually video(roll)

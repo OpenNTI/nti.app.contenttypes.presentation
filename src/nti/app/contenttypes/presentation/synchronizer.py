@@ -325,7 +325,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 						# create mediaref and register it
 						media_ref = media_to_mediaref(registered)
 						_, registered = _do_register(media_ref, registry)
-						
+
 					if _validate_ref(registered, validate):
 						media_roll.append(registered)
 					roll_idx += 1
