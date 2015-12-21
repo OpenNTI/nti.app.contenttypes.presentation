@@ -188,8 +188,8 @@ class OutlineLessonOverviewSummaryView(RecursiveUGDView,
 		if not IPublishable.providedBy(lesson) or lesson.is_published():
 			self.user = self.remoteUser
 			mime_type = MIME_BASE + ".courses.overviewitemsummary"
-			for lesson_group in lesson.items:
-				for item in lesson_group.items:
+			for lesson_group in lesson.items or ():
+				for item in lesson_group.items or ():
 					ugd_count = self._do_count(item)
 					result[item.ntiid] = item_results = {}
 					item_results[CLASS] = 'OverviewItemSummary'
