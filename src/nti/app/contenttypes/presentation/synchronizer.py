@@ -27,6 +27,7 @@ from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import get_course_packages
 
 from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import	CourseLessonSyncResults
 from nti.contenttypes.courses.interfaces import	ICourseOutlineContentNode
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
@@ -259,8 +260,16 @@ def _add_2_package_containers(course, catalog, item):
 		catalog.index(item, container_ntiids=ntiids,
 				  	  namespace=ntiids[0]) # pick first
 
+def _update_sync_results( lesson_ntiid, sync_results, lesson_locked ):
+	field = 'LessonsSyncLocked' if lesson_locked else 'LessonsUpdated'
+	if sync_results is not None:
+		lessons = sync_results.Lessons
+		if lessons is None:
+			sync_results.Lessons = lessons = CourseLessonSyncResults()
+		getattr( lessons, field ).append( lesson_ntiid )
+
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
-											validate=False, course=None):
+											validate=False, course=None, sync_results=None):
 	registry = get_registry(registry)
 
 	# read and parse json text
@@ -270,8 +279,8 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 
 	existing_overview = registry.queryUtility(INTILessonOverview, name=overview.ntiid)
 	is_locked, locked_ntiids = _is_lesson_sync_locked(existing_overview)
+	_update_sync_results( overview.ntiid, sync_results, is_locked )
 	if is_locked:
-		# TODO: Event/notification/logging.
 		logger.info('Not syncing lesson (%s) (locked=%s)', overview.ntiid, locked_ntiids)
 		return existing_overview, ()
 
@@ -455,7 +464,7 @@ def _recurse_copy(ntiids, *items):
 	ntiids = ntiids.copy() if ntiids is not None else set()
 	ntiids.update(items)
 	return ntiids
-	
+
 def _index_overview_items(items, container_ntiids=None, namespace=None,
 						  intids=None, catalog=None, node=None, course=None,
 						  parent=None):
@@ -535,7 +544,7 @@ def get_cataloged_namespaces(ntiid, catalog=None, sites=None):
 	result.discard(None)
 	return result
 
-def synchronize_course_lesson_overview(course, intids=None, catalog=None):
+def synchronize_course_lesson_overview(course, intids=None, catalog=None, **kwargs):
 	result = []
 	namespaces = set()
 	course_packages = get_course_packages(course)
@@ -610,7 +619,8 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None):
 																	validate=True,
 																	course=course,
 																	ntiid=ref_ntiid,
-																	registry=registry)
+																	registry=registry,
+																	**kwargs )
 			removed.extend(rmv)
 			result.append(overview)
 
