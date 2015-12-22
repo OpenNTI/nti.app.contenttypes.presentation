@@ -313,6 +313,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 			item = items[idx]
 
 			if _is_auto_roll_coalesce(item):
+				logger.info( 'Building video roll for lesson (%s)', overview.ntiid )
 				# Ok, we have media that we want to auto-coalesce into a roll.
 				roll_idx = idx
 				roll_item = item
@@ -341,6 +342,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 
 				# Must have at least two items in our auto-roll; otherwise continue on.
 				if len(media_roll) > 1:
+					logger.info( 'Built video roll (%s)', media_roll.ntiid )
 					# Should always be new.
 					_do_register(media_roll, registry)
 					items[idx] = media_roll
@@ -348,6 +350,8 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 					# Make sure to update our index/delete contained indexes.
 					del items[idx:roll_idx]
 					continue
+				else:
+					logger.info( 'Empty video roll dropped (%s) (%s)', overview.ntiid, media_roll.ntiid )
 			elif INTIDiscussionRef.providedBy(item) and item.isCourseBundle() and ntiid:
 				specific = get_specific(ntiid)
 				provider = make_provider_safe(specific) if specific else None
@@ -412,10 +416,11 @@ def _outline_nodes(outline):
 	return result
 
 def _create_lesson_4_node(node, registry=None, catalog=None):
+	"""
+	Possibly legacy calendar, 'stub' nodes.  We want these created,
+	unpublished and unlocked so that they can be updated on sync.
+	"""
 	result = create_lesson_4_node(node, registry=registry, catalog=catalog)
-	result.locked = node.locked
-	if IPublishable.providedBy(result):
-		result.publish()
 	return result
 
 def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
@@ -569,7 +574,8 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, **kwar
 	for node in nodes:
 		namespace = node.src
 		if not namespace:
-			# User created content node without a source.
+			# These are possibly the legacy calendar nodes. Stub
+			# the lesson out.
 			_create_lesson_4_node(node, registry, catalog)
 			continue
 		elif is_ntiid_of_type(namespace, TYPE_OID):  # ignore
