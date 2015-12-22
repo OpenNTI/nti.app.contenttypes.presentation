@@ -210,7 +210,7 @@ def _register_media_rolls(roll, registry=None, validate=False):
 	return roll
 
 def _is_auto_roll_coalesce(item):
-	return (	INTIMedia.providedBy(item)
+	return (INTIMedia.providedBy(item)
 			or 	INTIMediaRef.providedBy(item)) \
 		and not _is_obj_locked(item)
 
@@ -258,15 +258,15 @@ def _add_2_package_containers(course, catalog, item):
 		container[item.ntiid] = item
 	if ntiids:
 		catalog.index(item, container_ntiids=ntiids,
-				  	  namespace=ntiids[0]) # pick first
+				  	  namespace=ntiids[0])  # pick first
 
-def _update_sync_results( lesson_ntiid, sync_results, lesson_locked ):
+def _update_sync_results(lesson_ntiid, sync_results, lesson_locked):
 	field = 'LessonsSyncLocked' if lesson_locked else 'LessonsUpdated'
 	if sync_results is not None:
 		lessons = sync_results.Lessons
 		if lessons is None:
 			sync_results.Lessons = lessons = CourseLessonSyncResults()
-		getattr( lessons, field ).append( lesson_ntiid )
+		getattr(lessons, field).append(lesson_ntiid)
 
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 											validate=False, course=None, sync_results=None):
@@ -279,7 +279,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 
 	existing_overview = registry.queryUtility(INTILessonOverview, name=overview.ntiid)
 	is_locked, locked_ntiids = _is_lesson_sync_locked(existing_overview)
-	_update_sync_results( overview.ntiid, sync_results, is_locked )
+	_update_sync_results(overview.ntiid, sync_results, is_locked)
 	if is_locked:
 		logger.info('Not syncing lesson (%s) (locked=%s)', overview.ntiid, locked_ntiids)
 		return existing_overview, ()
@@ -292,7 +292,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 	_register_utility(overview, INTILessonOverview, overview.ntiid, registry)
 
 	# canonicalize group
-	groups = overview.Items
+	groups = overview.Items or ()
 	for gdx, group in enumerate(groups):
 		# register course overview group
 		did_register_new_item, registered = _register_utility(group,
@@ -306,14 +306,14 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 		registered.__parent__ = overview
 
 		idx = 0
-		items = group.Items
+		items = group.Items or ()
 
 		# canonicalize item refs
 		while idx < len(items):
 			item = items[idx]
 
 			if _is_auto_roll_coalesce(item):
-				logger.info( 'Building video roll for lesson (%s)', overview.ntiid )
+				logger.info('Building video roll for lesson (%s)', overview.ntiid)
 				# Ok, we have media that we want to auto-coalesce into a roll.
 				roll_idx = idx
 				roll_item = item
@@ -342,8 +342,8 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 					roll_item = items[roll_idx] if roll_idx < len(items) else None
 
 				# Must have at least two items in our auto-roll; otherwise continue on.
-				if len(media_roll) > 1:
-					logger.info( 'Built video roll (%s)', media_roll.ntiid )
+				if len(media_roll) >= 1:
+					logger.info('Built video roll (%s)', media_roll.ntiid)
 					# Should always be new.
 					_do_register(media_roll, registry)
 					items[idx] = media_roll
@@ -352,7 +352,8 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 					del items[idx:roll_idx]
 					continue
 				else:
-					logger.info( 'Empty video roll dropped (%s) (%s)', overview.ntiid, media_roll.ntiid )
+					logger.info('Empty video roll dropped (%s) (%s)', overview.ntiid, 
+								media_roll.ntiid)
 			elif INTIDiscussionRef.providedBy(item) and item.isCourseBundle() and ntiid:
 				specific = get_specific(ntiid)
 				provider = make_provider_safe(specific) if specific else None
@@ -627,7 +628,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, **kwar
 																	course=course,
 																	ntiid=ref_ntiid,
 																	registry=registry,
-																	**kwargs )
+																	**kwargs)
 			removed.extend(rmv)
 			result.append(overview)
 
