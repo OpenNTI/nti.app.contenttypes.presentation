@@ -57,6 +57,7 @@ from nti.contenttypes.presentation import NTI_LESSON_OVERVIEW
 from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
+from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
@@ -256,6 +257,28 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		ntiids = {node.ContentNTIID for node in nodes}
 		result['ContainerOrder'] = [node.ContentNTIID for node in nodes]
 
+
+		def add_item( item ):
+			# check visibility
+			if IVisible.providedBy(item):
+				if not is_item_visible(item, self.remoteUser, record=record):
+					return
+				else:
+					item = INTIMedia(item, None)
+
+			# check if ref was valid
+			uid = intids.queryId(item) if item is not None else None
+			if uid is None:
+				return
+
+			# set content containers
+			for ntiid in catalog.get_containers(uid):
+				if ntiid in ntiids:
+					containers.setdefault(ntiid, set())
+					containers[ntiid].add(item.ntiid)
+			items[item.ntiid] = to_external_object(item)
+			return item.lastModified
+
 		sites = get_component_hierarchy_names()
 		for group in catalog.search_objects(
 								namespace=namespaces,
@@ -264,30 +287,23 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 
 			for item in group.Items:
 				# ignore non media items
-				if 	(not IMediaRef.providedBy(item)
+				if 	(	 not IMediaRef.providedBy(item)
 					 and not INTIMedia.providedBy(item)
+					 and not INTIMediaRoll.providedBy( item )
 					 and not INTISlideDeck.providedBy(item)):
 					continue
 
-				# check visibility
-				if IVisible.providedBy(item):
-					if not is_item_visible(item, self.remoteUser, record=record):
-						continue
-					else:
-						item = INTIMedia(item, None)
-
-				# check if ref was valid
-				uid = intids.queryId(item) if item is not None else None
-				if uid is None:
-					continue
-
-				# set content containers
-				for ntiid in catalog.get_containers(uid):
-					if ntiid in ntiids:
-						containers.setdefault(ntiid, set())
-						containers[ntiid].add(item.ntiid)
-				items[item.ntiid] = to_external_object(item)
-				lastModified = max(lastModified, item.lastModified)
+				if INTIMediaRoll.providedBy( item ):
+					item_last_mod = 0
+					# For media rolls, we want to expand to preserve bwc.
+					for roll_item in item.items:
+						roll_last_mod = add_item( roll_item )
+						if roll_last_mod:
+							item_last_mod = max(roll_last_mod, item_last_mod)
+				else:
+					item_last_mod = add_item( item )
+				if item_last_mod:
+					lastModified = max(lastModified, item_last_mod)
 
 		for item in catalog.search_objects(
 								container_ntiids=ntiids,
