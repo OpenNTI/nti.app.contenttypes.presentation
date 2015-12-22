@@ -322,8 +322,6 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 				while 	 roll_idx < len(items) \
 					and _is_auto_roll_coalesce(roll_item):
 
-					roll_item = items[roll_idx]
-
 					# It should be ok if this is called multiple times on object.
 					_, registered = _do_register(roll_item, registry)
 
@@ -338,7 +336,10 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 
 					if _validate_ref(registered, validate):
 						media_roll.append(registered)
+
+					# advance
 					roll_idx += 1
+					roll_item = items[roll_idx] if roll_idx < len(items) else None
 
 				# Must have at least two items in our auto-roll; otherwise continue on.
 				if len(media_roll) > 1:
