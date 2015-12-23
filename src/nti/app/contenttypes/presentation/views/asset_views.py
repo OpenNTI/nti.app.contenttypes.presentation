@@ -497,7 +497,10 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		# process group items
 		for item in group or ():
 			provided = iface_of_asset(item)
-			self._handle_group_over_viewable(provided, item, creator, item_extended)
+			if INTIMediaRoll.providedBy(item):
+				self._handle_media_roll(provided, item, creator, item_extended)
+			else:
+				self._handle_group_over_viewable(provided, item, creator, item_extended)
 
 		# index group
 		lesson = group.__parent__
