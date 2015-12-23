@@ -15,10 +15,12 @@ from collections import defaultdict
 
 from zope import component
 
-from zope.security.management import endInteraction
-from zope.security.management import restoreInteraction
+from zope.component.hooks import site as current_site
 
 from zope.intid import IIntIds
+
+from zope.security.management import endInteraction
+from zope.security.management import restoreInteraction
 
 from pyramid.view import view_config
 from pyramid.view import view_defaults
@@ -52,7 +54,11 @@ from nti.externalization.interfaces import StandardExternalFields
 from nti.recorder.record import remove_transaction_history
 
 from nti.site.utils import unregisterUtility
+from nti.site.interfaces import IHostPolicyFolder
+from nti.site.site import get_site_for_site_names
 from nti.site.site import get_component_hierarchy_names
+
+from nti.traversal.traversal import find_interface
 
 from ..synchronizer import synchronize_course_lesson_overview
 
@@ -276,8 +282,11 @@ class SyncCoursePresentationAssetsView(AbstractAuthenticatedView,
 
 		items = result[ITEMS] = []
 		for course in courses:
-			synchronize_course_lesson_overview(course)
-			items.append(ICourseCatalogEntry(course).ntiid)
+			folder = find_interface(course, IHostPolicyFolder, strict=False)
+			site = get_site_for_site_names((folder.__name__,))
+			with current_site(site):
+				synchronize_course_lesson_overview(course)
+				items.append(ICourseCatalogEntry(course).ntiid)
 		return result
 
 	def __call__(self):

@@ -13,7 +13,11 @@ from zope import component
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseSubInstance
+
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
+
+from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -22,8 +26,13 @@ def yield_sync_courses(ntiids=()):
 	if not ntiids:
 		for entry in catalog.iterCatalogEntries():
 			course = ICourseInstance(entry, None)
-			if course is not None and not ILegacyCourseInstance.providedBy(course):
-				yield course
+			if 		course is None \
+				or	ILegacyCourseInstance.providedBy(course) \
+				or	ICourseSubInstance.providedBy(course):
+				continue
+			yield course
+			for subinstance in get_course_subinstances(course):
+				yield subinstance
 	else:
 		for ntiid in ntiids:
 			obj = find_object_with_ntiid(ntiid)
