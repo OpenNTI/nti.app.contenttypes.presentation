@@ -313,14 +313,13 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 			item = items[idx]
 
 			if _is_auto_roll_coalesce(item):
-				logger.info('Building video roll for lesson (%s)', overview.ntiid)
 				# Ok, we have media that we want to auto-coalesce into a roll.
 				roll_idx = idx
 				roll_item = item
 				# TODO: generalize media type
 				media_roll = NTIVideoRoll()
-				while 	 roll_idx < len(items) \
-					and _is_auto_roll_coalesce(roll_item):
+
+				while _is_auto_roll_coalesce(roll_item):
 
 					# It should be ok if this is called multiple times on object.
 					_, registered = _do_register(roll_item, registry)
@@ -337,13 +336,13 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 					if _validate_ref(registered, validate):
 						media_roll.append(registered)
 
-					# advance
 					roll_idx += 1
 					roll_item = items[roll_idx] if roll_idx < len(items) else None
 
 				# Must have at least two items in our auto-roll; otherwise continue on.
-				if len(media_roll) >= 1:
-					logger.info('Built video roll (%s)', media_roll.ntiid)
+				if len(media_roll) > 1:
+					logger.debug('Built video roll (%s) (%s)', overview.ntiid,
+								media_roll.ntiid)
 					# Should always be new.
 					_do_register(media_roll, registry)
 					items[idx] = media_roll
@@ -351,9 +350,6 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 					# Make sure to update our index/delete contained indexes.
 					del items[idx:roll_idx]
 					continue
-				else:
-					logger.info('Empty video roll dropped (%s) (%s)', overview.ntiid, 
-								media_roll.ntiid)
 			elif INTIDiscussionRef.providedBy(item) and item.isCourseBundle() and ntiid:
 				specific = get_specific(ntiid)
 				provider = make_provider_safe(specific) if specific else None
