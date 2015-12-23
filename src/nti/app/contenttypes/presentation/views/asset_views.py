@@ -113,10 +113,14 @@ from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.site.utils import registerUtility
+from nti.site.interfaces import IHostPolicyFolder
+
+from nti.traversal.traversal import find_interface
 
 from ..utils import intid_register
 from ..utils import add_2_connection
 from ..utils import make_asset_ntiid
+from ..utils import registry_by_name
 from ..utils import component_registry
 from ..utils import get_course_packages
 from ..utils import remove_presentation_asset
@@ -658,6 +662,12 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 
 	content_predicate = IPresentationAsset.providedBy
 
+	@Lazy
+	def _registry(self):
+		folder = find_interface(self._course, IHostPolicyFolder, strict=False)
+		result = registry_by_name(folder.__name__)
+		return result
+
 	def checkContentObject(self, contentObject, externalValue):
 		if contentObject is None or not self.content_predicate(contentObject):
 			transaction.doom()
@@ -670,7 +680,7 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 		# process input
 		externalValue = self.readInput() if not externalValue else externalValue
 		externalValue = preflight_input(externalValue)
-		result = copy.deepcopy(externalValue) # return original input
+		result = copy.deepcopy(externalValue)  # return original input
 		# create and validate
 		contentObject = create_from_external(externalValue, notify=False)
 		contentObject = self.checkContentObject(contentObject, externalValue)
@@ -860,7 +870,7 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 		if MIMETYPE not in externalValue:
 			externalValue[MIMETYPE] = COURSE_OVERVIEW_GROUP_MIMETYES[0]
 		externalValue = preflight_input(externalValue)
-		result = copy.deepcopy(externalValue) # return original input
+		result = copy.deepcopy(externalValue)  # return original input
 		# create object
 		contentObject = create_from_external(externalValue, notify=False)
 		contentObject = self.checkContentObject(contentObject, externalValue)
@@ -959,7 +969,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		externalValue = self.readInput() if not externalValue else externalValue
 		externalValue = self.preflight_video(externalValue)
 		externalValue = preflight_input(externalValue)
-		result = copy.deepcopy(externalValue) # return original input
+		result = copy.deepcopy(externalValue)  # return original input
 		# create object
 		contentObject = create_from_external(externalValue, notify=False)
 		contentObject = self.checkContentObject(contentObject, externalValue)
@@ -1005,6 +1015,6 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 
 		# We don't return media refs in the overview group.
 		# So don't here either.
-		if INTIMediaRef.providedBy( contentObject ):
-			contentObject = INTIMedia( contentObject )
+		if INTIMediaRef.providedBy(contentObject):
+			contentObject = INTIMedia(contentObject)
 		return contentObject

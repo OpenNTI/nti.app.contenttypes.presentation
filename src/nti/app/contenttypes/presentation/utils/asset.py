@@ -81,6 +81,16 @@ def intid_register(item, registry=None, connection=None, event=True):
 		return True
 	return False
 
+def registry_by_name(name):
+	hostsites = component.getUtility(IEtcNamespace, name='hostsites')
+	try:
+		folder = hostsites[name]
+		registry = folder.getSiteManager()
+		return registry
+	except KeyError:
+		pass
+	return None
+
 def component_registry(context, provided, name=None):
 	sites_names = list(get_component_hierarchy_names())
 	sites_names.reverse()  # higher sites first

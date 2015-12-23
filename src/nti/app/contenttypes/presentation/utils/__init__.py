@@ -43,6 +43,7 @@ from .common import yield_sync_courses
 from .asset import intid_register
 from .asset import add_2_connection
 from .asset import make_asset_ntiid
+from .asset import registry_by_name
 from .asset import component_registry
 from .asset import create_lesson_4_node
 from .asset import remove_presentation_asset
