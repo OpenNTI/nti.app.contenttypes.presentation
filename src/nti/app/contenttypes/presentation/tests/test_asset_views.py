@@ -92,8 +92,8 @@ class TestAssetViews(ApplicationLayerTest):
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_all_assets(self):
 		res = self.testapp.get(self.assets_url, status=200)
-		assert_that(res.json_body, has_entry('Total', is_(5)))
-		assert_that(res.json_body, has_entry('Items', has_length(5)))
+		assert_that(res.json_body, has_entry('Total', is_(16)))
+		assert_that(res.json_body, has_entry('Items', has_length(16)))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_ntivideo(self):
@@ -650,3 +650,4 @@ class TestAssetViews(ApplicationLayerTest):
 		assert_that( new_target_group_items, has_length( original_target_group_size ))
 		assert_that( new_source_group_items[0].get( 'NTIID' ), is_( first_asset_ntiid ))
 		assert_that( new_target_group_items[0].get( 'NTIID' ), is_not( first_asset_ntiid ))
+

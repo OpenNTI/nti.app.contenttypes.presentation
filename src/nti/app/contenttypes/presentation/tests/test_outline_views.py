@@ -71,7 +71,7 @@ class TestOutlineViews(ApplicationLayerTest):
 		assert_that(data, has_entry('ItemCount', is_(51)))
 		assert_that(data, has_entry('Items', has_length(51)))
 		assert_that(data, has_entry('Containers', has_length(22)))
-		assert_that(data, has_entry('ContainerOrder', has_length(42)))
+		assert_that(data, has_entry('ContainerOrder', has_length(53)))
 
 class TestOutlineEditViews(ApplicationLayerTest):
 

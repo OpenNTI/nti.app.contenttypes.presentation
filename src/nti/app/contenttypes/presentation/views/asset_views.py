@@ -110,7 +110,7 @@ from nti.namedfile.file import safe_filename
 from nti.ntiids.ntiids import TYPE_UUID
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_specific
-from nti.ntiids.ntiids import find_object_with_ntiid 
+from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.site.utils import registerUtility
 
@@ -742,7 +742,6 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 												set_id=set_id,
 												notify=notify,
 												pre_hook=pre_hook)
-
 		sources = get_all_sources(self.request)
 		if sources:
 			courses = get_presentation_asset_courses(self.context)
