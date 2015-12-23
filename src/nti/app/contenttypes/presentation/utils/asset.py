@@ -216,7 +216,6 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None):
 	# XXX: if registry is specified register the new node
 	if registry is not None:
 		# register lesson
-		registry = get_registry(registry)
 		intid_register(result, registry=registry, event=False)
 		registerUtility(registry,
 						result,
