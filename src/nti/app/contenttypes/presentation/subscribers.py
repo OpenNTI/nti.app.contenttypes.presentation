@@ -77,9 +77,9 @@ def current_principal():
 # courses
 
 def _get_course_sync_results( event ):
-	sync_results = event.results
 	result = None
-	if sync_results and sync_results.Items:
+	sync_results = event.results
+	if sync_results is not None and sync_results.Items:
 		result = sync_results.Items[-1]
 	return result
 
@@ -89,7 +89,7 @@ def _on_course_instance_available(course, event):
 	if catalog is not None and not ILegacyCourseInstance.providedBy(course):
 		sync_results = _get_course_sync_results( event )
 		synchronize_course_lesson_overview(course, catalog=catalog,
-										sync_results=sync_results)
+										   sync_results=sync_results)
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
 def _clear_data_when_course_removed(course, event):
