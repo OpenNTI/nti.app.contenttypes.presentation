@@ -41,7 +41,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation.lesson import NTILessonOverView
-from nti.contenttypes.presentation.interfaces import INTILessonOverview,\
+from nti.contenttypes.presentation.interfaces import INTILessonOverview, \
 	INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
@@ -143,7 +143,7 @@ def remove_mediaroll(item, registry=None, catalog=None):
 		remove_asset(media, registry, catalog)
 	# remove roll
 	remove_asset(item, registry, catalog)
-	
+
 def remove_group(group, registry=None, catalog=None):
 	if isinstance(group, six.string_types):
 		group = component.queryUtility(INTICourseOverviewGroup, name=group)
