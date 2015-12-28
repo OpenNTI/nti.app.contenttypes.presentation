@@ -869,7 +869,7 @@ class AssetDeleteChildView(AbstractAuthenticatedView,
 		# ref, but the clients will only send target ntiids.
 		if INTIMedia.providedBy( item ):
 			for child in self.context.items or ():
-				if child.target == ntiid:
+				if getattr( child, 'target', '' ) == ntiid:
 					item = child
 					break
 
