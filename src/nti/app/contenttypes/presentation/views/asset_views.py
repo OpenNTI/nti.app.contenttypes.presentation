@@ -49,6 +49,8 @@ from nti.assessment.interfaces import IQSurvey
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQuestionSet
 
+from nti.common.maps import CaseInsensitiveDict
+
 from nti.common.property import Lazy
 
 from nti.coremetadata.interfaces import IPublishable
@@ -117,6 +119,7 @@ from nti.site.interfaces import IHostPolicyFolder
 
 from nti.traversal.traversal import find_interface
 
+from ..utils import remove_asset
 from ..utils import intid_register
 from ..utils import add_2_connection
 from ..utils import make_asset_ntiid
@@ -845,6 +848,39 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 		remove_presentation_asset(theObject, self._registry, self._catalog)
 		return theObject
 
+@view_config(context=INTILessonOverview)
+@view_config(context=INTICourseOverviewGroup)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   name=VIEW_CONTENTS,
+			   request_method='DELETE',
+			   permission=nauth.ACT_CONTENT_EDIT)
+class AssetDeleteChildView(AbstractAuthenticatedView,
+							ModeledContentUploadRequestUtilsMixin):
+
+	def __call__(self):
+		values = CaseInsensitiveDict(self.readInput())
+		ntiid = values.get('ntiid')
+		item = find_object_with_ntiid( ntiid )
+		if item is None:
+			raise hexc.HTTPConflict(_('Item no longer exists'))
+
+		# For media objects, we want to remove the actual
+		# ref, but the clients will only send target ntiids.
+		if INTIMedia.providedBy( item ):
+			for child in self.context.items or ():
+				if child.target == ntiid:
+					item = child
+					break
+
+		# We remove the item from our context, and clean it
+		# up. But we want to make sure we don't clean up the
+		# underlying asset items in a group.
+		self.context.remove( item )
+		if INTICourseOverviewGroup.providedBy( item ):
+			remove_asset( item )
+		return hexc.HTTPOk()
+
 # ordered contents
 
 @view_config(context=INTILessonOverview)
@@ -942,7 +978,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 				raise hexc.HTTPUnprocessableEntity(_('Missing overview group item NTIID'))
 			resolved = find_object_with_ntiid(ntiid)
 			if resolved is None:
-				raise hexc.HTTPUnprocessableEntity(_('Missing overview group  item'))
+				raise hexc.HTTPUnprocessableEntity(_('Missing overview group item'))
 			if (INTIMedia.providedBy(resolved) or INTIMediaRef.providedBy(resolved)):
 				externalValue[MIMETYPE] = resolved.mimeType
 			else:

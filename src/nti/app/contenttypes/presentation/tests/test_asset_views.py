@@ -381,6 +381,10 @@ class TestAssetViews(ApplicationLayerTest):
 				 'nti.app.contenttypes.presentation.views.asset_views.get_render_link')
 	def test_overview_group(self, mc_ri, mc_gaf, mc_lnk):
 		source = self._load_resource('nticourseoverviewgroup.json')
+		video_source = source.get( 'Items' )[1]
+		video_res = self.testapp.post_json(self.assets_url, video_source, status=201)
+		video_ntiid = video_res.json_body.get( 'ntiid' )
+		source.get( 'Items' )[1]['NTIID'] = video_ntiid
 
 		# post
 		res = self.testapp.post_json(self.assets_url, source, status=201)
@@ -438,6 +442,14 @@ class TestAssetViews(ApplicationLayerTest):
 			containers = catalog.get_containers(obj)
 			assert_that(ntiid, is_in(containers))
 
+		# Delete video from group; but asset still exists.
+		self.testapp.delete_json(contents_url, {'ntiid': video_ntiid})
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			obj = find_object_with_ntiid(ntiid)
+			assert_that( obj, has_property('Items', has_length(1)))
+			actual_video = find_object_with_ntiid( video_ntiid )
+			assert_that( actual_video, not_none() )
+
 		# Insert at index 0
 		res = self.testapp.post_json(contents_url + '/index/0',
 									upload_files=[('icon', 'ichigo.png', b'ichigo')],
@@ -445,7 +457,7 @@ class TestAssetViews(ApplicationLayerTest):
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			obj = find_object_with_ntiid(ntiid)
 			rel_ntiid = res.json_body['ntiid']
-			assert_that(obj, has_property('Items', has_length(3)))
+			assert_that(obj, has_property('Items', has_length(2)))
 			assert_that( obj.Items[0].ntiid, is_( rel_ntiid ))
 			history  = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(4))
@@ -536,7 +548,23 @@ class TestAssetViews(ApplicationLayerTest):
 			obj = find_object_with_ntiid(lesson_ntiid)
 			group_ntiid = res.json_body['ntiid']
 			assert_that( obj, has_property('Items', has_length(4)))
-			assert_that( obj.Items[-1].ntiid, is_( group_ntiid ))
+			group = obj.Items[-1]
+			assert_that( group.ntiid, is_( group_ntiid ))
+
+		# Delete group from lesson
+		res = self.testapp.delete_json(contents_link, {'ntiid': group_ntiid})
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			obj = find_object_with_ntiid(lesson_ntiid)
+			assert_that( obj, has_property('Items', has_length(3)))
+			assert_that( obj.Items[-1].ntiid, is_not( group_ntiid ))
+
+			entry = find_object_with_ntiid(self.course_ntiid)
+			course = ICourseInstance(entry)
+			container = IPresentationAssetContainer(course)
+			assert_that(container, does_not(has_key(group_ntiid)))
+
+			group = find_object_with_ntiid( group_ntiid )
+			assert_that( group, none() )
 
 	def _get_move_json(self, obj_ntiid, new_parent_ntiid, index=None, old_parent_ntiid=None):
 		result = { 'ObjectNTIID': obj_ntiid,
