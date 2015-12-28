@@ -40,7 +40,6 @@ from nti.contenttypes.presentation.interfaces import IPresentationVisibility
 from .common import yield_sync_courses
 
 # re-export
-from .asset import remove_asset
 from .asset import intid_register
 from .asset import add_2_connection
 from .asset import make_asset_ntiid

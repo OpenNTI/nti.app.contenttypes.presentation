@@ -119,7 +119,6 @@ from nti.site.interfaces import IHostPolicyFolder
 
 from nti.traversal.traversal import find_interface
 
-from ..utils import remove_asset
 from ..utils import intid_register
 from ..utils import add_2_connection
 from ..utils import make_asset_ntiid
@@ -856,29 +855,29 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 			   request_method='DELETE',
 			   permission=nauth.ACT_CONTENT_EDIT)
 class AssetDeleteChildView(AbstractAuthenticatedView,
-							ModeledContentUploadRequestUtilsMixin):
+						   ModeledContentUploadRequestUtilsMixin):
 
 	def __call__(self):
 		values = CaseInsensitiveDict(self.readInput())
 		ntiid = values.get('ntiid')
-		item = find_object_with_ntiid( ntiid )
+		item = find_object_with_ntiid(ntiid)
 		if item is None:
 			raise hexc.HTTPConflict(_('Item no longer exists'))
 
 		# For media objects, we want to remove the actual
-		# ref, but the clients will only send target ntiids.
-		if INTIMedia.providedBy( item ):
-			for child in self.context.items or ():
-				if getattr( child, 'target', '' ) == ntiid:
+		# ref, but clients will only send target ntiids.
+		if INTIMedia.providedBy(item):
+			for child in self.context:
+				if getattr(child, 'target', '') == ntiid:
 					item = child
 					break
 
 		# We remove the item from our context, and clean it
 		# up. But we want to make sure we don't clean up the
 		# underlying asset items in a group.
-		self.context.remove( item )
-		if INTICourseOverviewGroup.providedBy( item ):
-			remove_asset( item )
+		self.context.remove(item)
+		if INTICourseOverviewGroup.providedBy(item):
+			remove_presentation_asset(item)
 		return hexc.HTTPOk()
 
 # ordered contents
