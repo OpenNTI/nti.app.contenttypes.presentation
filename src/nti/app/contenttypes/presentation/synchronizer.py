@@ -91,8 +91,7 @@ def _removed_registered(provided, name, intids=None, registry=None,
 	if _can_be_removed(registered, force=force):
 		catalog = get_library_catalog() if catalog is None else catalog
 		catalog.unindex(registered, intids=intids)
-		if not unregisterUtility(registry, component=registered,
-								 provided=provided, name=name):
+		if not unregisterUtility(registry, provided=provided, name=name):
 			logger.warn("Could not unregister (%s,%s) during sync, continuing...",
 						provided.__name__, name)
 		intids.unregister(registered, event=False)
