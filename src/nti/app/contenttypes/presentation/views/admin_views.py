@@ -11,7 +11,6 @@ logger = __import__('logging').getLogger(__name__)
 
 import six
 import time
-from collections import defaultdict
 
 from zope import component
 
@@ -161,7 +160,7 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 		items = result[ITEMS] = []
 
 		sites = set()
-		master = defaultdict(list)
+		master = set()
 		catalog = get_library_catalog()
 		intids = component.getUtility(IIntIds)
 
@@ -183,7 +182,7 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 					container.pop(ntiid, None)
 					remove_transaction_history(asset)
 				else:
-					master[ntiid].append(asset)
+					master.add(ntiid)
 
 		# unregister those utilities that cannot be found in the course containers
 		for site in sites:
