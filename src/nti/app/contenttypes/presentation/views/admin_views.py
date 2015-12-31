@@ -147,7 +147,7 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 		for key, value in list(container.items()): # mutating
 			provided = iface_of_thing(value)
 			if provided in ifaces:
-				yield key, value
+				yield key, value, container
 
 	def _do_call(self, result):
 		registered = 0
@@ -158,12 +158,13 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 		catalog = get_library_catalog()
 		intids = component.getUtility(IIntIds)
 
+		# clean containers by removing those assets that either
+		# don't have an intid or cannot be found in the registry
 		for course in yield_sync_courses():
-			# check every object in the container
-			container = IPresentationAssetContainer(course)
+			# check every object in the course
 			folder = find_interface(course, IHostPolicyFolder, strict=False)
 			site = get_site_for_site_names((folder.__name__,))
-			for ntiid, asset in self._course_assets(course):
+			for ntiid, asset, container in self._course_assets(course):
 				uid = intids.queryId(asset)
 				provided = iface_of_thing(asset)
 				if uid is None:
@@ -179,11 +180,11 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 			# sites to check
 			sites[site.__name__] = site
 
+		# unregister those utilities that cannot be found
+		# in the course containers
 		for site in sites.values():
 			with current_site(site):
 				registry = get_registry()
-				# unregister those utilities that cannot be found
-				# in the course containers
 				for ntiid, asset in self._registered_assets(registry):
 					uid = intids.queryId(asset)
 					provided = iface_of_thing(asset)
