@@ -24,6 +24,8 @@ does_not = is_not
 from datetime import datetime
 from calendar import timegm as _calendar_timegm
 
+from urlparse import urlparse
+
 from nti.app.publishing import VIEW_PUBLISH
 from nti.app.publishing import VIEW_UNPUBLISH
 
@@ -36,6 +38,7 @@ from nti.dataserver.tests import mock_dataserver
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
+from nti.app.contenttypes.presentation import VIEW_CONTENTS
 from nti.app.contenttypes.presentation import VIEW_NODE_MOVE
 from nti.app.contenttypes.presentation import VIEW_ORDERED_CONTENTS
 from nti.app.contenttypes.presentation import VIEW_OVERVIEW_CONTENT
@@ -85,10 +88,18 @@ class TestOutlineEditViews(ApplicationLayerTest):
 	outline_obj_url = '/dataserver2/%2B%2Betc%2B%2Bhostsites/platform.ou.edu/%2B%2Betc%2B%2Bsite/Courses/Fall2015/CS%201323/SubInstances/995/Outline'
 	move_url = '%s/%s' % ( outline_obj_url, VIEW_NODE_MOVE )
 
+	def _get_outline_json(self):
+		res = self.testapp.get( self.outline_obj_url, extra_environ=self.editor_environ )
+		return res.json_body
+
 	@property
 	def outline_url(self):
-		res = self.testapp.get( self.outline_obj_url, extra_environ=self.editor_environ )
-		res = res.json_body
+		res = self._get_outline_json()
+		return self.require_link_href_with_rel( res, VIEW_CONTENTS )
+
+	@property
+	def outline_put_url(self):
+		res = self._get_outline_json()
 		return self.require_link_href_with_rel( res, VIEW_ORDERED_CONTENTS )
 
 	def setUp(self):
@@ -126,11 +137,21 @@ class TestOutlineEditViews(ApplicationLayerTest):
 			self.testapp.post_json(enroll_url, data, status=201)
 		return student_environ
 
-	def _get_outline_ntiids(self, environ, expected_size):
+	def _get_outline_url(self, get_unpublished=True):
+		url = self.outline_url
+		if get_unpublished:
+			parsed = urlparse( url )
+			parsed = parsed._replace( query="omit_unpublished=False" )
+			url = parsed.geturl()
+		return url
+
+	def _get_outline_ntiids(self, environ, expected_size, get_unpublished=True):
 		"""
-		Get the outline ntiids, validating size.
+		Get the outline ntiids, validating size. By default, instructors
+		will get unpublished nodes as well.
 		"""
-		res = self.testapp.get(self.outline_url, extra_environ=environ)
+		url = self._get_outline_url( get_unpublished )
+		res = self.testapp.get( url, extra_environ=environ )
 		res = res.json_body
 		unit_ntiids = [x.get('NTIID') for x in res]
 		assert_that(unit_ntiids, has_length(expected_size))
@@ -171,7 +192,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		links. Validate publish beginning/end times.
 		"""
 		environ = environ if environ else self.editor_environ
-		res = self.testapp.get(self.outline_url, extra_environ=environ)
+		res = self.testapp.get(self._get_outline_url(), extra_environ=environ)
 		res = res.json_body
 		def _find_item( items ):
 			for item in items:
@@ -239,7 +260,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 
 		# Try editing
 		unit_data = {'title': 'should not work', 'mime_type': self.unit_mime_type}
-		self.testapp.post_json(self.outline_url, unit_data,
+		self.testapp.post_json(self._get_outline_url(), unit_data,
 							   extra_environ=student_environ, status=403)
 
 		# Try moving
@@ -250,11 +271,11 @@ class TestOutlineEditViews(ApplicationLayerTest):
 
 		# Deleting
 		unit_data = {'ntiid': unit_ntiids[-1]}
-		self.testapp.delete_json(self.outline_url, unit_data,
+		self.testapp.delete_json(self._get_outline_url(), unit_data,
 								 extra_environ=student_environ, status=403)
 
 		# No pub/unpub links
-		res = self.testapp.get(self.outline_url, extra_environ=student_environ)
+		res = self.testapp.get(self._get_outline_url(), extra_environ=student_environ)
 		res = res.json_body
 		for item in res:
 			self.forbid_link_with_rel( item, VIEW_PUBLISH )
@@ -280,7 +301,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		instructor_environ = self.editor_environ
 		student_environ = self._create_student_environ()
 		def _get_first_unit_node( _environ=instructor_environ ):
-			res = self.testapp.get(self.outline_url, extra_environ=_environ)
+			res = self.testapp.get(self._get_outline_url(), extra_environ=_environ)
 			res = res.json_body
 			return res[0]
 
@@ -434,7 +455,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		"""
 		instructor_environ = self.editor_environ
 		def _get_unit_node(index):
-			res = self.testapp.get(self.outline_url, extra_environ=instructor_environ)
+			res = self.testapp.get(self._get_outline_url(), extra_environ=instructor_environ)
 			res = res.json_body
 			return res[index]
 
@@ -492,7 +513,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		# Append unit node
 		new_unit_title = 'new unit title'
 		unit_data = {'title': new_unit_title, 'MimeType': self.unit_mime_type}
-		res = self.testapp.post_json(self.outline_url, unit_data,
+		res = self.testapp.post_json(self.outline_put_url, unit_data,
 									 extra_environ=instructor_environ)
 
 		res = res.json_body
@@ -522,7 +543,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that(unit_ntiids[-1], is_(new_ntiid))
 
 		# Insert at index 0
-		at_index_url = self.outline_url + '/index/0'
+		at_index_url = self.outline_put_url + '/index/0'
 		new_unit_title2 = 'new unit title2'
 		unit_data2 = {'title': new_unit_title2,
 					'MimeType': self.unit_mime_type}
@@ -552,7 +573,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that(unit_ntiids[-1], is_(new_ntiid))
 
 		# Insert at last index
-		at_index_url = self.outline_url + '/index/9'
+		at_index_url = self.outline_put_url + '/index/9'
 		new_unit_title3 = 'new unit title3'
 		unit_data3 = {'title': new_unit_title3,
 					'MimeType': self.unit_mime_type}
@@ -629,7 +650,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 
 		# One
 		unit_data = {'ntiid': first_ntiid}
-		self.testapp.delete_json(self.outline_url, unit_data,
+		self.testapp.delete_json(self._get_outline_url(), unit_data,
 								 extra_environ=instructor_environ)
 		node_count -= 1
 		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
@@ -637,7 +658,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 
 		# Two
 		unit_data = {'ntiid': last_ntiid}
-		self.testapp.delete_json(self.outline_url, unit_data,
+		self.testapp.delete_json(self._get_outline_url(), unit_data,
 								 extra_environ=instructor_environ)
 		node_count -= 1
 		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
