@@ -529,6 +529,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 
 		# Before publishing, our outline is unchanged for students
 		self._get_outline_ntiids( student_environ, node_count )
+		self._get_outline_ntiids( instructor_environ, node_count, get_unpublished=False )
 		self._get_outline_ntiids( instructor_environ, node_count + 1 )
 		self._check_obj_state( new_ntiid )
 		self._publish_obj( new_ntiid )
@@ -555,6 +556,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self.require_link_href_with_rel(res, VIEW_UNPUBLISH)
 
 		self._get_outline_ntiids( student_environ, node_count )
+		self._get_outline_ntiids( instructor_environ, node_count, get_unpublished=False )
 		self._get_outline_ntiids( instructor_environ, node_count + 1 )
 		self._check_obj_state( new_ntiid2 )
 
