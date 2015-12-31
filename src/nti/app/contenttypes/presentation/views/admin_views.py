@@ -56,13 +56,11 @@ from nti.recorder.record import remove_transaction_history
 from nti.site.utils import unregisterUtility
 from nti.site.interfaces import IHostPolicyFolder
 from nti.site.site import get_site_for_site_names
-from nti.site.site import get_component_hierarchy_names
 
 from nti.traversal.traversal import find_interface
 
 from ..synchronizer import synchronize_course_lesson_overview
 
-from ..utils import component_registry
 from ..utils import yield_sync_courses
 
 from .. import iface_of_thing
@@ -138,98 +136,76 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 	def readInput(self, value=None):
 		return _read_input(self.request)
 
-	def _unregister(self, context, provided, name):
-		registry = component_registry(context, provided, name)
-		if registry is not None:
-			result = unregisterUtility(registry,
-									   provided=provided,
-									   name=name)
-			return result
-		return False
-
 	def _registered_assets(self, registry):
 		for iface in _course_asset_interfaces():
 			for ntiid, asset in list(registry.getUtilitiesFor(iface)):
 				yield ntiid, asset
 
-	def _contained_assets(self):
-		result = defaultdict(list)
-		containers = defaultdict(list)
+	def _course_assets(self, course):
 		ifaces = _course_asset_interfaces()
-		for course in yield_sync_courses():
-			container = IPresentationAssetContainer(course)
-			for key, value in container.items():
-				provided = iface_of_thing(value)
-				if provided in ifaces:
-					result[key].append(value)
-					containers[key].append(container)
-		return result, containers
-
-	def _pop(self, container, ntiid):
-		if ntiid in container:
-			del container[ntiid]
+		container = IPresentationAssetContainer(course)
+		for key, value in list(container.items()): # mutating
+			provided = iface_of_thing(value)
+			if provided in ifaces:
+				yield key, value
 
 	def _do_call(self, result):
-		registry = get_registry()
+		registered = 0
+		items = result[ITEMS] = []
+
+		sites = dict()
+		master = defaultdict(list)
 		catalog = get_library_catalog()
 		intids = component.getUtility(IIntIds)
 
-		contained = 0
-		registered = 0
-		items = result[ITEMS] = []
-		master, storages = self._contained_assets()
-
-		# clean containers by removing those assets that either
-		# don't have an intid or cannot be found in the registry
-		for ntiid, assets in list(master.items()):
-			provided = None
-			containers = storages[ntiid]
-			# check every object in the storage containers to look for
-			# invalid objects
-			for idx, asset in enumerate(assets):
+		for course in yield_sync_courses():
+			# check every object in the container
+			container = IPresentationAssetContainer(course)
+			folder = find_interface(course, IHostPolicyFolder, strict=False)
+			site = get_site_for_site_names((folder.__name__,))
+			for ntiid, asset in self._course_assets(course):
 				uid = intids.queryId(asset)
 				provided = iface_of_thing(asset)
 				if uid is None:
-					self._pop(containers[idx], ntiid)
+					container.pop(ntiid, None)
 					remove_transaction_history(asset)
-			# check registration
-			if component.queryUtility(provided, name=ntiid) is None:
-				# unindex and remove from containers
-				for idx, asset in enumerate(assets):
-					uid = intids.queryId(asset)
-					if uid is not None:
-						catalog.unindex(uid)
-						intids.unregister(asset)
-					self._pop(containers[idx], ntiid)
-					remove_transaction_history(asset)
-				# update master list
-				master.pop(ntiid, None)
-				storages.pop(ntiid, None)
-			else:
-				contained += 1
-
-		# unregister those utilities that cannot be found
-		# in the course containers
-		for ntiid, asset in self._registered_assets(registry):
-			uid = intids.queryId(asset)
-			provided = iface_of_thing(asset)
-			if uid is None or ntiid not in master:
-				remove_transaction_history(asset)
-				self._unregister(asset, provided=provided, name=ntiid)
-				if uid is not None:
+				elif component.queryUtility(provided, name=ntiid) is None:
 					catalog.unindex(uid)
 					intids.unregister(asset)
-				items.append({
-					'IntId':uid,
-					NTIID:ntiid,
-					MIMETYPE:asset.mimeType,
-				})
-			else:
-				registered += 1
+					container.pop(ntiid, None)
+					remove_transaction_history(asset)
+				else:
+					master[ntiid].append(asset)
+			# sites to check
+			sites[site.__name__] = site
+
+		for site in sites.values():
+			with current_site(site):
+				registry = get_registry()
+				# unregister those utilities that cannot be found
+				# in the course containers
+				for ntiid, asset in self._registered_assets(registry):
+					uid = intids.queryId(asset)
+					provided = iface_of_thing(asset)
+					if uid is None or ntiid not in master:
+						remove_transaction_history(asset)
+						unregisterUtility(registry,
+										  name=ntiid,
+									   	  provided=provided)
+						if uid is not None:
+							catalog.unindex(uid)
+							intids.unregister(asset)
+
+						items.append({
+							'IntId':uid,
+							NTIID:ntiid,
+							MIMETYPE:asset.mimeType,
+						})
+					else:
+						registered += 1
 
 		# unindex invalid entries in catalog
-		sites = get_component_hierarchy_names()
-		references = catalog.get_references(sites=sites,
+		references = catalog.get_references(sites=list(sites.keys()),
 										 	provided=_course_asset_interfaces())
 		for uid in references or ():
 			asset = intids.queryObject(uid)
@@ -249,7 +225,7 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 					})
 
 		items.sort(key=lambda x:x[NTIID])
-		result['TotalContainedAssets'] = contained
+		result['TotalContainedAssets'] = len(master)
 		result['TotalRegisteredAssets'] = registered
 		result['Total'] = result['ItemCount'] = len(items)
 		return result

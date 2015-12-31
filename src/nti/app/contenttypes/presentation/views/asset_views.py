@@ -240,7 +240,6 @@ def _handle_multipart(context, contentObject, sources, provided=None):
 
 # GET views
 
-# TODO: Don't we need to validate READ access?
 @view_config(context=IPresentationAsset)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
