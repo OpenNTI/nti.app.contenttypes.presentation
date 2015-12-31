@@ -22,6 +22,8 @@ from zope.intid import IIntIds
 from zope.security.management import endInteraction
 from zope.security.management import restoreInteraction
 
+from zope.traversing.interfaces import IEtcNamespace
+
 from pyramid.view import view_config
 from pyramid.view import view_defaults
 
@@ -34,7 +36,6 @@ from nti.app.products.courseware.views import CourseAdminPathAdapter
 from nti.common.string import TRUE_VALUES
 from nti.common.maps import CaseInsensitiveDict
 
-from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
@@ -141,6 +142,12 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 			for ntiid, asset in list(registry.getUtilitiesFor(iface)):
 				yield ntiid, asset
 
+	def _site_registry(self, site_name):
+		hostsites = component.getUtility(IEtcNamespace, name='hostsites')
+		folder = hostsites[site_name]
+		registry = folder.getSiteManager()
+		return registry
+
 	def _course_assets(self, course):
 		ifaces = _course_asset_interfaces()
 		container = IPresentationAssetContainer(course)
@@ -153,7 +160,7 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 		registered = 0
 		items = result[ITEMS] = []
 
-		sites = dict()
+		sites = set()
 		master = defaultdict(list)
 		catalog = get_library_catalog()
 		intids = component.getUtility(IIntIds)
@@ -163,7 +170,7 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 		for course in yield_sync_courses():
 			# check every object in the course
 			folder = find_interface(course, IHostPolicyFolder, strict=False)
-			site = get_site_for_site_names((folder.__name__,))
+			sites.add(folder.__name__)
 			for ntiid, asset, container in self._course_assets(course):
 				uid = intids.queryId(asset)
 				provided = iface_of_thing(asset)
@@ -177,36 +184,32 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 					remove_transaction_history(asset)
 				else:
 					master[ntiid].append(asset)
-			# sites to check
-			sites[site.__name__] = site
 
-		# unregister those utilities that cannot be found
-		# in the course containers
-		for site in sites.values():
-			with current_site(site):
-				registry = get_registry()
-				for ntiid, asset in self._registered_assets(registry):
-					uid = intids.queryId(asset)
-					provided = iface_of_thing(asset)
-					if uid is None or ntiid not in master:
-						remove_transaction_history(asset)
-						unregisterUtility(registry,
-										  name=ntiid,
-									   	  provided=provided)
-						if uid is not None:
-							catalog.unindex(uid)
-							intids.unregister(asset)
+		# unregister those utilities that cannot be found in the course containers
+		for site in sites:
+			registry = self._site_registry(site)
+			for ntiid, asset in self._registered_assets(registry):
+				uid = intids.queryId(asset)
+				provided = iface_of_thing(asset)
+				if uid is None or ntiid not in master:
+					remove_transaction_history(asset)
+					unregisterUtility(registry,
+									  name=ntiid,
+								   	  provided=provided)
+					if uid is not None:
+						catalog.unindex(uid)
+						intids.unregister(asset)
 
-						items.append({
-							'IntId':uid,
-							NTIID:ntiid,
-							MIMETYPE:asset.mimeType,
-						})
-					else:
-						registered += 1
+					items.append({
+						'IntId':uid,
+						NTIID:ntiid,
+						MIMETYPE:asset.mimeType,
+					})
+				else:
+					registered += 1
 
 		# unindex invalid entries in catalog
-		references = catalog.get_references(sites=list(sites.keys()),
+		references = catalog.get_references(sites=sites,
 										 	provided=_course_asset_interfaces())
 		for uid in references or ():
 			asset = intids.queryObject(uid)
