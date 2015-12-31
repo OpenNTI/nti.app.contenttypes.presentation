@@ -229,6 +229,7 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 					})
 
 		items.sort(key=lambda x:x[NTIID])
+		result['Sites'] = list(sites)
 		result['TotalContainedAssets'] = len(master)
 		result['TotalRegisteredAssets'] = registered
 		result['Total'] = result['ItemCount'] = len(items)
