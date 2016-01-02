@@ -94,7 +94,7 @@ def _removed_registered(provided, name, intids=None, registry=None,
 		if not unregisterUtility(registry, provided=provided, name=name):
 			logger.warn("Could not unregister (%s,%s) during sync, continuing...",
 						provided.__name__, name)
-		intids.unregister(registered, event=False)
+		intids.unregister(registered, event=True)
 	elif registered is not None:
 		logger.warn("Object (%s,%s) is locked cannot be removed during sync",
 					provided.__name__, name)

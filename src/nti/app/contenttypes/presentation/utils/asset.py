@@ -128,7 +128,7 @@ def remove_asset(item, registry=None, catalog=None):
 	catalog = get_library_catalog() if catalog is None else catalog
 	catalog.unindex(item)
 	# broadcast removed
-	notify_removed(item)
+	notify_removed(item) # remove intid
 
 def remove_mediaroll(item, registry=None, catalog=None):
 	if isinstance(item, six.string_types):
