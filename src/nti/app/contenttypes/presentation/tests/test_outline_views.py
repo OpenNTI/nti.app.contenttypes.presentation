@@ -117,7 +117,8 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		return result
 
 	def _get_delete_url_suffix(self, index, ntiid):
-		return '/index/%s?ntiid=%s' % (index, ntiid)
+		# For outlines, the index is ignored. Validate that.
+		return '/%s?index=%s' % (ntiid, -1)
 
 	def _get_outline_ntiid(self):
 		res = self.testapp.get(self.outline_obj_url, extra_environ=self.editor_environ)
@@ -666,6 +667,9 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		# Two
 		index = unit_ntiids.index( last_ntiid )
 		delete_suffix = self._get_delete_url_suffix( index, last_ntiid )
+		self.testapp.delete(self.outline_ordered_contents_url + delete_suffix,
+							extra_environ=instructor_environ)
+		# Multiple calls are fine
 		self.testapp.delete(self.outline_ordered_contents_url + delete_suffix,
 							extra_environ=instructor_environ)
 

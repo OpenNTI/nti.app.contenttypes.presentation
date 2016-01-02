@@ -91,6 +91,7 @@ from ..utils import create_lesson_4_node
 from ..utils import get_enrollment_record
 from ..utils import remove_presentation_asset
 
+from .view_mixins import NTIIDPathMixin
 from .view_mixins import IndexedRequestMixin
 from .view_mixins import AbstractChildMoveView
 from .view_mixins import PublishVisibilityMixin
@@ -486,9 +487,10 @@ class OutlineNodeMoveView(AbstractChildMoveView,
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest',
 			 name=VIEW_NODE_CONTENTS)
-class OutlineNodeDeleteView(AbstractAuthenticatedView, IndexedRequestMixin):
+class OutlineNodeDeleteView( AbstractAuthenticatedView, NTIIDPathMixin ):
 	"""
-	Delete the given ntiid in our context.
+	Delete the given ntiid in our context. We may be given an `index`
+	param, which we will ignore.
 	"""
 
 	def _remove_lesson(self, ntiid):
@@ -498,21 +500,7 @@ class OutlineNodeDeleteView(AbstractAuthenticatedView, IndexedRequestMixin):
 			remove_presentation_asset(lesson, registry=registry)
 
 	def __call__(self):
-		index = self._get_index()
-		values = CaseInsensitiveDict( self.request.params )
-		old_keys = list(self.context.keys() or ())
-		ntiid = values.get('ntiid')
-
-		current_index = None
-		try:
-			current_index = old_keys.index( ntiid )
-		except ValueError:
-			pass
-
-		if 		index is None \
-			or 	current_index is None \
-			or 	current_index != index:
-			raise hexc.HTTPConflict(_('NTIID/index are invalid'))
+		ntiid = self._get_ntiid()
 
 		# 12.2015 - We currently do not delete the underlying lesson
 		# and assets tied to this node. Potentially, we could allow
@@ -525,9 +513,13 @@ class OutlineNodeDeleteView(AbstractAuthenticatedView, IndexedRequestMixin):
 		# to avoid orphans?
 		# TODO: Do we want to permanently delete nodes, or delete placeholder
 		# mark them (to undo and save transaction history)?
-		del self.context[ntiid]
-
-		logger.info('Deleted entity in outline %s', ntiid)
+		try:
+			del self.context[ntiid]
+		except KeyError:
+			# Already deleted.
+			pass
+		else:
+			logger.info('Deleted entity in outline %s', ntiid)
 		return hexc.HTTPOk()
 
 @view_config(route_name='objects.generic.traversal',

@@ -90,7 +90,7 @@ class TestAssetViews(ApplicationLayerTest):
 				assert_that(container, has_key(ntiid))
 
 	def _get_delete_url_suffix(self, index, ntiid):
-		return '/index/%s?ntiid=%s' % (index, ntiid)
+		return '/%s?index=%s' % (ntiid, index)
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_all_assets(self):
@@ -447,7 +447,9 @@ class TestAssetViews(ApplicationLayerTest):
 
 		# Delete video from group; but asset still exists.
 		delete_suffix = self._get_delete_url_suffix( 0, video_ntiid )
-		self.testapp.delete( contents_url  + delete_suffix )
+		self.testapp.delete( contents_url + delete_suffix )
+		# No problem with multiple calls
+		self.testapp.delete( contents_url + delete_suffix )
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			obj = find_object_with_ntiid(ntiid)
 			assert_that( obj, has_property('Items', has_length(1)))

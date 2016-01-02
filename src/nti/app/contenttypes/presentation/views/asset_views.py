@@ -131,6 +131,7 @@ from ..utils import get_presentation_asset_courses
 from .view_mixins import slugify
 from .view_mixins import hexdigest
 from .view_mixins import get_namedfile
+from .view_mixins import NTIIDPathMixin
 from .view_mixins import get_render_link
 from .view_mixins import get_assets_folder
 from .view_mixins import get_file_from_link
@@ -848,6 +849,7 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 		remove_presentation_asset(theObject, self._registry, self._catalog)
 		return theObject
 
+# TODO Video Roll? Video roll move?
 @view_config(context=INTILessonOverview)
 @view_config(context=INTICourseOverviewGroup)
 @view_defaults(route_name='objects.generic.traversal',
@@ -856,36 +858,51 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 			   request_method='DELETE',
 			   permission=nauth.ACT_CONTENT_EDIT)
 class AssetDeleteChildView(AbstractAuthenticatedView,
-						   IndexedRequestMixin):
+						   NTIIDPathMixin):
 
-	def _validate_item(self, item, ntiid):
-		item_ntiid = getattr( item, 'ntiid', '' )
-		if INTIMediaRef.providedBy(item):
+	def _validate_media_item(self, ntiid, index):
+		found = []
+		for idx, child in enumerate( self.context ):
 			# For media objects, we want to remove the actual
 			# ref, but clients will only send target ntiids
-			item_ntiid = getattr( item, 'target', '' )
+			child_ntiid = getattr( child, 'target', '' )
+			if child_ntiid == ntiid:
+				if idx == index:
+					# We have an exact ref hit.
+					return child
+				else:
+					found.append( child )
 
-		if not ntiid or item_ntiid != ntiid:
-			raise hexc.HTTPConflict(_('Item no longer exists at this index.'))
+		if len( found ) == 1:
+			# Inconsistent match, but it's unambiguous.
+			return found[0]
+
+		if found:
+			# Multiple matches, none at index
+			raise hexc.HTTPConflict(_('Ambiguous item ref no longer exists at this index.'))
 
 	def __call__(self):
 		values = CaseInsensitiveDict( self.request.params )
-		ntiid = values.get('ntiid')
-		index = self._get_index()
+		index = values.get('index')
+		ntiid = self._get_ntiid()
 
-		item = None
-		try:
-			item = self.context[index]
-		except (KeyError, TypeError):
-			pass
-		self._validate_item( item, ntiid )
+		item = find_object_with_ntiid( ntiid )
+		if item is None:
+			raise hexc.HTTPConflict(_('Item no longer exists'))
+
+		if INTIMedia.providedBy( item ):
+			item = self._validate_media_item( ntiid, index )
 
 		# We remove the item from our context, and clean it
 		# up. But we want to make sure we don't clean up the
 		# underlying asset items in a group (?).
-		self.context.remove(item)
+		try:
+			self.context.remove( item )
+		except ValueError:
+			# Already gone.
+			pass
 		if INTICourseOverviewGroup.providedBy(item):
-			remove_presentation_asset(item)
+			remove_presentation_asset( item )
 		return hexc.HTTPOk()
 
 # ordered contents

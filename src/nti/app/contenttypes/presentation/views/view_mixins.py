@@ -251,3 +251,16 @@ class IndexedRequestMixin(object):
 				raise hexc.HTTPUnprocessableEntity(_('Invalid index %s' % index))
 		index = index if index is None else max(index, 0)
 		return index
+
+class NTIIDPathMixin(object):
+
+	def _get_ntiid(self):
+		"""
+		Looks for a user supplied ntiid in the context path.
+		"""
+		result = None
+		if self.request.subpath:
+			result = self.request.subpath[0]
+		if result is None or not is_valid_ntiid( result ):
+			raise hexc.HTTPUnprocessableEntity(_('Invalid ntiid %s' % result))
+		return result
