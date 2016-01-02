@@ -530,6 +530,10 @@ class TestAssetViews(ApplicationLayerTest):
 			containers = catalog.get_containers(obj)
 			assert_that(lesson_ntiid, is_in(containers))
 
+		# Long title validation
+		invalid_source = {'title':'mygroup' * 25}
+		self.testapp.post_json(contents_link, invalid_source, status=422)
+
 		# Insert group at index 0
 		res = self.testapp.post_json(contents_link + '/index/0', source, status=201)
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
