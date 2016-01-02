@@ -668,6 +668,7 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 
 	@Lazy
 	def _registry(self):
+		# XXX: register same site as the course
 		folder = find_interface(self._course, IHostPolicyFolder, strict=False)
 		result = registry_by_name(folder.__name__)
 		return result
@@ -735,6 +736,7 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 
 	@Lazy
 	def _registry(self):
+		# XXX: use correct registration site
 		provided = iface_of_asset(self.context)
 		return component_registry(self.context,
 								  provided=provided,

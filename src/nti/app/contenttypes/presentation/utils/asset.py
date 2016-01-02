@@ -19,8 +19,6 @@ from zope.event import notify
 
 from zope.interface.interface import InterfaceClass
 
-from zope.intid import IIntIds
-
 from zope.location.location import locate
 from zope.location.interfaces import ILocation
 
@@ -48,6 +46,8 @@ from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import WillRemovePresentationAssetEvent
 
 from nti.externalization.oids import to_external_ntiid_oid
+
+from nti.intid.common import addIntId
 
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
@@ -77,8 +77,7 @@ def intid_register(item, registry=None, connection=None, event=True):
 		if event:
 			lifecycleevent.added(item)
 		else:
-			intids = component.getUtility(IIntIds)
-			intids.register(item, event=False)
+			addIntId(item)
 		return True
 	return False
 
