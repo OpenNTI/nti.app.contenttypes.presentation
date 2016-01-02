@@ -662,6 +662,6 @@ clear_course_assets = _clear_course_assets
 def _clear_namespace_last_modified(course, catalog=None):
 	nodes = _outline_nodes(course.Outline)
 	for node in nodes or ():
-		namespace = node.src  # this is ntiid based file (unique)
+		namespace = node.src or u'' # this is ntiid based file (unique)
 		_remove_source_lastModified(namespace, catalog)
 clear_namespace_last_modified = _clear_namespace_last_modified

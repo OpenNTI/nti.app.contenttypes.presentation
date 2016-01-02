@@ -59,6 +59,8 @@ from nti.site.site import get_site_for_site_names
 
 from nti.traversal.traversal import find_interface
 
+from ..synchronizer import clear_namespace_last_modified
+from ..synchronizer import remove_and_unindex_course_assets
 from ..synchronizer import synchronize_course_lesson_overview
 
 from ..utils import yield_sync_courses
@@ -122,6 +124,58 @@ class GetCoursePresentationAssetsView(AbstractAuthenticatedView,
 										key=lambda x: x.__class__.__name__)
 			total += len(items[entry.ntiid])
 		result['ItemCount'] = result['Total'] = total
+		return result
+
+@view_config(context=IDataserverFolder)
+@view_config(context=CourseAdminPathAdapter)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   permission=nauth.ACT_NTI_ADMIN,
+			   name='ResetCoursePresentationAssets')
+class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
+							  	  		ModeledContentUploadRequestUtilsMixin):
+
+	def readInput(self, value=None):
+		return _read_input(self.request)
+
+	def _do_call(self, result):
+		values = self.readInput()
+		ntiids = _get_course_ntiids(values)
+		force = _is_true(values.get('force'))
+
+		total = 0
+		items = result[ITEMS] = {}
+		catalog = get_library_catalog()
+		for course in yield_sync_courses(ntiids):
+			folder = find_interface(course, IHostPolicyFolder, strict=False)
+			site = get_site_for_site_names((folder.__name__,))
+			with current_site(site):
+				entry = ICourseCatalogEntry(course)
+				# remove registered assets
+				removed = remove_and_unindex_course_assets(container_ntiids=entry.ntiid,
+												 		   course=course,
+												 		   catalog=catalog,
+												 		   force=force)
+				items[entry.ntiid] = removed
+				# remove last mod keys
+				clear_namespace_last_modified(course, catalog)
+				# remove all transactions
+				for obj in removed:
+					remove_transaction_history(obj)
+				# keep total
+				total += len(removed)
+		result['Total'] = total
+		return result
+
+	def __call__(self):
+		now = time.time()
+		result = LocatedExternalDict()
+		endInteraction()
+		try:
+			self._do_call(result)
+		finally:
+			restoreInteraction()
+			result['SyncTime'] = time.time() - now
 		return result
 
 @view_config(context=IDataserverFolder)
