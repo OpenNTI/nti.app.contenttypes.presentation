@@ -5,7 +5,6 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-from nti.app.contenttypes.presentation.utils.asset import remove_presentation_asset
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -60,11 +59,13 @@ from nti.site.site import get_site_for_site_names
 
 from nti.traversal.traversal import find_interface
 
+from ..synchronizer import can_be_removed
 from ..synchronizer import clear_namespace_last_modified
 from ..synchronizer import remove_and_unindex_course_assets
 from ..synchronizer import synchronize_course_lesson_overview
 
 from ..utils import yield_sync_courses
+from ..utils import remove_presentation_asset
 
 from .. import iface_of_thing
 
@@ -155,6 +156,7 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 				registry = component.getSiteManager()
 				entry = ICourseCatalogEntry(course)
 				removed = items[entry.ntiid] = []
+
 				# remove registered assets
 				removed.extend(remove_and_unindex_course_assets(
 													container_ntiids=entry.ntiid,
@@ -164,11 +166,11 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 				# remove last mod keys
 				clear_namespace_last_modified(course, catalog)
 
-				# let's try leftovers
+				# remove anything left in containers
 				container = IPresentationAssetContainer(course)
 				for ntiid, item in list(container.items()):  # mutating
 					provided = iface_of_thing(item)
-					if provided in course_ifaces:
+					if provided in course_ifaces and can_be_removed(item, force=force):
 						container.pop(ntiid, None)
 						remove_presentation_asset(item, registry, catalog)
 						removed.append(item)
