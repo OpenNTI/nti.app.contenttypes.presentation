@@ -20,6 +20,8 @@ from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecora
 
 from nti.appserver.pyramid_authorization import has_permission
 
+from nti.common.string import TRUE_VALUES
+
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentUnitHrefMapper
 
@@ -60,16 +62,27 @@ from . import is_legacy_uas
 
 LINKS = StandardExternalFields.LINKS
 
-def _is_visible( item, request ):
+def _is_visible( item, request, show_unpublished=False ):
 	return 	not IPublishable.providedBy(item) \
 		or 	item.is_published() \
-		or	has_permission(ACT_CONTENT_EDIT, item, request)
+		or	(   show_unpublished 
+			and has_permission(ACT_CONTENT_EDIT, item, request))
+
+def _is_true(v):
+	return v and str(v).lower() in TRUE_VALUES
 
 def _lesson_overview_links(context, request):
+	omit_unpublished = False
+
+	try:
+		omit_unpublished = _is_true(request.params.get('omit_unpublished', False))
+	except ValueError:
+		pass
+
 	try:
 		name = context.LessonOverviewNTIID
 		lesson = component.queryUtility(INTILessonOverview, name=name) if name else None
-		if lesson is not None and _is_visible( lesson, request ):
+		if lesson is not None and _is_visible( lesson, request, not omit_unpublished ):
 			overview_link = Link(context, rel=VIEW_OVERVIEW_CONTENT,
 								 elements=(VIEW_OVERVIEW_CONTENT,))
 			summary_link = Link(context, rel=VIEW_OVERVIEW_SUMMARY,
