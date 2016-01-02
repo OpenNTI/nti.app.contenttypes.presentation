@@ -62,7 +62,7 @@ from . import _AbstractMoveLinkDecorator
 
 LINKS = StandardExternalFields.LINKS
 
-def _is_visible(item, request, show_unpublished=False):
+def _is_visible( item, request, show_unpublished=True ):
 	return 	not IPublishable.providedBy(item) \
 			or 	item.is_published() \
 			or	(	 show_unpublished
