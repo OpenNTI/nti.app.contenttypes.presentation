@@ -90,7 +90,7 @@ class TestAssetViews(ApplicationLayerTest):
 				assert_that(container, has_key(ntiid))
 
 	def _get_delete_url_suffix(self, index, ntiid):
-		return '/%s?index=%s' % (ntiid, index)
+		return '/ntiid/%s?index=%s' % (ntiid, index)
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_all_assets(self):

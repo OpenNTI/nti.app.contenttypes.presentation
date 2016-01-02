@@ -118,7 +118,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 
 	def _get_delete_url_suffix(self, index, ntiid):
 		# For outlines, the index is ignored. Validate that.
-		return '/%s?index=%s' % (ntiid, -1)
+		return '/ntiid/%s?index=%s' % (ntiid, -1)
 
 	def _get_outline_ntiid(self):
 		res = self.testapp.get(self.outline_obj_url, extra_environ=self.editor_environ)

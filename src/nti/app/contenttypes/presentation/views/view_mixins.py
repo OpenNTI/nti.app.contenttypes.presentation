@@ -256,11 +256,15 @@ class NTIIDPathMixin(object):
 
 	def _get_ntiid(self):
 		"""
-		Looks for a user supplied ntiid in the context path.
+		Looks for a user supplied ntiid in the context path: '.../ntiid/<ntiid>'.
 		"""
 		result = None
-		if self.request.subpath:
-			result = self.request.subpath[0]
+		if 		self.request.subpath \
+			and self.request.subpath[0] == 'ntiid':
+			try:
+				result = self.request.subpath[1]
+			except (TypeError, IndexError):
+				pass
 		if result is None or not is_valid_ntiid( result ):
 			raise hexc.HTTPUnprocessableEntity(_('Invalid ntiid %s' % result))
 		return result
