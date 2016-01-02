@@ -104,7 +104,7 @@ def _removed_registered(provided, name, intids=None, registry=None,
 def intid_register(item, registry, intids=None, connection=None):
 	intids = component.getUtility(IIntIds) if intids is None else intids
 	if add_2_connection(item, registry, connection):
-		intids.register(item, event=False)
+		intids.register(item, event=True)
 		return True
 	return False
 
