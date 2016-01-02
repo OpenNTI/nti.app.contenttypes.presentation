@@ -5,6 +5,7 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+from nti.app.contenttypes.presentation.utils.asset import remove_presentation_asset
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -142,6 +143,7 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 		values = self.readInput()
 		ntiids = _get_course_ntiids(values)
 		force = _is_true(values.get('force'))
+		course_ifaces = _course_asset_interfaces()
 
 		total = 0
 		items = result[ITEMS] = {}
@@ -150,15 +152,27 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 			folder = find_interface(course, IHostPolicyFolder, strict=False)
 			site = get_site_for_site_names((folder.__name__,))
 			with current_site(site):
+				registry = component.getSiteManager()
 				entry = ICourseCatalogEntry(course)
+				removed = items[entry.ntiid] = []
 				# remove registered assets
-				removed = remove_and_unindex_course_assets(container_ntiids=entry.ntiid,
-												 		   course=course,
-												 		   catalog=catalog,
-												 		   force=force)
-				items[entry.ntiid] = removed
+				removed.extend(remove_and_unindex_course_assets(
+													container_ntiids=entry.ntiid,
+												 	course=course,
+												 	catalog=catalog,
+												 	force=force))
 				# remove last mod keys
 				clear_namespace_last_modified(course, catalog)
+
+				# let's try leftovers
+				container = IPresentationAssetContainer(course)
+				for ntiid, item in list(container.items()):  # mutating
+					provided = iface_of_thing(item)
+					if provided in course_ifaces:
+						container.pop(ntiid, None)
+						remove_presentation_asset(item, registry, catalog)
+						removed.append(item)
+
 				# remove all transactions
 				for obj in removed:
 					remove_transaction_history(obj)
@@ -204,7 +218,7 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 	def _course_assets(self, course):
 		ifaces = _course_asset_interfaces()
 		container = IPresentationAssetContainer(course)
-		for key, value in list(container.items()): # mutating
+		for key, value in list(container.items()):  # mutating
 			provided = iface_of_thing(value)
 			if provided in ifaces:
 				yield key, value, container
