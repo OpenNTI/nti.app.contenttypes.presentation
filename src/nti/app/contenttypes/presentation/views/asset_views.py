@@ -854,26 +854,33 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 			   request_method='DELETE',
 			   permission=nauth.ACT_CONTENT_EDIT)
 class AssetDeleteChildView(AbstractAuthenticatedView,
-						   ModeledContentUploadRequestUtilsMixin):
+						   IndexedRequestMixin):
+
+	def _validate_item(self, item, ntiid):
+		item_ntiid = getattr( item, 'ntiid', '' )
+		if INTIMediaRef.providedBy(item):
+			# For media objects, we want to remove the actual
+			# ref, but clients will only send target ntiids
+			item_ntiid = getattr( item, 'target', '' )
+
+		if not ntiid or item_ntiid != ntiid:
+			raise hexc.HTTPConflict(_('Item no longer exists at this index.'))
 
 	def __call__(self):
-		values = CaseInsensitiveDict(self.readInput())
+		values = CaseInsensitiveDict( self.request.params )
 		ntiid = values.get('ntiid')
-		item = find_object_with_ntiid(ntiid)
-		if item is None:
-			raise hexc.HTTPConflict(_('Item no longer exists'))
+		index = self._get_index()
 
-		# For media objects, we want to remove the actual
-		# ref, but clients will only send target ntiids.
-		if INTIMedia.providedBy(item):
-			for child in self.context:
-				if getattr(child, 'target', '') == ntiid:
-					item = child
-					break
+		item = None
+		try:
+			item = self.context[index]
+		except (KeyError, TypeError):
+			pass
+		self._validate_item( item, ntiid )
 
 		# We remove the item from our context, and clean it
 		# up. But we want to make sure we don't clean up the
-		# underlying asset items in a group.
+		# underlying asset items in a group (?).
 		self.context.remove(item)
 		if INTICourseOverviewGroup.providedBy(item):
 			remove_presentation_asset(item)

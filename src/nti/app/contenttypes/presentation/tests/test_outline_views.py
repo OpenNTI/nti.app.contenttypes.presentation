@@ -98,7 +98,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		return self.require_link_href_with_rel( res, VIEW_CONTENTS )
 
 	@property
-	def outline_put_url(self):
+	def outline_ordered_contents_url(self):
 		res = self._get_outline_json()
 		return self.require_link_href_with_rel( res, VIEW_ORDERED_CONTENTS )
 
@@ -115,6 +115,9 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		if old_parent_ntiid is not None:
 			result['OldParentNTIID'] = old_parent_ntiid
 		return result
+
+	def _get_delete_url_suffix(self, index, ntiid):
+		return '/index/%s?ntiid=%s' % (index, ntiid)
 
 	def _get_outline_ntiid(self):
 		res = self.testapp.get(self.outline_obj_url, extra_environ=self.editor_environ)
@@ -270,9 +273,11 @@ class TestOutlineEditViews(ApplicationLayerTest):
 							  extra_environ=student_environ, status=403)
 
 		# Deleting
-		unit_data = {'ntiid': unit_ntiids[-1]}
-		self.testapp.delete_json(self._get_outline_url(), unit_data,
-								 extra_environ=student_environ, status=403)
+		to_delete = unit_ntiids[-1]
+		index = unit_ntiids.index( to_delete )
+		delete_suffix = self._get_delete_url_suffix( index, to_delete )
+		self.testapp.delete(self.outline_ordered_contents_url + delete_suffix,
+							extra_environ=student_environ, status=403)
 
 		# No pub/unpub links
 		res = self.testapp.get(self._get_outline_url(), extra_environ=student_environ)
@@ -513,7 +518,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		# Append unit node
 		new_unit_title = 'new unit title'
 		unit_data = {'title': new_unit_title, 'MimeType': self.unit_mime_type}
-		res = self.testapp.post_json(self.outline_put_url, unit_data,
+		res = self.testapp.post_json(self.outline_ordered_contents_url, unit_data,
 									 extra_environ=instructor_environ)
 
 		res = res.json_body
@@ -544,7 +549,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that(unit_ntiids[-1], is_(new_ntiid))
 
 		# Insert at index 0
-		at_index_url = self.outline_put_url + '/index/0'
+		at_index_url = self.outline_ordered_contents_url + '/index/0'
 		new_unit_title2 = 'new unit title2'
 		unit_data2 = {'title': new_unit_title2,
 					'MimeType': self.unit_mime_type}
@@ -575,7 +580,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that(unit_ntiids[-1], is_(new_ntiid))
 
 		# Insert at last index
-		at_index_url = self.outline_put_url + '/index/9'
+		at_index_url = self.outline_ordered_contents_url + '/index/9'
 		new_unit_title3 = 'new unit title3'
 		unit_data3 = {'title': new_unit_title3,
 					'MimeType': self.unit_mime_type}
@@ -651,17 +656,19 @@ class TestOutlineEditViews(ApplicationLayerTest):
 							extra_environ=instructor_environ, status=404 )
 
 		# One
-		unit_data = {'ntiid': first_ntiid}
-		self.testapp.delete_json(self._get_outline_url(), unit_data,
-								 extra_environ=instructor_environ)
+		delete_suffix = self._get_delete_url_suffix( 0, first_ntiid )
+		self.testapp.delete(self.outline_ordered_contents_url + delete_suffix,
+							extra_environ=instructor_environ)
 		node_count -= 1
 		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		assert_that(unit_ntiids, is_not(has_item(first_ntiid)))
 
 		# Two
-		unit_data = {'ntiid': last_ntiid}
-		self.testapp.delete_json(self._get_outline_url(), unit_data,
-								 extra_environ=instructor_environ)
+		index = unit_ntiids.index( last_ntiid )
+		delete_suffix = self._get_delete_url_suffix( index, last_ntiid )
+		self.testapp.delete(self.outline_ordered_contents_url + delete_suffix,
+							extra_environ=instructor_environ)
+
 		node_count -= 1
 		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		assert_that(unit_ntiids, is_not(has_item(last_ntiid)))

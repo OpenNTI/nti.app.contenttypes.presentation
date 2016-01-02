@@ -243,12 +243,11 @@ class IndexedRequestMixin(object):
 		"""
 		index = None
 		if 		self.request.subpath \
-			and self.request.subpath[0] == 'index' \
-			and len(self.request.subpath) > 1:
+			and self.request.subpath[0] == 'index':
 			try:
 				index = self.request.subpath[1]
 				index = int(index)
 			except (TypeError, IndexError):
-				raise hexc.HTTPUnprocessableEntity('Invalid index %s' % index)
+				raise hexc.HTTPUnprocessableEntity(_('Invalid index %s' % index))
 		index = index if index is None else max(index, 0)
 		return index

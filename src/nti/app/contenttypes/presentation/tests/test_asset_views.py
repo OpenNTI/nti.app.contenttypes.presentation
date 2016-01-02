@@ -89,6 +89,9 @@ class TestAssetViews(ApplicationLayerTest):
 				container = IPresentationAssetContainer(packs[0])
 				assert_that(container, has_key(ntiid))
 
+	def _get_delete_url_suffix(self, index, ntiid):
+		return '/index/%s?ntiid=%s' % (index, ntiid)
+
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_all_assets(self):
 		res = self.testapp.get(self.assets_url, status=200)
@@ -443,7 +446,8 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(ntiid, is_in(containers))
 
 		# Delete video from group; but asset still exists.
-		self.testapp.delete_json(contents_url, {'ntiid': video_ntiid})
+		delete_suffix = self._get_delete_url_suffix( 0, video_ntiid )
+		self.testapp.delete( contents_url  + delete_suffix )
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			obj = find_object_with_ntiid(ntiid)
 			assert_that( obj, has_property('Items', has_length(1)))
@@ -549,10 +553,12 @@ class TestAssetViews(ApplicationLayerTest):
 			group_ntiid = res.json_body['ntiid']
 			assert_that( obj, has_property('Items', has_length(4)))
 			group = obj.Items[-1]
+			group_index = len( obj.Items ) - 1
 			assert_that( group.ntiid, is_( group_ntiid ))
 
 		# Delete group from lesson
-		res = self.testapp.delete_json(contents_link, {'ntiid': group_ntiid})
+		delete_suffix = self._get_delete_url_suffix( group_index, group_ntiid )
+		self.testapp.delete( contents_link  + delete_suffix )
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			obj = find_object_with_ntiid(lesson_ntiid)
 			assert_that( obj, has_property('Items', has_length(3)))

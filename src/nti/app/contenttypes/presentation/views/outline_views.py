@@ -486,8 +486,7 @@ class OutlineNodeMoveView(AbstractChildMoveView,
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest',
 			 name=VIEW_NODE_CONTENTS)
-class OutlineNodeDeleteView(AbstractAuthenticatedView,
-							ModeledContentUploadRequestUtilsMixin):
+class OutlineNodeDeleteView(AbstractAuthenticatedView, IndexedRequestMixin):
 	"""
 	Delete the given ntiid in our context.
 	"""
@@ -499,12 +498,21 @@ class OutlineNodeDeleteView(AbstractAuthenticatedView,
 			remove_presentation_asset(lesson, registry=registry)
 
 	def __call__(self):
-		values = CaseInsensitiveDict(self.readInput())
-		old_keys = list(self.context.keys())
+		index = self._get_index()
+		values = CaseInsensitiveDict( self.request.params )
+		old_keys = list(self.context.keys() or ())
 		ntiid = values.get('ntiid')
 
-		if ntiid not in old_keys:
-			raise hexc.HTTPConflict(_('NTIID no longer present'))
+		current_index = None
+		try:
+			current_index = old_keys.index( ntiid )
+		except ValueError:
+			pass
+
+		if 		index is None \
+			or 	current_index is None \
+			or 	current_index != index:
+			raise hexc.HTTPConflict(_('NTIID/index are invalid'))
 
 		# 12.2015 - We currently do not delete the underlying lesson
 		# and assets tied to this node. Potentially, we could allow
