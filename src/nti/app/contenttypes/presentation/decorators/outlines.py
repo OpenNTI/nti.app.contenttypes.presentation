@@ -56,17 +56,17 @@ from . import LEGACY_UAS_20
 from . import VIEW_ORDERED_CONTENTS
 from . import VIEW_OVERVIEW_CONTENT
 from . import VIEW_OVERVIEW_SUMMARY
-from . import _AbstractMoveLinkDecorator
 
 from . import is_legacy_uas
+from . import _AbstractMoveLinkDecorator
 
 LINKS = StandardExternalFields.LINKS
 
-def _is_visible( item, request, show_unpublished=False ):
+def _is_visible(item, request, show_unpublished=False):
 	return 	not IPublishable.providedBy(item) \
-		or 	item.is_published() \
-		or	(   show_unpublished 
-			and has_permission(ACT_CONTENT_EDIT, item, request))
+			or 	item.is_published() \
+			or	(	 show_unpublished
+			 	 and has_permission(ACT_CONTENT_EDIT, item, request))
 
 def _is_true(v):
 	return v and str(v).lower() in TRUE_VALUES
@@ -82,7 +82,7 @@ def _lesson_overview_links(context, request):
 	try:
 		name = context.LessonOverviewNTIID
 		lesson = component.queryUtility(INTILessonOverview, name=name) if name else None
-		if lesson is not None and _is_visible( lesson, request, not omit_unpublished ):
+		if lesson is not None and _is_visible(lesson, request, not omit_unpublished):
 			overview_link = Link(context, rel=VIEW_OVERVIEW_CONTENT,
 								 elements=(VIEW_OVERVIEW_CONTENT,))
 			summary_link = Link(context, rel=VIEW_OVERVIEW_SUMMARY,

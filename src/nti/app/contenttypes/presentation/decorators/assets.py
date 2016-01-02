@@ -100,9 +100,9 @@ LINKS = StandardExternalFields.LINKS
 ITEMS = StandardExternalFields.ITEMS
 CLASS = StandardExternalFields.CLASS
 MIMETYPE = StandardExternalFields.MIMETYPE
+IN_CLASS_SAFE = make_provider_safe(IN_CLASS)
 CREATED_TIME = StandardExternalFields.CREATED_TIME
 LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
-IN_CLASS_SAFE = make_provider_safe(IN_CLASS)
 
 @component.adapter(IPresentationAsset)
 @interface.implementer(IExternalMappingDecorator)
@@ -267,14 +267,14 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 
 		discussion, topic = resolved
 
-		#For legacy purposes we need NTIID to be the id of the topic
-		#that the user should see when selecting this resource.
-		#As of Dec 2015 all clients are looking at the NTIID field so
-		#the resolved topic id has to go there. We need to get clients migrated
-		#over to target, which is currently safe to change.  We set target
-		#to the course.discussion object and will use a view to resolve it
-		#to the specific topic as necessary. This gets these objects exposed for
-		#editing while maintaining backwards compatibility.
+		# For legacy purposes we need NTIID to be the id of the topic
+		# that the user should see when selecting this resource.
+		# As of Dec 2015 all clients are looking at the NTIID field so
+		# the resolved topic id has to go there. We need to get clients migrated
+		# over to target, which is currently safe to change.  We set target
+		# to the course.discussion object and will use a view to resolve it
+		# to the specific topic as necessary. This gets these objects exposed for
+		# editing while maintaining backwards compatibility.
 		ext_item[NTIID] = topic.NTIID
 		ext_item['Target-NTIID'] = to_external_ntiid_oid(discussion)
 		return True
@@ -453,7 +453,6 @@ class _NTIDiscussionRefDecorator(_BaseAssetDecorator):
 			external['Target-NTIID'] = external.pop('target')
 		if 'Target-NTIID' in external:
 			external[NTIID] = external['Target-NTIID']
-
 
 @component.adapter(INTIRelatedWorkRef)
 @interface.implementer(IExternalObjectDecorator)
