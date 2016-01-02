@@ -14,9 +14,12 @@ import time
 import simplejson
 
 from zope import component
-from zope import lifecycleevent
 
-from zope.intid import IIntIds
+from zope.event import notify
+
+from zope.intid.interfaces import IIntIds
+from zope.intid.interfaces import IntIdAddedEvent
+from zope.intid.interfaces import IntIdRemovedEvent
 
 from nti.coremetadata.interfaces import IRecordable
 from nti.coremetadata.interfaces import IPublishable
@@ -95,7 +98,8 @@ def _removed_registered(provided, name, intids=None, registry=None,
 		if not unregisterUtility(registry, provided=provided, name=name):
 			logger.warn("Could not unregister (%s,%s) during sync, continuing...",
 						provided.__name__, name)
-		lifecycleevent.removed(registered)
+		notify(IntIdRemovedEvent(registered, None))
+		intids.unregister(registered, event=False)
 	elif registered is not None:
 		logger.warn("Object (%s,%s) is locked cannot be removed during sync",
 					provided.__name__, name)
@@ -105,7 +109,8 @@ def _removed_registered(provided, name, intids=None, registry=None,
 def intid_register(item, registry, intids=None, connection=None):
 	intids = component.getUtility(IIntIds) if intids is None else intids
 	if add_2_connection(item, registry, connection):
-		lifecycleevent.added(item)
+		intids.register(item, event=False)
+		notify(IntIdAddedEvent(item, None))
 		return True
 	return False
 
