@@ -849,7 +849,6 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 		remove_presentation_asset(theObject, self._registry, self._catalog)
 		return theObject
 
-# TODO Video Roll? Video roll move?
 @view_config(context=INTILessonOverview)
 @view_config(context=INTICourseOverviewGroup)
 @view_defaults(route_name='objects.generic.traversal',
