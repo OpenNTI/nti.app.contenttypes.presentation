@@ -9,6 +9,7 @@ entry_points = {
 	],
 	'console_scripts': [
 		"nti_sync_lessons_overviews = nti.app.contenttypes.presentation.scripts.sync_lessons_overviews:main",
+		"nti_sync_all_presentation_assets = nti.app.contenttypes.presentation.scripts.sync_all_presentation_assets:main",
 	],
 }
 
