@@ -132,8 +132,8 @@ from .view_mixins import slugify
 from .view_mixins import hexdigest
 from .view_mixins import get_namedfile
 from .view_mixins import NTIIDPathMixin
-from .view_mixins import get_render_link
 from .view_mixins import get_assets_folder
+from .view_mixins import get_download_href
 from .view_mixins import get_file_from_link
 from .view_mixins import IndexedRequestMixin
 from .view_mixins import AbstractChildMoveView
@@ -236,7 +236,7 @@ def _handle_multipart(context, contentObject, sources, provided=None):
 			file_key = _get_unique_filename(assets, source, name)
 			namedfile = get_namedfile(source, file_key)
 			assets[file_key] = namedfile  # add to container
-			location = get_render_link(namedfile)
+			location = get_download_href(namedfile)
 			setattr(contentObject, name, location)
 
 # GET views

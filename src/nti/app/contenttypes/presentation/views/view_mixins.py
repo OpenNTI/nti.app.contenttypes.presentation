@@ -11,6 +11,7 @@ logger = __import__('logging').getLogger(__name__)
 
 from .. import MessageFactory as _
 
+import re
 import os
 import hashlib
 from urllib import unquote
@@ -27,7 +28,7 @@ from slugify import slugify_filename
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
-from nti.app.contentfile import to_external_href
+from nti.app.contentfile import to_external_download_href
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
@@ -92,9 +93,9 @@ def get_namedfile(source, name=None):
 	result.contentType = contentType
 	return result
 
-def get_render_link(item):
+def get_download_href(item):
 	try:
-		result = to_external_href(item)  # adds @@view
+		result = to_external_download_href(item)
 		return result
 	except Exception:
 		pass  # Nope
@@ -103,9 +104,11 @@ def get_render_link(item):
 def get_file_from_link(link):
 	result = None
 	try:
-		if link.endswith('view') or link.endswith('download'):
+		if link.endswith('view') or re.match('(.+)/download(\/.*)?', link):
 			path = urlparse(link).path
 			path = os.path.split(path)[0]
+			if path.endswith('download'):
+				path = os.path.split(path)[0]
 		else:
 			path = link
 		ntiid = unquote(os.path.split(path)[1] or u'')  # last part of path

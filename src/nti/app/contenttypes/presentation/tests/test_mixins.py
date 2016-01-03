@@ -37,6 +37,12 @@ class TestMixins(unittest.TestCase):
 		n = get_file_from_link('/dataserver2/Objects/tag:nextthought.com,2011-10:NTI-CourseInfo-Fall2015_CS_1323/@@view')
 		assert_that(n, is_(foo))
 
+		n = get_file_from_link('/dataserver2/Objects/tag:nextthought.com,2011-10:NTI-CourseInfo-Fall2015_CS_1323/download')
+		assert_that(n, is_(foo))
+
+		n = get_file_from_link('/dataserver2/Objects/tag:nextthought.com,2011-10:NTI-CourseInfo-Fall2015_CS_1323/download/foo.dat')
+		assert_that(n, is_(foo))
+
 		n = get_file_from_link('/dataserver2/Objects/xxx')
 		assert_that(n, is_(none()))
 

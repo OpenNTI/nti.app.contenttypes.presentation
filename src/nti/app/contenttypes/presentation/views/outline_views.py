@@ -16,7 +16,7 @@ import simplejson
 
 from zope import component
 
-from zope.intid import IIntIds
+from zope.intid.interfaces import IIntIds
 
 from pyramid.view import view_config
 from pyramid.view import view_defaults
@@ -36,7 +36,6 @@ from nti.appserver.ugd_query_views import RecursiveUGDView
 from nti.appserver.pyramid_authorization import has_permission
 
 from nti.common.time import time_to_64bit_int
-from nti.common.maps import CaseInsensitiveDict
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
@@ -143,7 +142,7 @@ class OutlineLessonOverviewView(AbstractAuthenticatedView,
 		lesson = self._get_lesson()
 		if self._is_visible(lesson):
 			self.request.acl_decoration = self._can_edit_lesson(lesson)
-			external = to_external_object( lesson )
+			external = to_external_object(lesson)
 			external.lastModified = external[LAST_MODIFIED] = lesson.lastModified
 		else:
 			external = LocatedExternalDict()
@@ -259,7 +258,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 		result['ContainerOrder'] = [node.ContentNTIID for node in nodes]
 
 
-		def add_item( item ):
+		def add_item(item):
 			# check visibility
 			if IVisible.providedBy(item):
 				if not is_item_visible(item, self.remoteUser, record=record):
@@ -288,21 +287,21 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 
 			for item in group.Items:
 				# ignore non media items
-				if 	(	 not IMediaRef.providedBy(item)
+				if 	(not IMediaRef.providedBy(item)
 					 and not INTIMedia.providedBy(item)
-					 and not INTIMediaRoll.providedBy( item )
+					 and not INTIMediaRoll.providedBy(item)
 					 and not INTISlideDeck.providedBy(item)):
 					continue
 
-				if INTIMediaRoll.providedBy( item ):
+				if INTIMediaRoll.providedBy(item):
 					item_last_mod = 0
 					# For media rolls, we want to expand to preserve bwc.
 					for roll_item in item.items:
-						roll_last_mod = add_item( roll_item )
+						roll_last_mod = add_item(roll_item)
 						if roll_last_mod:
 							item_last_mod = max(roll_last_mod, item_last_mod)
 				else:
-					item_last_mod = add_item( item )
+					item_last_mod = add_item(item)
 				if item_last_mod:
 					lastModified = max(lastModified, item_last_mod)
 
@@ -427,7 +426,7 @@ class OutlineNodeInsertView(AbstractAuthenticatedView,
 	def __call__(self):
 		index = self._get_index()
 		new_node = self._get_new_node()
-		self.context.insert( index, new_node )
+		self.context.insert(index, new_node)
 
 		logger.info('Created new outline node (%s)', new_node.ntiid)
 		self.request.response.status_int = 201
@@ -475,10 +474,10 @@ class OutlineNodeMoveView(AbstractChildMoveView,
 		return result
 
 	def __call__(self):
-		super( OutlineNodeMoveView, self ).__call__()
-		result = to_external_object( self.context )
+		super(OutlineNodeMoveView, self).__call__()
+		result = to_external_object(self.context)
 		if ITEMS not in result:
-			result[ITEMS] = self.externalize_node_contents( self.context )
+			result[ITEMS] = self.externalize_node_contents(self.context)
 		return result
 
 @view_config(route_name='objects.generic.traversal',
@@ -487,7 +486,7 @@ class OutlineNodeMoveView(AbstractChildMoveView,
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest',
 			 name=VIEW_NODE_CONTENTS)
-class OutlineNodeDeleteView( AbstractAuthenticatedView, NTIIDPathMixin ):
+class OutlineNodeDeleteView(AbstractAuthenticatedView, NTIIDPathMixin):
 	"""
 	Delete the given ntiid in our context. We may be given an `index`
 	param, which we will ignore.
