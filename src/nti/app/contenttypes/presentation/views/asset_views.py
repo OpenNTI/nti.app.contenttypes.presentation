@@ -376,7 +376,8 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 	def _set_creator(self, item, creator):
 		creator = getattr(creator, 'username', creator)
-		if not getattr(item, 'creator', None):
+		if 		not getattr(item, 'creator', None) \
+			or	getattr(item, 'creator', None) == getattr(item, 'byline', None):
 			item.creator = creator
 
 	def _handle_package_asset(self, provided, item, creator, extended=None):
