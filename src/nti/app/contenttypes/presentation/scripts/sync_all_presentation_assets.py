@@ -19,12 +19,17 @@ from zope.component.hooks import site as current_site
 
 from zope.intid.interfaces import IIntIds
 
+from ZODB.POSException import POSError
+
 from nti.app.contentlibrary.utils import yield_content_packages
 from nti.app.contentlibrary.subscribers import update_indices_when_content_changes
+
+from nti.coremetadata.interfaces import IRecordable
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 
+from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.presentation import iface_of_asset
@@ -36,6 +41,8 @@ from nti.dataserver.utils.base_script import create_context
 
 from nti.intid.common import removeIntId
 
+from nti.metadata import metadata_queue
+
 from nti.recorder.record import remove_transaction_history
 
 from nti.site.utils import unregisterUtility
@@ -45,6 +52,22 @@ from ..utils.common import yield_sync_courses
 
 from ..synchronizer import synchronize_course_lesson_overview
 
+def _clear_history(item):
+	try:
+		remove_transaction_history(item)
+	except POSError:
+		logger.error('Cannot remove transaction history for %s', item.ntiid)
+
+def _intid_unregister(item, intids):
+	try:
+		removeIntId(item)
+	except POSError:
+		iid = intids.queryId(item)
+		intids.unregister(item)
+		queue = metadata_queue()
+		if queue is not None and iid is not None:
+			queue.remove(iid)
+
 def remove_assets(registry, intids):
 	total = 0
 	logger.info('Removing assets from registry')
@@ -53,8 +76,8 @@ def remove_assets(registry, intids):
 			continue
 		provided = iface_of_asset(item)
 		unregisterUtility(registry, provided=provided, name=ntiid)
-		remove_transaction_history(item)
-		removeIntId(item)
+		_clear_history(item)
+		_intid_unregister(item, intids)
 		total += 1
 	logger.info('%s assets removed', total)
 
@@ -71,12 +94,30 @@ def _clear_package_containers(package):
 		container.clear()
 	recur(package)
 
+def _clear_outline(course):
+
+	def _recur(node):
+		if not ICourseOutline.providedBy(node) and IRecordable.providedBy(node):
+			node.locked = False
+			_clear_history(node)
+
+		for child in node.values():
+			_recur(child)
+
+	outline = course.Outline
+	if outline is not None:
+		_recur(outline)
+
+def _clear_container(course):
+	container = IPresentationAssetContainer(course)
+	container.clear()
+
 def _sync_courses():
 	for course in yield_sync_courses():
 		entry = ICourseCatalogEntry(course)
 		logger.info("Synchronizing course %s", entry.ntiid)
-		container = IPresentationAssetContainer(course)
-		container.clear()
+		_clear_outline(course)
+		_clear_container(course)
 		synchronize_course_lesson_overview(course)
 
 def _sync_pacakges():
