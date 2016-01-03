@@ -28,7 +28,7 @@ from slugify import slugify_filename
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
-from nti.app.contentfile import to_external_download_href
+from nti.app.contentfile import to_external_href
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
@@ -95,7 +95,7 @@ def get_namedfile(source, name=None):
 
 def get_download_href(item):
 	try:
-		result = to_external_download_href(item)
+		result = to_external_href(item)
 		return result
 	except Exception:
 		pass  # Nope
