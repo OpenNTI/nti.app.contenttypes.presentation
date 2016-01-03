@@ -95,7 +95,7 @@ def get_namedfile(source, name=None):
 
 def get_download_href(item):
 	try:
-		result = to_external_href(item)
+		result = to_external_href(item, True)
 		return result
 	except Exception:
 		pass  # Nope
@@ -104,10 +104,10 @@ def get_download_href(item):
 def get_file_from_link(link):
 	result = None
 	try:
-		if link.endswith('view') or re.match('(.+)/download(\/.*)?', link):
+		if re.match('(.+)/(@@)?[view|download](\/.*)?', link):
 			path = urlparse(link).path
 			path = os.path.split(path)[0]
-			if path.endswith('download'):
+			if path.endswith('download') or path.endswith('view'):
 				path = os.path.split(path)[0]
 		else:
 			path = link
