@@ -461,6 +461,7 @@ class _NTIRelatedWorkRefDecorator(object):
 	__metaclass__ = SingletonDecorator
 
 	def decorateExternalObject(self, original, external):
+		external['href'] = original.href
 		if 'byline' in external:
 			external[u'creator'] = external['byline']  # legacy
 		description = external.get('description')

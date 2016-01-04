@@ -500,6 +500,40 @@ class TestAssetViews(ApplicationLayerTest):
 						upload_files=[('icon', 'ichigo.png', b'ichigo')],
 						status=422)
 
+
+	@WithSharedApplicationMockDS(testapp=True, users=True)
+	def test_overview_group_post(self):
+		source = self._load_resource('nticourseoverviewgroup.json')
+
+		# post
+		res = self.testapp.post_json(self.assets_url, source, status=201)
+		assert_that(res.json_body, has_entry('ntiid', is_not(none())))
+		ntiid = res.json_body['ntiid']
+		href = res.json_body['href']
+		contents_url = href + '/@@contents'
+
+		# Insert external link at index 0
+		external_link = "http://www.google.com"
+		related_work = {"href": external_link,
+						"MimeType":"application/vnd.nextthought.relatedworkref",
+						"label":"afd",
+						"byline":"",
+						"description":"afd",
+						"targetMimeType":"application/vnd.nextthought.externallink"}
+
+		res = self.testapp.post_json(contents_url + '/index/0',
+									related_work,
+									status=201)
+		res = res.json_body
+		rel_ntiid = res['ntiid']
+		assert_that( res.get( 'href' ), is_( external_link ))
+
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			obj = find_object_with_ntiid(ntiid)
+			rel_obj = obj.items[0]
+			assert_that( rel_obj.ntiid, is_( rel_ntiid ))
+			assert_that( rel_obj.href, is_( external_link ))
+
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_lesson(self):
 		source = self._load_resource('ntilessonoverview.json')
@@ -543,7 +577,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj, has_property('Items', has_length(1)))
 			history  = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(2))
-			# FIXME
+			# FIXME: posting to href does not toggle flag.
 			#assert_that(obj.child_order_locked, is_( True ))
 			#obj.child_order_locked = False # Reset
 
