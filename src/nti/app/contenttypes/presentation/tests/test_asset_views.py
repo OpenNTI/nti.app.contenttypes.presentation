@@ -178,6 +178,10 @@ class TestAssetViews(ApplicationLayerTest):
 		assert_that( res.get( 'Items' ), has_length( 2 ) )
 		contents_link = self.require_link_href_with_rel( res, VIEW_ORDERED_CONTENTS )
 
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			group = find_object_with_ntiid( group_ntiid )
+			assert_that( group.child_order_locked, is_( False ))
+
 		# Create base video and video roll
 		video_source = self._load_resource('ntivideo.json')
 		video_source.pop('NTIID', None)
@@ -201,6 +205,7 @@ class TestAssetViews(ApplicationLayerTest):
 
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			group = find_object_with_ntiid( group_ntiid )
+			assert_that( group.child_order_locked, is_( True ))
 			ref_obj = group.Items[0]
 			assert_that( ref_obj.locked, is_( True ))
 			assert_that( ref_obj, validly_provides(INTIVideoRef) )
@@ -208,6 +213,9 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that( target_ntiid, is_( video_ntiid ) )
 			video_obj = find_object_with_ntiid( target_ntiid )
 			assert_that( video_obj, validly_provides(INTIVideo) )
+
+			# Reset child move status
+			group.child_order_locked = False
 
 		# Upload/append roll into group
 		roll_source = {"MimeType": NTIVideoRoll.mime_type,
@@ -237,6 +245,9 @@ class TestAssetViews(ApplicationLayerTest):
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			# Check our objects are locked and are actually video(roll)
 			# objects that can be found in course.
+			group = find_object_with_ntiid( group_ntiid )
+			assert_that( group.child_order_locked, is_( True ))
+
 			roll_obj = find_object_with_ntiid( video_roll_ntiid )
 			assert_that(roll_obj, not_none())
 			assert_that(roll_obj, validly_provides(INTIVideoRoll))
@@ -262,6 +273,9 @@ class TestAssetViews(ApplicationLayerTest):
 
 			# This doesn't use our request specific externalizer.
 			to_external_object( roll_obj )
+
+			# Reset child move status
+			group.child_order_locked = False
 
 		# Now append a video ntiid to video roll
 		items = item_last.get( 'Items' )
@@ -328,6 +342,10 @@ class TestAssetViews(ApplicationLayerTest):
 		assert_that( item_zero.get( 'ntiid' ), is_( video_ntiid ) )
 		assert_that( item_roll.get( 'ntiid' ), is_( video_roll_ntiid ) )
 		assert_that( item_last.get( 'ntiid' ), is_( video_ntiid ) )
+
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			group = find_object_with_ntiid( group_ntiid )
+			assert_that( group.child_order_locked, is_( True ))
 
 		# Try to insert non-existant ntiid
 		items.append( video_ntiid + 'xxx' )
@@ -501,6 +519,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj, is_not(none()))
 			assert_that(obj, validly_provides(INTILessonOverview))
 			assert_that(obj, has_property('Items', has_length(1)))
+			assert_that(obj.child_order_locked, is_( False ))
 			group_ntiid = obj.Items[0].ntiid
 
 			entry = find_object_with_ntiid(self.course_ntiid)
@@ -524,6 +543,9 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj, has_property('Items', has_length(1)))
 			history  = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(2))
+			# FIXME
+			#assert_that(obj.child_order_locked, is_( True ))
+			#obj.child_order_locked = False # Reset
 
 		# Contents, insert group at end
 		source = {'title':'mygroup'}
@@ -552,6 +574,8 @@ class TestAssetViews(ApplicationLayerTest):
 			group_ntiid = res.json_body['ntiid']
 			assert_that(obj, has_property('Items', has_length(3)))
 			assert_that( obj.Items[0].ntiid, is_( group_ntiid ))
+			assert_that(obj.child_order_locked, is_( True ))
+			obj.child_order_locked = False # Reset
 
 			obj = find_object_with_ntiid(group_ntiid)
 			catalog = get_library_catalog()
@@ -571,6 +595,9 @@ class TestAssetViews(ApplicationLayerTest):
 			group_index = len( obj.Items ) - 1
 			assert_that( group.ntiid, is_( group_ntiid ))
 
+			assert_that(obj.child_order_locked, is_( True ))
+			obj.child_order_locked = False # Reset
+
 		# Delete group from lesson
 		delete_suffix = self._get_delete_url_suffix( group_index, group_ntiid )
 		self.testapp.delete( contents_link  + delete_suffix )
@@ -586,6 +613,9 @@ class TestAssetViews(ApplicationLayerTest):
 
 			group = find_object_with_ntiid( group_ntiid )
 			assert_that( group, none() )
+
+			assert_that(obj.child_order_locked, is_( True ))
+			obj.child_order_locked = False # Reset
 
 	def _get_move_json(self, obj_ntiid, new_parent_ntiid, index=None, old_parent_ntiid=None):
 		result = { 'ObjectNTIID': obj_ntiid,
@@ -616,6 +646,10 @@ class TestAssetViews(ApplicationLayerTest):
 		first_group_ntiid = groups[0].get( 'NTIID' )
 		last_group_ntiid = groups[-1].get( 'NTIID' )
 
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			obj = find_object_with_ntiid(lesson_ntiid)
+			assert_that( obj.child_order_locked, is_( False ))
+
 		# Move our last item to first
 		move_data = self._get_move_json(last_group_ntiid, lesson_ntiid, 0, lesson_ntiid)
 		self.testapp.post_json( move_link, move_data )
@@ -628,6 +662,11 @@ class TestAssetViews(ApplicationLayerTest):
 		assert_that( groups[1].get( 'NTIID' ), is_( first_group_ntiid ))
 		assert_that( groups[-1].get( 'NTIID' ), is_not( first_group_ntiid ))
 
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			obj = find_object_with_ntiid(lesson_ntiid)
+			assert_that( obj.child_order_locked, is_( True ))
+			obj.child_order_locked = False # Reset
+
 		# Move the item back to the end
 		move_data = self._get_move_json(last_group_ntiid, lesson_ntiid)
 		self.testapp.post_json( move_link, move_data )
@@ -638,6 +677,11 @@ class TestAssetViews(ApplicationLayerTest):
 		assert_that( groups, has_length( original_group_count ))
 		assert_that( groups[0].get( 'NTIID' ), is_( first_group_ntiid ))
 		assert_that( groups[-1].get( 'NTIID' ), is_( last_group_ntiid ))
+
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			obj = find_object_with_ntiid(lesson_ntiid)
+			assert_that( obj.child_order_locked, is_( True ))
+			obj.child_order_locked = False # Reset
 
 		# Overview groups
 		source_group_index = 0
@@ -653,6 +697,10 @@ class TestAssetViews(ApplicationLayerTest):
 		last_asset_ntiid = group_items[-1].get( 'NTIID' )
 
 		# Move within an overview group
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			obj = find_object_with_ntiid(source_group_ntiid)
+			assert_that( obj.child_order_locked, is_( False ))
+
 		move_data = self._get_move_json(first_asset_ntiid, source_group_ntiid)
 		self.testapp.post_json( move_link, move_data )
 
@@ -666,7 +714,16 @@ class TestAssetViews(ApplicationLayerTest):
 		assert_that( new_source_group_items[-2].get( 'NTIID' ), is_( last_asset_ntiid ))
 		assert_that( new_source_group_items[-1].get( 'NTIID' ), is_( first_asset_ntiid ))
 
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			obj = find_object_with_ntiid(source_group_ntiid)
+			assert_that( obj.child_order_locked, is_( True ))
+			obj.child_order_locked = False # Reset
+
 		# Move between overview groups
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			obj = find_object_with_ntiid(target_group_ntiid)
+			assert_that( obj.child_order_locked, is_( False ))
+
 		move_data = self._get_move_json(first_asset_ntiid, target_group_ntiid, 0, source_group_ntiid)
 		self.testapp.post_json( move_link, move_data )
 
@@ -682,6 +739,13 @@ class TestAssetViews(ApplicationLayerTest):
 		assert_that( new_target_group_items, has_length( original_target_group_size + 1 ))
 		assert_that( new_source_group_items[-1].get( 'NTIID' ), is_not( first_asset_ntiid ))
 		assert_that( new_target_group_items[0].get( 'NTIID' ), is_( first_asset_ntiid ))
+
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			obj = find_object_with_ntiid(target_group_ntiid)
+			assert_that( obj.child_order_locked, is_( True ))
+			tar = find_object_with_ntiid(source_group_ntiid)
+			assert_that( tar.child_order_locked, is_( True ))
+			obj.child_order_locked = tar.child_order_locked = False # Reset
 
 		# Move back to original group
 		move_data = self._get_move_json(first_asset_ntiid, source_group_ntiid, 0, target_group_ntiid )
@@ -699,4 +763,11 @@ class TestAssetViews(ApplicationLayerTest):
 		assert_that( new_target_group_items, has_length( original_target_group_size ))
 		assert_that( new_source_group_items[0].get( 'NTIID' ), is_( first_asset_ntiid ))
 		assert_that( new_target_group_items[0].get( 'NTIID' ), is_not( first_asset_ntiid ))
+
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			obj = find_object_with_ntiid(target_group_ntiid)
+			assert_that( obj.child_order_locked, is_( True ))
+			tar = find_object_with_ntiid(source_group_ntiid)
+			assert_that( tar.child_order_locked, is_( True ))
+			obj.child_order_locked = tar.child_order_locked = False # Reset
 

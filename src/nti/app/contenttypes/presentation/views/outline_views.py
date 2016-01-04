@@ -427,6 +427,7 @@ class OutlineNodeInsertView(AbstractAuthenticatedView,
 		index = self._get_index()
 		new_node = self._get_new_node()
 		self.context.insert(index, new_node)
+		self.context.child_order_locked = True
 
 		logger.info('Created new outline node (%s)', new_node.ntiid)
 		self.request.response.status_int = 201
@@ -519,6 +520,7 @@ class OutlineNodeDeleteView(AbstractAuthenticatedView, NTIIDPathMixin):
 			pass
 		else:
 			logger.info('Deleted entity in outline %s', ntiid)
+			self.context.child_order_locked = True
 		return hexc.HTTPOk()
 
 @view_config(route_name='objects.generic.traversal',

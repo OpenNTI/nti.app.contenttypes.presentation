@@ -219,11 +219,13 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 			did_remove = self._remove_from_parent(old_parent, obj)
 			if not did_remove:
 				raise hexc.HTTPUnprocessableEntity(_('Moved node does not exist in old parent.'))
+			old_parent.child_order_locked = True
 
 		if self.notify_type:
 			notify(self.notify_type(new_parent, self.remoteUser.username, index))
 		logger.info('Moved item (%s) at index (%s) (to=%s) (from=%s)',
 					ntiid, index, new_parent_ntiid, old_parent_ntiid)
+		new_parent.child_order_locked = True
 		return self.context
 
 class PublishVisibilityMixin(object):

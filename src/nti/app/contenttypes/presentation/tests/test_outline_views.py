@@ -104,6 +104,13 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		res = self._get_outline_json()
 		return self.require_link_href_with_rel( res, VIEW_ORDERED_CONTENTS )
 
+	@property
+	def outline_ntiid(self):
+		res = self.testapp.get(self.outline_obj_url, extra_environ=self.editor_environ)
+		res = res.json_body
+		outline_ntiid = res.get( 'NTIID' )
+		return outline_ntiid
+
 	def setUp(self):
 		# This instructor is also a content editor for this course.
 		self.instructor_username = 'tryt3968'
@@ -121,12 +128,6 @@ class TestOutlineEditViews(ApplicationLayerTest):
 	def _get_delete_url_suffix(self, index, ntiid):
 		# For outlines, the index is ignored. Validate that.
 		return '/ntiid/%s?index=%s' % (ntiid, -1)
-
-	def _get_outline_ntiid(self):
-		res = self.testapp.get(self.outline_obj_url, extra_environ=self.editor_environ)
-		res = res.json_body
-		outline_ntiid = res.get( 'NTIID' )
-		return outline_ntiid
 
 	def _create_student_environ(self):
 		student = "ichigo"
@@ -245,7 +246,13 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that( _to_date( obj.get('publishBeginning')), is_(start))
 		assert_that( _to_date( obj.get('publishEnding')), is_(end))
 
-	def _check_obj_state(self, ntiid, is_published=False, is_locked=True):
+	def _reset_obj_state(self, ntiid, child_locked=False):
+		with mock_dataserver.mock_db_trans(self.ds, site_name='janux.ou.edu'):
+			obj = find_object_with_ntiid(ntiid)
+			assert_that(obj, not_none())
+			obj.child_order_locked = child_locked
+
+	def _check_obj_state(self, ntiid, is_published=False, is_locked=True, is_child_locked=False):
 		"""
 		Check our server state, specifically, whether an object is locked,
 		published, and registered. If given a lesson, validate lesson props.
@@ -255,6 +262,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 			assert_that(obj, not_none())
 			assert_that(obj.locked, is_(is_locked))
 			assert_that(obj.isPublished(), is_(is_published))
+			assert_that(obj.child_order_locked, is_(is_child_locked))
 
 			if INTILessonOverview.providedBy( obj ):
 				# Lessons have same titles as content nodes.
@@ -274,7 +282,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 							   extra_environ=student_environ, status=403)
 
 		# Try moving
-		outline_ntiid = self._get_outline_ntiid()
+		outline_ntiid = self.outline_ntiid
 		move_data = self._get_move_json(unit_ntiids[-1], outline_ntiid, 0)
 		self.testapp.post_json(self.move_url, move_data,
 							  extra_environ=student_environ, status=403)
@@ -327,6 +335,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		first_unit_ntiid = res.get('NTIID')
 		_first_node_size()
 		_first_node_size( _environ=student_environ )
+		self._check_obj_state( first_unit_ntiid, is_published=True, is_locked=False )
 
 		# Append content node; validate fields
 		new_content_title = 'new content node title'
@@ -355,6 +364,9 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self._check_obj_state( content_node_ntiid, is_published=True )
 		self._check_obj_state( lesson_ntiid )
 		self._check_ext_state( content_node_ntiid,  has_lesson=True )
+		# Parent is child order locked.
+		self._check_obj_state( first_unit_ntiid, is_published=True,
+							is_locked=False, is_child_locked=True )
 
 		_first_node_size( 4, student_environ )
 		child_ntiids = _first_node_size( 4 )
@@ -381,6 +393,9 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self.require_link_href_with_rel(res, VIEW_UNPUBLISH)
 		self._check_obj_state(content_node_ntiid2)
 		self._check_obj_state(lesson_ntiid2)
+		# Parent is child order locked.
+		self._check_obj_state( first_unit_ntiid, is_published=True,
+							is_locked=False, is_child_locked=True )
 
 		# Must publish for students to see
 		_first_node_size( 5 )
@@ -488,12 +503,17 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		target_unit_ntiid = res.get('NTIID')
 		original_target_child_ntiids = [x.get('NTIID') for x in res.get('contents')]
 
+		self._reset_obj_state( target_unit_ntiid )
+		self._reset_obj_state( src_unit_ntiid )
+		self._check_obj_state( target_unit_ntiid, is_locked=False, is_published=True )
+		self._check_obj_state( src_unit_ntiid, is_locked=False, is_published=True )
+
 		# Move to our target
 		move_data = self._get_move_json(moved_ntiid, target_unit_ntiid, 0, src_unit_ntiid)
 		self.testapp.post_json(self.move_url, move_data,
 							  extra_environ=instructor_environ)
 
-		# Still in old for now
+		# Removed from old
 		res = _get_unit_node(0)
 		src_child_ntiids = [x.get('NTIID') for x in res.get('contents')]
 		assert_that( src_child_ntiids, is_not(has_item(moved_ntiid)))
@@ -502,6 +522,11 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		res = _get_unit_node(1)
 		target_child_ntiids = [x.get('NTIID') for x in res.get('contents')]
 		assert_that( target_child_ntiids[0], is_(moved_ntiid) )
+
+		self._check_obj_state( target_unit_ntiid, is_locked=True,
+							is_child_locked=True, is_published=True )
+		self._check_obj_state( src_unit_ntiid, is_locked=False,
+							is_child_locked=True, is_published=True )
 
 		# Move back
 		move_data = self._get_move_json(moved_ntiid, src_unit_ntiid, 0, target_unit_ntiid)
@@ -517,6 +542,11 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		target_child_ntiids2 = [x.get('NTIID') for x in res.get('contents')]
 		assert_that(target_child_ntiids2, contains(*original_target_child_ntiids))
 
+		self._check_obj_state( target_unit_ntiid, is_locked=True,
+							is_child_locked=True, is_published=True )
+		self._check_obj_state( src_unit_ntiid, is_locked=True,
+							is_child_locked=True, is_published=True )
+
 	def _test_unit_node_inserts(self):
 		"""
 		Test inserting/appending unit nodes to an outline, with fields.
@@ -524,11 +554,15 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		# Base case
 		node_count = 8
 		instructor_environ = self.editor_environ
+		outline_ntiid = self.outline_ntiid
 		student_environ = self._create_student_environ()
 		self._get_outline_ntiids(student_environ, node_count)
 		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		first_unit_ntiid = unit_ntiids[0]
 		last_unit_ntiid = unit_ntiids[-1]
+
+		self._reset_obj_state( outline_ntiid )
+		self._check_obj_state( outline_ntiid, is_locked=False )
 
 		# Append unit node
 		new_unit_title = 'new unit title'
@@ -562,6 +596,8 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that(unit_ntiids[0], is_(first_unit_ntiid))
 		assert_that(unit_ntiids[-2], is_(last_unit_ntiid))
 		assert_that(unit_ntiids[-1], is_(new_ntiid))
+		self._check_obj_state( outline_ntiid, is_locked=False,
+							is_child_locked=True )
 
 		# Insert at index 0
 		at_index_url = self.outline_ordered_contents_url + '/index/0'
@@ -616,6 +652,9 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that(unit_ntiids[-3], is_(last_unit_ntiid))
 		assert_that(unit_ntiids[-2], is_(new_ntiid3))
 		assert_that(unit_ntiids[-1], is_(new_ntiid))
+
+		self._check_obj_state( outline_ntiid, is_locked=False,
+							is_child_locked=True )
 		return node_count
 
 	def _test_moving_nodes(self, node_count):
@@ -623,7 +662,10 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		first_ntiid = unit_ntiids[0]
 		last_ntiid = unit_ntiids[-1]
-		outline_ntiid = self._get_outline_ntiid()
+		outline_ntiid = self.outline_ntiid
+
+		self._reset_obj_state( outline_ntiid )
+		self._check_obj_state( outline_ntiid, is_locked=False )
 
 		# Move last object to index 0
 		move_data = self._get_move_json(last_ntiid, outline_ntiid, 0)
@@ -635,6 +677,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that( unit_ntiids[0], is_(last_ntiid))
 		assert_that( unit_ntiids[1], is_(first_ntiid))
 		assert_that( move_res, has_length( node_count ))
+		self._check_obj_state( outline_ntiid, is_locked=False, is_child_locked=True )
 
 		# Same move is no-op
 		move_res = self.testapp.post_json(self.move_url, move_data,
@@ -659,12 +702,17 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that( unit_ntiids[-1], is_(first_ntiid))
 		assert_that( move_res, has_length( node_count ))
 		assert_that( move_ntiids, is_( unit_ntiids ))
+		self._check_obj_state( outline_ntiid, is_locked=False, is_child_locked=True )
 
 	def _test_deleting_nodes(self, node_count):
 		instructor_environ = self.editor_environ
 		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		first_ntiid = unit_ntiids[0]
 		last_ntiid = unit_ntiids[-1]
+		outline_ntiid = self.outline_ntiid
+
+		self._reset_obj_state( outline_ntiid )
+		self._check_obj_state( outline_ntiid, is_locked=False )
 
 		# Direct deletes are not allowed.
 		self.testapp.delete( '/dataserver2/Objects/%s' % first_ntiid,
@@ -677,6 +725,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		node_count -= 1
 		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		assert_that(unit_ntiids, is_not(has_item(first_ntiid)))
+		self._check_obj_state( outline_ntiid, is_locked=False, is_child_locked=True )
 
 		# Two
 		index = unit_ntiids.index( last_ntiid )
@@ -690,6 +739,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		node_count -= 1
 		unit_ntiids = self._get_outline_ntiids(instructor_environ, node_count)
 		assert_that(unit_ntiids, is_not(has_item(last_ntiid)))
+		self._check_obj_state( outline_ntiid, is_locked=False, is_child_locked=True )
 		return node_count
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)

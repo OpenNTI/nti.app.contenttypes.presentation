@@ -903,6 +903,7 @@ class AssetDeleteChildView(AbstractAuthenticatedView,
 			pass
 		if INTICourseOverviewGroup.providedBy(item):
 			remove_presentation_asset( item )
+		self.context.child_order_locked = True
 		return hexc.HTTPOk()
 
 # ordered contents
@@ -967,6 +968,7 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 									extended=(self.context.ntiid,))
 
 		notify_modified(self.context, externalValue, external_keys=(ITEMS,))
+		self.context.child_order_locked = True
 		self.request.response.status_int = 201
 		return contentObject
 
@@ -1075,6 +1077,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 
 		notify_modified(self.context, externalValue, external_keys=(ITEMS,))
 		self.request.response.status_int = 201
+		self.context.child_order_locked = True
 
 		# We don't return media refs in the overview group.
 		# So don't here either.
