@@ -552,12 +552,15 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		item_extended = tuple(extended or ()) + tuple(containers or ())
 		self._catalog.index(item, container_ntiids=item_extended)
 
+	def _handle_package_container_asset(self, provided, item, creator, extended=None):
+		if INTIRelatedWorkRef.providedBy(item):
+			self._handle_related_work(provided, item, creator, extended)
+		else:
+			self._handle_package_asset(provided, item, creator, extended)
+
 	def _handle_asset(self, provided, item, creator, extended=()):
 		if provided in PACKAGE_CONTAINER_INTERFACES:
-			if INTIRelatedWorkRef.providedBy(item):
-				self._handle_related_work(provided, item, creator, extended)
-			else:
-				self._handle_package_asset(provided, item, creator, extended)
+			self._handle_package_container_asset(provided, item, creator, extended)
 		elif INTIMediaRoll.providedBy(item):
 			self._handle_media_roll(provided, item, creator, extended)
 		elif IGroupOverViewable.providedBy(item):
