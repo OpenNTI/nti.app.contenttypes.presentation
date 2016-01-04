@@ -238,7 +238,8 @@ def _is_lesson_sync_locked(existing_overview):
 	# Currently only return first locked item for efficiency.
 	locked_items = []
 	def _recur(item):
-		if _is_obj_locked(item):
+		if 		_is_obj_locked(item) \
+			or  getattr( item, 'child_order_locked', False ):
 			locked_items.append(item.ntiid)
 			return True
 		children = getattr(item, 'Items', None) or ()

@@ -222,8 +222,24 @@ class TestSynchronizer(ApplicationLayerTest):
 		assert_that( removed, has_length( 0 ))
 		assert_that( overview, is_( original_overview ))
 
-		# 6. Unlock and wipe
+		# 6. Child order lock group.
 		new_group.locked = False
+		new_group.child_order_locked = True
+		overview, removed = _load_and_register_lesson_overview_json(source, registry=registry)
+		assert_that( overview.items, has_length( 5 ))
+		assert_that( removed, has_length( 0 ))
+		assert_that( overview, is_( original_overview ))
+
+		# 7. Child order lock lesson.
+		new_group.child_order_locked = False
+		original_overview.child_order_locked = True
+		overview, removed = _load_and_register_lesson_overview_json(source, registry=registry)
+		assert_that( overview.items, has_length( 5 ))
+		assert_that( removed, has_length( 0 ))
+		assert_that( overview, is_( original_overview ))
+
+		# 8. Unlock and wipe
+		original_overview.child_order_locked = False
 		overview, removed = _load_and_register_lesson_overview_json(source, registry=registry)
 		assert_that( overview.items, has_length( 4 ))
 		assert_that( removed, has_length( 12 ))
