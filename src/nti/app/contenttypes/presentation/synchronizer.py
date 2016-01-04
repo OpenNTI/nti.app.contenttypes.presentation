@@ -369,6 +369,10 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 			elif not result:  # replace if registered before
 				items[idx] = registered
 			idx += 1
+		
+		# set lineage
+		for item in items or ():
+			item.__parent__ = group
 
 	return overview, removed
 
