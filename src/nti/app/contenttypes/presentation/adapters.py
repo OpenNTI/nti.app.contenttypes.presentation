@@ -24,7 +24,8 @@ from nti.assessment.interfaces import IQAssignment
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
-from nti.contenttypes.presentation.interfaces import INTIAudio
+from nti.contenttypes.presentation.interfaces import INTIAudio,\
+	IGroupOverViewable
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTIPollRef
@@ -57,6 +58,11 @@ def _course_overview_group_to_course(group):
 @component.adapter(INTILessonOverview)
 @interface.implementer(ICourseInstance)
 def _lesson_overview_to_course(item):
+	return find_interface(item, ICourseInstance, strict=False)
+
+@component.adapter(IGroupOverViewable)
+@interface.implementer(ICourseInstance)
+def _group_overviewable_to_course(item):
 	return find_interface(item, ICourseInstance, strict=False)
 
 @component.adapter(INTIAudioRef)
