@@ -16,7 +16,7 @@ from zope import component
 
 from zope.component.hooks import site as current_site
 
-from zope.intid import IIntIds
+from zope.intid.interfaces import IIntIds
 
 from zope.security.management import endInteraction
 from zope.security.management import restoreInteraction
@@ -83,9 +83,12 @@ def _course_asset_interfaces():
 	return result
 
 def _get_course_ntiids(values):
-	ntiids = values.get('ntiid') or values.get('ntiids') or \
-			 values.get('entry') or values.get('entries') or \
-			 values.get('course') or values.get('courses')
+	ntiids =	values.get('ntiid') \
+			or	values.get('ntiids') \
+			or	values.get('entry')  \
+			or	values.get('entries') \
+			or	values.get('course') \
+			or	values.get('courses')
 	if ntiids and isinstance(ntiids, six.string_types):
 		ntiids = ntiids.split()
 	return ntiids
