@@ -538,12 +538,15 @@ class OutlineNodeFieldPutView(UGDPutView, OutlineLessonOverviewMixin):
 
 	def __call__(self):
 		result = UGDPutView.__call__(self)
-		input_dict = self.readInput()
-		new_title = input_dict.get( 'title' )
-		if new_title:
-			lesson = self._get_lesson()
-			if lesson is not None:
-				lesson.title = new_title
+
+		if ICourseOutlineContentNode.providedBy( self.context ):
+			# For content nodes, sync our title with our lesson.
+			input_dict = self.readInput()
+			new_title = input_dict.get( 'title' )
+			if new_title:
+				lesson = self._get_lesson()
+				if lesson is not None:
+					lesson.title = new_title
 		return result
 
 @view_config(route_name='objects.generic.traversal',
