@@ -39,7 +39,7 @@ def _process_rolls(registry):
 			if item.__parent__ is None:
 				item.__parent__ = roll
 		items = roll.Items
-		if items and isinstance(object, PersistentList):
+		if items and not isinstance(object, PersistentList):
 			roll.Items = PersistentList(items)
 		count += 1
 	return count
