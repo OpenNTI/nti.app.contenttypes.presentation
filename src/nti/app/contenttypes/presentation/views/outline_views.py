@@ -526,12 +526,22 @@ class OutlineNodeDeleteView(AbstractAuthenticatedView, NTIIDPathMixin):
 			 request_method='PUT',
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest')
-class OutlineNodeFieldPutView(UGDPutView):
+class OutlineNodeFieldPutView(UGDPutView, OutlineLessonOverviewMixin):
 
 	def readInput(self, value=None):
 		result = UGDPutView.readInput(self, value=value)
 		result.pop('ntiid', None)
 		result.pop('NTIID', None)
+		return result
+
+	def __call__(self):
+		result = UGDPutView.__call__(self)
+		input_dict = self.readInput()
+		new_title = input_dict.get( 'title' )
+		if new_title:
+			lesson = self._get_lesson()
+			if lesson is not None:
+				lesson.title = new_title
 		return result
 
 @view_config(route_name='objects.generic.traversal',

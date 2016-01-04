@@ -34,6 +34,8 @@ from nti.app.products.courseware.tests import InstructedCourseApplicationTestLay
 from nti.app.testing.decorators import WithSharedApplicationMockDS
 from nti.app.testing.application_webtest import ApplicationLayerTest
 
+from nti.contenttypes.presentation.interfaces import INTILessonOverview
+
 from nti.dataserver.tests import mock_dataserver
 
 from nti.ntiids.ntiids import find_object_with_ntiid
@@ -246,13 +248,17 @@ class TestOutlineEditViews(ApplicationLayerTest):
 	def _check_obj_state(self, ntiid, is_published=False, is_locked=True):
 		"""
 		Check our server state, specifically, whether an object is locked,
-		published, and registered.
+		published, and registered. If given a lesson, validate lesson props.
 		"""
 		with mock_dataserver.mock_db_trans(self.ds, site_name='janux.ou.edu'):
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, not_none())
 			assert_that(obj.locked, is_(is_locked))
 			assert_that(obj.isPublished(), is_(is_published))
+
+			if INTILessonOverview.providedBy( obj ):
+				# Lessons have same titles as content nodes.
+				assert_that( obj.title, is_( obj.__parent__.title ))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_permissions(self):
@@ -329,6 +335,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		res = self.testapp.post_json(unit_url, content_data,
 									 extra_environ=instructor_environ)
 		res = res.json_body
+		content_href = res.get( 'href' )
 		content_node_ntiid = res.get('NTIID')
 		lesson_ntiid = res.get('ContentNTIID')
 		assert_that(res.get('Creator'), is_(self.instructor_username))
@@ -352,6 +359,13 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		_first_node_size( 4, student_environ )
 		child_ntiids = _first_node_size( 4 )
 		assert_that(child_ntiids[-1], is_(content_node_ntiid))
+
+		# Editting content node title changes lesson title.
+		content_data = {'title':'new content title2'}
+		self.testapp.put_json(content_href, content_data,
+							extra_environ=instructor_environ)
+		self._check_obj_state( content_node_ntiid, is_published=True )
+		self._check_obj_state( lesson_ntiid )
 
 		# Insert at index 0 with dates
 		new_content_title2 = 'new content node title2'
