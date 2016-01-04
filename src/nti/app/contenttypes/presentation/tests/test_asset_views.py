@@ -429,6 +429,7 @@ class TestAssetViews(ApplicationLayerTest):
 		res = self.testapp.post(contents_url,
 								upload_files=[('icon', 'ichigo.png', b'ichigo')],
 								status=201)
+
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			# check returned object
 			assert_that(res.json_body, has_entry('icon', 'http://bleach.org/ichigo.png'))
@@ -472,6 +473,14 @@ class TestAssetViews(ApplicationLayerTest):
 			catalog = get_library_catalog()
 			containers = catalog.get_containers(obj)
 			assert_that(ntiid, is_in(containers))
+
+		# Label length validation
+		invalid_source = dict( source )
+		invalid_source['label'] = 'mygroup' * 25
+		mc_ri.is_callable().with_args().returns(invalid_source)
+		self.testapp.post(contents_url,
+						upload_files=[('icon', 'ichigo.png', b'ichigo')],
+						status=422)
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_lesson(self):
