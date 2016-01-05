@@ -494,7 +494,7 @@ class TestAssetViews(ApplicationLayerTest):
 
 		# Label length validation
 		invalid_source = dict( source )
-		invalid_source['label'] = 'mygroup' * 25
+		invalid_source['label'] = 'mygroup' * 28
 		mc_ri.is_callable().with_args().returns(invalid_source)
 		self.testapp.post(contents_url,
 						upload_files=[('icon', 'ichigo.png', b'ichigo')],
