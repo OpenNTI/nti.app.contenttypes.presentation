@@ -582,6 +582,15 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		result = super(PresentationAssetSubmitViewMixin, self).readInput()
 		self._remove_ntiids(result, no_ntiids)
 		return result
+	
+	def transformOutput(self, obj):
+		provided = iface_of_asset(obj)
+		if provided is not None and 'href' in provided:
+			result = to_external_object(obj)
+			interface.alsoProvides(result, INoHrefInResponse)
+		else:
+			result = obj
+		return result
 
 # preflight routines
 
@@ -727,7 +736,7 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 
 		self.request.response.status_int = 201
 		self._handle_asset(provided, contentObject, creator.username)
-		return contentObject
+		return self.transformOutput(contentObject)
 
 # put views
 
@@ -776,7 +785,7 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 	def __call__(self):
 		result = UGDPutView.__call__(self)
 		self._handle_asset(iface_of_asset(result), result, result.creator)
-		return result
+		return self.transformOutput(result)
 
 @view_config(context=INTILessonOverview)
 @view_defaults(route_name='objects.generic.traversal',
@@ -1086,4 +1095,4 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		# So don't here either.
 		if INTIMediaRef.providedBy(contentObject):
 			contentObject = INTIMedia(contentObject)
-		return contentObject
+		return self.transformOutput(contentObject)
