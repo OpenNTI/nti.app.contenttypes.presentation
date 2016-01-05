@@ -495,7 +495,9 @@ class _NTIBaseSlideDecorator(_BaseAssetDecorator):
 
 	def decorateExternalObject(self, original, external):
 		super(_NTIBaseSlideDecorator, self).decorateExternalObject(original, external)
-		if 'byline' in external:
+		if CREATOR in external:
+			external[u'creator'] = external[CREATOR] # legacy
+		elif 'byline' in external:
 			external[u'creator'] = external['byline']
 		if CLASS in external:
 			external[u'class'] = (external.get(CLASS) or u'').lower()  # legacy
@@ -568,7 +570,9 @@ class _BaseMediaDecorator(object):
 		if MIMETYPE in external:
 			external[StandardExternalFields.CTA_MIMETYPE] = external[MIMETYPE]  # legacy
 
-		if 'byline' in external:
+		if CREATOR in external:
+			external[u'creator'] = external[CREATOR] # legacy
+		elif 'byline' in external:
 			external[u'creator'] = external['byline']  # legacy
 
 		if 'ntiid' in external and NTIID not in external:
