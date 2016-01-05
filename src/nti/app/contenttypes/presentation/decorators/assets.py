@@ -99,6 +99,7 @@ NTIID = StandardExternalFields.NTIID
 LINKS = StandardExternalFields.LINKS
 ITEMS = StandardExternalFields.ITEMS
 CLASS = StandardExternalFields.CLASS
+CREATOR = StandardExternalFields.CREATOR
 MIMETYPE = StandardExternalFields.MIMETYPE
 IN_CLASS_SAFE = make_provider_safe(IN_CLASS)
 CREATED_TIME = StandardExternalFields.CREATED_TIME
@@ -461,8 +462,9 @@ class _NTIRelatedWorkRefDecorator(object):
 	__metaclass__ = SingletonDecorator
 
 	def decorateExternalObject(self, original, external):
-		external['href'] = original.href
-		if 'byline' in external:
+		if CREATOR in external:
+			external[u'creator'] = external[CREATOR] # legacy
+		elif 'byline' in external:
 			external[u'creator'] = external['byline']  # legacy
 		description = external.get('description')
 		if description:
