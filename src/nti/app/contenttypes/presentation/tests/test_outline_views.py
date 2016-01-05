@@ -73,10 +73,19 @@ class TestOutlineViews(ApplicationLayerTest):
 		res = self.testapp.get(media_ref, extra_environ=ichigo_environ)
 
 		data = res.json_body
-		assert_that(data, has_entry('ItemCount', is_(51)))
-		assert_that(data, has_entry('Items', has_length(51)))
-		assert_that(data, has_entry('Containers', has_length(22)))
+		assert_that(data, has_entry('ItemCount', is_(63)))
+		assert_that(data, has_entry('Items', has_length(63)))
+		assert_that(data, has_entry('Containers', has_length(24)))
 		assert_that(data, has_entry('ContainerOrder', has_length(53)))
+
+		lesson = 'tag:nextthought.com,2011-10:OU-HTML-CS1323_F_2015_Intro_to_Computer_Programming.lec:01.01_LESSON'
+		children = [ "tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_01.01.01_Welcome",
+				"tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_01.01.01_Code",
+				"tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_01.01.01_Obama",
+				"tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_01.01.01_Java",
+				"tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_01.01.01_Academic_Integrity"]
+
+		assert_that( data.get('Containers').get( lesson ), is_( children ))
 
 class TestOutlineEditViews(ApplicationLayerTest):
 

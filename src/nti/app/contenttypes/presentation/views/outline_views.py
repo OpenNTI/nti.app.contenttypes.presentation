@@ -251,12 +251,21 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 
 		items = result[ITEMS] = {}
 		containers = result['Containers'] = {}
+		containers_seen = {}
 
 		nodes = self._outline_nodes(course)
 		namespaces = {node.src for node in nodes}
 		ntiids = {node.ContentNTIID for node in nodes}
 		result['ContainerOrder'] = [node.ContentNTIID for node in nodes]
 
+		def _add_item_to_container( container_ntiid, item ):
+			containers_seen.setdefault(container_ntiid, set())
+			seen = containers_seen[container_ntiid]
+			# Avoid dupes but retain order.
+			if item.ntiid not in seen:
+				seen.add(item.ntiid)
+				containers.setdefault(container_ntiid, [])
+				containers[container_ntiid].append( item.ntiid )
 
 		def add_item(item):
 			# check visibility
@@ -274,8 +283,7 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 			# set content containers
 			for ntiid in catalog.get_containers(uid):
 				if ntiid in ntiids:
-					containers.setdefault(ntiid, set())
-					containers[ntiid].add(item.ntiid)
+					_add_item_to_container( ntiid, item )
 			items[item.ntiid] = to_external_object(item)
 			return item.lastModified
 
@@ -313,14 +321,10 @@ class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
 			uid = intids.getId(item)
 			for ntiid in catalog.get_containers(uid):
 				if ntiid in ntiids:
-					containers.setdefault(ntiid, set())
-					containers[ntiid].add(item.ntiid)
+					_add_item_to_container( ntiid, item )
 			items[item.ntiid] = to_external_object(item)
 			lastModified = max(lastModified, item.lastModified)
 
-		# make json ready
-		for k, v in list(containers.items()):
-			containers[k] = list(v)
 		result[LAST_MODIFIED] = lastModified
 		result['Total'] = result['ItemCount'] = len(items)
 		return result

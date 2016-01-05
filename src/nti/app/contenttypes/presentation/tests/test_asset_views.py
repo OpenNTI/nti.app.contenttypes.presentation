@@ -95,8 +95,8 @@ class TestAssetViews(ApplicationLayerTest):
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_all_assets(self):
 		res = self.testapp.get(self.assets_url, status=200)
-		assert_that(res.json_body, has_entry('Total', is_(16)))
-		assert_that(res.json_body, has_entry('Items', has_length(16)))
+		assert_that(res.json_body, has_entry('Total', is_(62)))
+		assert_that(res.json_body, has_entry('Items', has_length(62)))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_ntivideo(self):
