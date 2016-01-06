@@ -598,7 +598,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(lesson_ntiid, is_in(containers))
 
 		# Long title validation
-		invalid_source = {'title':'mygroup' * 25}
+		invalid_source = {'title':'mygroup' * 28}
 		self.testapp.post_json(contents_link, invalid_source, status=422)
 
 		# Insert group at index 0
