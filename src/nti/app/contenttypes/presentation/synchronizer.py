@@ -272,7 +272,8 @@ def _update_sync_results(lesson_ntiid, sync_results, lesson_locked):
 		getattr(lessons, field).append(lesson_ntiid)
 
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
-											validate=False, course=None, sync_results=None):
+											validate=False, course=None, node=None,
+											sync_results=None):
 	registry = get_registry(registry)
 
 	# read and parse json text
@@ -292,6 +293,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 									   			 registry=registry,
 									   			 course=course)
 
+	overview.__parent__ = node # set lineage 
 	_register_utility(overview, INTILessonOverview, overview.ntiid, registry)
 
 	# canonicalize group
@@ -371,7 +373,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 				items[idx] = registered
 			idx += 1
 
-		# set lineage
+		# set lineage just in case
 		for item in items or ():
 			item.__parent__ = group
 
@@ -627,6 +629,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, **kwar
 			logger.debug("Synchronizing %s", namespace)
 			index_text = content_package.read_contents_of_sibling_entry(namespace)
 			overview, rmv = _load_and_register_lesson_overview_json(index_text,
+																	node=node,
 																	validate=True,
 																	course=course,
 																	ntiid=ref_ntiid,
