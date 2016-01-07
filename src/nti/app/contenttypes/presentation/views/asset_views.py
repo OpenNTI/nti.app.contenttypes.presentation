@@ -602,17 +602,17 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 # preflight routines
 MAX_TITLE_LENGTH = 140
 
-def _validate_input( externalValue ):
+def _validate_input(externalValue):
 	# Normally, we'd let our defined schema enforce limits,
 	# but old, unreasonable content makes us enforce some
 	# limits here, through the user API.
-	for attr in ('title', 'Title', 'label', 'Label' ):
-		value = externalValue.get( attr )
-		if value and len( value ) > MAX_TITLE_LENGTH:
+	for attr in ('title', 'Title', 'label', 'Label'):
+		value = externalValue.get(attr)
+		if value and len(value) > MAX_TITLE_LENGTH:
 			raise_json_error(get_current_request(),
 							 hexc.HTTPUnprocessableEntity,
 							 {
-							 	u'provided_size': len( value ),
+							 	u'provided_size': len(value),
 							 	u'max_size': MAX_TITLE_LENGTH,
 								u'message': _('The title length is too long.'),
 								u'code': 'TitleTooLongError',
@@ -626,7 +626,7 @@ def preflight_mediaroll(externalValue):
 
 	items = externalValue.get(ITEMS)
 
-	_validate_input( externalValue )
+	_validate_input(externalValue)
 	for idx, item in enumerate(items or ()):
 		if isinstance(item, six.string_types):
 			item = items[idx] = {'ntiid': item}
@@ -653,7 +653,7 @@ def preflight_overview_group(externalValue):
 	if not isinstance(externalValue, Mapping):
 		return externalValue
 
-	_validate_input( externalValue )
+	_validate_input(externalValue)
 	items = externalValue.get(ITEMS)
 	for idx, item in enumerate(items or ()):
 		if isinstance(item, six.string_types):
@@ -678,7 +678,7 @@ def preflight_lesson_overview(externalValue):
 	if not isinstance(externalValue, Mapping):
 		return externalValue
 
-	_validate_input( externalValue )
+	_validate_input(externalValue)
 	items = externalValue.get(ITEMS)
 	for item in items or ():
 		preflight_overview_group(item)
@@ -695,7 +695,7 @@ def preflight_input(externalValue):
 		return preflight_overview_group(externalValue)
 	elif mimeType in LESSON_OVERVIEW_MIMETYES:
 		return preflight_lesson_overview(externalValue)
-	_validate_input( externalValue )
+	_validate_input(externalValue)
 	return externalValue
 
 @view_config(context=ICourseInstance)
@@ -904,18 +904,18 @@ class AssetDeleteChildView(AbstractAuthenticatedView,
 
 	def _validate_media_item(self, ntiid, index):
 		found = []
-		for idx, child in enumerate( self.context ):
+		for idx, child in enumerate(self.context):
 			# For media objects, we want to remove the actual
 			# ref, but clients will only send target ntiids
-			child_ntiid = getattr( child, 'target', '' )
+			child_ntiid = getattr(child, 'target', '')
 			if child_ntiid == ntiid:
 				if idx == index:
 					# We have an exact ref hit.
 					return child
 				else:
-					found.append( child )
+					found.append(child)
 
-		if len( found ) == 1:
+		if len(found) == 1:
 			# Inconsistent match, but it's unambiguous.
 			return found[0]
 
@@ -924,27 +924,26 @@ class AssetDeleteChildView(AbstractAuthenticatedView,
 			raise hexc.HTTPConflict(_('Ambiguous item ref no longer exists at this index.'))
 
 	def __call__(self):
-		values = CaseInsensitiveDict( self.request.params )
+		values = CaseInsensitiveDict(self.request.params)
 		index = values.get('index')
 		ntiid = self._get_ntiid()
 
-		item = find_object_with_ntiid( ntiid )
+		item = find_object_with_ntiid(ntiid)
 		if item is None:
 			raise hexc.HTTPConflict(_('Item no longer exists'))
 
-		if INTIMedia.providedBy( item ):
-			item = self._validate_media_item( ntiid, index )
+		if INTIMedia.providedBy(item):
+			item = self._validate_media_item(ntiid, index)
 
 		# We remove the item from our context, and clean it
-		# up. But we want to make sure we don't clean up the
-		# underlying asset items in a group (?).
+		# up. We want to make sure we clean up the
+		# underlying asset
 		try:
-			self.context.remove( item )
+			self.context.remove(item)
 		except ValueError:
 			# Already gone.
 			pass
-		if INTICourseOverviewGroup.providedBy(item):
-			remove_presentation_asset( item )
+		remove_presentation_asset(item)
 		self.context.child_order_locked = True
 		return hexc.HTTPOk()
 
