@@ -373,9 +373,11 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 				items[idx] = registered
 			idx += 1
 
-		# set lineage just in case
+		# set lineage just in case for non pacakge assets
 		for item in items or ():
-			item.__parent__ = group
+			provided = iface_of_thing(item)
+			if provided not in PACKAGE_CONTAINER_INTERFACES:
+				item.__parent__ = group
 
 	return overview, removed
 

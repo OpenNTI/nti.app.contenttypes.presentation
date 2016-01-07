@@ -18,7 +18,9 @@ from zope.component.hooks import site as current_site
 
 from persistent.list import PersistentList
 
+from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.site.hostpolicy import get_all_host_sites
@@ -27,6 +29,8 @@ def _process_groups(registry):
 	count = 0
 	for _, group in list(registry.getUtilitiesFor(INTICourseOverviewGroup)):
 		for item in group:
+			if INTITimeline.providedBy(item) or INTIRelatedWorkRef.providedBy(item):
+				continue
 			if item.__parent__ is None:
 				item.__parent__ = group
 		count += 1
@@ -62,6 +66,6 @@ def do_evolve(context, generation=generation):
 
 def evolve(context):
 	"""
-	Evolve to generation 16 by setting lineage
+	Evolve to generation 16 by setting lineage group items and media roll items
 	"""
 	do_evolve(context, generation)
