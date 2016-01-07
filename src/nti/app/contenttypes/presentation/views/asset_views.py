@@ -27,9 +27,11 @@ from zope.event import notify
 from zope.security.interfaces import NoInteraction
 from zope.security.management import getInteraction
 
-from pyramid.view import view_config
+from pyramid.threadlocal import get_current_request
 
+from pyramid.view import view_config
 from pyramid.view import view_defaults
+
 from pyramid import httpexceptions as hexc
 
 from nti.app.renderers.interfaces import INoHrefInResponse
@@ -38,6 +40,8 @@ from nti.app.base.abstract_views import get_all_sources
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.contentfile import validate_sources
+
+from nti.app.externalization.error import raise_json_error
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
@@ -582,7 +586,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		result = super(PresentationAssetSubmitViewMixin, self).readInput()
 		self._remove_ntiids(result, no_ntiids)
 		return result
-	
+
 	def transformOutput(self, obj):
 		provided = iface_of_asset(obj)
 		if provided is not None and 'href' in provided:
@@ -593,6 +597,25 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		return result
 
 # preflight routines
+MAX_TITLE_LENGTH = 140
+
+def _validate_input( externalValue ):
+	# Normally, we'd let our defined schema enforce limits,
+	# but old, unreasonable content makes us enforce some
+	# limits here, through the user API.
+	for attr in ('title', 'Title', 'label', 'Label' ):
+		value = externalValue.get( attr )
+		if value and len( value ) > MAX_TITLE_LENGTH:
+			raise_json_error(get_current_request(),
+							 hexc.HTTPUnprocessableEntity,
+							 {
+							 	u'provided_size': len( value ),
+							 	u'max_size': MAX_TITLE_LENGTH,
+								u'message': _('The title length is too long.'),
+								u'code': 'TitleTooLongError',
+								u'field': 'title'
+							 },
+							 None)
 
 def preflight_mediaroll(externalValue):
 	if not isinstance(externalValue, Mapping):
@@ -600,6 +623,7 @@ def preflight_mediaroll(externalValue):
 
 	items = externalValue.get(ITEMS)
 
+	_validate_input( externalValue )
 	for idx, item in enumerate(items or ()):
 		if isinstance(item, six.string_types):
 			item = items[idx] = {'ntiid': item}
@@ -626,6 +650,7 @@ def preflight_overview_group(externalValue):
 	if not isinstance(externalValue, Mapping):
 		return externalValue
 
+	_validate_input( externalValue )
 	items = externalValue.get(ITEMS)
 	for idx, item in enumerate(items or ()):
 		if isinstance(item, six.string_types):
@@ -650,6 +675,7 @@ def preflight_lesson_overview(externalValue):
 	if not isinstance(externalValue, Mapping):
 		return externalValue
 
+	_validate_input( externalValue )
 	items = externalValue.get(ITEMS)
 	for item in items or ():
 		preflight_overview_group(item)
@@ -666,6 +692,7 @@ def preflight_input(externalValue):
 		return preflight_overview_group(externalValue)
 	elif mimeType in LESSON_OVERVIEW_MIMETYES:
 		return preflight_lesson_overview(externalValue)
+	_validate_input( externalValue )
 	return externalValue
 
 @view_config(context=ICourseInstance)

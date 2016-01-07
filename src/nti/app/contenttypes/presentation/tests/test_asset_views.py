@@ -494,12 +494,11 @@ class TestAssetViews(ApplicationLayerTest):
 
 		# Label length validation
 		invalid_source = dict( source )
-		invalid_source['label'] = 'mygroup' * 28
+		invalid_source['label'] = 'mygroup' * 25
 		mc_ri.is_callable().with_args().returns(invalid_source)
 		self.testapp.post(contents_url,
 						upload_files=[('icon', 'ichigo.png', b'ichigo')],
 						status=422)
-
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_overview_group_post(self):
@@ -598,7 +597,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(lesson_ntiid, is_in(containers))
 
 		# Long title validation
-		invalid_source = {'title':'mygroup' * 28}
+		invalid_source = {'title':'mygroup' * 25}
 		self.testapp.post_json(contents_link, invalid_source, status=422)
 
 		# Insert group at index 0
