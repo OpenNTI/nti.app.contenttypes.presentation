@@ -12,6 +12,7 @@ logger = __import__('logging').getLogger(__name__)
 generation = 17
 
 from zope import component
+from zope import interface
 
 from zope.component.hooks import site
 from zope.component.hooks import site as current_site
@@ -19,16 +20,33 @@ from zope.component.hooks import site as current_site
 from nti.app.contentlibrary.utils import yield_sync_content_packages
 
 from nti.contentlibrary.interfaces import IContentUnit
+from nti.contentlibrary.interfaces import IContentPackageLibrary
 
 from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
+from nti.dataserver.interfaces import IDataserver
+from nti.dataserver.interfaces import IOIDResolver
+
 from nti.site.hostpolicy import get_all_host_sites
 
+@interface.implementer(IDataserver)
+class MockDataserver(object):
+
+	root = None
+
+	def get_by_oid(self, oid, ignore_creator=False):
+		resolver = component.queryUtility(IOIDResolver)
+		if resolver is None:
+			logger.warn("Using dataserver without a proper ISiteManager configuration.")
+		else:
+			return resolver.get_object_by_oid(oid, ignore_creator=ignore_creator)
+		return None
+
 def _pacakge_assets(pacakge):
-	
+
 	def recur(unit):
 		for child in unit.children or ():
 			recur(child)
@@ -49,9 +67,17 @@ def do_evolve(context, generation=generation):
 	conn = context.connection
 	ds_folder = conn.root()['nti.dataserver']
 
+	mock_ds = MockDataserver()
+	mock_ds.root = ds_folder
+	component.provideUtility(mock_ds, IDataserver)
+
 	with current_site(ds_folder):
 		assert	component.getSiteManager() == ds_folder.getSiteManager(), \
 				"Hooks not installed?"
+
+		library = component.queryUtility(IContentPackageLibrary)
+		if library is not None:
+			library.syncContentPackages()
 
 		for site in get_all_host_sites():
 			with current_site(site):
