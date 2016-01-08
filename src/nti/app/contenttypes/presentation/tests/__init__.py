@@ -11,5 +11,7 @@ from persistent import Persistent
 
 from zope.component.persistentregistry import PersistentComponents as Components
 
+INVALID_TITLE_LENGTH = 301
+
 class PersistentComponents(Components, Persistent):
     pass

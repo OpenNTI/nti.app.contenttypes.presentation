@@ -62,6 +62,10 @@ from nti.app.products.courseware.tests import InstructedCourseApplicationTestLay
 from nti.app.contenttypes.presentation import VIEW_NODE_MOVE
 from nti.app.contenttypes.presentation import VIEW_ORDERED_CONTENTS
 
+from nti.app.contenttypes.presentation.tests import INVALID_TITLE_LENGTH
+
+INVALID_TITLE = 'x' * INVALID_TITLE_LENGTH
+
 class TestAssetViews(ApplicationLayerTest):
 
 	layer = InstructedCourseApplicationTestLayer
@@ -494,7 +498,7 @@ class TestAssetViews(ApplicationLayerTest):
 
 		# Label length validation
 		invalid_source = dict( source )
-		invalid_source['label'] = 'mygroup' * 25
+		invalid_source['label'] = INVALID_TITLE
 		mc_ri.is_callable().with_args().returns(invalid_source)
 		self.testapp.post(contents_url,
 						upload_files=[('icon', 'ichigo.png', b'ichigo')],
@@ -597,7 +601,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(lesson_ntiid, is_in(containers))
 
 		# Long title validation
-		invalid_source = {'title':'mygroup' * 25}
+		invalid_source = {'title': INVALID_TITLE}
 		self.testapp.post_json(contents_link, invalid_source, status=422)
 
 		# Insert group at index 0

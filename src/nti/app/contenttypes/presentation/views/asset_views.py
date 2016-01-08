@@ -600,7 +600,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		return result
 
 # preflight routines
-MAX_TITLE_LENGTH = 140
+MAX_TITLE_LENGTH = 300
 
 def _validate_input(externalValue):
 	# Normally, we'd let our defined schema enforce limits,
@@ -609,14 +609,17 @@ def _validate_input(externalValue):
 	for attr in ('title', 'Title', 'label', 'Label'):
 		value = externalValue.get(attr)
 		if value and len(value) > MAX_TITLE_LENGTH:
+			# Mapping to what we do in nti.schema.field.
 			raise_json_error(get_current_request(),
 							 hexc.HTTPUnprocessableEntity,
 							 {
 							 	u'provided_size': len(value),
 							 	u'max_size': MAX_TITLE_LENGTH,
-								u'message': _('The title length is too long.'),
-								u'code': 'TitleTooLongError',
-								u'field': 'title'
+								u'message': _('${field} is too long. ${max_size} character limit.',
+											mapping={'field': attr.capitalize(),
+													'max_size': MAX_TITLE_LENGTH}),
+								u'code': 'TooLong',
+								u'field': attr.capitalize()
 							 },
 							 None)
 

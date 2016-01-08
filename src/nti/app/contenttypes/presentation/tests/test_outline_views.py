@@ -46,6 +46,10 @@ from nti.app.contenttypes.presentation import VIEW_ORDERED_CONTENTS
 from nti.app.contenttypes.presentation import VIEW_OVERVIEW_CONTENT
 from nti.app.contenttypes.presentation import VIEW_OVERVIEW_SUMMARY
 
+from nti.app.contenttypes.presentation.tests import INVALID_TITLE_LENGTH
+
+INVALID_TITLE = 'x' * INVALID_TITLE_LENGTH
+
 class TestOutlineViews(ApplicationLayerTest):
 
 	layer = InstructedCourseApplicationTestLayer
@@ -664,6 +668,14 @@ class TestOutlineEditViews(ApplicationLayerTest):
 
 		self._check_obj_state( outline_ntiid, is_locked=False,
 							is_child_locked=True )
+
+		# Invalid
+		invalid_data = {'title': INVALID_TITLE,
+					'MimeType': self.unit_mime_type}
+		self.testapp.post_json(at_index_url, invalid_data,
+								extra_environ=instructor_environ,
+								status=422)
+
 		return node_count
 
 	def _test_moving_nodes(self, node_count):
