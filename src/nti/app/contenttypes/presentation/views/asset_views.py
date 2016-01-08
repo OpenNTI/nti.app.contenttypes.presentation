@@ -938,12 +938,9 @@ class AssetDeleteChildView(AbstractAuthenticatedView,
 		# We remove the item from our context, and clean it
 		# up. We want to make sure we clean up the
 		# underlying asset
-		try:
-			self.context.remove(item)
-		except ValueError:
-			# Already gone.
-			pass
-		remove_presentation_asset(item)
+		if item is not None: # tests
+			self.context.remove(item) # safe op if gone already
+			remove_presentation_asset(item)
 		self.context.child_order_locked = True
 		return hexc.HTTPOk()
 
