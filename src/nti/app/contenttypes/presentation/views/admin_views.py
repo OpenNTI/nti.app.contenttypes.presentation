@@ -83,12 +83,7 @@ def _course_asset_interfaces():
 	return result
 
 def _get_course_ntiids(values):
-	ntiids =	values.get('ntiid') \
-			or	values.get('ntiids') \
-			or	values.get('entry')  \
-			or	values.get('entries') \
-			or	values.get('course') \
-			or	values.get('courses')
+	ntiids = values.get('ntiid') or	values.get('ntiids')
 	if ntiids and isinstance(ntiids, six.string_types):
 		ntiids = ntiids.split()
 	return ntiids
@@ -130,6 +125,8 @@ class GetCoursePresentationAssetsView(AbstractAuthenticatedView,
 			items[entry.ntiid] = sorted(container.values(),
 										key=lambda x: x.__class__.__name__)
 			total += len(items[entry.ntiid])
+
+		self.request.acl_decoration = False
 		result['ItemCount'] = result['Total'] = total
 		return result
 
