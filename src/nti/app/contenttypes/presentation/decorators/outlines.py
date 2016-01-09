@@ -16,10 +16,13 @@ from zope import interface
 
 from zope.location.interfaces import ILocation
 
+from pyramid.threadlocal import get_current_request
+
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
 from nti.appserver.pyramid_authorization import has_permission
 
+from nti.common.property import Lazy
 from nti.common.string import TRUE_VALUES
 
 from nti.contentlibrary.interfaces import IContentPackageLibrary
@@ -62,7 +65,7 @@ from . import _AbstractMoveLinkDecorator
 
 LINKS = StandardExternalFields.LINKS
 
-def _is_visible( item, request, show_unpublished=True ):
+def _is_visible(item, request, show_unpublished=True):
 	return 	not IPublishable.providedBy(item) \
 			or 	item.is_published() \
 			or	(	 show_unpublished
@@ -101,8 +104,15 @@ class _CourseOutlineSharedDecorator(object):
 	"""
 	__metaclass__ = SingletonDecorator
 
+	@Lazy
+	def _acl_decoration(self):
+		request = get_current_request()
+		result = getattr(request, 'acl_decoration', True)
+		return result
+
 	def _predicate(self, context, result):
-		return has_permission(ACT_CONTENT_EDIT, context, self.request)
+		return 		self._acl_decoration \
+				and has_permission(ACT_CONTENT_EDIT, context, self.request)
 
 	def _possible_courses(self, course):
 		if ICourseSubInstance.providedBy(course):
@@ -134,8 +144,15 @@ class _CourseOutlineMoveLinkDecorator(_AbstractMoveLinkDecorator):
 @interface.implementer(IExternalMappingDecorator)
 class _CourseOutlineEditLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
+	@Lazy
+	def _acl_decoration(self):
+		request = self.request
+		result = getattr(request, 'acl_decoration', True)
+		return result
+	
 	def _predicate(self, context, result):
-		return 		self._is_authenticated \
+		return		self._acl_decoration \
+				and self._is_authenticated \
 				and has_permission(ACT_CONTENT_EDIT, context, self.request)
 
 	def _do_decorate_external(self, context, result):
@@ -150,8 +167,14 @@ class _CourseOutlineEditLinkDecorator(AbstractAuthenticatedRequestAwareDecorator
 @interface.implementer(IExternalMappingDecorator)
 class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
+	@Lazy
+	def _acl_decoration(self):
+		request = self.request
+		result = getattr(request, 'acl_decoration', True)
+		return result
+
 	def _predicate(self, context, result):
-		return True
+		return self._acl_decoration
 
 	def _legacy_decorate_external(self, context, result):
 		if context.src and not is_ntiid_of_type(context.src, TYPE_OID):
