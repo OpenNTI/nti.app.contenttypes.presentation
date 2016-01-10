@@ -27,11 +27,15 @@ from nti.contenttypes.presentation.interfaces import INTIVideoRef
 from nti.contenttypes.presentation.interfaces import INTIAudioRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTIVideoRoll
+from nti.contenttypes.presentation.interfaces import INTIInquiryRef
 from nti.contenttypes.presentation.interfaces import INTISlideVideo
+from nti.contenttypes.presentation.interfaces import INTIQuestionRef
+from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import IGroupOverViewable
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
+from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
@@ -49,6 +53,18 @@ class _PresentationResolver(object):
 	def resolve(self, key):
 		result = component.queryUtility(self._ext_iface, name=key)
 		return result
+
+class _NTIQuestionRef(_PresentationResolver):
+	_ext_iface = INTIQuestionRef
+
+class _NTIQuestionSetRef(_PresentationResolver):
+	_ext_iface = INTIQuestionSetRef
+
+class _NTIAssignmentRef(_PresentationResolver):
+	_ext_iface = INTIAssignmentRef
+
+class _NTIInquiryRef(_PresentationResolver):
+	_ext_iface = INTIInquiryRef
 
 class _NTIAudioRefResolver(_PresentationResolver):
 	_ext_iface = INTIAudioRef
