@@ -300,15 +300,13 @@ class GetCoursePresentationAssetPostView(AbstractAuthenticatedView):
 				yield container
 
 	def __call__(self):
-		total = 0
 		result = LocatedExternalDict()
 		result[ITEMS] = items = {}
 		course = ICourseInstance(self.context)
 		for container in self._course_containers(course):
 			for ntiid, item in list(container.items()):
 				items[ntiid] = item
-			total += len(container)
-		result['ItemCount'] = result['Total'] = total
+		result['ItemCount'] = result['Total'] = len(items)
 		return result
 
 # POST/PUT views
