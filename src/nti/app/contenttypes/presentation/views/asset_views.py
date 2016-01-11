@@ -289,8 +289,8 @@ class GetCoursePresentationAssetPostView(AbstractAuthenticatedView):
 		course = ICourseInstance(self.context)
 		for container in chain((course, get_course_packages(course))):
 			container = IPresentationAssetContainer(container)
-			for item in container.values():
-				items[item.ntiid] = item
+			for ntiid, item in list(container.items()):
+				items[ntiid] = item
 			total += len(container)
 		result['ItemCount'] = result['Total'] = total
 		return result
