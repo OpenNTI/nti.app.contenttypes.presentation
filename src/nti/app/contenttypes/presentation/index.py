@@ -30,9 +30,7 @@ zope.deferredimport.deprecated(
 
 deprecated('PresentationAssetCatalog', 'Use lastest library index implementation')
 class PresentationAssetCatalog(Persistent):
-
-	def reset(self):
-		pass
+	pass
 
 deprecated('PACatalogIndex', 'Use lastest library index implementation')
 class PACatalogIndex(Persistent):

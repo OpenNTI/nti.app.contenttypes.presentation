@@ -23,9 +23,8 @@ from nti.contenttypes.courses.utils import get_course_editors
 from nti.contenttypes.presentation.interfaces import INTIAudio
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTITimeline
-from nti.contenttypes.presentation.interfaces import INTIAudioRoll
+from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
-from nti.contenttypes.presentation.interfaces import INTIVideoRoll
 from nti.contenttypes.presentation.interfaces import INTISlideVideo
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
@@ -92,14 +91,6 @@ class NTIAudioACLProvider(BasePresentationAssetACLProvider):
 class NTIVideoACLProvider(BasePresentationAssetACLProvider):
 	pass
 
-@component.adapter(INTIAudioRoll)
-class NTIAudioRollACLProvider(BasePresentationAssetACLProvider):
-	pass
-
-@component.adapter(INTIVideoRoll)
-class NTIVideoRollACLProvider(BasePresentationAssetACLProvider):
-	pass
-
 @component.adapter(INTISlideDeck)
 class NTISlideDeckACLProvider(BasePresentationAssetACLProvider):
 	pass
@@ -115,6 +106,27 @@ class NTITimelineACLProvider(BasePresentationAssetACLProvider):
 @component.adapter(INTISlideVideo)
 class NTISlideVideoACLProvider(BasePresentationAssetACLProvider):
 	pass
+
+@component.adapter(INTIMediaRoll)
+@interface.implementer(IACLProvider)
+class NTIMediaRollACLProvider(object):
+
+	def __init__(self, context):
+		self.context = context
+
+	@property
+	def __parent__(self):
+		return self.context.__parent__
+
+	@Lazy
+	def __acl__(self):
+		aces = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
+				ace_allowing(ROLE_CONTENT_EDITOR, ALL_PERMISSIONS, type(self))]
+		course = find_interface(self.context, ICourseInstance, strict=False)
+		if course is None:
+			aces.append(ACE_DENY_ALL)
+		result = acl_from_aces(aces)
+		return result
 
 @interface.implementer(IACLProvider)
 @component.adapter(INTICourseOverviewGroup)

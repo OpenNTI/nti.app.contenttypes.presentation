@@ -50,8 +50,7 @@
 	<adapter factory=".acl.NTIAudioACLProvider" />
 	<adapter factory=".acl.NTIVideoACLProvider" />
 	<adapter factory=".acl.NTITimelineACLProvider" />
-	<adapter factory=".acl.NTIAudioRollACLProvider" />
-	<adapter factory=".acl.NTIVideoRollACLProvider" />
+	<adapter factory=".acl.NTIMediaRollACLProvider" />
 	<adapter factory=".acl.NTISlideDeckACLProvider" />
 	<adapter factory=".acl.NTISlideVideoACLProvider" />
 	<adapter factory=".acl.NTIRelatedWorkRefACLProvider" />
