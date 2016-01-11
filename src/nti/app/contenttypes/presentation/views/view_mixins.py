@@ -32,7 +32,7 @@ from nti.app.contentfile import to_external_href
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
-from nti.app.products.courseware.interfaces import ICourseRootFolder
+from nti.app.products.courseware.utils import get_assets_folder
 
 from nti.appserver.pyramid_authorization import has_permission
 
@@ -44,18 +44,12 @@ from nti.coremetadata.interfaces import IPublishable
 from nti.contentfile.model import ContentBlobFile
 from nti.contentfile.model import ContentBlobImage
 
-from nti.contentfolder.model import ContentFolder
-
-from nti.contenttypes.courses.interfaces import ICourseInstance
-
 from nti.dataserver import authorization as nauth
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 from nti.ntiids.ntiids import is_valid_ntiid_string as is_valid_ntiid
 
-from nti.traversal.traversal import find_interface
-
-from . import ASSETS_FOLDER
+get_assets_folder = get_assets_folder # re-export
 
 def hexdigest(data, hasher=None):
 	hasher = hashlib.sha256() if hasher is None else hasher
@@ -117,20 +111,6 @@ def get_file_from_link(link):
 			return result
 	except Exception:
 		pass  # Nope
-	return None
-
-def get_assets_folder(context, strict=True):
-	course = ICourseInstance(context, None)
-	if course is None:
-		course = find_interface(context, ICourseInstance, strict=strict)
-	root = ICourseRootFolder(course, None)
-	if root is not None:
-		if ASSETS_FOLDER not in root:
-			result = ContentFolder(name=ASSETS_FOLDER)
-			root[ASSETS_FOLDER] = result
-		else:
-			result = root[ASSETS_FOLDER]
-		return result
 	return None
 
 class AbstractChildMoveView(AbstractAuthenticatedView,
