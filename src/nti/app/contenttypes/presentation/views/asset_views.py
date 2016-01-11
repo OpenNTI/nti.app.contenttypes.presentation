@@ -282,13 +282,29 @@ class NoHrefAssetGetView(PresentationAssetGetView):
 			   permission=nauth.ACT_CONTENT_EDIT)
 class GetCoursePresentationAssetPostView(AbstractAuthenticatedView):
 
+	def _pkg_containers(self, pacakge):
+		result = []
+		def recur(unit):
+			for child in unit.children or ():
+				recur(child)
+			container = IPresentationAssetContainer(unit, None)
+			if container:
+				result.append(container)
+		recur(pacakge)
+		return result
+	
+	def _course_containers(self, course):
+		yield IPresentationAssetContainer(course)
+		for pacakge in get_course_packages(course):
+			for container in self._pkg_containers(pacakge):
+				yield container
+
 	def __call__(self):
 		total = 0
 		result = LocatedExternalDict()
 		result[ITEMS] = items = {}
 		course = ICourseInstance(self.context)
-		for container in chain((course, get_course_packages(course))):
-			container = IPresentationAssetContainer(container)
+		for container in self._course_containers(course):
 			for ntiid, item in list(container.items()):
 				items[ntiid] = item
 			total += len(container)
@@ -308,7 +324,6 @@ class LessonOverviewMoveView(AbstractChildMoveView):
 	Move the given object between lessons or overview groups.
 	"""
 
-	# TODO
 	notify_type = None
 
 	def _get_context_ntiid(self):

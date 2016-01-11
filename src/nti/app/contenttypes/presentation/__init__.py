@@ -19,9 +19,11 @@ from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.contenttypes.presentation import iface_of_asset as iface_of_thing
 
+#: Course assets storage folder
+ASSETS_FOLDER = 'assets'
+
 VIEW_ASSETS = 'assets'
 VIEW_NODE_MOVE = 'move'
-ASSETS_FOLDER = 'assets'
 VIEW_CONTENTS = 'contents'
 VIEW_NODE_CONTENTS = 'contents'
 VIEW_OVERVIEW_CONTENT = "overview-content"
