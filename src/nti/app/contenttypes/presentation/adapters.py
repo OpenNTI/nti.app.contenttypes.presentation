@@ -29,6 +29,7 @@ from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTIPollRef
 from nti.contenttypes.presentation.interfaces import INTIAudioRef
+from nti.contenttypes.presentation.interfaces import INTIMediaRef
 from nti.contenttypes.presentation.interfaces import INTIVideoRef
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import INTIInquiryRef
@@ -77,6 +78,17 @@ def _audioref_to_audio(context):
 def _videoref_to_video(context):
 	name = context.target or context.ntiid
 	result = component.queryUtility(INTIVideo, name=name)
+	return result
+
+@component.adapter(INTIMediaRef)
+@interface.implementer(INTIMedia)
+def _mediaref_to_media(context):
+	if INTIAudioRef.providedBy(context):
+		result = _audioref_to_audio(context)
+	elif INTIVideoRef.providedBy(context):
+		result = _videoref_to_video(context)
+	else:
+		result = None
 	return result
 
 @interface.implementer(IQuestion)

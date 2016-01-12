@@ -28,6 +28,7 @@
 	<adapter factory=".adapters._pollref_to_poll" />
 	<adapter factory=".adapters._audioref_to_audio" />
 	<adapter factory=".adapters._videoref_to_video" />
+	<adapter factory=".adapters._mediaref_to_media" />
 	<adapter factory=".adapters._surveyref_to_survey" />
 	<adapter factory=".adapters._inquiryref_to_inquiry" />
 	<adapter factory=".adapters._questionref_to_question" />
