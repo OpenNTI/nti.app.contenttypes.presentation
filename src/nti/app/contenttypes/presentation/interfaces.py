@@ -13,9 +13,7 @@ from zope.deprecation import deprecated
 
 deprecated('IPresentationAssetsIndex', 'Use lastest library implementation')
 class IPresentationAssetsIndex(interface.Interface):
-    
-    def reset():
-        pass
+    pass
 
 class IItemRefValidator(interface.Interface):
     
