@@ -1110,6 +1110,8 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		contentObject, externalValue = self.readCreateUpdateContentObject(creator)
 		provided = iface_of_asset(contentObject)
 
+		__traceback_info__ = contentObject
+					
 		# check item does not exists and notify
 		self._check_exists(provided, contentObject, creator)
 		_notify_created(contentObject, self.remoteUser.username, externalValue)
