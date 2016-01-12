@@ -280,7 +280,7 @@ class NoHrefAssetGetView(PresentationAssetGetView):
 			   name=VIEW_ASSETS,
 			   request_method='GET',
 			   permission=nauth.ACT_CONTENT_EDIT)
-class GetCoursePresentationAssetPostView(AbstractAuthenticatedView):
+class CoursePresentationAssetsView(AbstractAuthenticatedView):
 
 	def _pkg_containers(self, pacakge):
 		result = []
