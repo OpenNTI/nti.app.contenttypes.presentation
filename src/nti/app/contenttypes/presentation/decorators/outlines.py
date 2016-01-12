@@ -149,7 +149,7 @@ class _CourseOutlineEditLinkDecorator(AbstractAuthenticatedRequestAwareDecorator
 		request = self.request
 		result = getattr(request, 'acl_decoration', True)
 		return result
-	
+
 	def _predicate(self, context, result):
 		return		self._acl_decoration \
 				and self._is_authenticated \

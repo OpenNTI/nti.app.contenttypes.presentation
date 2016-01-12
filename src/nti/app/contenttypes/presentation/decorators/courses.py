@@ -13,6 +13,8 @@ from zope import interface
 
 from zope.location.interfaces import ILocation
 
+from nti.app.products.courseware.utils import PreviewCourseAccessPredicate
+
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -45,12 +47,14 @@ class _CourseAssetsLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		_links.append(link)
 
 @interface.implementer(IExternalMappingDecorator)
-class _MediaByOutlineNodeDecorator(AbstractAuthenticatedRequestAwareDecorator):
+class _MediaByOutlineNodeDecorator(PreviewCourseAccessPredicate):
 
 	def _predicate(self, context, result_map):
+		result = super( _MediaByOutlineNodeDecorator, self )._predicate( context, result_map )
 		course = ICourseInstance(context, None)
-		result = 	is_course_instructor(course, self.remoteUser) \
-				 or get_enrollment_record(course, self.remoteUser) is not None
+		result = 	result \
+				and ( 	is_course_instructor(course, self.remoteUser) \
+				 	or 	get_enrollment_record(course, self.remoteUser) is not None )
 		return result
 
 	def _do_decorate_external(self, context, result_map):

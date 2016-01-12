@@ -7,6 +7,8 @@ __docformat__ = "restructuredtext en"
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
 
+import fudge
+
 from hamcrest import is_
 from hamcrest import none
 from hamcrest import is_not
@@ -50,6 +52,8 @@ from nti.app.contenttypes.presentation.tests import INVALID_TITLE_LENGTH
 
 INVALID_TITLE = 'x' * INVALID_TITLE_LENGTH
 
+STUDENT = 'ichigo'
+
 class TestOutlineViews(ApplicationLayerTest):
 
 	layer = InstructedCourseApplicationTestLayer
@@ -59,22 +63,40 @@ class TestOutlineViews(ApplicationLayerTest):
 	course_ntiid = 'tag:nextthought.com,2011-10:NTI-CourseInfo-Fall2015_CS_1323_SubInstances_995'
 	course_href = '/dataserver2/Objects/%s' + course_ntiid
 
-	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def test_media_by_outline(self):
-		student = "ichigo"
-		with mock_dataserver.mock_db_trans(self.ds):
-			self._create_user(student)
-
-		# enroll student
+	def _do_enroll(self):
+		admin_environ = self._make_extra_environ(username=self.default_username)
 		enroll_url = '/dataserver2/CourseAdmin/UserCourseEnroll'
-		data = {'username':student, 'ntiid': self.course_ntiid, 'scope':'ForCredit'}
-		res = self.testapp.post_json(enroll_url, data, status=201)
+		data = {'username':STUDENT, 'ntiid': self.course_ntiid, 'scope':'ForCredit'}
+		return self.testapp.post_json(enroll_url, data, status=201, extra_environ=admin_environ)
+
+	@WithSharedApplicationMockDS(testapp=True, users=(STUDENT,))
+	@fudge.patch( 'nti.app.products.courseware.utils.PreviewCourseAccessPredicate._is_preview' )
+	def test_links(self, mock_preview):
+		mock_preview.is_callable().returns( True )
+		res = self._do_enroll()
+		course_ext = res.json_body['CourseInstance']
+		course_href = course_ext.get( 'href' )
+		self.forbid_link_with_rel(course_ext, 'MediaByOutlineNode')
+		ichigo_environ = self._make_extra_environ(username=STUDENT)
+
+		# Now verify our link shows up outside of preview mode.
+		mock_preview.is_callable().returns( False )
+		res = self.testapp.get( course_href, extra_environ=ichigo_environ )
+		course_ext = res.json_body
+		self.require_link_href_with_rel(course_ext, 'MediaByOutlineNode')
+
+	@WithSharedApplicationMockDS(testapp=True, users=(STUDENT,))
+	def test_media_by_outline(self):
+		res = self._do_enroll()
 
 		# request media by outline
-		course_ref = res.json_body['CourseInstance']['href']
-		media_ref = course_ref + '/@@MediaByOutlineNode'
-		ichigo_environ = self._make_extra_environ(username=student)
-		res = self.testapp.get(media_ref, extra_environ=ichigo_environ)
+		course_ext = res.json_body['CourseInstance']
+		course_href = course_ext.get( 'href' )
+		ichigo_environ = self._make_extra_environ(username=STUDENT)
+		res = self.testapp.get( course_href, extra_environ=ichigo_environ )
+		course_ext = res.json_body
+		media_href = self.require_link_href_with_rel(course_ext, 'MediaByOutlineNode')
+		res = self.testapp.get(media_href, extra_environ=ichigo_environ)
 
 		data = res.json_body
 		assert_that(data, has_entry('ItemCount', is_(63)))
@@ -143,17 +165,16 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		return '/ntiid/%s?index=%s' % (ntiid, -1)
 
 	def _create_student_environ(self):
-		student = "ichigo"
-		student_environ = self._make_extra_environ(username=student)
+		student_environ = self._make_extra_environ(username=STUDENT)
 		try:
 			with mock_dataserver.mock_db_trans(self.ds):
-				self._create_user(student)
+				self._create_user(STUDENT)
 		except KeyError:
 			pass
 		else:
 			# Enroll student
 			enroll_url = '/dataserver2/CourseAdmin/UserCourseEnroll'
-			data = {'username':student, 'ntiid': self.course_ntiid, 'scope':'ForCredit'}
+			data = {'username':STUDENT, 'ntiid': self.course_ntiid, 'scope':'ForCredit'}
 			self.testapp.post_json(enroll_url, data, status=201)
 		return student_environ
 
