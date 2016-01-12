@@ -282,6 +282,13 @@ class NoHrefAssetGetView(PresentationAssetGetView):
 			   permission=nauth.ACT_CONTENT_EDIT)
 class CoursePresentationAssetsView(AbstractAuthenticatedView):
 
+	def _get_mimeTypes(self):
+		params = CaseInsensitiveDict(self.request.params)
+		result = params.get('accept') or params.get('mimeType')
+		if result:
+			result = set(result.split(','))
+		return result or ()
+
 	def _pkg_containers(self, pacakge):
 		result = []
 		def recur(unit):
@@ -302,10 +309,17 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView):
 	def __call__(self):
 		result = LocatedExternalDict()
 		result[ITEMS] = items = {}
+		mimeTypes = self._get_mimeTypes()
 		course = ICourseInstance(self.context)
 		for container in self._course_containers(course):
 			for ntiid, item in list(container.items()):
-				items[ntiid] = item
+				if not mimeTypes:
+					items[ntiid] = item
+				else:
+					mimeType = 	getattr(item, 'mimeType', None) \
+								or	getattr(item, 'mime_type', None)
+					if mimeType in mimeTypes:
+						items[ntiid] = item
 		result['ItemCount'] = result['Total'] = len(items)
 		return result
 

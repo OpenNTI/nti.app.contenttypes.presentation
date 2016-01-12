@@ -38,7 +38,7 @@ class _CourseAssetsLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	def _do_decorate_external(self, context, result):
 		_links = result.setdefault(LINKS, [])
-		link = Link(context, rel=VIEW_ASSETS, elements=(VIEW_ASSETS,))
+		link = Link(context, rel=VIEW_ASSETS, elements=('@@'+VIEW_ASSETS,))
 		interface.alsoProvides(link, ILocation)
 		link.__name__ = ''
 		link.__parent__ = context
