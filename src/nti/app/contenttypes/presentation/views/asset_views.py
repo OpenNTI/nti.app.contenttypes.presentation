@@ -314,7 +314,7 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView):
 		for container in self._course_containers(course):
 			for item in list(container.values()):
 				if not mimeTypes:
-					item.append(item)
+					items.append(item)
 				else:
 					mimeType = 	getattr(item, 'mimeType', None) \
 								or	getattr(item, 'mime_type', None)
