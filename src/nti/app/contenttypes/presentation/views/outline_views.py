@@ -24,6 +24,21 @@ from pyramid import httpexceptions as hexc
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
+from nti.app.contenttypes.presentation.views import VIEW_NODE_MOVE
+from nti.app.contenttypes.presentation.views import VIEW_NODE_CONTENTS
+from nti.app.contenttypes.presentation.views import VIEW_OVERVIEW_CONTENT
+from nti.app.contenttypes.presentation.views import VIEW_OVERVIEW_SUMMARY
+
+from nti.app.contenttypes.presentation.utils import is_item_visible
+from nti.app.contenttypes.presentation.utils import create_lesson_4_node
+from nti.app.contenttypes.presentation.utils import get_enrollment_record
+from nti.app.contenttypes.presentation.utils import remove_presentation_asset
+
+from nti.app.contenttypes.presentation.views.view_mixins import NTIIDPathMixin
+from nti.app.contenttypes.presentation.views.view_mixins import IndexedRequestMixin
+from nti.app.contenttypes.presentation.views.view_mixins import AbstractChildMoveView
+from nti.app.contenttypes.presentation.views.view_mixins import PublishVisibilityMixin
+
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
 from nti.app.products.courseware.interfaces import ICourseInstanceEnrollment
@@ -35,6 +50,7 @@ from nti.appserver.ugd_query_views import RecursiveUGDView
 
 from nti.appserver.pyramid_authorization import has_permission
 
+from nti.common.property import Lazy
 from nti.common.time import time_to_64bit_int
 
 from nti.contentlibrary.indexed_data import get_library_catalog
@@ -81,24 +97,10 @@ from nti.ntiids.ntiids import make_specific_safe
 from nti.site.site import get_component_hierarchy_names
 
 from nti.site.utils import registerUtility
+from nti.site.utils import unregisterUtility
+from nti.site.interfaces import IHostPolicyFolder
 
 from nti.traversal.traversal import find_interface
-
-from ..utils import is_item_visible
-from ..utils import component_registry
-from ..utils import create_lesson_4_node
-from ..utils import get_enrollment_record
-from ..utils import remove_presentation_asset
-
-from .view_mixins import NTIIDPathMixin
-from .view_mixins import IndexedRequestMixin
-from .view_mixins import AbstractChildMoveView
-from .view_mixins import PublishVisibilityMixin
-
-from . import VIEW_NODE_MOVE
-from . import VIEW_NODE_CONTENTS
-from . import VIEW_OVERVIEW_CONTENT
-from . import VIEW_OVERVIEW_SUMMARY
 
 CLASS = StandardExternalFields.CLASS
 ITEMS = StandardExternalFields.ITEMS
@@ -155,8 +157,7 @@ class OutlineLessonOverviewView(AbstractAuthenticatedView,
 			 permission=nauth.ACT_READ,
 			 renderer='rest',
 			 name=VIEW_OVERVIEW_SUMMARY)
-class OutlineLessonOverviewSummaryView(RecursiveUGDView,
-									   OutlineLessonOverviewMixin):
+class OutlineLessonOverviewSummaryView(RecursiveUGDView, OutlineLessonOverviewMixin):
 
 	_DEFAULT_BATCH_START = 0
 	_DEFAULT_BATCH_SIZE = None
@@ -198,151 +199,6 @@ class OutlineLessonOverviewSummaryView(RecursiveUGDView,
 					item_results['ItemCount'] = ugd_count
 		return result
 
-@view_config(context=ICourseInstance)
-@view_config(context=ICourseCatalogEntry)
-@view_config(context=ICourseInstanceEnrollment)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   permission=nauth.ACT_READ,
-			   request_method='GET',
-			   name='MediaByOutlineNode')  # See decorators
-class MediaByOutlineNodeDecorator(AbstractAuthenticatedView):
-
-	def _outline_nodes(self, course):
-		result = []
-		def _recur(node):
-			if ICourseOutlineContentNode.providedBy(node):
-				if node.src and node.ContentNTIID:
-					result.append(node)
-			for child in node.values():
-				_recur(child)
-
-		outline = course.Outline
-		if outline is not None:
-			_recur(outline)
-		return result
-
-	def _do_legacy(self, course, record):
-		result = None
-		index_filename = "video_index.json"
-		bundle = course.ContentPackageBundle
-		for package in bundle.ContentPackages:
-			sibling_key = package.does_sibling_entry_exist(index_filename)
-			if not sibling_key:
-				continue
-			else:
-				index_text = package.read_contents_of_sibling_entry(index_filename)
-				if isinstance(index_text, bytes):
-					index_text = index_text.decode('utf-8')
-				result = simplejson.loads(index_text)
-				break
-
-		result = LocatedExternalDict() if not result else result
-		return result
-
-	def _do_current(self, course, record):
-		result = LocatedExternalDict()
-		result.__name__ = self.request.view_name
-		result.__parent__ = self.request.context
-
-		lastModified = 0
-		catalog = get_library_catalog()
-		intids = component.getUtility(IIntIds)
-
-		items = result[ITEMS] = {}
-		containers = result['Containers'] = {}
-		containers_seen = {}
-
-		nodes = self._outline_nodes(course)
-		namespaces = {node.src for node in nodes}
-		ntiids = {node.ContentNTIID for node in nodes}
-		result['ContainerOrder'] = [node.ContentNTIID for node in nodes]
-
-		def _add_item_to_container( container_ntiid, item ):
-			containers_seen.setdefault(container_ntiid, set())
-			seen = containers_seen[container_ntiid]
-			# Avoid dupes but retain order.
-			if item.ntiid not in seen:
-				seen.add(item.ntiid)
-				containers.setdefault(container_ntiid, [])
-				containers[container_ntiid].append( item.ntiid )
-
-		def add_item(item):
-			# check visibility
-			if IVisible.providedBy(item):
-				if not is_item_visible(item, self.remoteUser, record=record):
-					return
-				else:
-					item = INTIMedia(item, None)
-
-			# check if ref was valid
-			uid = intids.queryId(item) if item is not None else None
-			if uid is None:
-				return
-
-			# set content containers
-			for ntiid in catalog.get_containers(uid):
-				if ntiid in ntiids:
-					_add_item_to_container( ntiid, item )
-			items[item.ntiid] = to_external_object(item)
-			return item.lastModified
-
-		sites = get_component_hierarchy_names()
-		for group in catalog.search_objects(
-								namespace=namespaces,
-								provided=INTICourseOverviewGroup,
-								sites=sites):
-
-			for item in group.Items:
-				# ignore non media items
-				if 	(not IMediaRef.providedBy(item)
-					 and not INTIMedia.providedBy(item)
-					 and not INTIMediaRoll.providedBy(item)
-					 and not INTISlideDeck.providedBy(item)):
-					continue
-
-				if INTIMediaRoll.providedBy(item):
-					item_last_mod = 0
-					# For media rolls, we want to expand to preserve bwc.
-					for roll_item in item.items:
-						roll_last_mod = add_item(roll_item)
-						if roll_last_mod:
-							item_last_mod = max(roll_last_mod, item_last_mod)
-				else:
-					item_last_mod = add_item(item)
-				if item_last_mod:
-					lastModified = max(lastModified, item_last_mod)
-
-		for item in catalog.search_objects(
-								container_ntiids=ntiids,
-								provided=INTISlideDeck,
-								container_all_of=False,
-								sites=sites):
-			uid = intids.getId(item)
-			for ntiid in catalog.get_containers(uid):
-				if ntiid in ntiids:
-					_add_item_to_container( ntiid, item )
-			items[item.ntiid] = to_external_object(item)
-			lastModified = max(lastModified, item.lastModified)
-
-		result[LAST_MODIFIED] = lastModified
-		result['Total'] = result['ItemCount'] = len(items)
-		return result
-
-	def __call__(self):
-		course = ICourseInstance(self.request.context)
-		record = get_enrollment_record(course, self.remoteUser)
-		if record is None:
-			raise hexc.HTTPForbidden(_("Must be enrolled in a course."))
-
-		self.request.acl_decoration = False  # avoid acl decoration
-
-		if ILegacyCourseInstance.providedBy(course):
-			result = self._do_legacy(course, record)
-		else:
-			result = self._do_current(course, record)
-		return result
-
 @view_config(route_name='objects.generic.traversal',
 			 context=ICourseOutlineNode,
 			 request_method='POST',
@@ -359,6 +215,12 @@ class OutlineNodeInsertView(AbstractAuthenticatedView,
 	We could generalize this and the index views for
 	all IOrderedContainers.
 	"""
+
+	@Lazy
+	def _registry(self):
+		folder = find_interface(self.context, IHostPolicyFolder, strict=False)
+		result = folder.getSiteManager() if folder is not None else None
+		return result if result is not None else component.getSiteManager()
 
 	def _get_catalog_entry(self, outline):
 		course = find_interface(outline, ICourseInstance, strict=False)
@@ -378,6 +240,7 @@ class OutlineNodeInsertView(AbstractAuthenticatedView,
 			# Outline, use catalog entry
 			entry = self._get_catalog_entry(parent)
 			base = entry.ntiid if entry is not None else None
+
 		provider = get_provider(base) or 'NTI'
 		current_time = time_to_64bit_int(time.time())
 		specific_base = '%s.%s.%s' % (get_specific(base),
@@ -403,14 +266,14 @@ class OutlineNodeInsertView(AbstractAuthenticatedView,
 		new_node.ntiid = ntiid
 
 	def _register_obj(self, obj):
-		registry = component.getSiteManager()
+		registry = self._registry
 		registerUtility(registry,
 						component=obj,
 						name=obj.ntiid,
 						provided=self.iface_of_obj(obj))
 
 	def _make_lesson_node(self, node):
-		registry = component.getSiteManager()
+		registry = self._registry
 		ntiid = make_ntiid(nttype=NTI_LESSON_OVERVIEW, base=node.ntiid)
 		result = create_lesson_4_node(node, ntiid=ntiid, registry=registry)
 		return result
@@ -444,8 +307,8 @@ class OutlineNodeInsertView(AbstractAuthenticatedView,
 			 renderer='rest',
 			 name=VIEW_NODE_MOVE)
 class OutlineNodeMoveView(AbstractChildMoveView,
-						CourseOutlineContentsView,
-						ModeledContentUploadRequestUtilsMixin):
+						  CourseOutlineContentsView,
+						  ModeledContentUploadRequestUtilsMixin):
 	"""
 	Move the given object between outline nodes in a course
 	outline. The source, target NTIIDs must exist in the outline (no
@@ -497,11 +360,16 @@ class OutlineNodeDeleteView(AbstractAuthenticatedView, NTIIDPathMixin):
 	param, which we will ignore.
 	"""
 
+	@Lazy
+	def _registry(self):
+		folder = find_interface(self.context, IHostPolicyFolder, strict=False)
+		result = folder.getSiteManager() if folder is not None else None
+		return result if result is not None else component.getSiteManager()
+
 	def _remove_lesson(self, ntiid):
 		lesson = component.queryUtility(INTILessonOverview, name=ntiid)
 		if lesson is not None:
-			registry = component_registry(lesson, provided=INTILessonOverview, name=ntiid)
-			remove_presentation_asset(lesson, registry=registry)
+			remove_presentation_asset(lesson, registry=self._registry())
 
 	def __call__(self):
 		ntiid = self._get_ntiid()
@@ -513,11 +381,13 @@ class OutlineNodeDeleteView(AbstractAuthenticatedView, NTIIDPathMixin):
 		# if self.context.LessonOverviewNTIID:
 		# 	self._remove_lesson(self.context.LessonOverviewNTIID)
 
-		# TODO: Can we tell when to unregister nodes (no longer contained)
-		# to avoid orphans?
 		# TODO: Do we want to permanently delete nodes, or delete placeholder
 		# mark them (to undo and save transaction history)?
 		try:
+			node = self.context[ntiid]
+			unregisterUtility(name=ntiid,
+							  registry=self._registry,
+							  provided=iface_of_node(node))
 			del self.context[ntiid]
 		except KeyError:
 			# Already deleted.
@@ -540,17 +410,21 @@ class OutlineNodeFieldPutView(UGDPutView, OutlineLessonOverviewMixin):
 		result.pop('NTIID', None)
 		return result
 
+	def _update_lesson(self):
+		"""
+		For content nodes, sync our title with our lesson
+		"""
+		input_dict = self.readInput()
+		new_title = input_dict.get('title')
+		if new_title:
+			lesson = self._get_lesson()
+			if lesson is not None:
+				lesson.title = new_title
+
 	def __call__(self):
 		result = UGDPutView.__call__(self)
-
-		if ICourseOutlineContentNode.providedBy( self.context ):
-			# For content nodes, sync our title with our lesson.
-			input_dict = self.readInput()
-			new_title = input_dict.get( 'title' )
-			if new_title:
-				lesson = self._get_lesson()
-				if lesson is not None:
-					lesson.title = new_title
+		if ICourseOutlineContentNode.providedBy(self.context):
+			self._update_lesson()
 		return result
 
 @view_config(route_name='objects.generic.traversal',
@@ -564,3 +438,150 @@ class OutlineNodeGetView(AbstractAuthenticatedView, PublishVisibilityMixin):
 		if self._is_visible(self.context):
 			return self.context
 		raise hexc.HTTPForbidden()
+
+# Misc Views
+
+@view_config(context=ICourseInstance)
+@view_config(context=ICourseCatalogEntry)
+@view_config(context=ICourseInstanceEnrollment)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   permission=nauth.ACT_READ,
+			   request_method='GET',
+			   name='MediaByOutlineNode')  # See decorators
+class MediaByOutlineNodeView(AbstractAuthenticatedView):
+
+	def _outline_nodes(self, course):
+		result = []
+		def _recur(node):
+			if ICourseOutlineContentNode.providedBy(node):
+				if node.src and node.ContentNTIID:
+					result.append(node)
+			for child in node.values():
+				_recur(child)
+
+		outline = course.Outline
+		if outline is not None:
+			_recur(outline)
+		return result
+
+	def _do_legacy(self, course, record):
+		result = None
+		index_filename = "video_index.json"
+		bundle = course.ContentPackageBundle
+		for package in bundle.ContentPackages:
+			sibling_key = package.does_sibling_entry_exist(index_filename)
+			if not sibling_key:
+				continue
+			else:
+				index_text = package.read_contents_of_sibling_entry(index_filename)
+				if isinstance(index_text, bytes):
+					index_text = index_text.decode('utf-8')
+				result = simplejson.loads(index_text)
+				break
+
+		result = LocatedExternalDict() if not result else result
+		return result
+
+	def _do_current(self, course, record):
+		result = LocatedExternalDict()
+		result.__name__ = self.request.view_name
+		result.__parent__ = self.request.context
+
+		lastModified = 0
+		catalog = get_library_catalog()
+		intids = component.getUtility(IIntIds)
+
+		items = result[ITEMS] = {}
+		containers = result['Containers'] = {}
+		containers_seen = {}
+
+		nodes = self._outline_nodes(course)
+		namespaces = {node.src for node in nodes}
+		ntiids = {node.ContentNTIID for node in nodes}
+		result['ContainerOrder'] = [node.ContentNTIID for node in nodes]
+
+		def _add_item_to_container(container_ntiid, item):
+			containers_seen.setdefault(container_ntiid, set())
+			seen = containers_seen[container_ntiid]
+			# Avoid dupes but retain order.
+			if item.ntiid not in seen:
+				seen.add(item.ntiid)
+				containers.setdefault(container_ntiid, [])
+				containers[container_ntiid].append(item.ntiid)
+
+		def add_item(item):
+			# check visibility
+			if IVisible.providedBy(item):
+				if not is_item_visible(item, self.remoteUser, record=record):
+					return
+				else:
+					item = INTIMedia(item, None)
+
+			# check if ref was valid
+			uid = intids.queryId(item) if item is not None else None
+			if uid is None:
+				return
+
+			# set content containers
+			for ntiid in catalog.get_containers(uid):
+				if ntiid in ntiids:
+					_add_item_to_container(ntiid, item)
+			items[item.ntiid] = to_external_object(item)
+			return item.lastModified
+
+		sites = get_component_hierarchy_names()
+		for group in catalog.search_objects(
+								namespace=namespaces,
+								provided=INTICourseOverviewGroup,
+								sites=sites):
+
+			for item in group.Items:
+				# ignore non media items
+				if 	(not IMediaRef.providedBy(item)
+					 and not INTIMedia.providedBy(item)
+					 and not INTIMediaRoll.providedBy(item)
+					 and not INTISlideDeck.providedBy(item)):
+					continue
+
+				if INTIMediaRoll.providedBy(item):
+					item_last_mod = 0
+					# For media rolls, we want to expand to preserve bwc.
+					for roll_item in item.items:
+						roll_last_mod = add_item(roll_item)
+						if roll_last_mod:
+							item_last_mod = max(roll_last_mod, item_last_mod)
+				else:
+					item_last_mod = add_item(item)
+				if item_last_mod:
+					lastModified = max(lastModified, item_last_mod)
+
+		for item in catalog.search_objects(
+								container_ntiids=ntiids,
+								provided=INTISlideDeck,
+								container_all_of=False,
+								sites=sites):
+			uid = intids.getId(item)
+			for ntiid in catalog.get_containers(uid):
+				if ntiid in ntiids:
+					_add_item_to_container(ntiid, item)
+			items[item.ntiid] = to_external_object(item)
+			lastModified = max(lastModified, item.lastModified)
+
+		result[LAST_MODIFIED] = lastModified
+		result['Total'] = result['ItemCount'] = len(items)
+		return result
+
+	def __call__(self):
+		course = ICourseInstance(self.request.context)
+		record = get_enrollment_record(course, self.remoteUser)
+		if record is None:
+			raise hexc.HTTPForbidden(_("Must be enrolled in a course."))
+
+		self.request.acl_decoration = False  # avoid acl decoration
+
+		if ILegacyCourseInstance.providedBy(course):
+			result = self._do_legacy(course, record)
+		else:
+			result = self._do_current(course, record)
+		return result
