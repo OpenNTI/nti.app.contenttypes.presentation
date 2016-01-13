@@ -308,18 +308,20 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView):
 
 	def __call__(self):
 		result = LocatedExternalDict()
-		result[ITEMS] = items = {}
+		result[ITEMS] = items = list()
 		mimeTypes = self._get_mimeTypes()
 		course = ICourseInstance(self.context)
 		for container in self._course_containers(course):
-			for ntiid, item in list(container.items()):
+			for item in list(container.values()):
 				if not mimeTypes:
-					items[ntiid] = item
+					item.append(item)
 				else:
 					mimeType = 	getattr(item, 'mimeType', None) \
 								or	getattr(item, 'mime_type', None)
 					if mimeType in mimeTypes:
-						items[ntiid] = item
+						items.append(item)
+		if mimeTypes:
+			items.sort() # natural order
 		result['ItemCount'] = result['Total'] = len(items)
 		return result
 
