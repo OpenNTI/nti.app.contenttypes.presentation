@@ -13,6 +13,8 @@ from zope import interface
 
 from zope.location.interfaces import ILocation
 
+from nti.app.products.courseware.utils import PreviewCourseAccessPredicate as PreviewCourseAccessPredicateDecorator
+
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
 from nti.appserver.pyramid_authorization import has_permission

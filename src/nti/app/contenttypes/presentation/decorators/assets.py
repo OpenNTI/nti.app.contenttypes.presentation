@@ -114,9 +114,8 @@ class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecor
 		return result
 
 	def _has_edit_link(self, result):
-		_links = result.get(LINKS)
-		for link in _links or ():
-			if getattr(link, 'rel', None) == 'edit':
+		for lnk in result.get(LINKS) or ():
+			if getattr(lnk, 'rel', None) == 'edit':
 				return True
 		return False
 
