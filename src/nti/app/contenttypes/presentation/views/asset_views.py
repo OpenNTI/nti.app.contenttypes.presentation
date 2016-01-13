@@ -20,9 +20,12 @@ from collections import Mapping
 
 import transaction
 
+from zope import component
 from zope import interface
 
 from zope.event import notify
+
+from zope.intid.interfaces import IIntIds
 
 from zope.security.interfaces import NoInteraction
 from zope.security.management import getInteraction
@@ -40,6 +43,30 @@ from nti.app.base.abstract_views import get_all_sources
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.contentfile import validate_sources
+
+from nti.app.contenttypes.presentation.utils import intid_register
+from nti.app.contenttypes.presentation.utils import add_2_connection
+from nti.app.contenttypes.presentation.utils import make_asset_ntiid
+from nti.app.contenttypes.presentation.utils import registry_by_name
+from nti.app.contenttypes.presentation.utils import component_registry
+from nti.app.contenttypes.presentation.utils import get_course_packages
+from nti.app.contenttypes.presentation.utils import remove_presentation_asset
+from nti.app.contenttypes.presentation.utils import get_presentation_asset_courses
+
+from nti.app.contenttypes.presentation.views import VIEW_ASSETS
+from nti.app.contenttypes.presentation.views import VIEW_CONTENTS
+from nti.app.contenttypes.presentation.views import VIEW_NODE_MOVE
+
+from nti.app.contenttypes.presentation.views.view_mixins import slugify
+from nti.app.contenttypes.presentation.views.view_mixins import hexdigest
+from nti.app.contenttypes.presentation.views.view_mixins import get_namedfile
+from nti.app.contenttypes.presentation.views.view_mixins import NTIIDPathMixin
+from nti.app.contenttypes.presentation.views.view_mixins import get_assets_folder
+from nti.app.contenttypes.presentation.views.view_mixins import get_download_href
+from nti.app.contenttypes.presentation.views.view_mixins import get_file_from_link
+from nti.app.contenttypes.presentation.views.view_mixins import IndexedRequestMixin
+from nti.app.contenttypes.presentation.views.view_mixins import AbstractChildMoveView
+from nti.app.contenttypes.presentation.views.view_mixins import PublishVisibilityMixin
 
 from nti.app.externalization.error import raise_json_error
 
@@ -120,32 +147,9 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.site.utils import registerUtility
 from nti.site.interfaces import IHostPolicyFolder
+from nti.site.site import get_component_hierarchy_names
 
 from nti.traversal.traversal import find_interface
-
-from ..utils import intid_register
-from ..utils import add_2_connection
-from ..utils import make_asset_ntiid
-from ..utils import registry_by_name
-from ..utils import component_registry
-from ..utils import get_course_packages
-from ..utils import remove_presentation_asset
-from ..utils import get_presentation_asset_courses
-
-from .view_mixins import slugify
-from .view_mixins import hexdigest
-from .view_mixins import get_namedfile
-from .view_mixins import NTIIDPathMixin
-from .view_mixins import get_assets_folder
-from .view_mixins import get_download_href
-from .view_mixins import get_file_from_link
-from .view_mixins import IndexedRequestMixin
-from .view_mixins import AbstractChildMoveView
-from .view_mixins import PublishVisibilityMixin
-
-from . import VIEW_ASSETS
-from . import VIEW_CONTENTS
-from . import VIEW_NODE_MOVE
 
 ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID
@@ -294,34 +298,38 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView):
 		def recur(unit):
 			for child in unit.children or ():
 				recur(child)
-			container = IPresentationAssetContainer(unit, None)
-			if container:
-				result.append(container)
+			result.append(unit.ntiid)
 		recur(pacakge)
 		return result
 
 	def _course_containers(self, course):
-		yield IPresentationAssetContainer(course)
+		result = set()
+		entry = ICourseCatalogEntry(course)
+		result.add(entry.ntiid)
 		for pacakge in get_course_packages(course):
-			for container in self._pkg_containers(pacakge):
-				yield container
+			result.update(self._pkg_containers(pacakge))
+		return result
 
 	def __call__(self):
 		result = LocatedExternalDict()
 		result[ITEMS] = items = list()
+		catalog = get_library_catalog()
 		mimeTypes = self._get_mimeTypes()
 		course = ICourseInstance(self.context)
-		for container in self._course_containers(course):
-			for item in list(container.values()):
-				if not mimeTypes:
+		intids = component.queryUtility(IIntIds)
+		container_ntiids = self._course_containers(course)
+		for item in catalog.search_objects(intids=intids,
+										   container_all_of=False,
+										   container_ntiids=container_ntiids,
+										   sites=get_component_hierarchy_names()):
+			if not mimeTypes:
+				items.append(item)
+			else:
+				mt = getattr(item, 'mimeType', None) or getattr(item, 'mime_type', None)
+				if mt in mimeTypes:
 					items.append(item)
-				else:
-					mimeType = 	getattr(item, 'mimeType', None) \
-								or	getattr(item, 'mime_type', None)
-					if mimeType in mimeTypes:
-						items.append(item)
 		if mimeTypes:
-			items.sort() # natural order
+			items.sort()  # natural order
 		result['ItemCount'] = result['Total'] = len(items)
 		return result
 
@@ -365,7 +373,7 @@ class LessonOverviewMoveView(AbstractChildMoveView):
 	def _get_media_ref_in_parent(self, ntiid, parent):
 		# Assuming one hit per parent...We actually ensure
 		# that in the group itself.
-		for child in list( parent ):
+		for child in list(parent):
 			# For media objects, we want to move the actual
 			# ref, but clients will only send target ntiids
 			child_ntiid = getattr(child, 'target', '')
@@ -374,10 +382,10 @@ class LessonOverviewMoveView(AbstractChildMoveView):
 		return None
 
 	def _get_object_to_move(self, ntiid, old_parent=None):
-		obj = super( LessonOverviewMoveView, self )._get_object_to_move( ntiid, old_parent )
-		if INTIMedia.providedBy( obj ) and old_parent is not None:
+		obj = super(LessonOverviewMoveView, self)._get_object_to_move(ntiid, old_parent)
+		if INTIMedia.providedBy(obj) and old_parent is not None:
 			# Need a media ref.
-			obj = self._get_media_ref_in_parent( ntiid, old_parent )
+			obj = self._get_media_ref_in_parent(ntiid, old_parent)
 			if obj is None:
 				raise hexc.HTTPUnprocessableEntity(_('No ref found for given media ntiid.'))
 		return obj
@@ -990,8 +998,8 @@ class AssetDeleteChildView(AbstractAuthenticatedView,
 		# We remove the item from our context, and clean it
 		# up. We want to make sure we clean up the
 		# underlying asset
-		if item is not None: # tests
-			self.context.remove(item) # safe op if gone already
+		if item is not None:  # tests
+			self.context.remove(item)  # safe op if gone already
 			remove_presentation_asset(item)
 		self.context.child_order_locked = True
 		return hexc.HTTPOk()
