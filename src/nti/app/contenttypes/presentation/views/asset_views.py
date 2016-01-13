@@ -305,9 +305,9 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView):
 	def _course_containers(self, course):
 		result = set()
 		entry = ICourseCatalogEntry(course)
-		result.add(entry.ntiid)
 		for pacakge in get_course_packages(course):
 			result.update(self._pkg_containers(pacakge))
+		result.add(entry.ntiid)
 		return result
 
 	def __call__(self):
