@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+from Canvas import Group
 __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
@@ -331,10 +332,13 @@ class TestAssetViews(ApplicationLayerTest):
 				assert_that( item, validly_provides( INTIVideoRef ))
 				assert_that( item.locked, is_( True ))
 
-		# Insert video ntiid into overview group
-		res = self.testapp.post_json( contents_link, {'ntiid':video_ntiid}, status=201 )
+		# Insert new video ntiid into overview group
+		res = self.testapp.post_json(self.assets_url, video_source, status=201)
 		res = res.json_body
-		assert_that( res.get( 'ntiid'), is_( video_ntiid ) )
+		new_video_ntiid = res.get( 'ntiid' )
+		res = self.testapp.post_json( contents_link, {'ntiid':new_video_ntiid}, status=201 )
+		res = res.json_body
+		assert_that( res.get( 'ntiid'), is_( new_video_ntiid ) )
 		assert_that( res.get( 'MimeType' ), is_( 'application/vnd.nextthought.ntivideo' ))
 
 		group_res = self.testapp.get( group_href )
@@ -345,11 +349,14 @@ class TestAssetViews(ApplicationLayerTest):
 		item_last = group_res.get( 'Items' )[-1]
 		assert_that( item_zero.get( 'ntiid' ), is_( video_ntiid ) )
 		assert_that( item_roll.get( 'ntiid' ), is_( video_roll_ntiid ) )
-		assert_that( item_last.get( 'ntiid' ), is_( video_ntiid ) )
+		assert_that( item_last.get( 'ntiid' ), is_( new_video_ntiid ) )
 
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			group = find_object_with_ntiid( group_ntiid )
 			assert_that( group.child_order_locked, is_( True ))
+
+		# Cannot have duplicate videos (by ntiid) in a group
+		#self.testapp.post_json( contents_link, {'ntiid':new_video_ntiid}, status=422 )
 
 		# Try to insert non-existant ntiid
 		items.append( video_ntiid + 'xxx' )
@@ -662,6 +669,34 @@ class TestAssetViews(ApplicationLayerTest):
 		if old_parent_ntiid is not None:
 			result['OldParentNTIID'] = old_parent_ntiid
 		return result
+
+	@WithSharedApplicationMockDS(testapp=True, users=True)
+	def test_group_videos(self):
+		source = self._load_resource('lesson_overview.json')
+		# Remove all NTIIDs so things get registered.
+		def _remove_ntiids( obj ):
+			obj.pop( 'NTIID', None )
+			for item in obj.get( 'Items', () ):
+				_remove_ntiids( item )
+		_remove_ntiids( source )
+		res = self.testapp.post_json(self.assets_url, source, status=201)
+		res = res.json_body
+		move_link = self.require_link_href_with_rel( res, VIEW_NODE_MOVE )
+		def _get_group( ext ):
+			return ext.get( 'Items' )[-1]
+
+		group = _get_group( res )
+		last_group_ntiid = group.get( 'NTIID' )
+		video_ntiid = group.get( 'Items' )[0].get( 'NTIID' )
+		original_size = len( group.get( 'Items' ))
+
+		# Moving a video does not create a new video.
+		move_data = self._get_move_json(video_ntiid, last_group_ntiid)
+		res = self.testapp.post_json( move_link, move_data )
+		group = _get_group( res.json_body )
+		group_items = group.get( 'Items' )
+		assert_that( group_items, has_length( original_size ))
+		assert_that( group_items[-1].get( 'NTIID' ), is_( video_ntiid ))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_moves(self):

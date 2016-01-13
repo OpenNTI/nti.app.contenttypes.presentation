@@ -159,24 +159,21 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 		"""
 		raise NotImplementedError()
 
-	def __call__(self):
-		values = CaseInsensitiveDict(self.readInput())
-		index = values.get('Index')
-		ntiid = values.get('ObjectNTIID')
-		new_parent_ntiid = values.get('ParentNTIID')
-		old_parent_ntiid = values.get('OldParentNTIID')
-		context_ntiid = self._get_context_ntiid()
-
+	def _get_object_to_move(self, ntiid, old_parent=None):
 		obj = find_object_with_ntiid(ntiid)
 		if obj is None:
 			raise hexc.HTTPUnprocessableEntity(_('Object no longer exists.'))
+		return obj
 
-		children_ntiids = self._get_children_ntiids(context_ntiid)
-		if 		new_parent_ntiid not in children_ntiids \
-			or (	old_parent_ntiid
-				and old_parent_ntiid not in children_ntiids):
-			raise hexc.HTTPUnprocessableEntity(_('Cannot move between root objects.'))
+	def _get_old_parent(self, old_parent_ntiid):
+		result = None
+		if old_parent_ntiid:
+			result = find_object_with_ntiid(old_parent_ntiid)
+			if result is None:
+				raise hexc.HTTPUnprocessableEntity(_('Old node parent no longer exists.'))
+		return result
 
+	def _get_new_parent(self, context_ntiid, new_parent_ntiid):
 		if new_parent_ntiid == context_ntiid:
 			new_parent = self.context
 		else:
@@ -185,6 +182,26 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 		if new_parent is None:
 			# Really shouldn't happen if we validate this object is in our outline.
 			raise hexc.HTTPUnprocessableEntity(_('New parent does not exist.'))
+		return new_parent
+
+	def __call__(self):
+		values = CaseInsensitiveDict(self.readInput())
+		index = values.get('Index')
+		ntiid = values.get('ObjectNTIID')
+		new_parent_ntiid = values.get('ParentNTIID')
+		old_parent_ntiid = values.get('OldParentNTIID')
+		context_ntiid = self._get_context_ntiid()
+
+		old_parent = self._get_old_parent( old_parent_ntiid )
+		obj = self._get_object_to_move( ntiid )
+
+		children_ntiids = self._get_children_ntiids(context_ntiid)
+		if 		new_parent_ntiid not in children_ntiids \
+			or (	old_parent_ntiid
+				and old_parent_ntiid not in children_ntiids):
+			raise hexc.HTTPUnprocessableEntity(_('Cannot move between root objects.'))
+
+		new_parent = self._get_new_parent( context_ntiid, new_parent_ntiid )
 
 		if index is not None and index < 0:
 			raise hexc.HTTPBadRequest(_('Invalid index.'))
@@ -193,9 +210,6 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 		# Make sure they don't move the object within the same node and
 		# attempt to delete from that node.
 		if old_parent_ntiid and old_parent_ntiid != new_parent_ntiid:
-			old_parent = find_object_with_ntiid(old_parent_ntiid)
-			if old_parent is None:
-				raise hexc.HTTPUnprocessableEntity(_('Old node parent no longer exists.'))
 			did_remove = self._remove_from_parent(old_parent, obj)
 			if not did_remove:
 				raise hexc.HTTPUnprocessableEntity(_('Moved node does not exist in old parent.'))
