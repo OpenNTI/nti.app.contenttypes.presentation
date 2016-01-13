@@ -534,20 +534,30 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		item_extended = tuple(extended or ()) + tuple(containers or ())
 		self._catalog.index(item, container_ntiids=item_extended)
 
-		# find a content unit
-		content_unit = None
+		# find a content unit and set ref fields
 		if INTIAssignmentRef.providedBy(item) and not item.title:
 			assignment = self._registry.queryUtility(IQAssignment, name=item.target or '')
-			item.title = assignment.title if assignment is not None else item.title
+			if not item.label and assignment is not None:
+				item.label = assignment.title
+			if not item.title and assignment is not None:
+				item.title = assignment.title
 			content_unit = assignment.__parent__ if assignment is not None else None
 		elif INTIQuestionSetRef.providedBy(item):
 			qset = self._registry.queryUtility(IQuestionSet, name=item.target or '')
-			item.question_count = len(qset) if qset is not None else item.question_count
+			if not item.label and qset is not None:
+				item.label = qset.title
+			if qset is not None:
+				item.question_count = len(qset)
 			content_unit = qset.__parent__ if qset is not None else None
 		elif INTISurveyRef.providedBy(item):
 			survey = self._registry.queryUtility(IQSurvey, name=item.target or '')
-			item.question_count = len(survey) if survey is not None else item.question_count
+			if not item.label and survey is not None:
+				item.label = survey.title
+			if survey is not None:
+				item.question_count = len(survey)
 			content_unit = survey.__parent__ if survey is not None else None
+		else:
+			content_unit = None
 
 		# set container id
 		if content_unit is not None:
