@@ -103,6 +103,7 @@ from nti.contenttypes.presentation import LESSON_OVERVIEW_MIMETYES
 from nti.contenttypes.presentation import ALL_MEDIA_ROLL_MIME_TYPES
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import COURSE_OVERVIEW_GROUP_MIMETYES
+from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
@@ -325,7 +326,8 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView):
 		for item in catalog.search_objects(intids=intids,
 										   container_all_of=False,
 										   container_ntiids=container_ntiids,
-										   sites=get_component_hierarchy_names()):
+										   sites=get_component_hierarchy_names(),
+										   provided=ALL_PRESENTATION_ASSETS_INTERFACES):
 			if not mimeTypes:
 				items.append(item)
 			else:
