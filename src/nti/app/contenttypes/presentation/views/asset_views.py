@@ -312,6 +312,10 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView):
 
 	def __call__(self):
 		result = LocatedExternalDict()
+		result.__name__ = self.request.view_name
+		result.__parent__ = self.request.context
+		self.request.acl_decoration = False  # decoration
+
 		result[ITEMS] = items = list()
 		catalog = get_library_catalog()
 		mimeTypes = self._get_mimeTypes()
