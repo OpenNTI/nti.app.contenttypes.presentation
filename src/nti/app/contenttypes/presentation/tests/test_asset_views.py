@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-from Canvas import Group
 __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
