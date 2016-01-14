@@ -12,8 +12,9 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
-from nti.appserver.interfaces import IExternalFieldTraversable
 from nti.appserver._adapters import _AbstractExternalFieldTraverser
+
+from nti.appserver.interfaces import IExternalFieldTraversable
 
 from nti.assessment.interfaces import IQPoll
 from nti.assessment.interfaces import IQSurvey
@@ -21,6 +22,8 @@ from nti.assessment.interfaces import IQInquiry
 from nti.assessment.interfaces import IQuestion
 from nti.assessment.interfaces import IQuestionSet
 from nti.assessment.interfaces import IQAssignment
+
+from nti.contenttypes.presentation import iface_of_asset
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
@@ -48,8 +51,6 @@ from nti.namedfile.file import FileConstraints
 from nti.schema.jsonschema import TAG_HIDDEN_IN_UI
 
 from nti.traversal.traversal import find_interface
-
-from . import iface_of_thing
 
 @interface.implementer(ICourseInstance)
 @component.adapter(INTICourseOverviewGroup)
@@ -83,12 +84,8 @@ def _videoref_to_video(context):
 @component.adapter(INTIMediaRef)
 @interface.implementer(INTIMedia)
 def _mediaref_to_media(context):
-	if INTIAudioRef.providedBy(context):
-		result = _audioref_to_audio(context)
-	elif INTIVideoRef.providedBy(context):
-		result = _videoref_to_video(context)
-	else:
-		result = None
+	name = context.target or context.ntiid
+	result = component.queryUtility(INTIMedia, name=name)
 	return result
 
 @interface.implementer(IQuestion)
@@ -134,7 +131,7 @@ class _PresentationAssetExternalFieldTraverser(_AbstractExternalFieldTraverser):
 	def __init__(self, context, request=None):
 		super(_PresentationAssetExternalFieldTraverser, self).__init__(context, request=request)
 		allowed_fields = set()
-		asset_iface = iface_of_thing(context)
+		asset_iface = iface_of_asset(context)
 		for k, v in asset_iface.namesAndDescriptions(all=True):
 			__traceback_info__ = k, v
 			if interface.interfaces.IMethod.providedBy(v):
