@@ -381,8 +381,10 @@ class LessonOverviewMoveView(AbstractChildMoveView):
 		return result
 
 	def _get_ref_in_parent(self, ntiid, parent):
+		# XXX: If the client were to pass us OIDs (to the refs),
+		# this code could disappear.
 		# Assuming one hit per parent...We actually ensure
-		# that in the group itself.
+		# that in the group itself (only for videos).
 		for child in list(parent):
 			# We want to move the actual ref, but clients will
 			# only send target ntiids.
@@ -392,8 +394,7 @@ class LessonOverviewMoveView(AbstractChildMoveView):
 		return None
 
 	def _get_object_to_move(self, ntiid, old_parent=None):
-		obj = super(LessonOverviewMoveView, self)._get_object_to_move(ntiid, old_parent)
-		if not IAssetRef.providedBy(obj) and old_parent is not None:
+		if old_parent is not None:
 			# Need a to convert any non-ref into the ref.
 			obj = self._get_ref_in_parent(ntiid, old_parent)
 			if obj is None:
