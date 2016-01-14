@@ -37,7 +37,10 @@ from nti.common.maps import CaseInsensitiveDict
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
+from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+
+from nti.contenttypes.courses.utils import get_course_hierarchy
 
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
@@ -52,6 +55,8 @@ from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 
 from nti.intid.common import removeIntId
+
+from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.recorder.record import remove_transaction_history
 
@@ -350,4 +355,39 @@ class SyncCoursePresentationAssetsView(AbstractAuthenticatedView,
 		finally:
 			restoreInteraction()
 			result['SyncTime'] = time.time() - now
+		return result
+
+@view_config(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   context=IDataserverFolder,
+			   permission=nauth.ACT_NTI_ADMIN,
+			   name='OutlineObjectCourseResolver')
+class OutlineObjectCourseResolverView(AbstractAuthenticatedView):
+	"""
+	An admin view to fetch the courses associated with a given
+	outline object (node/lesson/group/asset), given by an `ntiid`
+	param.
+	"""
+
+	def _possible_courses(self, course):
+		return get_course_hierarchy(course)
+
+	def __call__(self):
+		result = LocatedExternalDict()
+		result[ITEMS] = items = []
+		params = CaseInsensitiveDict(self.request.params)
+		ntiid = params.get( 'ntiid' )
+		obj = find_object_with_ntiid( ntiid )
+		course = find_interface(obj, ICourseInstance, strict=False)
+
+		if course is None:
+			course = ICourseInstance( obj, None )
+
+		if course is not None:
+			possible_courses = self._possible_courses( course )
+			our_outline = course.Outline
+			for course in possible_courses:
+				if course.Outline == our_outline:
+					items.append( course )
+		result['ItemCount'] = len( items )
 		return result
