@@ -124,8 +124,10 @@ from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import OverviewGroupMovedEvent
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
+from nti.contenttypes.presentation.interfaces import PresentationAssetMovedEvent
 from nti.contenttypes.presentation.interfaces import PresentationAssetCreatedEvent
 
 from nti.contenttypes.presentation.internalization import internalization_ntiaudioref_pre_hook
@@ -363,7 +365,6 @@ class LessonOverviewMoveView(AbstractChildMoveView):
 		underneath the old parent
 	"""
 
-	# TODO:
 	notify_type = None
 
 	def _get_context_ntiid(self):
@@ -401,12 +402,19 @@ class LessonOverviewMoveView(AbstractChildMoveView):
 				return child
 		return None
 
+	def _set_notify_type(self, obj):
+		if INTICourseOverviewGroup.providedBy( obj ):
+			self.notify_type = OverviewGroupMovedEvent
+		else:
+			self.notify_type = PresentationAssetMovedEvent
+
 	def _get_object_to_move(self, ntiid, old_parent=None):
 		if old_parent is not None:
 			# Need a to convert any non-ref into the ref.
 			obj = self._get_ref_in_parent(ntiid, old_parent)
 			if obj is None:
 				raise hexc.HTTPUnprocessableEntity(_('No ref found for given media ntiid.'))
+		self._set_notify_type( obj )
 		return obj
 
 class PresentationAssetMixin(object):

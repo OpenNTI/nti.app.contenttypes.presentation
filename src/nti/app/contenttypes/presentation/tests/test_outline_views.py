@@ -557,7 +557,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		target_child_ntiids = [x.get('NTIID') for x in res.get('contents')]
 		assert_that( target_child_ntiids[0], is_(moved_ntiid) )
 
-		self._check_obj_state( target_unit_ntiid, is_locked=True,
+		self._check_obj_state( target_unit_ntiid, is_locked=False,
 							is_child_locked=True, is_published=True )
 		self._check_obj_state( src_unit_ntiid, is_locked=False,
 							is_child_locked=True, is_published=True )
@@ -576,9 +576,9 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		target_child_ntiids2 = [x.get('NTIID') for x in res.get('contents')]
 		assert_that(target_child_ntiids2, contains(*original_target_child_ntiids))
 
-		self._check_obj_state( target_unit_ntiid, is_locked=True,
+		self._check_obj_state( target_unit_ntiid, is_locked=False,
 							is_child_locked=True, is_published=True )
-		self._check_obj_state( src_unit_ntiid, is_locked=True,
+		self._check_obj_state( src_unit_ntiid, is_locked=False,
 							is_child_locked=True, is_published=True )
 
 	def _test_unit_node_inserts(self):

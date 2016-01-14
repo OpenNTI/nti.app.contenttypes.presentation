@@ -33,6 +33,11 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
+from nti.contenttypes.presentation.interfaces import IOverviewGroupMovedEvent
+from nti.contenttypes.presentation.interfaces import IPresentationAssetMovedEvent
+
+from nti.contenttypes.presentation.interfaces import TRX_ASSET_MOVE_TYPE
+from nti.contenttypes.presentation.interfaces import TRX_OVERVIEW_GROUP_MOVE_TYPE
 from nti.contenttypes.presentation.interfaces import TRX_ASSET_REMOVED_FROM_ITEM_ASSET_CONTAINER
 
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
@@ -143,6 +148,20 @@ def _on_item_asset_containter_modified(container, event):
 def _on_presentation_asset_created(asset, event):
 	if IRecordable.providedBy(asset) and event.principal:
 		record_transaction(asset, principal=event.principal, type_=TRX_TYPE_CREATE)
+
+@component.adapter(INTICourseOverviewGroup, IOverviewGroupMovedEvent)
+def on_group_moved(group, event):
+	ntiid = getattr(group, 'ntiid', None)
+	if ntiid:
+		record_transaction(group, principal=event.principal,
+						   type_=TRX_OVERVIEW_GROUP_MOVE_TYPE)
+
+@component.adapter(IPresentationAsset, IPresentationAssetMovedEvent)
+def on_asset_moved(asset, event):
+	ntiid = getattr(asset, 'ntiid', None)
+	if ntiid:
+		record_transaction(asset, principal=event.principal,
+						   type_=TRX_ASSET_MOVE_TYPE)
 
 @component.adapter(IPresentationAsset, IWillRemovePresentationAssetEvent)
 def _on_will_remove_presentation_asset(asset, event):

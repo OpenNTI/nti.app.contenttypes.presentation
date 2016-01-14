@@ -14,6 +14,7 @@ from hamcrest import is_not
 from hamcrest import has_key
 from hamcrest import contains
 from hamcrest import not_none
+from hamcrest import has_item
 from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
@@ -41,6 +42,9 @@ from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
+
+from nti.contenttypes.presentation.interfaces import TRX_ASSET_MOVE_TYPE
+from nti.contenttypes.presentation.interfaces import TRX_OVERVIEW_GROUP_MOVE_TYPE
 
 from nti.contenttypes.presentation.media import NTIVideoRoll
 
@@ -92,6 +96,13 @@ class TestAssetViews(ApplicationLayerTest):
 				packs = course.ContentPackageBundle.ContentPackages
 				container = IPresentationAssetContainer(packs[0])
 				assert_that(container, has_key(ntiid))
+
+	def _test_transaction_history(self, obj, *args):
+		# Call within a ds transaction
+		history  = ITransactionRecordHistory(obj)
+		record_types = [x.type for x in history.records()]
+		for record_type in args:
+			assert_that( record_types, has_item( record_type ))
 
 	def _get_delete_url_suffix(self, index, ntiid):
 		return '/ntiid/%s?index=%s' % (ntiid, index)
@@ -737,6 +748,8 @@ class TestAssetViews(ApplicationLayerTest):
 			obj = find_object_with_ntiid(lesson_ntiid)
 			assert_that( obj.child_order_locked, is_( True ))
 			obj.child_order_locked = False # Reset
+			moved_group = find_object_with_ntiid( last_group_ntiid )
+			self._test_transaction_history( moved_group, TRX_OVERVIEW_GROUP_MOVE_TYPE )
 
 		# Move the item back to the end
 		move_data = self._get_move_json(last_group_ntiid, lesson_ntiid)
@@ -817,6 +830,8 @@ class TestAssetViews(ApplicationLayerTest):
 			tar = find_object_with_ntiid(source_group_ntiid)
 			assert_that( tar.child_order_locked, is_( True ))
 			obj.child_order_locked = tar.child_order_locked = False # Reset
+			moved_asset = find_object_with_ntiid( first_asset_ntiid )
+			self._test_transaction_history( moved_asset, TRX_ASSET_MOVE_TYPE )
 
 		# Move back to original group
 		move_data = self._get_move_json(first_asset_ntiid, source_group_ntiid, 0, target_group_ntiid )
