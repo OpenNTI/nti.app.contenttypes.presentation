@@ -104,6 +104,8 @@ from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import COURSE_OVERVIEW_GROUP_MIMETYES
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
+from nti.contenttypes.presentation.discussion import is_nti_course_bundle
+
 from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIMediaRef
@@ -563,7 +565,10 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 				item.containerId = reference.__parent__.ntiid
 
 		elif INTIDiscussionRef.providedBy(item):
-			if not item.isCourseBundle():
+			if is_nti_course_bundle(item.target):
+				item.id = item.target
+				item.target = None
+			elif not item.isCourseBundle():
 				target = find_object_with_ntiid(item.target or '')
 				if target is None or not ITopic.providedBy(target):
 					raise hexc.HTTPUnprocessableEntity(
