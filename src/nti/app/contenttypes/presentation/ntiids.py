@@ -16,6 +16,11 @@ from zope import interface
 
 from nti.app.authentication import get_remote_user
 
+from nti.app.contenttypes.presentation.utils import resolve_discussion_course_bundle
+from nti.app.contenttypes.presentation.utils import get_course_by_relative_path_parts
+
+from nti.common.property import Lazy
+
 from nti.contenttypes.courses.discussions.utils import get_discussion_for_path
 
 from nti.contenttypes.presentation.interfaces import INTIAudio
@@ -41,9 +46,6 @@ from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.ntiids.ntiids import get_parts
 from nti.ntiids.interfaces import INTIIDResolver
-
-from .utils import resolve_discussion_course_bundle
-from .utils import get_course_by_relative_path_parts
 
 @interface.implementer(INTIIDResolver)
 class _PresentationResolver(object):
@@ -116,12 +118,12 @@ class _NTICourseBundleResolver(object):
 
 	separator = ':'
 
-	@property
+	@Lazy
 	def remoteUser(self):
 		return get_remote_user()
 
 	def get_course(self, splits=()):
-		if splits and len(splits) >= 2:  # by parts e.g Fall2015:BIOL_2124
+		if splits and len(splits) >= 2: # by parts e.g Fall2015:BIOL_2124
 			result = get_course_by_relative_path_parts(*splits[:2])
 			return result
 		return None
@@ -136,7 +138,7 @@ class _NTICourseBundleResolver(object):
 
 	def resolve(self, key):
 		user = self.remoteUser
-		if user is not None:
+		if user is None:
 			parts = get_parts(key) if key else None
 			specific = parts.specific if parts else None
 			splits = specific.split(self.separator) if specific else ()
