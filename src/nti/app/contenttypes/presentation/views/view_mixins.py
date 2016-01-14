@@ -134,6 +134,9 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 	OldParentNTIID
 		(Optional) The NTIID of the old parent of our moved
 		node.
+
+	:raises HTTPUnprocessableEntity if the parents do not exist, if the item
+		does not exist in the old parent, or if moving between outlines.
 	"""
 
 	# The notify event on move.

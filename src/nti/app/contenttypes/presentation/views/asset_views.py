@@ -355,7 +355,12 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView):
 			 name=VIEW_NODE_MOVE)
 class LessonOverviewMoveView(AbstractChildMoveView):
 	"""
-	Move the given object between lessons or overview groups.
+	Move the given object between lessons or overview groups. For
+	overview groups, we need to resolve the given ntiid as an
+	asset ref in the old parent (or new parent if moving internally).
+
+	:raises HTTPUnprocessableEntity if we do not find the given ntiid
+		underneath the old parent
 	"""
 
 	# TODO:
@@ -988,6 +993,17 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 			   permission=nauth.ACT_CONTENT_EDIT)
 class AssetDeleteChildView(AbstractAuthenticatedView,
 						   NTIIDPathMixin):
+	"""
+	A view to delete a child underneath the given context.
+
+	index
+		This param will be used to indicate which object should be
+		deleted. If the object described by `ntiid` is no longer at
+		this index, the object will still be deleted, as long as it
+		is unambiguous.
+
+	:raises HTTPConflict if state has changed out from underneath user
+	"""
 
 	def _get_item(self, ntiid, index):
 		"""
@@ -995,7 +1011,6 @@ class AssetDeleteChildView(AbstractAuthenticatedView,
 		"""
 		found = []
 		for idx, child in enumerate(self.context):
-			# Find the obj/
 			if 		ntiid == getattr(child, 'target', '') \
 				or 	ntiid == getattr(child, 'ntiid', ''):
 				if idx == index:
