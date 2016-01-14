@@ -356,6 +356,7 @@ class LessonOverviewMoveView(AbstractChildMoveView):
 	Move the given object between lessons or overview groups.
 	"""
 
+	# TODO:
 	notify_type = None
 
 	def _get_context_ntiid(self):
@@ -983,13 +984,15 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 class AssetDeleteChildView(AbstractAuthenticatedView,
 						   NTIIDPathMixin):
 
-	def _validate_media_item(self, ntiid, index):
+	def _get_item(self, ntiid, index):
+		"""
+		Find the item/ref for the given ntiid.
+		"""
 		found = []
 		for idx, child in enumerate(self.context):
-			# For media objects, we want to remove the actual
-			# ref, but clients will only send target ntiids
-			child_ntiid = getattr(child, 'target', '')
-			if child_ntiid == ntiid:
+			# Find the obj/
+			if 		ntiid == getattr(child, 'target', '') \
+				or 	ntiid == getattr(child, 'ntiid', ''):
 				if idx == index:
 					# We have an exact ref hit.
 					return child
@@ -1003,22 +1006,16 @@ class AssetDeleteChildView(AbstractAuthenticatedView,
 		if found:
 			# Multiple matches, none at index
 			raise hexc.HTTPConflict(_('Ambiguous item ref no longer exists at this index.'))
+		raise hexc.HTTPConflict(_('Item not found under this parent.'))
 
 	def __call__(self):
 		values = CaseInsensitiveDict(self.request.params)
 		index = values.get('index')
 		ntiid = self._get_ntiid()
-
-		item = find_object_with_ntiid(ntiid)
-		if item is None:
-			raise hexc.HTTPConflict(_('Item no longer exists'))
-
-		if INTIMedia.providedBy(item):
-			item = self._validate_media_item(ntiid, index)
+		item = self._get_item(ntiid, index)
 
 		# We remove the item from our context, and clean it
-		# up. We want to make sure we clean up the
-		# underlying asset
+		# up. We want to make sure we clean up the underlying asset.
 		if item is not None:  # tests
 			self.context.remove(item)  # safe op if gone already
 			remove_presentation_asset(item)
