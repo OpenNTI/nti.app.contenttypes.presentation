@@ -12,7 +12,4 @@ logger = __import__('logging').getLogger(__name__)
 generation = 17
 
 def evolve(context):
-	"""
-	Evolve to generation 17 by setting lineage of package assets
-	"""
 	pass
