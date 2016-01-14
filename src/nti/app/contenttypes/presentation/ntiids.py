@@ -138,7 +138,7 @@ class _NTICourseBundleResolver(object):
 
 	def resolve(self, key):
 		user = self.remoteUser
-		if user is None:
+		if user is not None:
 			parts = get_parts(key) if key else None
 			specific = parts.specific if parts else None
 			splits = specific.split(self.separator) if specific else ()
