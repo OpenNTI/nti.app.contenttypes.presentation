@@ -192,16 +192,17 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 		old_parent_ntiid = values.get('OldParentNTIID')
 		context_ntiid = self._get_context_ntiid()
 
+		new_parent = self._get_new_parent( context_ntiid, new_parent_ntiid )
 		old_parent = self._get_old_parent( old_parent_ntiid )
-		obj = self._get_object_to_move( ntiid )
+		if old_parent is None:
+			old_parent = new_parent
+		obj = self._get_object_to_move( ntiid, old_parent )
 
 		children_ntiids = self._get_children_ntiids(context_ntiid)
 		if 		new_parent_ntiid not in children_ntiids \
 			or (	old_parent_ntiid
 				and old_parent_ntiid not in children_ntiids):
 			raise hexc.HTTPUnprocessableEntity(_('Cannot move between root objects.'))
-
-		new_parent = self._get_new_parent( context_ntiid, new_parent_ntiid )
 
 		if index is not None and index < 0:
 			raise hexc.HTTPBadRequest(_('Invalid index.'))

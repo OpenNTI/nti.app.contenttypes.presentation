@@ -380,22 +380,22 @@ class LessonOverviewMoveView(AbstractChildMoveView):
 		_recur(self.context)
 		return result
 
-	def _get_media_ref_in_parent(self, ntiid, parent):
+	def _get_ref_in_parent(self, ntiid, parent):
 		# Assuming one hit per parent...We actually ensure
 		# that in the group itself.
 		for child in list(parent):
-			# For media objects, we want to move the actual
-			# ref, but clients will only send target ntiids
-			child_ntiid = getattr(child, 'target', '')
-			if child_ntiid == ntiid:
+			# We want to move the actual ref, but clients will
+			# only send target ntiids.
+			if 		ntiid == getattr(child, 'target', '') \
+				or 	ntiid == getattr(child, 'ntiid', ''):
 				return child
 		return None
 
 	def _get_object_to_move(self, ntiid, old_parent=None):
 		obj = super(LessonOverviewMoveView, self)._get_object_to_move(ntiid, old_parent)
-		if INTIMedia.providedBy(obj) and old_parent is not None:
-			# Need a media ref.
-			obj = self._get_media_ref_in_parent(ntiid, old_parent)
+		if not IAssetRef.providedBy(obj) and old_parent is not None:
+			# Need a to convert any non-ref into the ref.
+			obj = self._get_ref_in_parent(ntiid, old_parent)
 			if obj is None:
 				raise hexc.HTTPUnprocessableEntity(_('No ref found for given media ntiid.'))
 		return obj
