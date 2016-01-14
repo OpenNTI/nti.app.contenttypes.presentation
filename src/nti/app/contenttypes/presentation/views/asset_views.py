@@ -30,12 +30,12 @@ from zope.intid.interfaces import IIntIds
 from zope.security.interfaces import NoInteraction
 from zope.security.management import getInteraction
 
-from pyramid.threadlocal import get_current_request
+from pyramid import httpexceptions as hexc
 
 from pyramid.view import view_config
 from pyramid.view import view_defaults
 
-from pyramid import httpexceptions as hexc
+from pyramid.threadlocal import get_current_request
 
 from nti.app.renderers.interfaces import INoHrefInResponse
 
@@ -76,9 +76,8 @@ from nti.appserver.ugd_edit_views import UGDPutView
 from nti.appserver.ugd_edit_views import UGDDeleteView
 from nti.appserver.dataserver_pyramid_views import GenericGetView
 
-from nti.assessment.interfaces import IQSurvey
-from nti.assessment.interfaces import IQAssignment
-from nti.assessment.interfaces import IQuestionSet
+from nti.assessment.interfaces import IQInquiry
+from nti.assessment.interfaces import IQAssessment
 
 from nti.common.maps import CaseInsensitiveDict
 
@@ -114,6 +113,9 @@ from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import INTIVideoRoll
+from nti.contenttypes.presentation.interfaces import INTIInquiryRef
+from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
+from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import IGroupOverViewable
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
@@ -131,6 +133,8 @@ from nti.contenttypes.presentation.utils import create_from_external
 from nti.contenttypes.presentation.utils import get_external_pre_hook
 
 from nti.dataserver import authorization as nauth
+
+from nti.dataserver.contenttypes.forums.interfaces import ITopic
 
 from nti.externalization.oids import to_external_ntiid_oid
 from nti.externalization.internalization import notify_modified
@@ -534,34 +538,34 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		item_extended = tuple(extended or ()) + tuple(containers or ())
 		self._catalog.index(item, container_ntiids=item_extended)
 
-		# find a content unit and set ref fields
-		if INTIAssignmentRef.providedBy(item) and not item.title:
-			assignment = self._registry.queryUtility(IQAssignment, name=item.target or '')
-			if not item.label and assignment is not None:
-				item.label = assignment.title
-			if not item.title and assignment is not None:
-				item.title = assignment.title
-			content_unit = assignment.__parent__ if assignment is not None else None
-		elif INTIQuestionSetRef.providedBy(item):
-			qset = self._registry.queryUtility(IQuestionSet, name=item.target or '')
-			if not item.label and qset is not None:
-				item.label = qset.title
-			if qset is not None:
-				item.question_count = len(qset)
-			content_unit = qset.__parent__ if qset is not None else None
-		elif INTISurveyRef.providedBy(item):
-			survey = self._registry.queryUtility(IQSurvey, name=item.target or '')
-			if not item.label and survey is not None:
-				item.label = survey.title
-			if survey is not None:
-				item.question_count = len(survey)
-			content_unit = survey.__parent__ if survey is not None else None
-		else:
-			content_unit = None
+		if INTIAssessmentRef.providedBy(item):
 
-		# set container id
-		if content_unit is not None:
-			item.containerId = content_unit.ntiid
+			# find the target
+			if INTIInquiryRef.providedBy(item):
+				reference = IQInquiry(item, None)
+			else:
+				reference = IQAssessment(item, None)
+			if reference == None:
+				raise hexc.HTTPUnprocessableEntity(
+								_('No assessment/inquiry found for given ntiid.'))
+
+			if INTIAssignmentRef.providedBy(item):
+				item.label = reference.title if not item.label else item.label
+				item.title = reference.title if not item.title else item.title
+			elif INTIQuestionSetRef.providedBy(item) or INTISurveyRef.providedBy(item):
+				item.question_count = len(reference)
+				item.label = reference.title if not item.label else item.label
+
+			# set container id
+			if reference.__parent__ is not None:
+				item.containerId = reference.__parent__.ntiid
+
+		elif INTIDiscussionRef.providedBy(item):
+			if not item.isCourseBundle():
+				target = find_object_with_ntiid(item.target or '')
+				if target is None or not ITopic.providedBy(target):
+					raise hexc.HTTPUnprocessableEntity(
+								_('No valid topic found for given ntiid.'))
 
 	def _handle_overview_group(self, group, creator, extended=None):
 		# set creator
