@@ -1011,7 +1011,6 @@ class AssetDeleteChildView(AbstractAuthenticatedView,
 		if found:
 			# Multiple matches, none at index
 			raise hexc.HTTPConflict(_('Ambiguous item ref no longer exists at this index.'))
-		raise hexc.HTTPConflict(_('Item not found under this parent.'))
 
 	def __call__(self):
 		values = CaseInsensitiveDict(self.request.params)
@@ -1024,7 +1023,7 @@ class AssetDeleteChildView(AbstractAuthenticatedView,
 		if item is not None:  # tests
 			self.context.remove(item)  # safe op if gone already
 			remove_presentation_asset(item)
-		self.context.child_order_locked = True
+			self.context.child_order_locked = True
 		return hexc.HTTPOk()
 
 # ordered contents
