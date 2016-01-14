@@ -28,7 +28,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
-from nti.contenttypes.courses.utils import get_parent_course
+from nti.contenttypes.courses.utils import is_course_editor
+from nti.contenttypes.courses.utils import get_parent_course 
 from nti.contenttypes.courses.utils import get_any_enrollment
 from nti.contenttypes.courses.utils import get_course_packages
 from nti.contenttypes.courses.utils import is_course_instructor
@@ -58,7 +59,7 @@ def get_enrollment_record(context, user):
 
 	# give priority to course in lineage before checking the rest
 	for instance in chain((course, main_course), main_course.SubInstances.values()):
-		if is_course_instructor(instance, user):
+		if is_course_instructor(instance, user) or is_course_editor(instance, user):
 			# create a fake enrollment record w/ all scopes to signal an instructor
 			return ProxyEnrollmentRecord(course, IPrincipal(user), ES_ALL)
 
