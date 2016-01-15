@@ -72,12 +72,11 @@ def remove_assets(registry, intids):
 	total = 0
 	logger.info('Removing assets from registry')
 	for ntiid, item in list(registry.getUtilitiesFor(IPresentationAsset)):
-		if intids.queryId(item) is None:
-			continue
 		provided = iface_of_asset(item)
 		unregisterUtility(registry, provided=provided, name=ntiid)
-		_clear_history(item)
-		_intid_unregister(item, intids)
+		if intids.queryId(item) is not None:
+			_clear_history(item)
+			_intid_unregister(item, intids)
 		total += 1
 	logger.info('%s assets removed', total)
 
