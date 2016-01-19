@@ -20,8 +20,6 @@ from zope.location.interfaces import ILocation
 
 from pyramid.interfaces import IRequest
 
-from nti.app.contentlibrary.utils import get_item_content_units
-
 from nti.app.contenttypes.presentation.decorators import LEGACY_UAS_40
 from nti.app.contenttypes.presentation.decorators import VIEW_ORDERED_CONTENTS
 
@@ -44,8 +42,11 @@ from nti.assessment.interfaces import IQAssignment
 
 from nti.common.property import Lazy
 
-from nti.contentlibrary.interfaces import IContentPackageLibrary
+from nti.contentlibrary.interfaces import IContentUnit
+from nti.contentlibrary.interfaces import IContentPackage
 from nti.contentlibrary.interfaces import IContentUnitHrefMapper
+
+from nti.contentlibrary.indexed_data import get_catalog
 
 from nti.contenttypes.courses.interfaces import OPEN
 from nti.contenttypes.courses.interfaces import ES_ALL
@@ -53,7 +54,11 @@ from nti.contenttypes.courses.interfaces import IN_CLASS
 from nti.contenttypes.courses.interfaces import ES_CREDIT
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_for_user
+
+from nti.contenttypes.courses.utils import get_course_packages
 
 from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IMediaRef
@@ -93,6 +98,9 @@ from nti.links.links import Link
 from nti.ntiids.ntiids import get_type
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_provider_safe
+from nti.ntiids.ntiids import find_object_with_ntiid
+
+from nti.traversal.traversal import find_interface
 
 NTIID = StandardExternalFields.NTIID
 LINKS = StandardExternalFields.LINKS
@@ -228,7 +236,7 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 	def is_legacy_ipad(self):
 		result = is_legacy_uas(self.request, LEGACY_UAS_40)
 		return result
-	
+
 	def _is_legacy_discussion(self, item):
 		nttype = get_type(item.target)
 		return nttype in (NTIID_TYPE_COURSE_TOPIC, NTIID_TYPE_COURSE_SECTION_TOPIC)
@@ -309,7 +317,7 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 		key = COLLECTION_ITEMS if self.is_legacy_ipad else ITEMS
 		value  = ext_item.get(key)
 		return bool(value)
-	
+
 	def _decorate_external_impl(self, context, result):
 		idx = 0
 		removal = set()
@@ -343,6 +351,33 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 		if removal:
 			result[ITEMS] = [x for idx, x in enumerate(items) if idx not in removal]
 
+def _get_content_package(ntiids=()):
+	# XXX: We would like context from clients.
+	# Get the first available content package from the given ntiids.
+	# This could be improved if we indexed/registered ContentUnits.
+	result = None
+	for ntiid in ntiids or ():
+		obj = find_object_with_ntiid(ntiid)
+		if ICourseCatalogEntry.providedBy(obj) or ICourseInstance.providedBy(obj):
+			packages = get_course_packages(obj)
+			result = packages[0] if packages else None
+			if result is not None:
+				break
+		elif IContentPackage.providedBy( obj ):
+			result = obj
+			break
+		if IContentUnit.providedBy( ntiid ):
+			result = find_interface( obj, IContentPackage, strict=False )
+			if result is not None:
+				break
+	return result
+
+def _get_item_content_package(item):
+	catalog = get_catalog()
+	entries = catalog.get_containers(item)
+	result = _get_content_package(entries) if entries else None
+	return result
+
 @component.adapter(INTITimeline, IRequest)
 @component.adapter(INTIRelatedWorkRef, IRequest)
 @interface.implementer(IExternalMappingDecorator)
@@ -358,14 +393,7 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		return result
 
 	def _do_decorate_external(self, context, result):
-		package = None
-		library = component.queryUtility(IContentPackageLibrary)
-		if library is not None:
-			units = get_item_content_units(context)
-			# FIXME: pick first content unit avaiable; clients
-			# should try to give us context
-			paths = library.pathToNTIID(units[0].ntiid) if units else None
-			package = paths[0] if paths else None
+		package = _get_item_content_package( context )
 		if package is not None:
 			location = IContentUnitHrefMapper(package.key.bucket).href  # parent
 			for name in ('href', 'icon'):
