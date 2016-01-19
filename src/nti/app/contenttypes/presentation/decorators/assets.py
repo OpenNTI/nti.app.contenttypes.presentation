@@ -22,6 +22,16 @@ from pyramid.interfaces import IRequest
 
 from nti.app.contentlibrary.utils import get_item_content_units
 
+from nti.app.contenttypes.presentation.decorators import LEGACY_UAS_40
+from nti.app.contenttypes.presentation.decorators import VIEW_ORDERED_CONTENTS
+
+from nti.app.contenttypes.presentation.decorators import is_legacy_uas
+from nti.app.contenttypes.presentation.decorators import _AbstractMoveLinkDecorator
+
+from nti.app.contenttypes.presentation.utils import is_item_visible
+from nti.app.contenttypes.presentation.utils import resolve_discussion_course_bundle
+from nti.app.contenttypes.presentation.utils import get_enrollment_record as get_any_enrollment_record
+
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_TOPIC
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_SECTION_TOPIC
 
@@ -43,7 +53,6 @@ from nti.contenttypes.courses.interfaces import IN_CLASS
 from nti.contenttypes.courses.interfaces import ES_CREDIT
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
-
 from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_for_user
 
 from nti.contenttypes.presentation.interfaces import IVisible
@@ -85,16 +94,6 @@ from nti.ntiids.ntiids import get_type
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_provider_safe
 
-from ..utils import is_item_visible
-from ..utils import resolve_discussion_course_bundle
-from ..utils import get_enrollment_record as get_any_enrollment_record
-
-from . import LEGACY_UAS_40
-from . import VIEW_ORDERED_CONTENTS
-
-from . import is_legacy_uas
-from . import _AbstractMoveLinkDecorator
-
 NTIID = StandardExternalFields.NTIID
 LINKS = StandardExternalFields.LINKS
 ITEMS = StandardExternalFields.ITEMS
@@ -103,6 +102,9 @@ MIMETYPE = StandardExternalFields.MIMETYPE
 IN_CLASS_SAFE = make_provider_safe(IN_CLASS)
 CREATED_TIME = StandardExternalFields.CREATED_TIME
 LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
+
+#: Legacy ipad key for item video rolls
+COLLECTION_ITEMS = u'collectionItems'
 
 @component.adapter(IPresentationAsset)
 @interface.implementer(IExternalMappingDecorator)
@@ -216,12 +218,17 @@ class _NTIMediaRollDecorator(_VisibleMixinDecorator):
 			result[ITEMS] = [x for idx, x in enumerate(items) if idx not in removal]
 
 		if self.is_legacy_ipad:
-			result['collectionItems'] = result[ITEMS]
+			result[COLLECTION_ITEMS] = result[ITEMS]
 			del result[ITEMS]
 
 @component.adapter(INTICourseOverviewGroup)
 class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 
+	@Lazy
+	def is_legacy_ipad(self):
+		result = is_legacy_uas(self.request, LEGACY_UAS_40)
+		return result
+	
 	def _is_legacy_discussion(self, item):
 		nttype = get_type(item.target)
 		return nttype in (NTIID_TYPE_COURSE_TOPIC, NTIID_TYPE_COURSE_SECTION_TOPIC)
@@ -298,6 +305,11 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 		result = self._allow_assessmentref(IQSurvey, context, item)
 		return result
 
+	def allow_mediaroll(self, ext_item):
+		key = COLLECTION_ITEMS if self.is_legacy_ipad else ITEMS
+		value  = ext_item.get(key)
+		return bool(value)
+	
 	def _decorate_external_impl(self, context, result):
 		idx = 0
 		removal = set()
@@ -316,11 +328,11 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 					discussions.append(idx)
 			elif IMediaRef.providedBy(item):
 				self._handle_media_ref(items, item, idx)
-			elif INTIAssignmentRef.providedBy(item) and \
-				not self.allow_assignmentref(context, item):
+			elif INTIAssignmentRef.providedBy(item) and not self.allow_assignmentref(context, item):
 				removal.add(idx)
-			elif INTISurveyRef.providedBy(item) and \
-				not self.allow_surveyref(context, item):
+			elif INTISurveyRef.providedBy(item) and not self.allow_surveyref(context, item):
+				removal.add(idx)
+			elif INTIMediaRoll.providedBy(item) and not self.allow_mediaroll(items[idx]):
 				removal.add(idx)
 
 		# filter legacy discussions
