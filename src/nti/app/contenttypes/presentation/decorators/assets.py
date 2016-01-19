@@ -366,7 +366,7 @@ def _get_content_package(ntiids=()):
 		elif IContentPackage.providedBy( obj ):
 			result = obj
 			break
-		if IContentUnit.providedBy( ntiid ):
+		elif IContentUnit.providedBy( obj ):
 			result = find_interface( obj, IContentPackage, strict=False )
 			if result is not None:
 				break
