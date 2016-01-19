@@ -14,6 +14,7 @@ import time
 
 from zope import component
 
+from zope.component.hooks import getSite
 from zope.component.hooks import site as current_site
 
 from zope.intid.interfaces import IIntIds
@@ -66,15 +67,15 @@ from nti.site.site import get_site_for_site_names
 
 from nti.traversal.traversal import find_interface
 
-from ..synchronizer import can_be_removed
-from ..synchronizer import clear_namespace_last_modified
-from ..synchronizer import remove_and_unindex_course_assets
-from ..synchronizer import synchronize_course_lesson_overview
+from nti.app.contenttypes.presentation.synchronizer import can_be_removed
+from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
+from nti.app.contenttypes.presentation.synchronizer import remove_and_unindex_course_assets
+from nti.app.contenttypes.presentation.synchronizer import synchronize_course_lesson_overview
 
-from ..utils import yield_sync_courses
-from ..utils import remove_presentation_asset
+from nti.app.contenttypes.presentation.utils import yield_sync_courses
+from nti.app.contenttypes.presentation.utils import remove_presentation_asset
 
-from .. import iface_of_thing
+from nti.app.contenttypes.presentation import iface_of_thing
 
 ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID
@@ -390,4 +391,5 @@ class OutlineObjectCourseResolverView(AbstractAuthenticatedView):
 				if course.Outline == our_outline:
 					items.append( course )
 		result['ItemCount'] = len( items )
+		result['SiteInfo'] = getSite().__name__
 		return result
