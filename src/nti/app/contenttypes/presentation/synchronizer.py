@@ -17,6 +17,15 @@ from zope import component
 
 from zope.intid.interfaces import IIntIds
 
+from nti.app.contenttypes.presentation import iface_of_thing
+
+from nti.app.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
+
+from nti.app.contenttypes.presentation.interfaces import IItemRefValidator
+
+from nti.app.contenttypes.presentation.utils import add_2_connection
+from nti.app.contenttypes.presentation.utils import create_lesson_4_node
+
 from nti.coremetadata.interfaces import IRecordable
 from nti.coremetadata.interfaces import IPublishable
 
@@ -26,7 +35,8 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import get_course_packages
 
-from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import	ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import	CourseLessonSyncResults
 from nti.contenttypes.courses.interfaces import	ICourseOutlineContentNode
 
@@ -62,14 +72,7 @@ from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
 from nti.site.site import get_component_hierarchy_names
 
-from .interfaces import IItemRefValidator
-
-from .utils import add_2_connection
-from .utils import create_lesson_4_node
-
-from . import iface_of_thing
-
-from . import PACKAGE_CONTAINER_INTERFACES
+from nti.traversal.traversal import find_interface
 
 ITEMS = StandardExternalFields.ITEMS
 
@@ -430,6 +433,10 @@ def _create_lesson_4_node(node, registry=None, catalog=None):
 	unpublished and unlocked so that they can be updated on sync.
 	"""
 	result = create_lesson_4_node(node, registry=registry, catalog=catalog)
+	course = find_interface(node, ICourseInstance, strict=False)
+	container = IPresentationAssetContainer(course, None)
+	if container is not None:
+		container[result.ntiid] = result
 	return result
 
 def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
