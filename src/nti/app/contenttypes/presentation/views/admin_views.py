@@ -28,8 +28,19 @@ from pyramid.view import view_config
 from pyramid.view import view_defaults
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
+
 from nti.app.externalization.internalization import read_body_as_external_object
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
+
+from nti.app.contenttypes.presentation import iface_of_thing
+
+from nti.app.contenttypes.presentation.synchronizer import can_be_removed
+from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
+from nti.app.contenttypes.presentation.synchronizer import remove_and_unindex_course_assets
+from nti.app.contenttypes.presentation.synchronizer import synchronize_course_lesson_overview
+
+from nti.app.contenttypes.presentation.utils import yield_sync_courses
+from nti.app.contenttypes.presentation.utils import remove_presentation_asset
 
 from nti.app.products.courseware.views import CourseAdminPathAdapter
 
@@ -66,16 +77,6 @@ from nti.site.interfaces import IHostPolicyFolder
 from nti.site.site import get_site_for_site_names
 
 from nti.traversal.traversal import find_interface
-
-from nti.app.contenttypes.presentation.synchronizer import can_be_removed
-from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
-from nti.app.contenttypes.presentation.synchronizer import remove_and_unindex_course_assets
-from nti.app.contenttypes.presentation.synchronizer import synchronize_course_lesson_overview
-
-from nti.app.contenttypes.presentation.utils import yield_sync_courses
-from nti.app.contenttypes.presentation.utils import remove_presentation_asset
-
-from nti.app.contenttypes.presentation import iface_of_thing
 
 ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID
@@ -377,19 +378,19 @@ class OutlineObjectCourseResolverView(AbstractAuthenticatedView):
 		result = LocatedExternalDict()
 		result[ITEMS] = items = []
 		params = CaseInsensitiveDict(self.request.params)
-		ntiid = params.get( 'ntiid' )
-		obj = find_object_with_ntiid( ntiid )
+		ntiid = params.get('ntiid')
+		obj = find_object_with_ntiid(ntiid)
 		course = find_interface(obj, ICourseInstance, strict=False)
 
 		if course is None:
-			course = ICourseInstance( obj, None )
+			course = ICourseInstance(obj, None)
 
 		if course is not None:
-			possible_courses = self._possible_courses( course )
+			possible_courses = self._possible_courses(course)
 			our_outline = course.Outline
 			for course in possible_courses:
 				if course.Outline == our_outline:
-					items.append( course )
-		result['ItemCount'] = len( items )
+					items.append(course)
+		result['ItemCount'] = len(items)
 		result['SiteInfo'] = getSite().__name__
 		return result
