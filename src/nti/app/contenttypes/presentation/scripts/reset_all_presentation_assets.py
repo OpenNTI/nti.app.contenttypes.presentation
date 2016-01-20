@@ -24,6 +24,10 @@ from ZODB.POSException import POSError
 from nti.app.contentlibrary.utils import yield_content_packages
 from nti.app.contentlibrary.subscribers import update_indices_when_content_changes
 
+from nti.app.contenttypes.presentation.synchronizer import synchronize_course_lesson_overview
+
+from nti.app.contenttypes.presentation.utils.common import yield_sync_courses
+
 from nti.coremetadata.interfaces import IRecordable
 
 from nti.contentlibrary.indexed_data import get_library_catalog
@@ -47,10 +51,6 @@ from nti.recorder.record import remove_transaction_history
 
 from nti.site.utils import unregisterUtility
 from nti.site.hostpolicy import get_all_host_sites
-
-from ..utils.common import yield_sync_courses
-
-from ..synchronizer import synchronize_course_lesson_overview
 
 def _clear_history(item):
 	try:
@@ -121,7 +121,7 @@ def _sync_courses():
 
 def _sync_pacakges():
 	for pacakge in yield_content_packages():
-		logger.info("Synchronizing Pacakge %s", pacakge.ntiid)
+		logger.info("Synchronizing Package %s", pacakge.ntiid)
 		_clear_package_containers(pacakge)
 		update_indices_when_content_changes(pacakge)
 
