@@ -39,7 +39,7 @@ from nti.dataserver.interfaces import IACLProvider
 from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization import ROLE_ADMIN
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
-from nti.dataserver.authorization import ROLE_CONTENT_EDITOR
+from nti.dataserver.authorization import ROLE_CONTENT_ADMIN
 
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
@@ -59,7 +59,7 @@ class BasePresentationAssetACLProvider(object):
 		editors = set()
 		instructors = set()
 		aces = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
-				ace_allowing(ROLE_CONTENT_EDITOR, ALL_PERMISSIONS, type(self))]
+				ace_allowing(ROLE_CONTENT_ADMIN, ALL_PERMISSIONS, type(self))]
 		courses = get_presentation_asset_courses(self.context)
 		for course in courses or ():
 			# scopes get read access
@@ -121,7 +121,7 @@ class NTIMediaRollACLProvider(object):
 	@Lazy
 	def __acl__(self):
 		aces = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
-				ace_allowing(ROLE_CONTENT_EDITOR, ALL_PERMISSIONS, type(self))]
+				ace_allowing(ROLE_CONTENT_ADMIN, ALL_PERMISSIONS, type(self))]
 		course = find_interface(self.context, ICourseInstance, strict=False)
 		if course is None:
 			aces.append(ACE_DENY_ALL)
@@ -142,7 +142,7 @@ class NTICourseOverviewGroupACLProvider(object):
 	@Lazy
 	def __acl__(self):
 		aces = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
-				ace_allowing(ROLE_CONTENT_EDITOR, ALL_PERMISSIONS, type(self))]
+				ace_allowing(ROLE_CONTENT_ADMIN, ALL_PERMISSIONS, type(self))]
 		course = find_interface(self.context, ICourseInstance, strict=False)
 		if course is None:
 			aces.append(ACE_DENY_ALL)
@@ -163,7 +163,7 @@ class NTILessonOverviewACLProvider(object):
 	@Lazy
 	def __acl__(self):
 		aces = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
-				ace_allowing(ROLE_CONTENT_EDITOR, ALL_PERMISSIONS, type(self))]
+				ace_allowing(ROLE_CONTENT_ADMIN, ALL_PERMISSIONS, type(self))]
 		course = find_interface(self.context, ICourseInstance, strict=False)
 		if course is None:
 			aces.append(ACE_DENY_ALL)
