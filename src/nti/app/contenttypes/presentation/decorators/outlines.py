@@ -18,6 +18,14 @@ from zope.location.interfaces import ILocation
 
 from pyramid.threadlocal import get_current_request
 
+from nti.app.contenttypes.presentation.decorators import LEGACY_UAS_20
+from nti.app.contenttypes.presentation.decorators import VIEW_ORDERED_CONTENTS
+from nti.app.contenttypes.presentation.decorators import VIEW_OVERVIEW_CONTENT
+from nti.app.contenttypes.presentation.decorators import VIEW_OVERVIEW_SUMMARY
+
+from nti.app.contenttypes.presentation.decorators import is_legacy_uas
+from nti.app.contenttypes.presentation.decorators import _AbstractMoveLinkDecorator
+
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
 from nti.appserver.pyramid_authorization import has_permission
@@ -55,20 +63,12 @@ from nti.links.externalization import render_link
 from nti.ntiids.ntiids import TYPE_OID
 from nti.ntiids.ntiids import is_ntiid_of_type
 
-from . import LEGACY_UAS_20
-from . import VIEW_ORDERED_CONTENTS
-from . import VIEW_OVERVIEW_CONTENT
-from . import VIEW_OVERVIEW_SUMMARY
-
-from . import is_legacy_uas
-from . import _AbstractMoveLinkDecorator
-
 LINKS = StandardExternalFields.LINKS
 
 def _is_visible(item, request, show_unpublished=True):
 	return 	not IPublishable.providedBy(item) \
 			or 	item.is_published() \
-			or	(	 show_unpublished
+			or	(show_unpublished
 			 	 and has_permission(ACT_CONTENT_EDIT, item, request))
 
 def _is_true(v):

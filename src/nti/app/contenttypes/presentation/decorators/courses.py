@@ -81,4 +81,4 @@ class _CourseDiscussionDecorator(AbstractAuthenticatedRequestAwareDecorator):
 			resolved = resolve_discussion_course_bundle(self.remoteUser, context, course)
 			if resolved is not None:
 				_, topic = resolved
-				result_map['Topic'] = result_map['TopicNTIID'] = topic.NTIID
+				result_map['Topic'] = topic.NTIID
