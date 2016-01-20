@@ -52,6 +52,7 @@ from nti.app.contenttypes.presentation.utils import component_registry
 from nti.app.contenttypes.presentation.utils import get_course_packages
 from nti.app.contenttypes.presentation.utils import remove_presentation_asset
 from nti.app.contenttypes.presentation.utils import get_presentation_asset_courses
+from nti.app.contenttypes.presentation.utils import resolve_discussion_course_bundle
 
 from nti.app.contenttypes.presentation.views import VIEW_ASSETS
 from nti.app.contenttypes.presentation.views import VIEW_CONTENTS
@@ -581,11 +582,18 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 			if is_nti_course_bundle(item.target):
 				item.id = item.target
 				item.target = None
-			elif not item.isCourseBundle():
+			if not item.isCourseBundle():
 				target = find_object_with_ntiid(item.target or '')
 				if target is None or not ITopic.providedBy(target):
 					raise hexc.HTTPUnprocessableEntity(
 								_('No valid topic found for given ntiid.'))
+			else:
+				resolved = resolve_discussion_course_bundle(self.remoteUser,
+															item,
+															context=self._course)
+				if resolved is not None:
+					_, topic = resolved
+					item.target = topic.NTIID
 
 	def _handle_overview_group(self, group, creator, extended=None):
 		# set creator
