@@ -58,6 +58,11 @@
 				for="nti.contenttypes.courses.interfaces.ICourseCatalogEntry
 					 pyramid.interfaces.IRequest" />
 
+	<subscriber factory=".courses._CourseDiscussionDecorator"
+				provides="nti.externalization.interfaces.IExternalMappingDecorator"
+				for="nti.contenttypes.courses.discussions.interfaces.ICourseDiscussion
+					 pyramid.interfaces.IRequest" />
+
 	<!-- Assets -->
 	<subscriber factory=".assets._LessonMoveLinkDecorator"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"

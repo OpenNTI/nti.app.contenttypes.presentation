@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from zope import component
 from zope import interface
 
 from zope.location.interfaces import ILocation
@@ -16,7 +17,13 @@ from zope.location.interfaces import ILocation
 from nti.app.contenttypes.presentation.decorators import VIEW_ASSETS
 from nti.app.contenttypes.presentation.decorators import PreviewCourseAccessPredicateDecorator
 
+from nti.app.contenttypes.presentation.utils import resolve_discussion_course_bundle
+
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
+
+from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussion
+
+from nti.contenttypes.courses.discussions.utils import is_nti_course_bundle
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
@@ -63,3 +70,15 @@ class _MediaByOutlineNodeDecorator(PreviewCourseAccessPredicateDecorator):
 					rel='MediaByOutlineNode',
 					elements=('@@MediaByOutlineNode',))
 		links.append(link)
+
+@component.adapter(ICourseDiscussion)
+@interface.implementer(IExternalMappingDecorator)
+class _CourseDiscussionDecorator(AbstractAuthenticatedRequestAwareDecorator):
+
+	def _do_decorate_external(self, context, result_map):
+		if is_nti_course_bundle(context):
+			course = ICourseInstance(context, None)
+			resolved = resolve_discussion_course_bundle(self.remoteUser, context, course)
+			if resolved is not None:
+				_, topic = resolved
+				result_map['Topic'] = result_map['TopicNTIID'] = topic.NTIID
