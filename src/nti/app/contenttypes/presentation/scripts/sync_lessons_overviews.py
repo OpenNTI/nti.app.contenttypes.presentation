@@ -13,23 +13,25 @@ import os
 import sys
 import argparse
 
+from nti.app.contenttypes.presentation.synchronizer import get_course_packages
+from nti.app.contenttypes.presentation.synchronizer import synchronize_course_lesson_overview
+
+from nti.app.contenttypes.presentation.utils.common import yield_sync_courses as yield_courses
+
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+
+from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.dataserver.utils import run_with_dataserver
 from nti.dataserver.utils.base_script import set_site
 from nti.dataserver.utils.base_script import create_context
 
-from ..utils.common import yield_sync_courses as yield_courses
-
-from ..synchronizer import get_course_packages
-from ..synchronizer import synchronize_course_lesson_overview
-
 def _sync_course(course, exclude=False):
 	result = []
 	result.extend(synchronize_course_lesson_overview(course))
 	if not exclude and not ICourseSubInstance.providedBy(course):
-		for sub_instance in (course.SubInstances or {}).values():
+		for sub_instance in get_course_subinstances(course):
 			result.extend(synchronize_course_lesson_overview(sub_instance))
 	return result
 
@@ -62,7 +64,7 @@ def main():
 
 	arg_parser.add_argument('-x', '--exclude', help="Exclude course sub-instances",
 							action='store_true', dest='exclude')
-	
+
 	arg_parser.add_argument('-s', '--site',
 							dest='site',
 							help="Application SITE.")
