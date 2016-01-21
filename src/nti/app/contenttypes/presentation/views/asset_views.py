@@ -9,8 +9,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from .. import MessageFactory as _
-
 import six
 import copy
 import uuid
@@ -43,6 +41,8 @@ from nti.app.base.abstract_views import get_all_sources
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.contentfile import validate_sources
+
+from nti.app.contenttypes.presentation import MessageFactory as _
 
 from nti.app.contenttypes.presentation.utils import intid_register
 from nti.app.contenttypes.presentation.utils import add_2_connection
@@ -165,7 +165,123 @@ ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID
 MIMETYPE = StandardExternalFields.MIMETYPE
 
-# helper functions
+# GET views
+
+@view_config(context=IPresentationAsset)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='GET')
+class PresentationAssetGetView(GenericGetView, PublishVisibilityMixin):
+
+	def __call__(self):
+		accept = self.request.headers.get(b'Accept') or u''
+		if accept == 'application/vnd.nextthought.pageinfo+json':
+			raise hexc.HTTPNotAcceptable()
+		if not self._is_visible(self.context):
+			raise hexc.HTTPForbidden(_("Item not visible."))
+		result = GenericGetView.__call__(self)
+		return result
+
+@view_config(context=INTITimeline)
+@view_config(context=INTIRelatedWorkRef)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='GET')
+class NoHrefAssetGetView(PresentationAssetGetView):
+
+	def __call__(self):
+		result = PresentationAssetGetView.__call__(self)
+		result = to_external_object(result)
+		interface.alsoProvides(result, INoHrefInResponse)
+		return result
+
+@view_config(context=INTIDiscussionRef)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='GET')
+class DiscussionRefGetView(AbstractAuthenticatedView, PublishVisibilityMixin):
+
+	def __call__(self):
+		accept = self.request.headers.get(b'Accept') or u''
+		if accept == 'application/vnd.nextthought.discussionref':
+			if not self._is_visible(self.context):
+				raise hexc.HTTPForbidden(_("Item not visible."))
+			return self.context
+		elif self.context.isCourseBundle():
+			course = ICourseInstance(self.context)
+			resolved = resolve_discussion_course_bundle(user=self.remoteUser,
+														item=self.context,
+														context=course)
+			if resolved is not None:
+				_, topic = resolved
+				return topic
+			else:
+				raise hexc.HTTPNotFound(_("Topic not found."))
+		else:
+			raise hexc.HTTPNotAcceptable()
+	
+@view_config(context=ICourseInstance)
+@view_config(context=ICourseCatalogEntry)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   name=VIEW_ASSETS,
+			   request_method='GET',
+			   permission=nauth.ACT_CONTENT_EDIT)
+class CoursePresentationAssetsView(AbstractAuthenticatedView):
+
+	def _get_mimeTypes(self):
+		params = CaseInsensitiveDict(self.request.params)
+		result = params.get('accept') or params.get('mimeType')
+		if result:
+			result = set(result.split(','))
+		return result or ()
+
+	def _pkg_containers(self, pacakge):
+		result = []
+		def recur(unit):
+			for child in unit.children or ():
+				recur(child)
+			result.append(unit.ntiid)
+		recur(pacakge)
+		return result
+
+	def _course_containers(self, course):
+		result = set()
+		entry = ICourseCatalogEntry(course)
+		for pacakge in get_course_packages(course):
+			result.update(self._pkg_containers(pacakge))
+		result.add(entry.ntiid)
+		return result
+
+	def __call__(self):
+		result = LocatedExternalDict()
+		result.__name__ = self.request.view_name
+		result.__parent__ = self.request.context
+		self.request.acl_decoration = False  # decoration
+
+		result[ITEMS] = items = list()
+		catalog = get_library_catalog()
+		mimeTypes = self._get_mimeTypes()
+		course = ICourseInstance(self.context)
+		intids = component.getUtility(IIntIds)
+		container_ntiids = self._course_containers(course)
+		for item in catalog.search_objects(intids=intids,
+										   container_all_of=False,
+										   container_ntiids=container_ntiids,
+										   sites=get_component_hierarchy_names(),
+										   provided=ALL_PRESENTATION_ASSETS_INTERFACES):
+			if not mimeTypes:
+				items.append(item)
+			else:
+				mt = getattr(item, 'mimeType', None) or getattr(item, 'mime_type', None)
+				if mt in mimeTypes:
+					items.append(item)
+		if mimeTypes:
+			items.sort()  # natural order
+		result['ItemCount'] = result['Total'] = len(items)
+		return result
+
+# POST/PUT views
 
 def principalId():
 	try:
@@ -256,99 +372,6 @@ def _handle_multipart(context, contentObject, sources, provided=None):
 			assets[file_key] = namedfile  # add to container
 			location = get_download_href(namedfile)
 			setattr(contentObject, name, location)
-
-# GET views
-
-@view_config(context=IPresentationAsset)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   request_method='GET')
-class PresentationAssetGetView(GenericGetView, PublishVisibilityMixin):
-
-	def __call__(self):
-		accept = self.request.headers.get(b'Accept') or u''
-		if accept == 'application/vnd.nextthought.pageinfo+json':
-			raise hexc.HTTPNotAcceptable()
-		if not self._is_visible(self.context):
-			raise hexc.HTTPForbidden(_("Item not visible."))
-		result = GenericGetView.__call__(self)
-		return result
-
-@view_config(context=INTITimeline)
-@view_config(context=INTIRelatedWorkRef)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   request_method='GET')
-class NoHrefAssetGetView(PresentationAssetGetView):
-
-	def __call__(self):
-		result = PresentationAssetGetView.__call__(self)
-		result = to_external_object(result)
-		interface.alsoProvides(result, INoHrefInResponse)
-		return result
-
-@view_config(context=ICourseInstance)
-@view_config(context=ICourseCatalogEntry)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   name=VIEW_ASSETS,
-			   request_method='GET',
-			   permission=nauth.ACT_CONTENT_EDIT)
-class CoursePresentationAssetsView(AbstractAuthenticatedView):
-
-	def _get_mimeTypes(self):
-		params = CaseInsensitiveDict(self.request.params)
-		result = params.get('accept') or params.get('mimeType')
-		if result:
-			result = set(result.split(','))
-		return result or ()
-
-	def _pkg_containers(self, pacakge):
-		result = []
-		def recur(unit):
-			for child in unit.children or ():
-				recur(child)
-			result.append(unit.ntiid)
-		recur(pacakge)
-		return result
-
-	def _course_containers(self, course):
-		result = set()
-		entry = ICourseCatalogEntry(course)
-		for pacakge in get_course_packages(course):
-			result.update(self._pkg_containers(pacakge))
-		result.add(entry.ntiid)
-		return result
-
-	def __call__(self):
-		result = LocatedExternalDict()
-		result.__name__ = self.request.view_name
-		result.__parent__ = self.request.context
-		self.request.acl_decoration = False  # decoration
-
-		result[ITEMS] = items = list()
-		catalog = get_library_catalog()
-		mimeTypes = self._get_mimeTypes()
-		course = ICourseInstance(self.context)
-		intids = component.queryUtility(IIntIds)
-		container_ntiids = self._course_containers(course)
-		for item in catalog.search_objects(intids=intids,
-										   container_all_of=False,
-										   container_ntiids=container_ntiids,
-										   sites=get_component_hierarchy_names(),
-										   provided=ALL_PRESENTATION_ASSETS_INTERFACES):
-			if not mimeTypes:
-				items.append(item)
-			else:
-				mt = getattr(item, 'mimeType', None) or getattr(item, 'mime_type', None)
-				if mt in mimeTypes:
-					items.append(item)
-		if mimeTypes:
-			items.sort()  # natural order
-		result['ItemCount'] = result['Total'] = len(items)
-		return result
-
-# POST/PUT views
 
 @view_config(route_name='objects.generic.traversal',
 			 request_method='POST',

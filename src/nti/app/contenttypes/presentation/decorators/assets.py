@@ -27,7 +27,6 @@ from nti.app.contenttypes.presentation.decorators import is_legacy_uas
 from nti.app.contenttypes.presentation.decorators import _AbstractMoveLinkDecorator
 
 from nti.app.contenttypes.presentation.utils import is_item_visible
-from nti.app.contenttypes.presentation.utils import resolve_discussion_course_bundle
 from nti.app.contenttypes.presentation.utils import get_enrollment_record as get_any_enrollment_record
 
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_TOPIC
@@ -89,7 +88,6 @@ from nti.externalization.interfaces import IExternalObjectDecorator
 from nti.externalization.interfaces import IExternalMappingDecorator
 
 from nti.externalization.externalization import to_external_object
-from nti.externalization.externalization import to_external_ntiid_oid
 
 from nti.externalization.singleton import SingletonDecorator
 
@@ -270,30 +268,6 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 				elif m_scope == ES_CREDIT and scope == ES_PUBLIC and has_credit:
 					removal.add(idx)
 
-	def _allow_discussion_course_bundle(self, context, item, ext_item):
-		record = self.record(context)
-		resolved = resolve_discussion_course_bundle(user=self.remoteUser,
-													item=item,
-													context=context,
-												 	record=record)
-		if resolved is None:
-			return False
-
-		discussion, topic = resolved
-
-		# For legacy purposes we need NTIID to be the id of the topic
-		# that the user should see when selecting this resource.
-		# As of Dec 2015 all clients are looking at the NTIID field so
-		# the resolved topic id has to go there. We need to get clients migrated
-		# over to target, which is currently safe to change.  We set target
-		# to the course.discussion object and will use a view to resolve it
-		# to the specific topic as necessary. This gets these objects exposed for
-		# editing while maintaining backwards compatibility.
-		ext_item[NTIID] = topic.NTIID
-		ext_item['Target-NTIID'] = to_external_ntiid_oid(discussion)
-		ext_item['Item-NTIID'] = getattr(item, 'ntiid', None) or to_external_ntiid_oid(item)
-		return True
-
 	def _allow_assessmentref(self, iface, context, item):
 		record = self.record(context)
 		assg = iface(item, None)
@@ -328,13 +302,8 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 		for idx, item in enumerate(context):
 			if IVisible.providedBy(item) and not self._allow_visible(context, item):
 				removal.add(idx)
-			elif INTIDiscussionRef.providedBy(item):
-				if item.isCourseBundle():
-					ext_item = items[idx]
-					if not self._allow_discussion_course_bundle(context, item, ext_item):
-						removal.add(idx)
-				elif self._is_legacy_discussion(item):
-					discussions.append(idx)
+			elif INTIDiscussionRef.providedBy(item) and self._is_legacy_discussion(item):
+				discussions.append(idx)
 			elif IMediaRef.providedBy(item):
 				self._handle_media_ref(items, item, idx)
 			elif INTIAssignmentRef.providedBy(item) and not self.allow_assignmentref(context, item):
@@ -491,7 +460,7 @@ class _NTIDiscussionRefDecorator(_BaseAssetDecorator):
 		super(_NTIDiscussionRefDecorator, self).decorateExternalObject(original, external)
 		if 'target' in external:
 			external['Target-NTIID'] = external.pop('target')
-		if 'Target-NTIID' in external:
+		if 'Target-NTIID' in external and not original.isCourseBundle():
 			external[NTIID] = external['Target-NTIID']
 
 @component.adapter(INTIRelatedWorkRef)
