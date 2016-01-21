@@ -291,6 +291,7 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 		# editing while maintaining backwards compatibility.
 		ext_item[NTIID] = topic.NTIID
 		ext_item['Target-NTIID'] = to_external_ntiid_oid(discussion)
+		ext_item['Item-NTIID'] = getattr(item, 'ntiid', None) or to_external_ntiid_oid(item)
 		return True
 
 	def _allow_assessmentref(self, iface, context, item):
@@ -315,7 +316,7 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 
 	def allow_mediaroll(self, ext_item):
 		key = COLLECTION_ITEMS if self.is_legacy_ipad else ITEMS
-		value  = ext_item.get(key)
+		value = ext_item.get(key)
 		return bool(value)
 
 	def _decorate_external_impl(self, context, result):
@@ -363,11 +364,11 @@ def _get_content_package(ntiids=()):
 			result = packages[0] if packages else None
 			if result is not None:
 				break
-		elif IContentPackage.providedBy( obj ):
+		elif IContentPackage.providedBy(obj):
 			result = obj
 			break
-		elif IContentUnit.providedBy( obj ):
-			result = find_interface( obj, IContentPackage, strict=False )
+		elif IContentUnit.providedBy(obj):
+			result = find_interface(obj, IContentPackage, strict=False)
 			if result is not None:
 				break
 	return result
@@ -393,7 +394,7 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		return result
 
 	def _do_decorate_external(self, context, result):
-		package = _get_item_content_package( context )
+		package = _get_item_content_package(context)
 		if package is not None:
 			location = IContentUnitHrefMapper(package.key.bucket).href  # parent
 			for name in ('href', 'icon'):
