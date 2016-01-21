@@ -369,7 +369,7 @@ class OutlineNodeDeleteView(AbstractAuthenticatedView, NTIIDPathMixin):
 	def _remove_lesson(self, ntiid):
 		lesson = component.queryUtility(INTILessonOverview, name=ntiid)
 		if lesson is not None:
-			remove_presentation_asset(lesson, registry=self._registry())
+			remove_presentation_asset(lesson, registry=self._registry)
 
 	def __call__(self):
 		ntiid = self._get_ntiid()
