@@ -9,8 +9,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from .. import MessageFactory as _
-
 import time
 import simplejson
 
@@ -23,6 +21,8 @@ from pyramid.view import view_defaults
 from pyramid import httpexceptions as hexc
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
+
+from nti.app.contenttypes.presentation import MessageFactory as _
 
 from nti.app.contenttypes.presentation.views import VIEW_NODE_MOVE
 from nti.app.contenttypes.presentation.views import VIEW_NODE_CONTENTS
