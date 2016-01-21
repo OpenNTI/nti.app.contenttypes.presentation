@@ -460,7 +460,7 @@ class _NTIDiscussionRefDecorator(_BaseAssetDecorator):
 		super(_NTIDiscussionRefDecorator, self).decorateExternalObject(original, external)
 		if 'target' in external:
 			external['Target-NTIID'] = external.pop('target')
-		if 'Target-NTIID' in external and not original.isCourseBundle():
+		if 'Target-NTIID' in external and not external.get(NTIID):
 			external[NTIID] = external['Target-NTIID']
 
 @component.adapter(INTIRelatedWorkRef)
