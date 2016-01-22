@@ -354,7 +354,7 @@ class OutlineNodeMoveView(AbstractChildMoveView,
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest',
 			 name=VIEW_NODE_CONTENTS)
-class OutlineNodeDeleteView(AbstractAuthenticatedView, NTIIDPathMixin):
+class OutlineNodeDeleteContentsView(AbstractAuthenticatedView, NTIIDPathMixin):
 	"""
 	Delete the given ntiid in our context. We may be given an `index`
 	param, which we will ignore.
@@ -371,31 +371,51 @@ class OutlineNodeDeleteView(AbstractAuthenticatedView, NTIIDPathMixin):
 		if lesson is not None:
 			remove_presentation_asset(lesson, registry=self._registry)
 
-	def __call__(self):
-		ntiid = self._get_ntiid()
+	def _do_delete(self, parent, ntiid):
 
 		# 12.2015 - We currently do not delete the underlying lesson
 		# and assets tied to this node. Potentially, we could allow
 		# the user to recover/undo these deleted lesson nodes, or
 		# through administrative action.
 		# if self.context.LessonOverviewNTIID:
-		# 	self._remove_lesson(self.context.LessonOverviewNTIID)
+		#	self._remove_lesson(self.context.LessonOverviewNTIID)
 
 		# TODO: Do we want to permanently delete nodes, or delete placeholder
 		# mark them (to undo and save transaction history)?
 		try:
-			node = self.context[ntiid]
+			node = parent[ntiid]
 			unregisterUtility(name=ntiid,
 							  registry=self._registry,
 							  provided=iface_of_node(node))
-			del self.context[ntiid]
+			del parent[ntiid]
 		except KeyError:
 			# Already deleted.
-			pass
+			return False
 		else:
 			logger.info('Deleted entity in outline %s', ntiid)
-			self.context.child_order_locked = True
+			parent.child_order_locked = True
+			return True
+
+	def __call__(self):
+		ntiid = self._get_ntiid()
+		self._do_delete(self.context, ntiid)
 		return hexc.HTTPOk()
+
+@view_config(route_name='objects.generic.traversal',
+			 context=ICourseOutlineNode,
+			 request_method='DELETE',
+			 permission=nauth.ACT_CONTENT_EDIT,
+			 renderer='rest')
+class OutlineNodeDeleteView(OutlineNodeDeleteContentsView):
+
+	def __call__(self):
+		self._do_delete(self.context.__parent__, self.context.ntiid)
+		try:
+			if self.context.LessonOverviewNTIID:
+				self._remove_lesson(self.context.LessonOverviewNTIID)
+		except AttributeError:
+			pass
+		return hexc.HTTPNoContent()
 
 @view_config(route_name='objects.generic.traversal',
 			 context=ICourseOutlineNode,
