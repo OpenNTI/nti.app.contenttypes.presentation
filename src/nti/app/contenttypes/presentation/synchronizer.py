@@ -130,7 +130,7 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 
 def _remove_registered_course_overview(name=None, registry=None, course=None, force=False):
 	result = []
-	container = IPresentationAssetContainer(course, None) or {}
+	container = IPresentationAssetContainer(course)
 	group = _removed_registered(INTICourseOverviewGroup,
 								name=name,
 								force=force,
@@ -177,7 +177,7 @@ def _remove_registered_lesson_overview(name, registry=None, course=None, force=F
 	if overview is None:
 		return result
 	else:  # remove from container
-		container = IPresentationAssetContainer(course, None) or {}
+		container = IPresentationAssetContainer(course)
 		container.pop(name, None)
 		result.append(overview)
 
@@ -455,7 +455,7 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 										   			  	 course=course))
 
 	if container_ntiids:  # unindex all other objects
-		container = IPresentationAssetContainer(course, None) or {}
+		container = IPresentationAssetContainer(course)
 		objs = catalog.search_objects(container_ntiids=container_ntiids,
 									  namespace=namespace, sites=sites, intids=intids)
 		for obj in list(objs):  # we are mutating
@@ -489,7 +489,7 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 
 	sites = get_component_hierarchy_names()
 	catalog = get_library_catalog() if catalog is None else catalog
-	container = IPresentationAssetContainer(course, None)
+	container = IPresentationAssetContainer(course)
 
 	if parent is not None:
 		to_index = _recurse_copy(container_ntiids, parent.ntiid)
@@ -498,8 +498,7 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 
 	for item in items or ():
 
-		if container is not None:
-			container[item.ntiid] = item
+		container[item.ntiid] = item
 
 		# set lesson overview NTIID on the outline node
 		if INTILessonOverview.providedBy(item) and node is not None:

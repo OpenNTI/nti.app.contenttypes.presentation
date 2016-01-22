@@ -155,9 +155,11 @@ from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import find_object_with_ntiid
 
-from nti.site.utils import registerUtility
 from nti.site.interfaces import IHostPolicyFolder
+
 from nti.site.site import get_component_hierarchy_names
+
+from nti.site.utils import registerUtility
 
 from nti.traversal.traversal import find_interface
 
