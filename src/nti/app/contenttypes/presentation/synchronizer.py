@@ -130,7 +130,7 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 
 def _remove_registered_course_overview(name=None, registry=None, course=None, force=False):
 	result = []
-	container = IPresentationAssetContainer(course)
+	container = IPresentationAssetContainer(course, None) or  {}
 	group = _removed_registered(INTICourseOverviewGroup,
 								name=name,
 								force=force,
@@ -177,7 +177,7 @@ def _remove_registered_lesson_overview(name, registry=None, course=None, force=F
 	if overview is None:
 		return result
 	else:  # remove from container
-		container = IPresentationAssetContainer(course)
+		container = IPresentationAssetContainer(course, None) or {}
 		container.pop(name, None)
 		result.append(overview)
 
@@ -259,7 +259,7 @@ def _add_2_package_containers(course, catalog, item):
 	packages = get_course_packages(course)
 	for package in packages or ():
 		ntiids.append(package.ntiid)
-		container = IPresentationAssetContainer(package)
+		container = IPresentationAssetContainer(package, None) or {}
 		container[item.ntiid] = item
 	if ntiids:
 		catalog.index(item, container_ntiids=ntiids,
@@ -455,7 +455,7 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 										   			  	 course=course))
 
 	if container_ntiids:  # unindex all other objects
-		container = IPresentationAssetContainer(course)
+		container = IPresentationAssetContainer(course, None) or {}
 		objs = catalog.search_objects(container_ntiids=container_ntiids,
 									  namespace=namespace, sites=sites, intids=intids)
 		for obj in list(objs):  # we are mutating
@@ -489,7 +489,7 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 
 	sites = get_component_hierarchy_names()
 	catalog = get_library_catalog() if catalog is None else catalog
-	container = IPresentationAssetContainer(course)
+	container = IPresentationAssetContainer(course, None) or {}
 
 	if parent is not None:
 		to_index = _recurse_copy(container_ntiids, parent.ntiid)
@@ -654,7 +654,6 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, **kwar
 				overview.publish()  # by default
 
 			_set_source_lastModified(namespace, sibling_lastModified, catalog)
-
 
 	# finally copy transactions from removed to new objects
 	_copy_remove_transactions(removed, registry=registry)

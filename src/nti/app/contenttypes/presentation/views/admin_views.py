@@ -74,7 +74,7 @@ from nti.recorder.record import remove_transaction_history
 
 from nti.site.interfaces import IHostPolicyFolder
 
-from nti.site.hostpolicy import get_site
+from nti.site.hostpolicy import get_host_site
 
 from nti.site.utils import unregisterUtility
 
@@ -162,7 +162,7 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 		catalog = get_library_catalog()
 		for course in yield_sync_courses(ntiids):
 			folder = find_interface(course, IHostPolicyFolder, strict=False)
-			with current_site(get_site(folder.__name__)):
+			with current_site(get_host_site(folder.__name__)):
 				removed = []
 				
 				registry = folder.getSiteManager()
@@ -349,7 +349,7 @@ class SyncCoursePresentationAssetsView(AbstractAuthenticatedView,
 		items = result[ITEMS] = []
 		for course in courses:
 			folder = find_interface(course, IHostPolicyFolder, strict=False)
-			with current_site(get_site(folder.__name__)):
+			with current_site(get_host_site(folder.__name__)):
 				synchronize_course_lesson_overview(course)
 				items.append(ICourseCatalogEntry(course).ntiid)
 		return result

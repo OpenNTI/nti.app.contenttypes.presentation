@@ -756,10 +756,6 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self._reset_obj_state( outline_ntiid )
 		self._check_obj_state( outline_ntiid, is_locked=False )
 
-		# Direct deletes are not allowed.
-		self.testapp.delete( '/dataserver2/Objects/%s' % first_ntiid,
-							extra_environ=instructor_environ, status=404 )
-
 		# One
 		delete_suffix = self._get_delete_url_suffix( 0, first_ntiid )
 		self.testapp.delete(self.outline_ordered_contents_url + delete_suffix,
