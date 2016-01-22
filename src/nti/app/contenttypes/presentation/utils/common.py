@@ -37,12 +37,6 @@ def yield_sync_courses(ntiids=()):
 		for ntiid in ntiids:
 			obj = find_object_with_ntiid(ntiid)
 			course = ICourseInstance(obj, None)
-			if course is None:
-				try:
-					entry = catalog.getCatalogEntry(ntiid)
-					course = ICourseInstance(entry, None)
-				except KeyError:
-					pass
 			if course is None or ILegacyCourseInstance.providedBy(course):
 				logger.error("Could not find course with NTIID %s", ntiid)
 			else:
