@@ -171,6 +171,7 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 													container_ntiids=entry.ntiid,
 												 	course=course,
 												 	catalog=catalog,
+												 	registry=registry,
 												 	force=force))
 				# remove last mod keys
 				clear_namespace_last_modified(course, catalog)
