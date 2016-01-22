@@ -150,6 +150,12 @@ def _remove_registered_course_overview(name=None, registry=None, course=None, fo
 		if removed is not None:
 			result.append(removed)
 			container.pop(ntiid, None)
+			
+		if INTIMediaRoll.providedBy(obj):
+			# Remove each item in our roll
+			for roll_item in item:
+				iface = iface_of_thing(roll_item)
+				_do_remove(iface, roll_item)
 
 	# For each group remove anything that is not synced in the content package.
 	# As of 20150404 we don't have a way to edit and register common group
@@ -158,11 +164,7 @@ def _remove_registered_course_overview(name=None, registry=None, course=None, fo
 		iface = iface_of_thing(item)
 		if iface not in PACKAGE_CONTAINER_INTERFACES:
 			_do_remove(iface, item)
-			if INTIMediaRoll.providedBy(item):
-				# Remove each item in our roll
-				for roll_item in item:
-					iface = iface_of_thing(roll_item)
-					_do_remove(iface, roll_item)
+			
 	return result
 
 def _remove_registered_lesson_overview(name, registry=None, course=None, force=False):
