@@ -27,6 +27,7 @@ from nti.app.contenttypes.presentation.decorators import is_legacy_uas
 from nti.app.contenttypes.presentation.decorators import _AbstractMoveLinkDecorator
 
 from nti.app.contenttypes.presentation.utils import is_item_visible
+from nti.app.contenttypes.presentation.utils import resolve_discussion_course_bundle
 from nti.app.contenttypes.presentation.utils import get_enrollment_record as get_any_enrollment_record
 
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_TOPIC
@@ -268,6 +269,14 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 				elif m_scope == ES_CREDIT and scope == ES_PUBLIC and has_credit:
 					removal.add(idx)
 
+	def _allow_discussion_course_bundle(self, context, item):
+		record = self.record(context)
+		resolved = resolve_discussion_course_bundle(user=self.remoteUser,
+													item=item,
+													context=context,
+												 	record=record)
+		return bool(resolved is not None)
+		
 	def _allow_assessmentref(self, iface, context, item):
 		record = self.record(context)
 		assg = iface(item, None)
@@ -302,8 +311,12 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 		for idx, item in enumerate(context):
 			if IVisible.providedBy(item) and not self._allow_visible(context, item):
 				removal.add(idx)
-			elif INTIDiscussionRef.providedBy(item) and self._is_legacy_discussion(item):
-				discussions.append(idx)
+			elif INTIDiscussionRef.providedBy(item):
+				if item.isCourseBundle():
+					if not self._allow_discussion_course_bundle(context, item):
+						removal.add(idx)
+				elif self._is_legacy_discussion(item):
+					discussions.append(idx)
 			elif IMediaRef.providedBy(item):
 				self._handle_media_ref(items, item, idx)
 			elif INTIAssignmentRef.providedBy(item) and not self.allow_assignmentref(context, item):
