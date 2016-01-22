@@ -72,9 +72,11 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.recorder.record import remove_transaction_history
 
-from nti.site.utils import unregisterUtility
 from nti.site.interfaces import IHostPolicyFolder
+
 from nti.site.site import get_site_for_site_names
+
+from nti.site.utils import unregisterUtility
 
 from nti.traversal.traversal import find_interface
 
