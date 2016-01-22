@@ -348,17 +348,7 @@ class OutlineNodeMoveView(AbstractChildMoveView,
 			result[ITEMS] = self.externalize_node_contents(self.context)
 		return result
 
-@view_config(route_name='objects.generic.traversal',
-			 context=ICourseOutlineNode,
-			 request_method='DELETE',
-			 permission=nauth.ACT_CONTENT_EDIT,
-			 renderer='rest',
-			 name=VIEW_NODE_CONTENTS)
-class OutlineNodeDeleteContentsView(AbstractAuthenticatedView, NTIIDPathMixin):
-	"""
-	Delete the given ntiid in our context. We may be given an `index`
-	param, which we will ignore.
-	"""
+class OutlineNodeDeleteMixIn(AbstractAuthenticatedView, NTIIDPathMixin):
 
 	@Lazy
 	def _registry(self):
@@ -371,17 +361,16 @@ class OutlineNodeDeleteContentsView(AbstractAuthenticatedView, NTIIDPathMixin):
 		if lesson is not None:
 			remove_presentation_asset(lesson, registry=self._registry)
 
-	def _do_delete(self, parent, ntiid):
+	def _delete_lesson(self, context):
+		try:
+			if context.LessonOverviewNTIID:
+				self._remove_lesson(context.LessonOverviewNTIID)
+				return True
+		except AttributeError:
+			pass
+		return False
 
-		# 12.2015 - We currently do not delete the underlying lesson
-		# and assets tied to this node. Potentially, we could allow
-		# the user to recover/undo these deleted lesson nodes, or
-		# through administrative action.
-		# if self.context.LessonOverviewNTIID:
-		#	self._remove_lesson(self.context.LessonOverviewNTIID)
-
-		# TODO: Do we want to permanently delete nodes, or delete placeholder
-		# mark them (to undo and save transaction history)?
+	def _delete_node(self, parent, ntiid):
 		try:
 			node = parent[ntiid]
 			unregisterUtility(name=ntiid,
@@ -396,9 +385,29 @@ class OutlineNodeDeleteContentsView(AbstractAuthenticatedView, NTIIDPathMixin):
 			parent.child_order_locked = True
 			return True
 
+@view_config(route_name='objects.generic.traversal',
+			 context=ICourseOutlineNode,
+			 request_method='DELETE',
+			 permission=nauth.ACT_CONTENT_EDIT,
+			 renderer='rest',
+			 name=VIEW_NODE_CONTENTS)
+class OutlineNodeDeleteContentsView(OutlineNodeDeleteMixIn):
+	"""
+	Delete the given ntiid in our context. We may be given an `index`
+	param, which we will ignore.
+	"""
+
 	def __call__(self):
 		ntiid = self._get_ntiid()
-		self._do_delete(self.context, ntiid)
+		# 12.2015 - We currently do not delete the underlying lesson
+		# and assets tied to this node. Potentially, we could allow
+		# the user to recover/undo these deleted lesson nodes, or
+		# through administrative action.
+		# if self.context.LessonOverviewNTIID:
+		#	self._remove_lesson(self.context.LessonOverviewNTIID)
+		# TODO: Do we want to permanently delete nodes, or delete placeholder
+		# mark them (to undo and save transaction history)?
+		self._delete_node(self.context, ntiid)
 		return hexc.HTTPOk()
 
 @view_config(route_name='objects.generic.traversal',
@@ -406,15 +415,11 @@ class OutlineNodeDeleteContentsView(AbstractAuthenticatedView, NTIIDPathMixin):
 			 request_method='DELETE',
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest')
-class OutlineNodeDeleteView(OutlineNodeDeleteContentsView):
+class OutlineNodeDeleteView(OutlineNodeDeleteMixIn):
 
 	def __call__(self):
-		self._do_delete(self.context.__parent__, self.context.ntiid)
-		try:
-			if self.context.LessonOverviewNTIID:
-				self._remove_lesson(self.context.LessonOverviewNTIID)
-		except AttributeError:
-			pass
+		self._delete_lesson(self.context)
+		self._delete_node(self.context.__parent__, self.context.ntiid)
 		return hexc.HTTPNoContent()
 
 @view_config(route_name='objects.generic.traversal',
