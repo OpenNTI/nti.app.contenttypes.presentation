@@ -162,9 +162,9 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 			folder = find_interface(course, IHostPolicyFolder, strict=False)
 			site = get_site_for_site_names((folder.__name__,))
 			with current_site(site):
-				registry = component.getSiteManager()
+				removed = []
+				registry = folder.getSiteManager()
 				entry = ICourseCatalogEntry(course)
-				removed = items[entry.ntiid] = []
 
 				# remove registered assets
 				removed.extend(remove_and_unindex_course_assets(
@@ -189,6 +189,10 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 					remove_transaction_history(obj)
 				# keep total
 				total += len(removed)
+				
+				# only return ntiids
+				items[entry.ntiid] = [x.ntiid for x in removed] 
+
 		result['Total'] = total
 		return result
 
