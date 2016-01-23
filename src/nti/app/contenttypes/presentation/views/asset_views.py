@@ -216,7 +216,7 @@ class DiscussionRefGetView(AbstractAuthenticatedView, PublishVisibilityMixin):
 														context=course)
 			if resolved is not None:
 				cdiss, topic = resolved
-				logger.debug('%s resolved to %s', self.context, cdiss)
+				logger.debug('%s resolved to %s', self.context.id, cdiss)
 				return topic
 			else:
 				raise hexc.HTTPNotFound(_("Topic not found."))
