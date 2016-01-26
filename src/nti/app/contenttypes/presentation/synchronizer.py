@@ -130,14 +130,15 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 
 def _remove_registered_course_overview(name=None, registry=None, course=None, force=False):
 	result = []
-	container = IPresentationAssetContainer(course, None) or  {}
+	container = IPresentationAssetContainer(course, None)
 	group = _removed_registered(INTICourseOverviewGroup,
 								name=name,
 								force=force,
 								registry=registry)
 	if group is not None:
 		result.append(group)
-		container.pop(name, None)
+		if container is not None:
+			container.pop(name, None)
 	else:
 		group = ()
 
@@ -149,7 +150,8 @@ def _remove_registered_course_overview(name=None, registry=None, course=None, fo
 								  	  force=force)
 		if removed is not None:
 			result.append(removed)
-			container.pop(ntiid, None)
+			if container is not None:
+				container.pop(ntiid, None)
 			
 		if INTIMediaRoll.providedBy(obj):
 			# Remove each item in our roll
@@ -177,8 +179,9 @@ def _remove_registered_lesson_overview(name, registry=None, course=None, force=F
 	if overview is None:
 		return result
 	else:  # remove from container
-		container = IPresentationAssetContainer(course, None) or {}
-		container.pop(name, None)
+		container = IPresentationAssetContainer(course, None)
+		if container is not None:
+			container.pop(name, None)
 		result.append(overview)
 
 	# remove all groups
@@ -259,8 +262,9 @@ def _add_2_package_containers(course, catalog, item):
 	packages = get_course_packages(course)
 	for package in packages or ():
 		ntiids.append(package.ntiid)
-		container = IPresentationAssetContainer(package, None) or {}
-		container[item.ntiid] = item
+		container = IPresentationAssetContainer(package, None)
+		if container is not None:
+			container[item.ntiid] = item
 	if ntiids:
 		catalog.index(item, container_ntiids=ntiids,
 				  	  namespace=ntiids[0])  # pick first
@@ -455,14 +459,14 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 										   			  	 course=course))
 
 	if container_ntiids:  # unindex all other objects
-		container = IPresentationAssetContainer(course, None) or {}
+		container = IPresentationAssetContainer(course, None)
 		objs = catalog.search_objects(container_ntiids=container_ntiids,
 									  namespace=namespace, sites=sites, intids=intids)
 		for obj in list(objs):  # we are mutating
 			doc_id = intids.queryId(obj)
 			if doc_id is not None:
 				catalog.remove_containers(doc_id, container_ntiids)
-			if _can_be_removed(obj, force):
+			if _can_be_removed(obj, force) and container is not None:
 				container.pop(obj.ntiid, None)
 	return result
 remove_and_unindex_course_assets = _remove_and_unindex_course_assets
@@ -489,7 +493,7 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 
 	sites = get_component_hierarchy_names()
 	catalog = get_library_catalog() if catalog is None else catalog
-	container = IPresentationAssetContainer(course, None) or {}
+	container = IPresentationAssetContainer(course, None)
 
 	if parent is not None:
 		to_index = _recurse_copy(container_ntiids, parent.ntiid)
@@ -497,8 +501,9 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 		to_index = container_ntiids
 
 	for item in items or ():
-
-		container[item.ntiid] = item
+		
+		if container is not None:
+			container[item.ntiid] = item
 
 		# set lesson overview NTIID on the outline node
 		if INTILessonOverview.providedBy(item) and node is not None:
