@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-generation = 18
+generation = 19
 
 from zope import component
 from zope import interface
@@ -17,21 +17,22 @@ from zope import interface
 from zope.component.hooks import site
 from zope.component.hooks import site as current_site
 
-from nti.app.contentlibrary.utils import yield_sync_content_packages
+from nti.app.contenttypes.presentation.utils.common import yield_sync_courses
 
-from nti.contentlibrary.interfaces import IContentUnit
-from nti.contentlibrary.interfaces import IContentPackageLibrary
+from nti.contentlibrary.indexed_data import get_library_catalog
+
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
-from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
 
 from nti.site.hostpolicy import get_all_host_sites
+from nti.site.site import get_component_hierarchy_names
 
 @interface.implementer(IDataserver)
 class MockDataserver(object):
@@ -46,28 +47,23 @@ class MockDataserver(object):
 			return resolver.get_object_by_oid(oid, ignore_creator=ignore_creator)
 		return None
 
-def _pacakge_assets(pacakge):
-
-	def recur(unit):
-		for child in unit.children or ():
-			recur(child)
-		container = IPresentationAssetContainer(unit)
-		for item in container.values():
-			provided = iface_of_asset(item)
-			if provided not in PACKAGE_CONTAINER_INTERFACES:
-				continue
-			if not item.__parent__ or not IContentUnit.providedBy(item.__parent__):
-				item.__parent__ = pacakge
-	recur(pacakge)
-
-def _process_pacakges(registry):
-	for pacakge in yield_sync_content_packages():
-		_pacakge_assets(pacakge)
-
-def _process_slidedecks(registry):
-	for _, deck in list(registry.getUtilitiesFor(INTISlideDeck)):
-		for item in deck.Items or ():
-			item.__parent__ = deck
+def _process_course(course, ntiid):
+	catalog = get_library_catalog()
+	sites = get_component_hierarchy_names()
+	container = IPresentationAssetContainer(course)
+	for item in catalog.search_objects(sites=sites,
+									   container_ntiids=ntiid,
+									   container_all_of=False):
+		iface = iface_of_asset(item)
+		if iface not in PACKAGE_CONTAINER_INTERFACES:
+			container[ntiid] = item
+	
+def _process_courses(registry, seen):
+	for course in yield_sync_courses():
+		ntiid = ICourseCatalogEntry(course).ntiid
+		if ntiid not in seen:
+			seen.add(ntiid)
+			_process_course(course, ntiid)
 
 def do_evolve(context, generation=generation):
 	conn = context.connection
@@ -77,24 +73,20 @@ def do_evolve(context, generation=generation):
 	mock_ds.root = ds_folder
 	component.provideUtility(mock_ds, IDataserver)
 
+	seen = set()
 	with current_site(ds_folder):
 		assert	component.getSiteManager() == ds_folder.getSiteManager(), \
 				"Hooks not installed?"
 
-		library = component.queryUtility(IContentPackageLibrary)
-		if library is not None:
-			library.syncContentPackages()
-
 		for site in get_all_host_sites():
 			with current_site(site):
 				registry = component.getSiteManager()
-				_process_pacakges(registry)
-				_process_slidedecks(registry)
+				_process_course(registry, seen)
 
 	logger.info('Evolution %s done.', generation)
 
 def evolve(context):
 	"""
-	Evolve to generation 18 by setting lineage of package assets
+	Evolve to generation 19 by resetting items in course containers
 	"""
 	do_evolve(context, generation)
