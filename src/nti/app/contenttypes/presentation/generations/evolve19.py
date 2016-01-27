@@ -65,11 +65,11 @@ def _process_course(registry, course, ntiid):
 									   container_all_of=False,
 									   provided=course_ifaces):
 		provided = iface_of_asset(item)
-		item = registry.queryUtility(provided, name=item.ntiid)
-		if item is not None:
-			container[item.ntiid] = item
+		registered = registry.queryUtility(provided, name=item.ntiid)
+		if registered is not None:
+			container[registered.ntiid] = registered
 		else:
-			container.pop(item.ntiid, None)
+			container[item.ntiid] = item.ntiid
 	
 def _process_courses(registry, seen):
 	for course in yield_sync_courses():
