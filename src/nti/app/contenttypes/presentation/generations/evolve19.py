@@ -25,6 +25,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
+from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
@@ -47,25 +48,35 @@ class MockDataserver(object):
 			return resolver.get_object_by_oid(oid, ignore_creator=ignore_creator)
 		return None
 
-def _process_course(course, ntiid):
+def _course_asset_interfaces():
+	result = []
+	for iface in ALL_PRESENTATION_ASSETS_INTERFACES:
+		if iface not in PACKAGE_CONTAINER_INTERFACES:
+			result.append(iface)
+	return result
+
+def _process_course(registry, course, ntiid):
 	catalog = get_library_catalog()
-	registry = component.getSiteManager()
 	sites = get_component_hierarchy_names()
+	course_ifaces = _course_asset_interfaces()
 	container = IPresentationAssetContainer(course)
 	for item in catalog.search_objects(sites=sites,
 									   container_ntiids=ntiid,
-									   container_all_of=False):
+									   container_all_of=False,
+									   provided=course_ifaces):
 		provided = iface_of_asset(item)
-		if 		provided not in PACKAGE_CONTAINER_INTERFACES \
-			and registry.queryUtility(provided, name=item.ntiid) != None:
-			container[ntiid] = item
+		item = registry.queryUtility(provided, name=item.ntiid)
+		if item is not None:
+			container[item.ntiid] = item
+		else:
+			container.pop(item.ntiid, None)
 	
 def _process_courses(registry, seen):
 	for course in yield_sync_courses():
 		ntiid = ICourseCatalogEntry(course).ntiid
 		if ntiid not in seen:
 			seen.add(ntiid)
-			_process_course(course, ntiid)
+			_process_course(registry, course, ntiid)
 
 def do_evolve(context, generation=generation):
 	conn = context.connection
@@ -83,7 +94,7 @@ def do_evolve(context, generation=generation):
 		for site in get_all_host_sites():
 			with current_site(site):
 				registry = component.getSiteManager()
-				_process_course(registry, seen)
+				_process_courses(registry, seen)
 
 	logger.info('Evolution %s done.', generation)
 
