@@ -22,6 +22,14 @@ from zope.lifecycleevent import IObjectRemovedEvent
 from zope.security.interfaces import NoInteraction
 from zope.security.management import getInteraction
 
+from nti.app.contenttypes.presentation.synchronizer import clear_course_assets
+from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
+from nti.app.contenttypes.presentation.synchronizer import remove_and_unindex_course_assets
+from nti.app.contenttypes.presentation.synchronizer import synchronize_course_lesson_overview
+
+from nti.app.contenttypes.presentation.utils import get_course_packages
+from nti.app.contenttypes.presentation.utils import get_presentation_asset_containers
+
 from nti.coremetadata.interfaces import IRecordable
 
 from nti.contentlibrary.indexed_data import get_library_catalog
@@ -33,15 +41,13 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
-from nti.contenttypes.presentation.interfaces import IOverviewGroupMovedEvent
-from nti.contenttypes.presentation.interfaces import IPresentationAssetMovedEvent
-
 from nti.contenttypes.presentation.interfaces import TRX_ASSET_MOVE_TYPE
 from nti.contenttypes.presentation.interfaces import TRX_OVERVIEW_GROUP_MOVE_TYPE
 from nti.contenttypes.presentation.interfaces import TRX_ASSET_REMOVED_FROM_ITEM_ASSET_CONTAINER
 
-from nti.contenttypes.presentation.interfaces import INTIMediaRoll
-from nti.contenttypes.presentation.interfaces import INTISlideDeck
+from nti.contenttypes.presentation.interfaces import IOverviewGroupMovedEvent
+from nti.contenttypes.presentation.interfaces import IPresentationAssetMovedEvent
+
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
@@ -58,16 +64,9 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.recorder.interfaces import TRX_TYPE_CREATE
 
-from nti.recorder.utils import record_transaction
 from nti.recorder.record import remove_transaction_history
 
-from .utils import get_course_packages
-from .utils import get_presentation_asset_containers
-
-from .synchronizer import clear_course_assets
-from .synchronizer import clear_namespace_last_modified
-from .synchronizer import remove_and_unindex_course_assets
-from .synchronizer import synchronize_course_lesson_overview
+from nti.recorder.utils import record_transaction
 
 ITEMS = StandardExternalFields.ITEMS
 
@@ -93,7 +92,8 @@ def _on_course_instance_available(course, event):
 	catalog = get_library_catalog()
 	if catalog is not None and not ILegacyCourseInstance.providedBy(course):
 		sync_results = _get_course_sync_results( event )
-		synchronize_course_lesson_overview(course, catalog=catalog,
+		synchronize_course_lesson_overview(course, 
+										   catalog=catalog,
 										   sync_results=sync_results)
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
@@ -172,11 +172,7 @@ def _on_will_remove_presentation_asset(asset, event):
 		else:
 			containers = (context,)
 		for container in containers:
-			if 		(	INTICourseOverviewGroup.providedBy(container)
-					 or INTILessonOverview.providedBy(container)
-					 or INTIMediaRoll.providedBy(container)
-					 or INTISlideDeck.providedBy(container) ) \
-				and container.remove(asset):
+			if IItemAssetContainer.providedBy(container) and container.remove(asset):
 				# XXX: notify the item asset container has been modified
 				# when an underlying asset has been removed
 				notify(ItemRemovedFromItemAssetContainerEvent(container, asset))
