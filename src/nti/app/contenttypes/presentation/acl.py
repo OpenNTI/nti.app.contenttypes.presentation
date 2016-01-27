@@ -12,6 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from nti.app.contenttypes.presentation.utils import get_presentation_asset_courses
+
 from nti.common.property import Lazy
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -39,8 +41,6 @@ from nti.dataserver.interfaces import IACLProvider
 
 from nti.traversal.traversal import find_interface
 
-from .utils import get_presentation_asset_courses
-
 @interface.implementer(IACLProvider)
 class BasePresentationAssetACLProvider(object):
 
@@ -49,7 +49,7 @@ class BasePresentationAssetACLProvider(object):
 
 	@property
 	def __acl__(self):
-		result = acl_from_aces( ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)) )
+		result = acl_from_aces(ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
 		courses = get_presentation_asset_courses(self.context)
 		for course in courses or ():
 			result.extend(IACLProvider(course).__acl__)
@@ -84,7 +84,7 @@ class NTITimelineACLProvider(BasePresentationAssetACLProvider):
 class NTISlideVideoACLProvider(BasePresentationAssetACLProvider):
 	pass
 
-class AbstractCourseLineageACLProvider( object ):
+class AbstractCourseLineageACLProvider(object):
 
 	def __init__(self, context):
 		self.context = context
@@ -95,7 +95,7 @@ class AbstractCourseLineageACLProvider( object ):
 
 	@Lazy
 	def __acl__(self):
-		result = acl_from_aces( ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)) )
+		result = acl_from_aces(ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
 		course = find_interface(self.context, ICourseInstance, strict=False)
 		if course is not None:
 			result.extend(IACLProvider(course).__acl__)
