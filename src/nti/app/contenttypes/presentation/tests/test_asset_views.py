@@ -107,6 +107,12 @@ class TestAssetViews(ApplicationLayerTest):
 	def _get_delete_url_suffix(self, index, ntiid):
 		return '/ntiid/%s?index=%s' % (ntiid, index)
 
+	def _get_non_perm_environ(self):
+		with mock_dataserver.mock_db_trans(self.ds):
+			username = 'quentin_coldwater'
+			self._create_user(username)
+		return self._make_extra_environ( username )
+
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_all_assets(self):
 		res = self.testapp.get(self.assets_url, status=200)
@@ -141,10 +147,7 @@ class TestAssetViews(ApplicationLayerTest):
 			source = to_external_object(obj)
 
 		# Permissions
-		with mock_dataserver.mock_db_trans(self.ds):
-			username = 'quentin_coldwater'
-			self._create_user(username)
-		non_perm_env = self._make_extra_environ( username )
+		non_perm_env = self._get_non_perm_environ()
 		self.testapp.get( href, extra_environ=non_perm_env, status=403 )
 
 		# put
@@ -203,6 +206,10 @@ class TestAssetViews(ApplicationLayerTest):
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			group = find_object_with_ntiid( group_ntiid )
 			assert_that( group.child_order_locked, is_( False ))
+
+		# Permissions
+		non_perm_env = self._get_non_perm_environ()
+		self.testapp.get( group_href, extra_environ=non_perm_env, status=403 )
 
 		# Create base video and video roll
 		video_source = self._load_resource('ntivideo.json')
@@ -263,6 +270,9 @@ class TestAssetViews(ApplicationLayerTest):
 		assert_that( item_zero.get( 'ntiid' ), is_( video_ntiid ) )
 		assert_that( item_last.get( 'ntiid' ), is_( video_roll_ntiid ) )
 		assert_that( item_last.get( 'MimeType' ), is_( NTIVideoRoll.mime_type ) )
+
+		# Permissions
+		self.testapp.get( roll_href, extra_environ=non_perm_env, status=403 )
 
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			# Check our objects are locked and are actually video(roll)
@@ -414,6 +424,10 @@ class TestAssetViews(ApplicationLayerTest):
 
 			source = to_external_object(obj)
 
+		# Permissions
+		non_perm_env = self._get_non_perm_environ()
+		self.testapp.get( href, extra_environ=non_perm_env, status=403 )
+
 		# put
 		source['title'] = 'Install Software on a MAC'
 		res = self.testapp.put_json(href, source, status=200)
@@ -451,6 +465,10 @@ class TestAssetViews(ApplicationLayerTest):
 			self._check_containers(course, False, obj.Items)
 
 			source = to_external_object(obj)
+
+		# Permissions
+		non_perm_env = self._get_non_perm_environ()
+		self.testapp.get( href, extra_environ=non_perm_env, status=403 )
 
 		# put
 		source['Items'] = [source['Items'][1]]
@@ -592,6 +610,10 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(lesson_ntiid, is_in(containers))
 
 			source = to_external_object(obj)
+
+		# Permissions
+		non_perm_env = self._get_non_perm_environ()
+		self.testapp.get( lesson_href, extra_environ=non_perm_env, status=403 )
 
 		# remove ntiid to fake a new group
 		source['Items'][0].pop('ntiid', None)
