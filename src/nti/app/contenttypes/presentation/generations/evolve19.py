@@ -49,13 +49,15 @@ class MockDataserver(object):
 
 def _process_course(course, ntiid):
 	catalog = get_library_catalog()
+	registry = component.getSiteManager()
 	sites = get_component_hierarchy_names()
 	container = IPresentationAssetContainer(course)
 	for item in catalog.search_objects(sites=sites,
 									   container_ntiids=ntiid,
 									   container_all_of=False):
-		iface = iface_of_asset(item)
-		if iface not in PACKAGE_CONTAINER_INTERFACES:
+		provided = iface_of_asset(item)
+		if 		provided not in PACKAGE_CONTAINER_INTERFACES \
+			and registry.queryUtility(provided, name=item.ntiid) != None:
 			container[ntiid] = item
 	
 def _process_courses(registry, seen):
