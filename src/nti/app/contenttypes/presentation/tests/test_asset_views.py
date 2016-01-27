@@ -140,6 +140,13 @@ class TestAssetViews(ApplicationLayerTest):
 
 			source = to_external_object(obj)
 
+		# Permissions
+		with mock_dataserver.mock_db_trans(self.ds):
+			username = 'quentin_coldwater'
+			self._create_user(username)
+		non_perm_env = self._make_extra_environ( username )
+		self.testapp.get( href, extra_environ=non_perm_env, status=403 )
+
 		# put
 		source['description'] = 'Human/Quincy'
 		res = self.testapp.put_json(href, source, status=200)

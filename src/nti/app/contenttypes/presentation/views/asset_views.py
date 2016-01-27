@@ -172,6 +172,7 @@ MIMETYPE = StandardExternalFields.MIMETYPE
 @view_config(context=IPresentationAsset)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
+			   permission=nauth.ACT_READ,
 			   request_method='GET')
 class PresentationAssetGetView(GenericGetView, PublishVisibilityMixin):
 
@@ -188,6 +189,7 @@ class PresentationAssetGetView(GenericGetView, PublishVisibilityMixin):
 @view_config(context=INTIRelatedWorkRef)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
+			   permission=nauth.ACT_READ,
 			   request_method='GET')
 class NoHrefAssetGetView(PresentationAssetGetView):
 
@@ -200,6 +202,7 @@ class NoHrefAssetGetView(PresentationAssetGetView):
 @view_config(context=INTIDiscussionRef)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
+			   permission=nauth.ACT_READ,
 			   request_method='GET')
 class DiscussionRefGetView(AbstractAuthenticatedView, PublishVisibilityMixin):
 
@@ -222,7 +225,7 @@ class DiscussionRefGetView(AbstractAuthenticatedView, PublishVisibilityMixin):
 				raise hexc.HTTPNotFound(_("Topic not found."))
 		else:
 			raise hexc.HTTPNotAcceptable()
-	
+
 @view_config(context=ICourseInstance)
 @view_config(context=ICourseCatalogEntry)
 @view_defaults(route_name='objects.generic.traversal',
