@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-.. $Id: evolve19.py 81818 2016-01-27 02:06:26Z carlos.sanchez $
+.. $Id$
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
@@ -93,31 +93,35 @@ def _process_nodes(registry, seen):
 			continue
 		seen.add(ntiid)
 		try:
-			name = node.LessonOverviewNTIID
+			name = node.LessonOverviewNTIID or u''
 			lesson = registry.queryUtility(INTILessonOverview, name=name)
-			if lesson is not None and lesson.__parent__ is None:
-				lesson.__parent__ = node
-				course = find_interface(node, ICourseInstance, strict=False)
-				if course is None:
-					continue
-				_add_2_container(course, lesson, packages=False)
-				for group in lesson:
-					group.__parent__ = lesson
-					_add_2_container(course, group, packages=False)
-					for item in group:
-						provided = iface_of_asset(item)
-						if not provided in PACKAGE_CONTAINER_INTERFACES:
-							item.__parent__ = group
-							_add_2_container(course, item, packages=False)
-						else:
-							_add_2_container(course, item, packages=True)
-							if item.__parent__ is None:
-								# Parent is first content package available.
-								packages = get_course_packages(course)
-								package = packages[0] if packages else None
-								if package is not None:
-									item.__parent__ = package
+			if lesson is None or lesson.__parent__ is not None:
+				continue
 
+			lesson.__parent__ = node
+			course = find_interface(node, ICourseInstance, strict=False)
+			if course is None:
+				continue
+
+			logger.info("Reparenting %s", name)
+
+			_add_2_container(course, lesson, packages=False)
+			for group in lesson:
+				group.__parent__ = lesson
+				_add_2_container(course, group, packages=False)
+				for item in group:
+					provided = iface_of_asset(item)
+					if not provided in PACKAGE_CONTAINER_INTERFACES:
+						item.__parent__ = group
+						_add_2_container(course, item, packages=False)
+					else:
+						_add_2_container(course, item, packages=True)
+						if item.__parent__ is None:
+							# Parent is first content package available.
+							packages = get_course_packages(course)
+							package = packages[0] if packages else None
+							if package is not None:
+								item.__parent__ = package
 		except AttributeError:
 			pass
 
