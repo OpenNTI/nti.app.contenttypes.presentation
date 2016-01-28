@@ -9,8 +9,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from .. import MessageFactory as _
-
 import re
 import os
 import hashlib
@@ -29,6 +27,8 @@ from slugify import slugify_filename
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.contentfile import to_external_href
+
+from nti.app.contenttypes.presentation import MessageFactory as _
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
@@ -98,6 +98,7 @@ def get_download_href(item):
 def get_file_from_link(link):
 	result = None
 	try:
+		# check for @@view/@@download href
 		if re.match('(.+)/(@@)?[view|download](\/.*)?', link):
 			path = urlparse(link).path
 			path = os.path.split(path)[0]
@@ -233,9 +234,9 @@ class PublishVisibilityMixin(object):
 		Define whether this possibly publishable object is visible to the
 		remote user.
 		"""
-		return 		not IPublishable.providedBy(item) \
-				or 	item.is_published() \
-				or	has_permission(nauth.ACT_CONTENT_EDIT, item, self.request)
+		return (	not IPublishable.providedBy(item)
+				or 	item.is_published()
+				or	has_permission(nauth.ACT_CONTENT_EDIT, item, self.request))
 
 class IndexedRequestMixin(object):
 
@@ -245,8 +246,8 @@ class IndexedRequestMixin(object):
 		path: '.../index/<index_number>'
 		"""
 		index = None
-		if 		self.request.subpath \
-			and self.request.subpath[0] == 'index':
+		if (	self.request.subpath
+			and self.request.subpath[0] == 'index'):
 			try:
 				index = self.request.subpath[1]
 				index = int(index)
@@ -262,8 +263,8 @@ class NTIIDPathMixin(object):
 		Looks for a user supplied ntiid in the context path: '.../ntiid/<ntiid>'.
 		"""
 		result = None
-		if 		self.request.subpath \
-			and self.request.subpath[0] == 'ntiid':
+		if (	self.request.subpath
+			and self.request.subpath[0] == 'ntiid'):
 			try:
 				result = self.request.subpath[1]
 			except (TypeError, IndexError):
