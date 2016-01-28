@@ -18,4 +18,6 @@ class IPresentationAssetsIndex(interface.Interface):
 class IItemRefValidator(interface.Interface):
     
     def validate():
-        pass
+        """
+        Return whether or not the item reference is valid
+        """
