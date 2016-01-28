@@ -11,6 +11,7 @@ import fudge
 
 from hamcrest import is_
 from hamcrest import none
+from hamcrest import has_key
 from hamcrest import is_not
 from hamcrest import contains
 from hamcrest import not_none
@@ -36,7 +37,10 @@ from nti.app.products.courseware.tests import InstructedCourseApplicationTestLay
 from nti.app.testing.decorators import WithSharedApplicationMockDS
 from nti.app.testing.application_webtest import ApplicationLayerTest
 
+from nti.contenttypes.courses.interfaces import ICourseInstance
+
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.dataserver.tests import mock_dataserver
 
@@ -301,6 +305,15 @@ class TestOutlineEditViews(ApplicationLayerTest):
 			if INTILessonOverview.providedBy( obj ):
 				# Lessons have same titles as content nodes.
 				assert_that( obj.title, is_( obj.__parent__.title ))
+				# Lineage and asset-container
+				assert_that( obj.__parent__, not_none())
+				entry = find_object_with_ntiid(self.course_ntiid)
+				course = ICourseInstance(entry)
+				# Our asset container is only valid for the outline course
+				# (which may or may not be shared with subinstances).
+				course = ICourseInstance( course.Outline )
+				container = IPresentationAssetContainer(course)
+				assert_that(container, has_key(obj.ntiid))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_permissions(self):
