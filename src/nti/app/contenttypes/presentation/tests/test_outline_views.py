@@ -419,7 +419,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		child_ntiids = _first_node_size( 4 )
 		assert_that(child_ntiids[-1], is_(content_node_ntiid))
 
-		# Editting content node title changes lesson title.
+		# Editing content node title changes lesson title.
 		content_data = {'title':'new content title2'}
 		self.testapp.put_json(content_href, content_data,
 							extra_environ=instructor_environ)

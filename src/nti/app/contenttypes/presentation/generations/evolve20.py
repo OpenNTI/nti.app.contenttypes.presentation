@@ -5,12 +5,11 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-from nti.traversal.traversal import find_interface
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-generation = 19
+generation = 20
 
 from zope import component
 from zope import interface
@@ -18,22 +17,26 @@ from zope import interface
 from zope.component.hooks import site
 from zope.component.hooks import site as current_site
 
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseOutlineNode
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
-from nti.contenttypes.courses.interfaces import ICourseCatalogEntry,\
-	ICourseOutlineNode, ICourseInstance
+from nti.contenttypes.courses.utils import get_course_packages
+from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
-from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer,\
-	INTILessonOverview
+from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
 
 from nti.site.hostpolicy import get_all_host_sites
-from nti.site.site import get_component_hierarchy_names
+
+from nti.traversal.traversal import find_interface
 
 @interface.implementer(IDataserver)
 class MockDataserver(object):
@@ -95,12 +98,26 @@ def _process_nodes(registry, seen):
 			if lesson is not None and lesson.__parent__ is None:
 				lesson.__parent__ = node
 				course = find_interface(node, ICourseInstance, strict=False)
+				if course is None:
+					continue
+				_add_2_container(course, lesson, packages=False)
 				for group in lesson:
 					group.__parent__ = lesson
+					_add_2_container(course, group, packages=False)
 					for item in group:
 						provided = iface_of_asset(item)
 						if not provided in PACKAGE_CONTAINER_INTERFACES:
 							item.__parent__ = group
+							_add_2_container(course, item, packages=False)
+						else:
+							_add_2_container(course, item, packages=True)
+							if item.__parent__ is None:
+								# Parent is first content package available.
+								packages = get_course_packages(course)
+								package = packages[0] if packages else None
+								if package is not None:
+									item.__parent__ = package
+
 		except AttributeError:
 			pass
 
@@ -126,6 +143,6 @@ def do_evolve(context, generation=generation):
 
 def evolve(context):
 	"""
-	Evolve to generation 19 by resetting items in course containers
+	Evolve to generation 20 by fixing authored lesson lineage.
 	"""
 	do_evolve(context, generation)
