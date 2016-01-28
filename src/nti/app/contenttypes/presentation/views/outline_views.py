@@ -283,9 +283,6 @@ class OutlineNodeInsertView(AbstractAuthenticatedView,
 		creator = self.remoteUser
 		new_node = self.readCreateUpdateContentObject(creator)
 		self._set_node_ntiid(new_node)
-		if ICourseOutlineContentNode.providedBy(new_node):
-			new_lesson = self._make_lesson_node(new_node)
-			new_lesson.locked = True  # locked
 		self._register_obj(new_node)
 		new_node.locked = True
 		return new_node
@@ -295,6 +292,12 @@ class OutlineNodeInsertView(AbstractAuthenticatedView,
 		new_node = self._get_new_node()
 		self.context.insert(index, new_node)
 		self.context.child_order_locked = True
+
+		# After insert, create our lesson. This makes sure lineage
+		# is hooked up correctly when we do so.
+		if ICourseOutlineContentNode.providedBy(new_node):
+			new_lesson = self._make_lesson_node(new_node)
+			new_lesson.locked = True
 
 		logger.info('Created new outline node (%s)', new_node.ntiid)
 		self.request.response.status_int = 201
