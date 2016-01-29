@@ -107,6 +107,8 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView):
 		items.extend(x for x in self._yield_course_items(course, mimeTypes))
 		items.sort()  # natural order
 		result['ItemCount'] = result['Total'] = len(items)
+		result.lastModified = reduce(lambda x, y: max(x, getattr(y, 'lastModified', 0)),
+									 items, 0)
 		return result
 
 	def __call__(self):
