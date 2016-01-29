@@ -18,12 +18,9 @@ from collections import Mapping
 
 import transaction
 
-from zope import component
 from zope import interface
 
 from zope.event import notify
-
-from zope.intid.interfaces import IIntIds
 
 from zope.security.interfaces import NoInteraction
 from zope.security.management import getInteraction
@@ -103,7 +100,6 @@ from nti.contenttypes.presentation import LESSON_OVERVIEW_MIMETYES
 from nti.contenttypes.presentation import ALL_MEDIA_ROLL_MIME_TYPES
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import COURSE_OVERVIEW_GROUP_MIMETYES
-from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.contenttypes.presentation.discussion import is_nti_course_bundle
 
@@ -144,7 +140,6 @@ from nti.dataserver.contenttypes.forums.interfaces import ITopic
 from nti.externalization.oids import to_external_ntiid_oid
 from nti.externalization.internalization import notify_modified
 from nti.externalization.externalization import to_external_object
-from nti.externalization.externalization import LocatedExternalDict
 from nti.externalization.externalization import StandardExternalFields
 
 from nti.namedfile.file import name_finder
@@ -156,8 +151,6 @@ from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.site.interfaces import IHostPolicyFolder
-
-from nti.site.site import get_component_hierarchy_names
 
 from nti.site.utils import registerUtility
 
@@ -225,67 +218,6 @@ class DiscussionRefGetView(AbstractAuthenticatedView, PublishVisibilityMixin):
 				raise hexc.HTTPNotFound(_("Topic not found."))
 		else:
 			raise hexc.HTTPNotAcceptable()
-
-@view_config(context=ICourseInstance)
-@view_config(context=ICourseCatalogEntry)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   name=VIEW_ASSETS,
-			   request_method='GET',
-			   permission=nauth.ACT_CONTENT_EDIT)
-class CoursePresentationAssetsView(AbstractAuthenticatedView):
-
-	def _get_mimeTypes(self):
-		params = CaseInsensitiveDict(self.request.params)
-		result = params.get('accept') or params.get('mimeType')
-		if result:
-			result = set(result.split(','))
-		return result or ()
-
-	def _pkg_containers(self, pacakge):
-		result = []
-		def recur(unit):
-			for child in unit.children or ():
-				recur(child)
-			result.append(unit.ntiid)
-		recur(pacakge)
-		return result
-
-	def _course_containers(self, course):
-		result = set()
-		entry = ICourseCatalogEntry(course)
-		for pacakge in get_course_packages(course):
-			result.update(self._pkg_containers(pacakge))
-		result.add(entry.ntiid)
-		return result
-
-	def __call__(self):
-		result = LocatedExternalDict()
-		result.__name__ = self.request.view_name
-		result.__parent__ = self.request.context
-		self.request.acl_decoration = False  # decoration
-
-		result[ITEMS] = items = list()
-		catalog = get_library_catalog()
-		mimeTypes = self._get_mimeTypes()
-		course = ICourseInstance(self.context)
-		intids = component.getUtility(IIntIds)
-		container_ntiids = self._course_containers(course)
-		for item in catalog.search_objects(intids=intids,
-										   container_all_of=False,
-										   container_ntiids=container_ntiids,
-										   sites=get_component_hierarchy_names(),
-										   provided=ALL_PRESENTATION_ASSETS_INTERFACES):
-			if not mimeTypes:
-				items.append(item)
-			else:
-				mt = getattr(item, 'mimeType', None) or getattr(item, 'mime_type', None)
-				if mt in mimeTypes:
-					items.append(item)
-		if mimeTypes:
-			items.sort()  # natural order
-		result['ItemCount'] = result['Total'] = len(items)
-		return result
 
 # POST/PUT views
 

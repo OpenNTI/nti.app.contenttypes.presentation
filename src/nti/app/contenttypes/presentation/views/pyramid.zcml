@@ -8,6 +8,7 @@
 
 	<pyramid:scan package=".admin_views" />
 	<pyramid:scan package=".asset_views" />
+	<pyramid:scan package=".course_views" />
 	<pyramid:scan package=".outline_views" />
 
 </configure>
