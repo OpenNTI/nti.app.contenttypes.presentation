@@ -30,6 +30,10 @@
 				for="nti.contenttypes.courses.interfaces.ICourseOutlineContentNode
 					 pyramid.interfaces.IRequest" />
 
+	<subscriber factory=".outlines._CourseOutlineNodeDecorator"
+				for="nti.contenttypes.courses.interfaces.ICourseOutlineNode"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
+
 	<subscriber factory=".outlines._IpadCourseOutlineContentNodeSrcDecorator"
 				provides="nti.externalization.interfaces.IExternalMappingDecorator"
 				for="nti.contenttypes.courses.interfaces.ICourseOutlineContentNode
