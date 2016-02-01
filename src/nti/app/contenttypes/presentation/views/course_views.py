@@ -39,6 +39,7 @@ from nti.externalization.externalization import StandardExternalFields
 from nti.site.site import get_component_hierarchy_names
 
 ITEMS = StandardExternalFields.ITEMS
+LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 
 @view_config(context=ICourseInstance)
 @view_config(context=ICourseCatalogEntry)
@@ -107,8 +108,8 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView):
 		items.extend(x for x in self._yield_course_items(course, mimeTypes))
 		items.sort()  # natural order
 		result['ItemCount'] = result['Total'] = len(items)
-		result.lastModified = reduce(lambda x, y: max(x, getattr(y, 'lastModified', 0)),
-									 items, 0)
+		result[LAST_MODIFIED] = result.lastModified = \
+					reduce(lambda x, y: max(x, getattr(y, 'lastModified', 0)), items, 0)
 		return result
 
 	def __call__(self):

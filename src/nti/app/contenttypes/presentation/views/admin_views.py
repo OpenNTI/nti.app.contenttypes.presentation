@@ -85,6 +85,7 @@ from nti.traversal.traversal import find_interface
 ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID
 MIMETYPE = StandardExternalFields.MIMETYPE
+LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 
 def _course_asset_interfaces():
 	result = []
@@ -128,7 +129,7 @@ class GetCoursePresentationAssetsView(AbstractAuthenticatedView,
 		courses = list(yield_sync_courses(ntiids))
 
 		total = 0
-		result = LocatedExternalDict()
+		result = LocatedExternalDict()		
 		result[ITEMS] = items = {}
 		for course in courses:
 			entry = ICourseCatalogEntry(course)
@@ -460,6 +461,6 @@ class OutlineObjectCourseResolverView(AbstractAuthenticatedView):
 			for course in possible_courses:
 				if course.Outline == our_outline:
 					items.append(course)
-		result['ItemCount'] = len(items)
 		result['SiteInfo'] = getSite().__name__
+		result['Total'] = result['ItemCount'] = len(items)
 		return result

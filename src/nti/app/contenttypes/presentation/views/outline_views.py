@@ -16,9 +16,10 @@ from zope import component
 
 from zope.intid.interfaces import IIntIds
 
+from pyramid import httpexceptions as hexc
+
 from pyramid.view import view_config
 from pyramid.view import view_defaults
-from pyramid import httpexceptions as hexc
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
@@ -55,9 +56,9 @@ from nti.common.time import time_to_64bit_int
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
-from nti.contenttypes.courses.interfaces import iface_of_node
 from nti.contenttypes.courses.interfaces import NTI_COURSE_OUTLINE_NODE
 
+from nti.contenttypes.courses.interfaces import iface_of_node
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
@@ -80,6 +81,7 @@ from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.coremetadata.interfaces import IPublishable
 
 from nti.dataserver import authorization as nauth
+
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.externalization.oids import to_external_ntiid_oid
@@ -94,11 +96,12 @@ from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
 
+from nti.site.interfaces import IHostPolicyFolder
+
 from nti.site.site import get_component_hierarchy_names
 
 from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
-from nti.site.interfaces import IHostPolicyFolder
 
 from nti.traversal.traversal import find_interface
 
