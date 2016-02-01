@@ -152,6 +152,6 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 				topic_key in v:
 				topic = v[topic_key]  # found the topic
 				break
-		if topic is None:
+		if topic is not None:
 			return (discussion, topic)
 		return None
