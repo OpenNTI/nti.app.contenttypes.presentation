@@ -9,6 +9,28 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+# re-export
+from nti.app.contenttypes.presentation.utils.asset import intid_register
+from nti.app.contenttypes.presentation.utils.asset import add_2_connection
+from nti.app.contenttypes.presentation.utils.asset import make_asset_ntiid
+from nti.app.contenttypes.presentation.utils.asset import registry_by_name
+from nti.app.contenttypes.presentation.utils.asset import component_registry
+from nti.app.contenttypes.presentation.utils.asset import create_lesson_4_node
+from nti.app.contenttypes.presentation.utils.asset import remove_presentation_asset
+from nti.app.contenttypes.presentation.utils.asset import notify_removed as notify_asset_removed
+
+# re-export
+from nti.app.contenttypes.presentation.utils.common import yield_sync_courses
+
+# re-export
+from nti.app.contenttypes.presentation.utils.course import get_courses
+from nti.app.contenttypes.presentation.utils.course import get_course_packages
+from nti.app.contenttypes.presentation.utils.course import get_enrollment_record
+from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_courses
+from nti.app.contenttypes.presentation.utils.course import get_entry_by_relative_path_parts
+from nti.app.contenttypes.presentation.utils.course import get_course_by_relative_path_parts
+from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_containers
+
 from nti.app.products.courseware.discussions import get_forum_scopes
 
 from nti.contenttypes.courses.interfaces import ES_ALL
@@ -36,28 +58,7 @@ from nti.contenttypes.presentation.interfaces import PURCHASED
 
 from nti.contenttypes.presentation.interfaces import IPresentationVisibility
 
-# re-export
-from .common import yield_sync_courses
-
-# re-export
-from .asset import intid_register
-from .asset import add_2_connection
-from .asset import make_asset_ntiid
-from .asset import registry_by_name
-from .asset import component_registry
-from .asset import create_lesson_4_node
-from .asset import remove_presentation_asset
-from .asset import notify_removed as notify_asset_removed
-
-# re-export
-from .course import get_courses
-from .course import get_course_packages
-from .course import get_enrollment_record
-from .course import get_presentation_asset_courses
-from .course import get_entry_by_relative_path_parts
-from .course import get_course_by_relative_path_parts
-from .course import get_presentation_asset_containers
-
+#: Visibility scope map
 VISIBILITY_SCOPE_MAP = {
 	ES_ALL: EVERYONE,
 	ES_PUBLIC: PUBLIC,
@@ -151,4 +152,6 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 				topic_key in v:
 				topic = v[topic_key]  # found the topic
 				break
-		return (discussion, topic)
+		if topic is None:
+			return (discussion, topic)
+		return None
