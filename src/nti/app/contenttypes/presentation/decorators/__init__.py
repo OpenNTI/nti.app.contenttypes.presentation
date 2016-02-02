@@ -13,7 +13,16 @@ from zope import interface
 
 from zope.location.interfaces import ILocation
 
-from nti.app.products.courseware.utils import PreviewCourseAccessPredicate as PreviewCourseAccessPredicateDecorator
+from nti.app.contenttypes.presentation import MessageFactory
+
+from nti.app.contenttypes.presentation import VIEW_ASSETS
+from nti.app.contenttypes.presentation import VIEW_NODE_MOVE
+from nti.app.contenttypes.presentation import VIEW_NODE_CONTENTS
+from nti.app.contenttypes.presentation import VIEW_OVERVIEW_CONTENT
+from nti.app.contenttypes.presentation import VIEW_OVERVIEW_SUMMARY
+from nti.app.contenttypes.presentation import VIEW_ORDERED_CONTENTS
+
+from nti.app.products.courseware.utils import PreviewCourseAccessPredicateDecorator
 
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
@@ -26,15 +35,6 @@ from nti.dataserver.authorization import ACT_CONTENT_EDIT
 from nti.externalization.interfaces import StandardExternalFields
 
 from nti.links.links import Link
-
-from .. import MessageFactory
-
-from .. import VIEW_ASSETS
-from .. import VIEW_NODE_MOVE
-from .. import VIEW_NODE_CONTENTS
-from .. import VIEW_OVERVIEW_CONTENT
-from .. import VIEW_OVERVIEW_SUMMARY
-from .. import VIEW_ORDERED_CONTENTS
 
 LINKS = StandardExternalFields.LINKS
 
@@ -65,9 +65,9 @@ class _AbstractMoveLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		return result
 
 	def _predicate(self, context, result):
-		return 		self._acl_decoration \
-				and self._is_authenticated \
-				and has_permission(ACT_CONTENT_EDIT, context, self.request)
+		return (	self._acl_decoration
+				and self._is_authenticated
+				and has_permission(ACT_CONTENT_EDIT, context, self.request))
 
 	def _do_decorate_external(self, context, result):
 		links = result.setdefault(LINKS, [])
