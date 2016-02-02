@@ -600,13 +600,13 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 			items[item.ntiid] = to_external_object(item)
 			lastModified = max(lastModified, item.lastModified)
 
-		result[LAST_MODIFIED] = lastModified
+		result.lastModified = result[LAST_MODIFIED] = lastModified
 		result['Total'] = result['ItemCount'] = len(items)
 		return result
 
 	def _predicate(self, course, record):
-		return record is not None \
-			or has_permission( ACT_CONTENT_EDIT, course, self.request )
+		return 		record is not None \
+				or	has_permission( ACT_CONTENT_EDIT, course, self.request )
 
 	def __call__(self):
 		course = ICourseInstance(self.request.context)
