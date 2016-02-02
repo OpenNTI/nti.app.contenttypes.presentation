@@ -87,10 +87,8 @@ def is_item_visible(item, user, context=None, record=None):
 		record = get_enrollment_record(context, user) if record is None else record
 		scope = record.Scope if record is not None else None
 		if scope != ES_ALL and get_visibility_for_scope(scope) != item.visibility:
-			return False
-
-		# Our item is scoped, but editors always should have access.
-		return has_permission( ACT_CONTENT_EDIT, context )
+			# Our item is scoped and not-visible to us, but editors always have access.
+			return has_permission( ACT_CONTENT_EDIT, context )
 	return True
 
 def get_scope_term(name):
