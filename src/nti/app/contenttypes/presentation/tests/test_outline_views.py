@@ -65,7 +65,7 @@ class TestOutlineViews(ApplicationLayerTest):
 	default_origin = b'http://janux.ou.edu'
 
 	course_ntiid = 'tag:nextthought.com,2011-10:NTI-CourseInfo-Fall2015_CS_1323_SubInstances_995'
-	course_href = '/dataserver2/Objects/%s' + course_ntiid
+	course_href = '/dataserver2/Objects/%s' % course_ntiid
 
 	def _do_enroll(self):
 		admin_environ = self._make_extra_environ(username=self.default_username)
@@ -80,8 +80,11 @@ class TestOutlineViews(ApplicationLayerTest):
 		res = self._do_enroll()
 		course_ext = res.json_body['CourseInstance']
 		course_href = course_ext.get( 'href' )
-		self.forbid_link_with_rel(course_ext, 'MediaByOutlineNode')
+
+		# Students do not in have access in preview mode.
 		ichigo_environ = self._make_extra_environ(username=STUDENT)
+		res = self.testapp.get( course_href, extra_environ=ichigo_environ)
+		self.forbid_link_with_rel( res.json_body, 'MediaByOutlineNode' )
 
 		# Now verify our link shows up outside of preview mode.
 		mock_preview.is_callable().returns( False )

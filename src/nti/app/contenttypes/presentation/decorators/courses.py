@@ -21,6 +21,8 @@ from nti.app.contenttypes.presentation.utils import resolve_discussion_course_bu
 
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
+from nti.appserver.pyramid_authorization import has_permission
+
 from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussion
 
 from nti.contenttypes.courses.discussions.utils import is_nti_course_bundle
@@ -30,6 +32,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.utils import is_course_editor
 from nti.contenttypes.courses.utils import is_course_instructor
 from nti.contenttypes.courses.utils import get_enrollment_record
+
+from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalMappingDecorator
@@ -59,8 +63,9 @@ class _MediaByOutlineNodeDecorator(PreviewCourseAccessPredicateDecorator):
 		result = super(_MediaByOutlineNodeDecorator, self)._predicate(context, result_map)
 		course = ICourseInstance(context, None)
 		result = 	result \
-				and (	is_course_instructor(course, self.remoteUser) \
-				 	 or get_enrollment_record(course, self.remoteUser) is not None)
+				and (	is_course_instructor(course, self.remoteUser)
+				 	 or get_enrollment_record(course, self.remoteUser) is not None
+				 	 or has_permission(ACT_CONTENT_EDIT, course, self.request))
 		return result
 
 	def _do_decorate_external(self, context, result_map):

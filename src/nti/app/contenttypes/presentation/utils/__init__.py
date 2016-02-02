@@ -33,6 +33,8 @@ from nti.app.contenttypes.presentation.utils.course import get_presentation_asse
 
 from nti.app.products.courseware.discussions import get_forum_scopes
 
+from nti.appserver.pyramid_authorization import has_permission
+
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import ES_CREDIT
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
@@ -57,6 +59,8 @@ from nti.contenttypes.presentation.interfaces import EVERYONE
 from nti.contenttypes.presentation.interfaces import PURCHASED
 
 from nti.contenttypes.presentation.interfaces import IPresentationVisibility
+
+from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 #: Visibility scope map
 VISIBILITY_SCOPE_MAP = {
@@ -84,6 +88,9 @@ def is_item_visible(item, user, context=None, record=None):
 		scope = record.Scope if record is not None else None
 		if scope != ES_ALL and get_visibility_for_scope(scope) != item.visibility:
 			return False
+
+		# Our item is scoped, but editors always should have access.
+		return has_permission( ACT_CONTENT_EDIT, context )
 	return True
 
 def get_scope_term(name):

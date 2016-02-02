@@ -544,7 +544,8 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 		def add_item(item):
 			# check visibility
 			if IVisible.providedBy(item):
-				if not is_item_visible(item, self.remoteUser, record=record):
+				if not is_item_visible(item, self.remoteUser,
+									context=course, record=record):
 					return
 				else:
 					item = INTIMedia(item, None)
@@ -603,10 +604,14 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 		result['Total'] = result['ItemCount'] = len(items)
 		return result
 
+	def _predicate(self, course, record):
+		return record is not None \
+			or has_permission( ACT_CONTENT_EDIT, course, self.request )
+
 	def __call__(self):
 		course = ICourseInstance(self.request.context)
 		record = get_enrollment_record(course, self.remoteUser)
-		if record is None:
+		if not self._predicate( course, record ):
 			raise hexc.HTTPForbidden(_("Must be enrolled in a course."))
 
 		self.request.acl_decoration = False  # avoid acl decoration
