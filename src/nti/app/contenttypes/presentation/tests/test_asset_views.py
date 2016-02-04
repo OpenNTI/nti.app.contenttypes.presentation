@@ -421,22 +421,26 @@ class TestAssetViews(ApplicationLayerTest):
 
 			items = chain(obj.Slides, obj.Videos, (obj,))
 			self._check_containers(course, items=items)
-
+			mime_type = obj.mime_type
 			source = to_external_object(obj)
 
 		# Permissions
 		non_perm_env = self._get_non_perm_environ()
 		self.testapp.get( href, extra_environ=non_perm_env, status=403 )
 
-		# put
-		source['title'] = 'Install Software on a MAC'
-		res = self.testapp.put_json(href, source, status=200)
+		# Change title
+		res = self.testapp.put_json(href,
+									{'title':'Install Software on a MAC',
+									 'MimeType':mime_type},
+									 status=200)
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, has_property('locked', is_(True)))
 			assert_that(obj, has_property('title', is_('Install Software on a MAC')))
 			history  = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(2))
+			# Only title shows up in history attributes.
+			assert_that( tuple(history.records())[-1].attributes, contains( 'title' ))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	@fudge.patch('nti.app.contenttypes.presentation.views.asset_views.CourseOverviewGroupOrderedContentsView.readInput',
