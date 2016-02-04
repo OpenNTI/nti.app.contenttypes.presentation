@@ -70,6 +70,11 @@ from nti.app.externalization.error import raise_json_error
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
+from nti.app.products.courseware import VIEW_RECURSIVE_AUDIT_LOG
+from nti.app.products.courseware import VIEW_RECURSIVE_TX_HISTORY
+
+from nti.app.products.courseware.views.view_mixins import AbstractRecursiveTransactionHistoryView
+
 from nti.appserver.ugd_edit_views import UGDPutView
 from nti.appserver.ugd_edit_views import UGDDeleteView
 from nti.appserver.dataserver_pyramid_views import GenericGetView
@@ -1198,3 +1203,20 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		if INTIMediaRef.providedBy(contentObject):
 			contentObject = INTIMedia(contentObject)
 		return self.transformOutput(contentObject)
+
+@view_config(name=VIEW_RECURSIVE_AUDIT_LOG)
+@view_config(name=VIEW_RECURSIVE_TX_HISTORY)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='GET',
+			   permission=nauth.ACT_CONTENT_EDIT,
+			   context=INTILessonOverview)
+class RecursiveCourseTransactionHistoryView( AbstractRecursiveTransactionHistoryView ):
+	"""
+	A batched view to get all edits that have occurred in the lesson, recursively.
+	"""
+
+	def _get_items(self):
+		result = []
+		self._accum_lesson_transactions( self.context, result )
+		return result

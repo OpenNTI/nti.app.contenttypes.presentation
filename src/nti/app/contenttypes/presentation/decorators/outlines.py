@@ -26,6 +26,8 @@ from nti.app.contenttypes.presentation.decorators import VIEW_OVERVIEW_SUMMARY
 from nti.app.contenttypes.presentation.decorators import is_legacy_uas
 from nti.app.contenttypes.presentation.decorators import _AbstractMoveLinkDecorator
 
+from nti.app.products.courseware.decorators import BaseRecursiveAuditLogLinkDecorator
+
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
 from nti.appserver.pyramid_authorization import has_permission
@@ -242,3 +244,8 @@ class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwar
 
 	def _do_decorate_external(self, context, result):
 		self._overview_decorate_external(context, result)
+
+@component.adapter(ICourseOutlineNode)
+@interface.implementer(IExternalMappingDecorator)
+class OutlineNodeRecursiveAuditLogLinkDecorator(BaseRecursiveAuditLogLinkDecorator):
+	pass

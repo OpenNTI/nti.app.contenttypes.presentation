@@ -33,6 +33,8 @@ from nti.app.contenttypes.presentation.utils import get_enrollment_record as get
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_TOPIC
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_SECTION_TOPIC
 
+from nti.app.products.courseware.decorators import BaseRecursiveAuditLogLinkDecorator
+
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
 from nti.appserver.pyramid_authorization import has_permission
@@ -276,7 +278,7 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 													context=context,
 												 	record=record)
 		return bool(resolved is not None)
-		
+
 	def _allow_assessmentref(self, iface, context, item):
 		record = self.record(context)
 		assg = iface(item, None)
@@ -626,4 +628,9 @@ class _NTIVideoDecorator(_BaseMediaDecorator):
 @component.adapter(INTIAudio)
 @interface.implementer(IExternalObjectDecorator)
 class _NTIAudioDecorator(_BaseMediaDecorator):
+	pass
+
+@component.adapter(INTILessonOverview)
+@interface.implementer(IExternalMappingDecorator)
+class LessonRecursiveAuditLogLinkDecorator(BaseRecursiveAuditLogLinkDecorator):
 	pass

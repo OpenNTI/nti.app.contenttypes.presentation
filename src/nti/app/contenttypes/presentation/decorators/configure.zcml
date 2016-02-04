@@ -39,6 +39,11 @@
 				for="nti.contenttypes.courses.interfaces.ICourseOutlineContentNode
 					 pyramid.interfaces.IRequest" />
 
+	<subscriber factory=".outlines.OutlineNodeRecursiveAuditLogLinkDecorator"
+				provides="nti.externalization.interfaces.IExternalMappingDecorator"
+				for="nti.contenttypes.courses.interfaces.ICourseOutlineNode
+					 pyramid.interfaces.IRequest" />
+
 	<!-- Courses -->
 	<subscriber factory=".courses._MediaByOutlineNodeDecorator"
 				provides="nti.externalization.interfaces.IExternalMappingDecorator"
@@ -111,6 +116,11 @@
 	<subscriber factory=".assets._IPADLegacyReferenceDecorator"
 				provides="nti.externalization.interfaces.IExternalMappingDecorator"
 				for="nti.contenttypes.presentation.interfaces.IPresentationAsset
+					 pyramid.interfaces.IRequest" />
+
+	subscriber factory=".assets.LessonRecursiveAuditLogLinkDecorator"
+				provides="nti.externalization.interfaces.IExternalMappingDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTILessonOverview
 					 pyramid.interfaces.IRequest" />
 
 	<!-- Asset decorators -->

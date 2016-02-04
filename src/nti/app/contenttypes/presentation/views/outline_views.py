@@ -42,9 +42,14 @@ from nti.app.contenttypes.presentation.views.view_mixins import PublishVisibilit
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
+from nti.app.products.courseware import VIEW_RECURSIVE_AUDIT_LOG
+from nti.app.products.courseware import VIEW_RECURSIVE_TX_HISTORY
+
 from nti.app.products.courseware.interfaces import ICourseInstanceEnrollment
 
 from nti.app.products.courseware.views.course_views import CourseOutlineContentsView
+
+from nti.app.products.courseware.views.view_mixins import AbstractRecursiveTransactionHistoryView
 
 from nti.appserver.ugd_edit_views import UGDPutView
 from nti.appserver.ugd_query_views import RecursiveUGDView
@@ -621,3 +626,18 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 		else:
 			result = self._do_current(course, record)
 		return result
+
+@view_config(name=VIEW_RECURSIVE_AUDIT_LOG)
+@view_config(name=VIEW_RECURSIVE_TX_HISTORY)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='GET',
+			   permission=nauth.ACT_CONTENT_EDIT,
+			   context=ICourseOutlineNode)
+class RecursiveCourseTransactionHistoryView( AbstractRecursiveTransactionHistoryView ):
+	"""
+	A batched view to get all edits that have occurred in this outline node, recursively.
+	"""
+
+	def _get_items(self):
+		return self._get_node_items( self.context )
