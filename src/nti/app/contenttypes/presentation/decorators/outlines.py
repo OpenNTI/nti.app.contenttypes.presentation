@@ -57,8 +57,9 @@ from nti.externalization.interfaces import IExternalMappingDecorator
 
 from nti.externalization.singleton import SingletonDecorator
 
-from nti.links.links import Link
 from nti.links.externalization import render_link
+
+from nti.links.links import Link
 
 from nti.ntiids.ntiids import TYPE_OID
 from nti.ntiids.ntiids import is_ntiid_of_type

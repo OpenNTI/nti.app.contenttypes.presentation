@@ -44,12 +44,13 @@ from nti.contenttypes.courses.interfaces import ES_CREDIT_NONDEGREE
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_MAP
 from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
 
-from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
 
 from nti.contenttypes.courses.discussions.utils import get_topic_key
 from nti.contenttypes.courses.discussions.utils import get_discussion_key
 from nti.contenttypes.courses.discussions.utils import get_course_for_discussion
+
+from nti.contenttypes.courses.interfaces import ICourseSubInstance
 
 from nti.contenttypes.courses.utils import get_any_enrollment
 
@@ -62,7 +63,7 @@ from nti.contenttypes.presentation.interfaces import IPresentationVisibility
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
-#: Visibility scope map
+# : Visibility scope map
 VISIBILITY_SCOPE_MAP = {
 	ES_ALL: EVERYONE,
 	ES_PUBLIC: PUBLIC,
@@ -88,7 +89,7 @@ def is_item_visible(item, user, context=None, record=None):
 		scope = record.Scope if record is not None else None
 		if scope != ES_ALL and get_visibility_for_scope(scope) != item.visibility:
 			# Our item is scoped and not-visible to us, but editors always have access.
-			return has_permission( ACT_CONTENT_EDIT, context )
+			return has_permission(ACT_CONTENT_EDIT, context)
 	return True
 
 def get_scope_term(name):
@@ -121,6 +122,7 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 	record = get_enrollment_record(context, user) if record is None else record
 	if record is None:
 		return None
+
 	# enrollment scope. When scope is equals to 'All' it means user is an instructor
 	scope = record.Scope
 
@@ -129,8 +131,9 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 
 	# if course is a subinstance, make sure we are enrolled in it and
 	# we are not an instructor
-	if 	ICourseSubInstance.providedBy(course) and \
-		scope != ES_ALL and course != record.CourseInstance:
+	if 		ICourseSubInstance.providedBy(course) \
+		and	scope != ES_ALL \
+		and course != record.CourseInstance:
 		return None
 
 	# get course discussion
@@ -138,9 +141,9 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 	discussion = ICourseDiscussions(course).get(key) if key else None
 	scopes = get_implied_by_scopes(discussion.scopes) if discussion is not None else ()
 
-	if	(not scope) or \
-		(not scopes) or \
-		(scope != ES_ALL and ES_ALL not in scopes and scope not in scopes):
+	if		(not scope) \
+		or	(not scopes) \
+		or	(scope != ES_ALL and ES_ALL not in scopes and scope not in scopes):
 		return None
 	else:
 		topic = None
