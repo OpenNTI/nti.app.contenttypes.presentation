@@ -282,9 +282,11 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 	def _allow_assessmentref(self, iface, context, item):
 		record = self.record(context)
 		assg = iface(item, None)
-		if assg is None or record is None:
+		if assg is None:
 			return False
-		if record.Scope == ES_ALL:  # instructor
+		# Instructor or editor
+		if 		record.Scope == ES_ALL \
+			or 	has_permission( ACT_CONTENT_EDIT, assg ):
 			return True
 		course = record.CourseInstance
 		predicate = get_course_assessment_predicate_for_user(self.remoteUser, course)
