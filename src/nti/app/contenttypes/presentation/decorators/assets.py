@@ -244,7 +244,7 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 
 	@property
 	def _is_editor(self):
-		return has_permission( ACT_CONTENT_EDIT, self.context )
+		return has_permission( ACT_CONTENT_EDIT, self.request.context )
 
 	def _filter_legacy_discussions(self, context, indexes, removal):
 		items = context.Items
@@ -284,13 +284,14 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 		return bool(resolved is not None)
 
 	def _allow_assessmentref(self, iface, context, item):
+		if self._is_editor:
+			return True
 		record = self.record(context)
 		assg = iface(item, None)
-		if assg is None:
+		if assg is None or record is None:
 			return False
-		# Instructor or editor
-		if 		record.Scope == ES_ALL \
-			or 	self._is_editor:
+		# Instructor
+		if record.Scope == ES_ALL:
 			return True
 		course = record.CourseInstance
 		predicate = get_course_assessment_predicate_for_user(self.remoteUser, course)
