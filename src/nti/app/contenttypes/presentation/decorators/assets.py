@@ -242,6 +242,10 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 		nttype = get_type(item.target)
 		return nttype in (NTIID_TYPE_COURSE_TOPIC, NTIID_TYPE_COURSE_SECTION_TOPIC)
 
+	@property
+	def _is_editor(self):
+		return has_permission( ACT_CONTENT_EDIT, self.context )
+
 	def _filter_legacy_discussions(self, context, indexes, removal):
 		items = context.Items
 		record = self.record(context)
@@ -286,7 +290,7 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 			return False
 		# Instructor or editor
 		if 		record.Scope == ES_ALL \
-			or 	has_permission( ACT_CONTENT_EDIT, assg ):
+			or 	self._is_editor:
 			return True
 		course = record.CourseInstance
 		predicate = get_course_assessment_predicate_for_user(self.remoteUser, course)
@@ -317,7 +321,8 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 				removal.add(idx)
 			elif INTIDiscussionRef.providedBy(item):
 				if item.isCourseBundle():
-					if not self._allow_discussion_course_bundle(context, item):
+					if 		not self._is_editor \
+						and not self._allow_discussion_course_bundle(context, item):
 						removal.add(idx)
 				elif self._is_legacy_discussion(item):
 					discussions.append(idx)
@@ -331,7 +336,7 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 				removal.add(idx)
 
 		# filter legacy discussions
-		if discussions:
+		if discussions and not self._is_editor:
 			self._filter_legacy_discussions(context, discussions, removal)
 
 		# remove disallowed items
