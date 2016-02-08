@@ -46,7 +46,9 @@ LINKS = StandardExternalFields.LINKS
 class _CourseAssetsLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	def _predicate(self, context, result):
-		return self._is_authenticated and is_course_editor(context, self.remoteUser)
+		return 		self._is_authenticated \
+				and (	is_course_editor(context, self.remoteUser)
+					 or has_permission(ACT_CONTENT_EDIT, context, self.request))
 
 	def _do_decorate_external(self, context, result):
 		_links = result.setdefault(LINKS, [])
