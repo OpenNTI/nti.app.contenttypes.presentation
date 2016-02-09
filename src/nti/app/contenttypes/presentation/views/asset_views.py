@@ -142,10 +142,12 @@ from nti.dataserver import authorization as nauth
 
 from nti.dataserver.contenttypes.forums.interfaces import ITopic
 
-from nti.externalization.oids import to_external_ntiid_oid
-from nti.externalization.internalization import notify_modified
 from nti.externalization.externalization import to_external_object
 from nti.externalization.externalization import StandardExternalFields
+
+from nti.externalization.internalization import notify_modified
+
+from nti.externalization.oids import to_external_ntiid_oid
 
 from nti.namedfile.file import name_finder
 from nti.namedfile.file import safe_filename
@@ -869,12 +871,13 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 	def updateContentObject(self, contentObject, externalValue, set_id=False, notify=True):
 		data = self.preflight(contentObject, externalValue)
 
+		originalSource = copy.copy(externalValue)
 		pre_hook = get_external_pre_hook(externalValue)
 		result = UGDPutView.updateContentObject(self,
 												contentObject,
 												externalValue,
 												set_id=set_id,
-												notify=notify,
+												notify=False,
 												pre_hook=pre_hook)
 		sources = get_all_sources(self.request)
 		if sources:
@@ -884,6 +887,7 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 				_handle_multipart(courses.__iter__().next(), self.context, sources)
 
 		self.postflight(contentObject, externalValue, data)
+		notify_modified(contentObject, originalSource)
 		return result
 
 	def __call__(self):
