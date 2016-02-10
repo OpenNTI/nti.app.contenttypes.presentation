@@ -582,7 +582,7 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 								provided=INTICourseOverviewGroup,
 								sites=sites):
 
-			for item in group.Items:
+			for item in group or ():
 				# ignore non media items
 				if 	(not IMediaRef.providedBy(item)
 					 and not INTIMedia.providedBy(item)
