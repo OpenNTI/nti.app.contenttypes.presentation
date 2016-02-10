@@ -135,6 +135,7 @@ def _on_outlinenode_unregistered(node, event):
 			registry = get_registry()
 			if registry != component.getGlobalSiteManager():
 				removeIntId(lesson)
+				get_library_catalog().unindex(lesson)
 				unregisterUtility(registry, provided=INTILessonOverview, name=ntiid)
 	except AttributeError:
 		pass
