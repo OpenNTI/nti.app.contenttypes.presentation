@@ -219,7 +219,7 @@ def course_for_node(node):
 	course = find_interface(node, ICourseInstance, strict=False)
 	return course
 
-def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None):
+def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None, sites=None):
 	creator = getattr(node, 'creator', None) or SYSTEM_USER_ID
 	creator = getattr(creator, 'username', creator)
 	if not ntiid:
@@ -266,7 +266,8 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None):
 		else:
 			ntiids = None
 		catalog = get_library_catalog() if catalog is None else catalog
-		catalog.index(result, container_ntiids=ntiids, namespace=node.src)
+		catalog.index(result, container_ntiids=ntiids,
+					  namespace=node.src, sites=sites)
 
 	# lesson is ready
 	return result

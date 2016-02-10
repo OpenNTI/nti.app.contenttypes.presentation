@@ -14,6 +14,8 @@ import simplejson
 
 from zope import component
 
+from zope.component.hooks import getSite
+
 from zope.intid.interfaces import IIntIds
 
 from pyramid import httpexceptions as hexc
@@ -225,6 +227,12 @@ class OutlineNodeInsertView(AbstractAuthenticatedView,
 	"""
 
 	@Lazy
+	def _site_name(self):
+		folder = find_interface(self.context, IHostPolicyFolder, strict=False)
+		result = folder.__name__ if folder is not None else getSite().__name__
+		return result
+
+	@Lazy
 	def _registry(self):
 		folder = find_interface(self.context, IHostPolicyFolder, strict=False)
 		result = folder.getSiteManager() if folder is not None else None
@@ -283,7 +291,8 @@ class OutlineNodeInsertView(AbstractAuthenticatedView,
 	def _make_lesson_node(self, node):
 		registry = self._registry
 		ntiid = make_ntiid(nttype=NTI_LESSON_OVERVIEW, base=node.ntiid)
-		result = create_lesson_4_node(node, ntiid=ntiid, registry=registry)
+		result = create_lesson_4_node(node, ntiid=ntiid, registry=registry,
+									  sites=self._site_name)
 		return result
 
 	def _get_new_node(self):

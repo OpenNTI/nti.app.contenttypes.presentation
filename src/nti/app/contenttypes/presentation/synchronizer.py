@@ -15,6 +15,8 @@ import simplejson
 
 from zope import component
 
+from zope.component.hooks import getSite
+
 from zope.intid.interfaces import IIntIds
 
 from nti.app.contenttypes.presentation import iface_of_thing
@@ -435,7 +437,8 @@ def _create_lesson_4_node(node, registry=None, catalog=None):
 	Possibly legacy calendar, 'stub' nodes.  We want these created,
 	unpublished and unlocked so that they can be updated on sync.
 	"""
-	result = create_lesson_4_node(node, registry=registry, catalog=catalog)
+	result = create_lesson_4_node(node, registry=registry,
+								  catalog=catalog, sites=getSite().__name__)
 	return result
 
 def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
