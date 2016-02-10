@@ -58,9 +58,9 @@ def _process_items(current, sites, intids, catalog, seen):
 	site_index = catalog.site_index
 	registry = current.getSiteManager()
 	for ntiid, item in list(registry.getUtilitiesFor(IPresentationAsset)):
-		if ntiid in seen:
-			continue
-		seen.add(ntiid)
+		#if ntiid in seen:
+		#	continue
+		#seen.add(ntiid)
 		provided = iface_of_asset(item)
 		doc_id = intids.queryId(item)
 
