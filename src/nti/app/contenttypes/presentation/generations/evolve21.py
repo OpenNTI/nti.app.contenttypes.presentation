@@ -67,21 +67,21 @@ def _process_items(current, sites, intids, catalog, seen):
 		# registration for a removed asset
 		if doc_id is None:
 			logger.warn("Removing invalid registration for %s", ntiid)
-			unregisterUtility(registry, item, provided, ntiid)
+			unregisterUtility(registry, provided=provided, name=ntiid)
 			continue
 
 		# invalid lesson overview
 		if INTILessonOverview.providedBy(item) and item.__parent__ is None:
 			logger.warn("Removing invalid lesson overview %s", ntiid)
 			removeIntId(item)
-			unregisterUtility(registry, item, provided, ntiid)
+			unregisterUtility(registry, provided=provided, name=ntiid)
 			continue
 
 		# registration not in base site
 		if len(site_names) > 1:
 			site_name = site_names[-1]
 			logger.warn("Moving %s to base site %s", ntiid, site_name)
-			unregisterUtility(registry, item, provided, ntiid)
+			unregisterUtility(registry, provided=provided, name=ntiid)
 			# new registry
 			registry = sites[site_name].getSiteManager()
 			registerUtility(registry, item, provided, ntiid)
