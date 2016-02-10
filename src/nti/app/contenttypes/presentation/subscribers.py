@@ -32,6 +32,7 @@ from nti.app.contenttypes.presentation.utils import get_presentation_asset_conta
 
 from nti.coremetadata.interfaces import IRecordable
 
+from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -60,6 +61,8 @@ from nti.contenttypes.presentation.interfaces import IItemRemovedFromItemAssetCo
 
 from nti.externalization.interfaces import StandardExternalFields
 
+from nti.intid.common import removeIntId
+
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.recorder.interfaces import TRX_TYPE_CREATE
@@ -67,6 +70,8 @@ from nti.recorder.interfaces import TRX_TYPE_CREATE
 from nti.recorder.record import remove_transaction_history
 
 from nti.recorder.utils import record_transaction
+
+from nti.site.utils import unregisterUtility
 
 ITEMS = StandardExternalFields.ITEMS
 
@@ -123,9 +128,14 @@ def _clear_data_when_course_removed(course, event):
 @component.adapter(ICourseOutlineNode, IUnregistered)
 def _on_outlinenode_unregistered(node, event):
 	try:
-		lesson = find_object_with_ntiid(node.LessonOverviewNTIID)
+		ntiid = node.LessonOverviewNTIID
+		lesson = find_object_with_ntiid(ntiid)
 		if lesson is not None:
 			lesson.__parent__ = None
+			registry = get_registry()
+			if registry != component.getGlobalSiteManager():
+				removeIntId(lesson)
+				unregisterUtility(registry, provided=INTILessonOverview, name=ntiid)
 	except AttributeError:
 		pass
 
