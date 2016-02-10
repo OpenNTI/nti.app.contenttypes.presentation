@@ -58,9 +58,6 @@ def _process_items(current, sites, intids, catalog, seen):
 	site_index = catalog.site_index
 	registry = current.getSiteManager()
 	for ntiid, item in list(registry.getUtilitiesFor(IPresentationAsset)):
-		#if ntiid in seen:
-		#	continue
-		#seen.add(ntiid)
 		provided = iface_of_asset(item)
 		doc_id = intids.queryId(item)
 
@@ -80,7 +77,7 @@ def _process_items(current, sites, intids, catalog, seen):
 			continue
 
 		# registration not in base site
-		if len(site_names) > 1:
+		if ntiid not in seen and len(site_names) > 1:
 			site_name = site_names[-1]
 			logger.warn("Moving %s to base site %s", ntiid, site_name)
 			unregisterUtility(registry, provided=provided, name=ntiid)
@@ -93,6 +90,8 @@ def _process_items(current, sites, intids, catalog, seen):
 			or	site_index.documents_to_values.get(doc_id) in (None, u'dataserver2'):
 			logger.info("Indexing %s to site %s", ntiid, site_name)
 			site_index.index_doc(doc_id, sites[site_name]) # pass host policy folder
+			
+		seen.add(ntiid)
 
 def do_evolve(context, generation=generation):
 	conn = context.connection
