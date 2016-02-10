@@ -73,6 +73,7 @@ def _process_items(current, sites, intids, catalog, seen):
 			logger.warn("Removing invalid lesson overview %s from site %s",
 						ntiid, site_name)
 			removeIntId(item)
+			catalog.unindex(doc_id)
 			unregisterUtility(registry, provided=provided, name=ntiid)
 			continue
 
