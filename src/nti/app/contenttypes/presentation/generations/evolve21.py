@@ -88,9 +88,9 @@ def _process_items(current, sites, intids, catalog, seen):
 			
 		# make sure we index
 		if 		site_name != current.__name__ \
-			or	site_index.documents_to_values.get(doc_id) is None:
+			or	site_index.documents_to_values.get(doc_id) in (None, u'dataserver2'):
 			logger.info("Indexing %s to site %s", ntiid, site_name)
-			site_index.index_doc(doc_id, site_name)
+			site_index.index_doc(doc_id, sites[site_name]) # pass host policy folder
 
 def do_evolve(context, generation=generation):
 	conn = context.connection
