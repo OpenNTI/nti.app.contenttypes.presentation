@@ -91,19 +91,26 @@ def registry_by_name(name):
 		pass
 	return None
 
-def component_registry(context, provided, name=None):
-	sites_names = list(get_component_hierarchy_names())
-	sites_names.reverse()  # higher sites first
+def component_site(context, provided, name=None):
+	sites_names = get_component_hierarchy_names()
 	name = name or getattr(context, 'ntiid', None)
 	hostsites = component.getUtility(IEtcNamespace, name='hostsites')
-	for site_name in sites_names:
+	for idx in range(len(sites_names) - 1, -1, -1):  # higher sites first
 		try:
+			site_name = sites_names[idx]
 			folder = hostsites[site_name]
 			registry = folder.getSiteManager()
 			if registry.queryUtility(provided, name=name) == context:
-				return registry
+				return site_name
 		except KeyError:
 			pass
+	return None
+
+def component_registry(context, provided, name=None):
+	site_name = component_site(context, provided, name)
+	if site_name:
+		folder = component.getUtility(IEtcNamespace, name='hostsites')[site_name]
+		return folder.getSiteManager()
 	return get_registry()
 
 def notify_removed(item):
@@ -127,7 +134,7 @@ def remove_asset(item, registry=None, catalog=None):
 	catalog = get_library_catalog() if catalog is None else catalog
 	catalog.unindex(item)
 	# broadcast removed
-	notify_removed(item) # remove intid
+	notify_removed(item)  # remove intid
 
 def remove_mediaroll(item, registry=None, catalog=None):
 	if isinstance(item, six.string_types):

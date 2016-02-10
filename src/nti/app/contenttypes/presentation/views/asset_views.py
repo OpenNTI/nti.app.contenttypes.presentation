@@ -20,6 +20,8 @@ import transaction
 
 from zope import interface
 
+from zope.component.hooks import getSite
+
 from zope.event import notify
 
 from zope.security.interfaces import NoInteraction
@@ -41,11 +43,11 @@ from nti.app.contentfile import validate_sources
 
 from nti.app.contenttypes.presentation import MessageFactory as _
 
+from nti.app.contenttypes.presentation.utils import component_site
 from nti.app.contenttypes.presentation.utils import intid_register
 from nti.app.contenttypes.presentation.utils import add_2_connection
 from nti.app.contenttypes.presentation.utils import make_asset_ntiid
 from nti.app.contenttypes.presentation.utils import registry_by_name
-from nti.app.contenttypes.presentation.utils import component_registry
 from nti.app.contenttypes.presentation.utils import get_course_packages
 from nti.app.contenttypes.presentation.utils import remove_presentation_asset
 from nti.app.contenttypes.presentation.utils import get_presentation_asset_courses
@@ -389,6 +391,10 @@ class LessonOverviewMoveView(AbstractChildMoveView):
 class PresentationAssetMixin(object):
 
 	@Lazy
+	def _site(self):
+		return getSite().__name__
+
+	@Lazy
 	def _catalog(self):
 		return get_library_catalog()
 
@@ -402,6 +408,18 @@ class PresentationAssetMixin(object):
 
 class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 									   AbstractAuthenticatedView):
+
+	@Lazy
+	def _site(self):
+		# XXX: use correct registration site
+		provided = iface_of_asset(self.context)
+		return component_site(self.context,
+							  provided=provided,
+							  name=self.context.ntiid)
+
+	@Lazy
+	def _registry(self):
+		return registry_by_name(self._site)
 
 	@Lazy
 	def _course(self):
@@ -460,11 +478,12 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 				self._set_creator(x, creator)
 				_add_2_container(self._course, x, packages=True)
 				self._catalog.index(x, container_ntiids=item_extended,
-									namespace=namespace)
+									namespace=namespace, sites=self._site)
 
 		# index item
 		item_extended = list(extended or ()) + containers
-		self._catalog.index(item, container_ntiids=item_extended, namespace=namespace)
+		self._catalog.index(item, container_ntiids=item_extended,
+							namespace=namespace, sites=self._site)
 
 	def _handle_related_work(self, provided, item, creator, extended=None):
 		self._set_creator(item, creator)
@@ -509,11 +528,11 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		for x in item or ():
 			self._set_creator(x, creator)
 			_add_2_container(self._course, x, packages=False)
-			self._catalog.index(x, container_ntiids=item_extended)
+			self._catalog.index(x, container_ntiids=item_extended, sites=self._site)
 
 		# index item
 		item_extended = tuple(extended or ()) + tuple(containers or ())
-		self._catalog.index(item, container_ntiids=item_extended)
+		self._catalog.index(item, container_ntiids=item_extended, sites=self._site)
 
 	def _handle_group_over_viewable(self, provided, item, creator, extended=None):
 		# set creator
@@ -522,7 +541,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		# add to course container
 		containers = _add_2_container(self._course, item, packages=False)
 		item_extended = tuple(extended or ()) + tuple(containers or ())
-		self._catalog.index(item, container_ntiids=item_extended)
+		self._catalog.index(item, container_ntiids=item_extended, sites=self._site)
 
 		if INTIAssessmentRef.providedBy(item):
 
@@ -590,7 +609,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		namespace = to_external_ntiid_oid(lesson) if lesson is not None else None
 		item_extended = tuple(extended or ()) + tuple(containers or ())
 		self._catalog.index(group, container_ntiids=item_extended,
-							namespace=namespace)
+							namespace=namespace, sites=self._site)
 
 	def _handle_lesson_overview(self, lesson, creator, extended=None):
 		# set creator
@@ -625,12 +644,12 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		namespace = to_external_ntiid_oid(lesson)
 		item_extended = tuple(extended or ()) + tuple(containers or ())
 		self._catalog.index(lesson, container_ntiids=item_extended,
-							namespace=namespace)
+							namespace=namespace, sites=self._site)
 
 	def _handle_other_asset(self, provided, item, creator, extended=None):
 		containers = _add_2_container(self._course, item, packages=False)
 		item_extended = tuple(extended or ()) + tuple(containers or ())
-		self._catalog.index(item, container_ntiids=item_extended)
+		self._catalog.index(item, container_ntiids=item_extended, sites=self._site)
 
 	def _handle_package_container_asset(self, provided, item, creator, extended=None):
 		if INTIRelatedWorkRef.providedBy(item):
@@ -785,13 +804,11 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 								ModeledContentUploadRequestUtilsMixin):  # order matters
 
 	content_predicate = IPresentationAsset.providedBy
-
+	
 	@Lazy
-	def _registry(self):
-		# XXX: register same site as the course
+	def _site(self):
 		folder = find_interface(self._course, IHostPolicyFolder, strict=False)
-		result = registry_by_name(folder.__name__)
-		return result
+		return folder.__name__
 
 	def checkContentObject(self, contentObject, externalValue):
 		if contentObject is None or not self.content_predicate(contentObject):
@@ -853,14 +870,6 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 			   permission=nauth.ACT_CONTENT_EDIT)
 class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 							   UGDPutView):  # order matters
-
-	@Lazy
-	def _registry(self):
-		# XXX: use correct registration site
-		provided = iface_of_asset(self.context)
-		return component_registry(self.context,
-								  provided=provided,
-								  name=self.context.ntiid)
 
 	def preflight(self, contentObject, externalValue):
 		preflight_input(externalValue)
@@ -960,11 +969,15 @@ class MediaRollPutView(PresentationAssetPutView):
 class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 
 	@Lazy
-	def _registry(self):
+	def _site(self):
 		provided = iface_of_asset(self.context)
-		return component_registry(self.context,
-								  provided=provided,
-								  name=self.context.ntiid)
+		return component_site(self.context,
+							  provided=provided,
+							  name=self.context.ntiid)
+
+	@Lazy
+	def _registry(self):
+		return registry_by_name(self._site)
 
 	def _do_delete_object(self, theObject):
 		remove_presentation_asset(theObject, self._registry, self._catalog)
@@ -977,8 +990,7 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 			   name=VIEW_CONTENTS,
 			   request_method='DELETE',
 			   permission=nauth.ACT_CONTENT_EDIT)
-class AssetDeleteChildView(AbstractAuthenticatedView,
-						   NTIIDPathMixin):
+class AssetDeleteChildView(AbstractAuthenticatedView, NTIIDPathMixin):
 	"""
 	A view to delete a child underneath the given context.
 

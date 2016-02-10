@@ -10,6 +10,7 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 # re-export
+from nti.app.contenttypes.presentation.utils.asset import component_site
 from nti.app.contenttypes.presentation.utils.asset import intid_register
 from nti.app.contenttypes.presentation.utils.asset import add_2_connection
 from nti.app.contenttypes.presentation.utils.asset import make_asset_ntiid
