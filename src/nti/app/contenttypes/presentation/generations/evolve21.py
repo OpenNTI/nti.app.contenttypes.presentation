@@ -66,13 +66,15 @@ def _process_items(current, sites, intids, catalog, seen):
 
 		# registration for a removed asset
 		if doc_id is None:
-			logger.warn("Removing invalid registration for %s", ntiid)
+			logger.warn("Removing invalid registration %s from site %s",
+						ntiid, site_name)
 			unregisterUtility(registry, provided=provided, name=ntiid)
 			continue
 
 		# invalid lesson overview
 		if INTILessonOverview.providedBy(item) and item.__parent__ is None:
-			logger.warn("Removing invalid lesson overview %s", ntiid)
+			logger.warn("Removing invalid lesson overview %s from site %s",
+						ntiid, site_name)
 			removeIntId(item)
 			unregisterUtility(registry, provided=provided, name=ntiid)
 			continue
