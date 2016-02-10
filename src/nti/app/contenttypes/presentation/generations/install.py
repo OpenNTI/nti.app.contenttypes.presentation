@@ -9,12 +9,13 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-generation = 20
+generation = 21
 
 from zope import interface
 
-from zope.generations.interfaces import IInstallableSchemaManager
 from zope.generations.generations import SchemaManager as BaseSchemaManager
+
+from zope.generations.interfaces import IInstallableSchemaManager
 
 @interface.implementer(IInstallableSchemaManager)
 class _SchemaManager(BaseSchemaManager):

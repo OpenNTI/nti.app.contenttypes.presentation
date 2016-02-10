@@ -66,26 +66,30 @@ def _process_items(current, sites, intids, catalog, seen):
 
 		# registration for a removed asset
 		if doc_id is None:
+			logger.warn("Removing invalid registration for %s", ntiid)
 			unregisterUtility(registry, item, provided, ntiid)
 			continue
 
 		# invalid lesson overview
 		if INTILessonOverview.providedBy(item) and item.__parent__ is None:
+			logger.warn("Removing invalid lesson overview %s", ntiid)
 			removeIntId(item)
 			unregisterUtility(registry, item, provided, ntiid)
 			continue
 
 		# registration not in base site
 		if len(site_names) > 1:
+			site_name = site_names[-1]
+			logger.warn("Moving %s to base site %s", ntiid, site_name)
 			unregisterUtility(registry, item, provided, ntiid)
 			# new registry
-			site_name = site_names[-1]
 			registry = sites[site_name].getSiteManager()
 			registerUtility(registry, component, provided, ntiid)
 			
 		# make sure we index
 		if 		site_name != current.__name__ \
 			or	site_index.documents_to_values.get(doc_id) is None:
+			logger.info("Indexing %s to site %s", ntiid, site_name)
 			site_index.index_doc(doc_id, site_name)
 
 def do_evolve(context, generation=generation):
