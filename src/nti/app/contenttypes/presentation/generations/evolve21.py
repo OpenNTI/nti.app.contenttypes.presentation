@@ -84,7 +84,7 @@ def _process_items(current, sites, intids, catalog, seen):
 			unregisterUtility(registry, item, provided, ntiid)
 			# new registry
 			registry = sites[site_name].getSiteManager()
-			registerUtility(registry, component, provided, ntiid)
+			registerUtility(registry, item, provided, ntiid)
 			
 		# make sure we index
 		if 		site_name != current.__name__ \
