@@ -269,7 +269,7 @@ def _add_2_package_containers(course, catalog, item):
 			container[item.ntiid] = item
 	if ntiids:
 		catalog.index(item, container_ntiids=ntiids,
-				  	  namespace=ntiids[0])  # pick first
+				  	  namespace=ntiids[0], sites=getSite().__name__)  # pick first
 
 def _update_sync_results(lesson_ntiid, sync_results, lesson_locked):
 	field = 'LessonsSyncLocked' if lesson_locked else 'LessonsUpdated'
