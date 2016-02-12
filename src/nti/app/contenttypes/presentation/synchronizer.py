@@ -154,7 +154,7 @@ def _remove_registered_course_overview(name=None, registry=None, course=None, fo
 			result.append(removed)
 			if container is not None:
 				container.pop(ntiid, None)
-			
+
 		if INTIMediaRoll.providedBy(obj):
 			# Remove each item in our roll
 			for roll_item in item:
@@ -168,7 +168,7 @@ def _remove_registered_course_overview(name=None, registry=None, course=None, fo
 		iface = iface_of_thing(item)
 		if iface not in PACKAGE_CONTAINER_INTERFACES:
 			_do_remove(iface, item)
-			
+
 	return result
 
 def _remove_registered_lesson_overview(name, registry=None, course=None, force=False):
@@ -219,7 +219,7 @@ def _register_media_rolls(roll, registry=None, validate=False):
 	return roll
 
 def _is_auto_roll_coalesce(item):
-	return (INTIMedia.providedBy(item)
+	return (	INTIMedia.providedBy(item)
 			or 	INTIMediaRef.providedBy(item)) \
 		and not _is_obj_locked(item)
 
@@ -301,7 +301,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 									   			 registry=registry,
 									   			 course=course)
 
-	overview.__parent__ = node # set lineage 
+	overview.__parent__ = node # set lineage
 	_register_utility(overview, INTILessonOverview, overview.ntiid, registry)
 
 	# canonicalize group
@@ -504,7 +504,7 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 		to_index = container_ntiids
 
 	for item in items or ():
-		
+
 		if container is not None:
 			container[item.ntiid] = item
 

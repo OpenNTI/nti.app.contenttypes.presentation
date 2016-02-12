@@ -15,6 +15,7 @@ from hamcrest import has_key
 from hamcrest import contains
 from hamcrest import not_none
 from hamcrest import has_item
+from hamcrest import has_items
 from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
@@ -79,6 +80,15 @@ class TestAssetViews(ApplicationLayerTest):
 	course_ntiid = 'tag:nextthought.com,2011-10:NTI-CourseInfo-Fall2015_CS_1323'
 	course_url = '/dataserver2/%2B%2Betc%2B%2Bhostsites/platform.ou.edu/%2B%2Betc%2B%2Bsite/Courses/Fall2015/CS%201323'
 	assets_url = course_url + '/assets'
+
+	@property
+	def _media_href(self):
+		res = self.testapp.get( self.course_url )
+		res = self.require_link_href_with_rel( res.json_body, 'MediaByOutlineNode' )
+		return res
+
+	def _media_by_outline(self):
+		return self.testapp.get( self._media_href ).json_body
 
 	def _load_resource(self, name):
 		path = os.path.join(os.path.dirname(__file__), name)
@@ -194,14 +204,18 @@ class TestAssetViews(ApplicationLayerTest):
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_video_roll(self):
-		# Setup overview group
-		source = self._load_resource('nticourseoverviewgroup.json')
-		res = self.testapp.post_json(self.assets_url, source, status=201)
+		# Use existing overview group to check containers.
+		group_ntiid = 'tag:nextthought.com,2011-10:OU-NTICourseOverviewGroup-CS1323_F_2015_Intro_to_Computer_Programming.lec:01.01_LESSON.0'
+		res = self.testapp.get( '/dataserver2/Objects/%s' % group_ntiid )
 		res = res.json_body
 		group_ntiid = res.get('ntiid')
 		group_href = res.get('href')
-		assert_that(res.get('Items'), has_length(2))
+		assert_that(res.get('Items'), has_length(1))
 		contents_link = self.require_link_href_with_rel(res, VIEW_ORDERED_CONTENTS)
+
+		media_res = self._media_by_outline()
+		container_ntiid = media_res.get( 'ContainerOrder' )[0]
+		container_ntiids = media_res.get( 'Containers' ).get( container_ntiid )
 
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			group = find_object_with_ntiid(group_ntiid)
@@ -218,6 +232,9 @@ class TestAssetViews(ApplicationLayerTest):
 		res = res.json_body
 		video_ntiid = res.get('ntiid')
 
+		# Video does not exist in MediaByOutlineNode
+		assert_that( container_ntiids, does_not( has_item( video_ntiid )))
+
 		# Post video to our ordered contents link
 		video_source['ntiid'] = video_ntiid
 		res = self.testapp.post_json(contents_link + '/index/0', video_source, status=201)
@@ -227,10 +244,15 @@ class TestAssetViews(ApplicationLayerTest):
 
 		group_res = self.testapp.get(group_href)
 		group_res = group_res.json_body
-		assert_that(group_res.get('Items'), has_length(3))
+		assert_that(group_res.get('Items'), has_length(2))
 		item_zero = group_res.get('Items')[0]
 		assert_that(item_zero.get('ntiid'), is_(video_ntiid))
 		assert_that(item_zero.get('MimeType'), is_('application/vnd.nextthought.ntivideo'))
+
+		# Now it's in our media container.
+		media_res = self._media_by_outline()
+		container_ntiids = media_res.get( 'Containers' ).get( container_ntiid )
+		assert_that( container_ntiids, has_item( video_ntiid ))
 
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			group = find_object_with_ntiid(group_ntiid)
@@ -264,7 +286,7 @@ class TestAssetViews(ApplicationLayerTest):
 
 		group_res = self.testapp.get(group_href)
 		group_res = group_res.json_body
-		assert_that(group_res.get('Items'), has_length(4))
+		assert_that(group_res.get('Items'), has_length(3))
 		item_zero = group_res.get('Items')[0]
 		item_last = group_res.get('Items')[-1]
 		assert_that(item_zero.get('ntiid'), is_(video_ntiid))
@@ -285,15 +307,17 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(roll_obj, validly_provides(INTIVideoRoll))
 
 			# Since we insert into groups without a course,
-			# containers will not work.
-			# entry = find_object_with_ntiid(self.course_ntiid)
-			# course = ICourseInstance(entry)
-			# self._check_containers(course, items=(roll_obj,))
-			# self._check_containers(course, packages=False, items=roll_obj.Items)
+			# containers will not work (?).
+# 			entry = find_object_with_ntiid(self.course_ntiid)
+# 			course = ICourseInstance(entry)
+# 			self._check_containers(course, items=(roll_obj,))
+# 			self._check_containers(course, packages=False, items=roll_obj.Items)
 
 			catalog = get_library_catalog()
 			containers = catalog.get_containers(roll_obj)
-			assert_that(containers, contains(group_ntiid))
+			assert_that(containers, has_items(	group_ntiid,
+												self.course_ntiid,
+												group.__parent__.ntiid))
 
 			assert_that(roll_obj.locked, is_(True))
 			new_item = roll_obj.Items[0]
@@ -312,6 +336,7 @@ class TestAssetViews(ApplicationLayerTest):
 		# Now append a video ntiid to video roll
 		items = item_last.get('Items')
 		items.append(video_ntiid)
+		source = self._load_resource('nticourseoverviewgroup.json')
 		source['Items'] = items
 		res = self.testapp.put_json(roll_href, source, status=200)
 		res = res.json_body
@@ -370,7 +395,7 @@ class TestAssetViews(ApplicationLayerTest):
 
 		group_res = self.testapp.get(group_href)
 		group_res = group_res.json_body
-		assert_that(group_res.get('Items'), has_length(5))
+		assert_that(group_res.get('Items'), has_length(4))
 		item_zero = group_res.get('Items')[0]
 		item_roll = group_res.get('Items')[-2]
 		item_last = group_res.get('Items')[-1]

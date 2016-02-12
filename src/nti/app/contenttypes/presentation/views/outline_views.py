@@ -260,7 +260,8 @@ class OutlineNodeInsertView(AbstractAuthenticatedView,
 		provider = get_provider(base) or 'NTI'
 		current_time = time_to_64bit_int(time.time())
 		specific_base = '%s.%s.%s' % (get_specific(base),
-									  self.remoteUser.username, current_time)
+									  self.remoteUser.username,
+									  current_time)
 		idx = 0
 		while True:
 			specific = specific_base + ".%s" % idx
@@ -528,6 +529,25 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 		result = LocatedExternalDict() if not result else result
 		return result
 
+	def _get_node_ntiids(self, nodes):
+		"""
+		Gather the set of ntiids to look up in our container index. Some API
+		created items are indexed by lesson overview (versus content) so
+		return those as well. Make sure we capture the map of lessons to
+		content so we can return items by ContentNTIID for clients.
+		"""
+		ntiids = set()
+		lesson_to_content_map = {}
+		for node in nodes:
+			ntiids.add( node.ContentNTIID )
+			try:
+				if node.ContentNTIID != node.LessonOverviewNTIID:
+					ntiids.add( node.LessonOverviewNTIID )
+					lesson_to_content_map[ node.LessonOverviewNTIID ] = node.ContentNTIID
+			except AttributeError:
+				pass
+		return ntiids, lesson_to_content_map
+
 	def _do_current(self, course, record):
 		result = LocatedExternalDict()
 		result.__name__ = self.request.view_name
@@ -543,10 +563,13 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 
 		nodes = self._outline_nodes(course)
 		namespaces = {node.src for node in nodes}
-		ntiids = {node.ContentNTIID for node in nodes}
+		ntiids, lesson_to_content_map = self._get_node_ntiids( nodes )
 		result['ContainerOrder'] = [node.ContentNTIID for node in nodes]
 
 		def _add_item_to_container(container_ntiid, item):
+			# We only want to map to our ContentNTIID here, for clients.
+			if container_ntiid in lesson_to_content_map:
+				container_ntiid = lesson_to_content_map.get( container_ntiid )
 			containers_seen.setdefault(container_ntiid, set())
 			seen = containers_seen[container_ntiid]
 			# Avoid dupes but retain order.
@@ -556,7 +579,8 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 				containers[container_ntiid].append(item.ntiid)
 
 		def add_item(item):
-			# check visibility
+			# Check visibility
+			ref_obj = item
 			if IVisible.providedBy(item):
 				if not is_item_visible(item, self.remoteUser,
 									context=course, record=record):
@@ -564,17 +588,21 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 				else:
 					item = INTIMedia(item, None)
 
-			# check if ref was valid
-			uid = intids.queryId(item) if item is not None else None
-			if uid is None:
-				return
+			# We need to check both our media obj and our ref here.
+			# API created objects are indexed with ref objects, where
+			# sync'd objects are indexed with media objects.
+			for media_obj in (item, ref_obj):
+				# Check if ref was valid
+				uid = intids.queryId(media_obj) if media_obj is not None else None
+				if uid is None:
+					return
 
-			# set content containers
-			for ntiid in catalog.get_containers(uid):
-				if ntiid in ntiids:
-					_add_item_to_container(ntiid, item)
+				# Set content containers
+				for ntiid in catalog.get_containers(uid):
+					if ntiid in ntiids:
+						_add_item_to_container(ntiid, item)
 			items[item.ntiid] = to_external_object(item)
-			return item.lastModified
+			return max( item.lastModified, ref_obj.lastModified )
 
 		sites = get_component_hierarchy_names()
 		for group in catalog.search_objects(
@@ -584,7 +612,7 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 
 			for item in group or ():
 				# ignore non media items
-				if 	(not IMediaRef.providedBy(item)
+				if 	(	 not IMediaRef.providedBy(item)
 					 and not INTIMedia.providedBy(item)
 					 and not INTIMediaRoll.providedBy(item)
 					 and not INTISlideDeck.providedBy(item)):

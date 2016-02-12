@@ -663,6 +663,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		elif INTIMediaRoll.providedBy(item):
 			self._handle_media_roll(provided, item, creator, extended)
 		elif IGroupOverViewable.providedBy(item):
+			# e.g. INTIVideoRef
 			self._handle_group_over_viewable(provided, item, creator, extended)
 		elif INTICourseOverviewGroup.providedBy(item):
 			self._handle_overview_group(item, creator, extended)
@@ -804,7 +805,7 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 								ModeledContentUploadRequestUtilsMixin):  # order matters
 
 	content_predicate = IPresentationAsset.providedBy
-	
+
 	@Lazy
 	def _site_name(self):
 		folder = find_interface(self._course, IHostPolicyFolder, strict=False)
