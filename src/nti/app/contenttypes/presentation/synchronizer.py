@@ -13,6 +13,8 @@ import six
 import time
 import simplejson
 
+import transaction
+
 from zope import component
 
 from zope.component.hooks import getSite
@@ -566,6 +568,13 @@ def get_cataloged_namespaces(ntiid, catalog=None, sites=None):
 	result.discard(None)
 	return result
 
+def savepoint():
+	try:
+		transaction.savepoint(True)
+	except Exception:
+		logger.debug("Savepoint not supported")
+		pass
+
 def synchronize_course_lesson_overview(course, intids=None, catalog=None, **kwargs):
 	result = []
 	namespaces = set()
@@ -669,6 +678,8 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, **kwar
 
 	logger.info('Lessons overviews for %s have been synchronized in %s(s)',
 				 name, time.time() - now)
+	
+	savepoint()
 	return result
 
 def _clear_course_assets(course):
