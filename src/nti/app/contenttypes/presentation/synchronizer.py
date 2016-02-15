@@ -120,7 +120,7 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 		registered = registry.queryUtility(provided, name=ntiid)
 		if registered is None or intids.queryId(registered) is None:
 			assert is_valid_ntiid_string(ntiid), "invalid NTIID %s" % ntiid
-			if intids.queryId(registered) is None:  # remove if invalid
+			if registered is not None and intids.queryId(registered) is None:  # remove if invalid
 				unregisterUtility(registry, provided=provided, name=ntiid)
 			registerUtility(registry, item, provided=provided, name=ntiid)
 			intid_register(item, registry, connection=connection)
@@ -517,9 +517,6 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 			INTICourseOverviewGroup.providedBy(item) or \
 			INTIMediaRoll.providedBy(item):
 
-			# for lesson and groups overviews index all fields
-			namespace = None if INTIMediaRoll.providedBy(item) else namespace
-
 			catalog.index(item,
 						  sites=sites,
 						  intids=intids,
@@ -535,11 +532,13 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 								  course=course,
 								  parent=item)
 		else:
-			# CS: We don't index items in groups with the namespace
-			# because and item can be in different groups with different namespace
+			provided = iface_of_thing(item)
+			namespace = None if provided in PACKAGE_CONTAINER_INTERFACES else namespace
+			
 			catalog.index(item,
 						  sites=sites,
 						  intids=intids,
+						  namespace=namespace,
 						  container_ntiids=to_index)
 
 def _index_pacakge_assets(course, catalog=None, sites=None):
