@@ -54,7 +54,7 @@ def _process_items(current, intids, catalog, seen):
 	site_name = current.__name__
 	registry = current.getSiteManager()
 	site_components = _lookupAll(registry)
-	logger.info("%s(s) asset(s) found in %s", len(site_components), site_name)
+	logger.info("%s asset(s) found in %s", len(site_components), site_name)
 
 	for ntiid, item in site_components.items():
 		provided = iface_of_asset(item)
