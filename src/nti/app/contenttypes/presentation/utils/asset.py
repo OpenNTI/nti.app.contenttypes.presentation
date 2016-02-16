@@ -120,17 +120,18 @@ def notify_removed(item):
 	if ILocation.providedBy(item):
 		locate(item, None, None)
 
-def registry4(item, provided, name, registry=None):
+def get_registry_4_item(item, provided, name, registry=None):
 	if registry is None:
 		registry = component_registry(item, provided, name=name)
 	return registry
+registry4 = get_registry_4_item
 
 def remove_asset(item, registry=None, catalog=None):
 	notify(WillRemovePresentationAssetEvent(item))
 	# remove utility
 	name = item.ntiid
 	provided = iface_of_asset(item)
-	registry = registry4(item, provided, name, registry=registry)
+	registry = get_registry_4_item(item, provided, name, registry=registry)
 	unregisterUtility(registry, provided=provided, name=name)
 	# unindex
 	catalog = get_library_catalog() if catalog is None else catalog
@@ -144,7 +145,7 @@ def remove_mediaroll(item, registry=None, catalog=None):
 	if item is None:
 		return
 	name = item.ntiid
-	registry = registry4(item, INTIMediaRoll, name, registry=registry)
+	registry = get_registry_4_item(item, INTIMediaRoll, name, registry=registry)
 	catalog = get_library_catalog() if catalog is None else catalog
 	# remove mediarefs first
 	for media in list(item):  # mutating
@@ -158,7 +159,7 @@ def remove_group(group, registry=None, catalog=None, package=True):
 	if group is None:
 		return
 	name = group.ntiid
-	registry = registry4(group, INTICourseOverviewGroup, name, registry=registry)
+	registry = get_registry_4_item(group, INTICourseOverviewGroup, name, registry=registry)
 	catalog = get_library_catalog() if catalog is None else catalog
 	# remove items first
 	for item in list(group):  # mutating
@@ -176,7 +177,7 @@ def remove_lesson(item, registry=None, catalog=None, package=True):
 	if item is None:
 		return
 	name = item.ntiid
-	registry = registry4(item, INTILessonOverview, name, registry=registry)
+	registry = get_registry_4_item(item, INTILessonOverview, name, registry=registry)
 	catalog = get_library_catalog() if catalog is None else catalog
 	# remove groups first
 	for group in list(item):  # mutating

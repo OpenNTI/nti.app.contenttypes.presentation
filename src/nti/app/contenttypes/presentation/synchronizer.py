@@ -460,7 +460,8 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 	result = []
 	sites = get_component_hierarchy_names() if not sites else sites
 	# unregister and unindex lesson overview obects
-	for item in catalog.search_objects(intids=intids, provided=INTILessonOverview,
+	for item in catalog.search_objects(intids=intids, 
+									   provided=INTILessonOverview,
 									   container_ntiids=container_ntiids,
 									   namespace=namespace,
 									   sites=sites):
@@ -632,7 +633,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, **kwar
 									  course=course)
 
 				continue
-
+			from IPython.core.debugger import Tracer; Tracer()()
 			# this remove all lesson overviews and overview groups
 			# for specified namespace file. As of 20150521 we
 			# don't allow shaing of lesson amogst different courses
