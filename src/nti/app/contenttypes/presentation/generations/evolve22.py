@@ -126,7 +126,6 @@ def do_evolve(context, generation=generation):
 		
 		seen = set()
 		catalog = get_library_catalog()
-		
 		for current in get_all_host_sites():
 			remove_leaks(current, intids, catalog, seen)
 
@@ -138,6 +137,6 @@ def do_evolve(context, generation=generation):
 
 def evolve(context):
 	"""
-	Evolve to generation 21 by indexing site name in library catalog for assets
+	Evolve to generation 22 by removing leaks and clean course containers
 	"""
 	do_evolve(context, generation)
