@@ -54,7 +54,7 @@ def _process_items(current, intids, catalog, seen):
 	site_name = current.__name__
 	registry = current.getSiteManager()
 	site_components = _lookupAll(registry)
-	logger.info("%s(s) asset(s) found in %s, %s", len(site_components), site_name)
+	logger.warn("%s(s) asset(s) found in %s, %s", len(site_components), site_name)
 
 	for ntiid, item in site_components.items():
 		provided = iface_of_asset(item)
@@ -64,7 +64,7 @@ def _process_items(current, intids, catalog, seen):
 		if doc_id is None:
 			logger.warn("Removing invalid registration %s from site %s",
 						ntiid, site_name)
-			unregisterUtility(registry, provided=provided, name=ntiid)
+			unregisterUtility(registry, item, provided=provided, name=ntiid, force=True)
 			continue
 
 		# invalid lesson overview
