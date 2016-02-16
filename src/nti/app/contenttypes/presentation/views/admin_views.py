@@ -44,12 +44,12 @@ from nti.app.contenttypes.presentation.utils import remove_presentation_asset
 
 from nti.app.products.courseware.views import CourseAdminPathAdapter
 
-from nti.common.string import TRUE_VALUES
 from nti.common.maps import CaseInsensitiveDict
+
+from nti.common.string import TRUE_VALUES
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
-from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
@@ -58,7 +58,6 @@ from nti.contenttypes.courses.utils import get_course_hierarchy
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
-from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
@@ -355,67 +354,6 @@ class SyncCoursePresentationAssetsView(AbstractAuthenticatedView,
 			with current_site(get_host_site(folder.__name__)):
 				synchronize_course_lesson_overview(course)
 				items.append(ICourseCatalogEntry(course).ntiid)
-		return result
-
-	def __call__(self):
-		now = time.time()
-		result = LocatedExternalDict()
-		endInteraction()
-		try:
-			self._do_call(result)
-		finally:
-			restoreInteraction()
-			result['SyncTime'] = time.time() - now
-		return result
-
-@view_config(context=IDataserverFolder)
-@view_config(context=CourseAdminPathAdapter)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   permission=nauth.ACT_NTI_ADMIN,
-			   name='ResetOutlineLessonOverviews')
-class ResetOutlineLessonOverviewsView(AbstractAuthenticatedView,
-									  ModeledContentUploadRequestUtilsMixin):
-
-	def readInput(self, value=None):
-		return _read_input(self.request)
-
-	def _outline_nodes(self, outline):
-		result = []
-		def _recur(node):
-			if 		not ICourseOutline.providedBy(node) \
-				and getattr(node, 'src', None):
-				result.append(node)
-	
-			# parse children
-			for child in node.values():
-				_recur(child)
-	
-		_recur(outline)
-		return result
-
-	def _do_call(self, result):
-		values = self.readInput()
-		ntiids = _get_course_ntiids(values)
-		intids = component.getUtility(IIntIds)
-		courses = list(yield_sync_courses(ntiids=ntiids))
-
-		items = result[ITEMS] = []
-		for course in courses:
-			ntiid = ICourseCatalogEntry(course).ntiid
-			catalog = get_library_catalog()
-			for node in self._outline_nodes(course.Outline):
-				if not getattr(node, 'src', None):
-					continue
-				objects = list(catalog.search_objects(namespace=node.src, # unique
-												 	  provided=INTILessonOverview,
-												 	  intids=intids))
-				if objects:
-					items.append(node.ntiid)
-					item = objects[0] # first
-					item.__parent__ = node  # lineage
-					node.LessonOverviewNTIID = item.ntiid
-					catalog.index(item, intids=intids, container_ntiids=(ntiid,))
 		return result
 
 	def __call__(self):
