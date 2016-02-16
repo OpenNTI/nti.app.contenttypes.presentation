@@ -28,6 +28,7 @@ from nti.app.contenttypes.presentation.synchronizer import remove_and_unindex_co
 from nti.app.contenttypes.presentation.synchronizer import synchronize_course_lesson_overview
 
 from nti.app.contenttypes.presentation.utils import get_course_packages
+from nti.app.contenttypes.presentation.utils import remove_presentation_asset
 from nti.app.contenttypes.presentation.utils import get_presentation_asset_containers
 
 from nti.coremetadata.interfaces import IRecordable
@@ -61,8 +62,6 @@ from nti.contenttypes.presentation.interfaces import IItemRemovedFromItemAssetCo
 
 from nti.externalization.interfaces import StandardExternalFields
 
-from nti.intid.common import removeIntId
-
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.recorder.interfaces import TRX_TYPE_CREATE
@@ -70,8 +69,6 @@ from nti.recorder.interfaces import TRX_TYPE_CREATE
 from nti.recorder.record import remove_transaction_history
 
 from nti.recorder.utils import record_transaction
-
-from nti.site.utils import unregisterUtility
 
 ITEMS = StandardExternalFields.ITEMS
 
@@ -141,9 +138,7 @@ def _on_outlinenode_unregistered(node, event):
 	# unregister empty lesson overviews to avoid leaking
 	registry = get_registry()
 	if not lesson.Items and registry != component.getGlobalSiteManager():
-		removeIntId(lesson)
-		get_library_catalog().unindex(lesson)
-		unregisterUtility(registry, provided=INTILessonOverview, name=ntiid)
+		remove_presentation_asset(lesson, registry)
 
 # Presentation assets
 
