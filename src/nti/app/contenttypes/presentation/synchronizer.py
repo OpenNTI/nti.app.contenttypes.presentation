@@ -633,7 +633,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, **kwar
 									  course=course)
 
 				continue
-			from IPython.core.debugger import Tracer; Tracer()()
+
 			# this remove all lesson overviews and overview groups
 			# for specified namespace file. As of 20150521 we
 			# don't allow shaing of lesson amogst different courses
