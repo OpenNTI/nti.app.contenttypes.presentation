@@ -103,6 +103,11 @@
 				for="nti.contenttypes.presentation.interfaces.IPresentationAsset
 					 pyramid.interfaces.IRequest" />
 
+	<subscriber factory=".assets._PresentationAssetContainersDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.IPresentationAsset
+					 pyramid.interfaces.IRequest" />
+
 	<subscriber factory=".assets._NTIAbsoluteURLDecorator"
 				provides="nti.externalization.interfaces.IExternalMappingDecorator"
 				for="nti.contenttypes.presentation.interfaces.INTITimeline

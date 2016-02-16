@@ -48,7 +48,7 @@ from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackage
 from nti.contentlibrary.interfaces import IContentUnitHrefMapper
 
-from nti.contentlibrary.indexed_data import get_catalog
+from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import OPEN
 from nti.contenttypes.courses.interfaces import ES_ALL
@@ -144,6 +144,25 @@ class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecor
 		link.__name__ = ''
 		link.__parent__ = context
 		_links.append(link)
+
+@component.adapter(IPresentationAsset)
+@interface.implementer(IExternalMappingDecorator)
+class _PresentationAssetContainersDecorator(AbstractAuthenticatedRequestAwareDecorator):
+
+	@Lazy
+	def _acl_decoration(self):
+		result = getattr(self.request, 'acl_decoration', True)
+		return result
+
+	def _predicate(self, context, result):
+		return 		self._acl_decoration \
+				and self._is_authenticated \
+				and has_permission(ACT_CONTENT_EDIT, context, self.request)
+
+	def _do_decorate_external(self, context, result):
+		catalog = get_library_catalog()
+		containers = catalog.get_containers(context)
+		result['Containers'] = sorted(containers or ())
 
 @component.adapter(INTILessonOverview)
 @interface.implementer(IExternalMappingDecorator)
@@ -367,7 +386,7 @@ def _get_content_package(ntiids=()):
 	return result
 
 def _get_item_content_package(item):
-	catalog = get_catalog()
+	catalog = get_library_catalog()
 	entries = catalog.get_containers(item)
 	result = _get_content_package(entries) if entries else None
 	return result
