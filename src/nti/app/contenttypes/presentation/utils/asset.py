@@ -38,6 +38,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.presentation import iface_of_asset
+from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
+
 from nti.contenttypes.presentation.lesson import NTILessonOverView
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -150,7 +152,7 @@ def remove_mediaroll(item, registry=None, catalog=None):
 	# remove roll
 	remove_asset(item, registry, catalog)
 
-def remove_group(group, registry=None, catalog=None):
+def remove_group(group, registry=None, catalog=None, pacakge=True):
 	if isinstance(group, six.string_types):
 		group = component.queryUtility(INTICourseOverviewGroup, name=group)
 	if group is None:
@@ -160,14 +162,15 @@ def remove_group(group, registry=None, catalog=None):
 	catalog = get_library_catalog() if catalog is None else catalog
 	# remove items first
 	for item in list(group):  # mutating
+		provided = iface_of_asset(item)
 		if INTIMediaRoll.providedBy(item):
 			remove_mediaroll(item, registry, catalog)
-		else:
+		elif pacakge or provided not in PACKAGE_CONTAINER_INTERFACES:
 			remove_asset(item, registry, catalog)
 	# remove groups
 	remove_asset(group, registry, catalog)
 
-def remove_lesson(item, registry=None, catalog=None):
+def remove_lesson(item, registry=None, catalog=None, pacakge=True):
 	if isinstance(item, six.string_types):
 		item = component.queryUtility(INTILessonOverview, name=item)
 	if item is None:
@@ -177,15 +180,15 @@ def remove_lesson(item, registry=None, catalog=None):
 	catalog = get_library_catalog() if catalog is None else catalog
 	# remove groups first
 	for group in list(item):  # mutating
-		remove_group(group, registry, catalog)
+		remove_group(group, registry, catalog, pacakge=pacakge)
 	# remove asset
 	remove_asset(item, registry, catalog)
 
-def remove_presentation_asset(item, registry=None, catalog=None):
+def remove_presentation_asset(item, registry=None, catalog=None, pacakge=True):
 	if INTILessonOverview.providedBy(item):
-		remove_lesson(item, registry, catalog)
+		remove_lesson(item, registry, catalog, pacakge=pacakge)
 	elif INTICourseOverviewGroup.providedBy(item):
-		remove_group(item, registry, catalog)
+		remove_group(item, registry, catalog, pacakge=pacakge)
 	elif INTIMediaRoll.providedBy(item):
 		remove_mediaroll(item, registry, catalog)
 	else:
