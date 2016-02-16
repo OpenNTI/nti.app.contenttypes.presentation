@@ -54,7 +54,7 @@ def _process_items(current, intids, catalog, seen):
 	site_name = current.__name__
 	registry = current.getSiteManager()
 	site_components = _lookupAll(registry)
-	logger.warn("%s(s) asset(s) found in %s, %s", len(site_components), site_name)
+	logger.info("%s(s) asset(s) found in %s", len(site_components), site_name)
 
 	for ntiid, item in site_components.items():
 		provided = iface_of_asset(item)
@@ -105,9 +105,9 @@ def main():
 
 	run_with_dataserver(environment_dir=env_dir,
 						verbose=args.verbose,
-						xmlconfig_packages=conf_packages,
 						context=context,
 						minimal_ds=True,
+						xmlconfig_packages=conf_packages,
 						function=lambda: _process_args(args))
 	sys.exit(0)
 

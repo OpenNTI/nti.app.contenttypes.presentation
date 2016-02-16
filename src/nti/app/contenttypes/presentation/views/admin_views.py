@@ -199,7 +199,7 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 				# only return ntiids
 				items[entry.ntiid] = [x.ntiid for x in removed] 
 
-		result['Total'] = total
+		result['ItemCount'] = result['Total'] = total
 		return result
 
 	def __call__(self):
