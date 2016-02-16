@@ -152,7 +152,7 @@ def remove_mediaroll(item, registry=None, catalog=None):
 	# remove roll
 	remove_asset(item, registry, catalog)
 
-def remove_group(group, registry=None, catalog=None, pacakge=True):
+def remove_group(group, registry=None, catalog=None, package=True):
 	if isinstance(group, six.string_types):
 		group = component.queryUtility(INTICourseOverviewGroup, name=group)
 	if group is None:
@@ -165,12 +165,12 @@ def remove_group(group, registry=None, catalog=None, pacakge=True):
 		provided = iface_of_asset(item)
 		if INTIMediaRoll.providedBy(item):
 			remove_mediaroll(item, registry, catalog)
-		elif pacakge or provided not in PACKAGE_CONTAINER_INTERFACES:
+		elif package or provided not in PACKAGE_CONTAINER_INTERFACES:
 			remove_asset(item, registry, catalog)
 	# remove groups
 	remove_asset(group, registry, catalog)
 
-def remove_lesson(item, registry=None, catalog=None, pacakge=True):
+def remove_lesson(item, registry=None, catalog=None, package=True):
 	if isinstance(item, six.string_types):
 		item = component.queryUtility(INTILessonOverview, name=item)
 	if item is None:
@@ -180,15 +180,15 @@ def remove_lesson(item, registry=None, catalog=None, pacakge=True):
 	catalog = get_library_catalog() if catalog is None else catalog
 	# remove groups first
 	for group in list(item):  # mutating
-		remove_group(group, registry, catalog, pacakge=pacakge)
+		remove_group(group, registry, catalog, package=package)
 	# remove asset
 	remove_asset(item, registry, catalog)
 
-def remove_presentation_asset(item, registry=None, catalog=None, pacakge=True):
+def remove_presentation_asset(item, registry=None, catalog=None, package=True):
 	if INTILessonOverview.providedBy(item):
-		remove_lesson(item, registry, catalog, pacakge=pacakge)
+		remove_lesson(item, registry, catalog, package=package)
 	elif INTICourseOverviewGroup.providedBy(item):
-		remove_group(item, registry, catalog, pacakge=pacakge)
+		remove_group(item, registry, catalog, package=package)
 	elif INTIMediaRoll.providedBy(item):
 		remove_mediaroll(item, registry, catalog)
 	else:
