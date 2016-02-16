@@ -129,16 +129,21 @@ def _clear_data_when_course_removed(course, event):
 def _on_outlinenode_unregistered(node, event):
 	try:
 		ntiid = node.LessonOverviewNTIID
-		lesson = find_object_with_ntiid(ntiid)
-		if lesson is not None:
-			lesson.__parent__ = None
-			registry = get_registry()
-			if registry != component.getGlobalSiteManager():
-				removeIntId(lesson)
-				get_library_catalog().unindex(lesson)
-				unregisterUtility(registry, provided=INTILessonOverview, name=ntiid)
-	except AttributeError:
-		pass
+		lesson = find_object_with_ntiid(ntiid or u'')
+		if lesson is None:
+			return
+	except AttributeError: # pragma no cover
+		return
+
+	# ground lesson
+	lesson.__parent__ = None
+	
+	# unregister empty lesson overviews to avoid leaking
+	registry = get_registry()
+	if not lesson.Items and registry != component.getGlobalSiteManager():
+		removeIntId(lesson)
+		get_library_catalog().unindex(lesson)
+		unregisterUtility(registry, provided=INTILessonOverview, name=ntiid)
 
 # Presentation assets
 
