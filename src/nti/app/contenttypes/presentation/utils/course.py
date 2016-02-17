@@ -10,17 +10,22 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 import os
-from itertools import chain
 
 from zope import component
 from zope import interface
 
 from zope.container.contained import Contained
 
+from zope.intid.interfaces import IIntIds
+
 from zope.security.interfaces import IPrincipal
 
-from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.indexed_data import get_catalog
+
+from nti.contentlibrary.interfaces import IContentUnit
+
+from nti.contenttypes.courses.index import IX_SITE
+from nti.contenttypes.courses.index import IX_PACKAGES
 
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import ICourseCatalog
@@ -29,14 +34,16 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.contenttypes.courses.utils import is_course_editor
-from nti.contenttypes.courses.utils import get_parent_course 
 from nti.contenttypes.courses.utils import get_any_enrollment
-from nti.contenttypes.courses.utils import get_course_packages
+from nti.contenttypes.courses.utils import get_courses_catalog
+from nti.contenttypes.courses.utils import get_course_hierarchy
 from nti.contenttypes.courses.utils import is_course_instructor
 
 from nti.coremetadata.mixins import CreatedAndModifiedTimeMixin
 
 from nti.ntiids.ntiids import find_object_with_ntiid
+
+from nti.site.site import get_component_hierarchy_names
 
 @interface.implementer(ICourseInstanceEnrollmentRecord)
 class ProxyEnrollmentRecord(CreatedAndModifiedTimeMixin, Contained):
@@ -54,27 +61,27 @@ def get_enrollment_record(context, user):
 	course = ICourseInstance(context, None)  # e.g. course in lineage
 	if course is None:
 		return None
-
-	main_course = get_parent_course(course)
-
-	# give priority to course in lineage before checking the rest
-	for instance in chain((course, main_course), main_course.SubInstances.values()):
-		if is_course_instructor(instance, user) or is_course_editor(instance, user):
-			# create a fake enrollment record w/ all scopes to signal an instructor
-			return ProxyEnrollmentRecord(course, IPrincipal(user), ES_ALL)
-
-	result = get_any_enrollment(course, user) if course is not None else None
-	return result
+	else:
+		# give priority to course in lineage before checking the rest
+		for instance in get_course_hierarchy(course):
+			if is_course_instructor(instance, user) or is_course_editor(instance, user):
+				# create a fake enrollment record w/ all scopes to signal an instructor
+				return ProxyEnrollmentRecord(course, IPrincipal(user), ES_ALL)
+		# find any enrollment
+		result = get_any_enrollment(course, user)
+		return result
 
 def get_courses_for_pacakge(ntiid):
 	result = []
-	catalog = component.getUtility(ICourseCatalog)
-	for entry in catalog.iterCatalogEntries():
-		course = ICourseInstance(entry, None)
-		packs = get_course_packages(course)	
-		for pack in packs or ():
-			if pack.ntiid == ntiid:
-				result.append(course)
+	catalog = get_courses_catalog()
+	intids = component.getUtility(IIntIds)
+	sites = get_component_hierarchy_names()
+	query = { IX_SITE: {'any_of':sites},
+			  IX_PACKAGES: {'any_of':(ntiid,) }}
+	for uid in catalog.apply(query) or ():
+		course = intids.queryObject(uid)
+		if ICourseInstance.providedBy(course):
+			result.append(course)
 	return result
 
 def get_containers(ntiids=()):
