@@ -44,8 +44,9 @@ from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
-from nti.ntiids.ntiids import get_parts
 from nti.ntiids.interfaces import INTIIDResolver
+
+from nti.ntiids.ntiids import get_parts
 
 @interface.implementer(INTIIDResolver)
 class _PresentationResolver(object):
