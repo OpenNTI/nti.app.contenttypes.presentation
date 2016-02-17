@@ -460,7 +460,7 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 	result = []
 	sites = get_component_hierarchy_names() if not sites else sites
 	# unregister and unindex lesson overview obects
-	for item in catalog.search_objects(intids=intids, 
+	for item in catalog.search_objects(intids=intids,
 									   provided=INTILessonOverview,
 									   container_ntiids=container_ntiids,
 									   namespace=namespace,
@@ -543,7 +543,7 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 		else:
 			provided = iface_of_thing(item)
 			namespace = None if provided in PACKAGE_CONTAINER_INTERFACES else namespace
-			
+
 			catalog.index(item,
 						  sites=sites,
 						  intids=intids,
@@ -598,6 +598,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, **kwar
 	# parse and register
 	removed = []
 	nodes = _outline_nodes(course.Outline)
+
 	for node in nodes:
 		namespace = node.src
 		if not namespace:
@@ -606,8 +607,6 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, **kwar
 			_create_lesson_4_node(node, registry, catalog)
 			continue
 		elif is_ntiid_of_type(namespace, TYPE_OID):  # ignore
-			continue
-		elif IRecordable.providedBy(node) and node.locked:  # ignore locked
 			continue
 		# ready to sync
 		namespaces.add(namespace)  # this is ntiid based file (unique)
