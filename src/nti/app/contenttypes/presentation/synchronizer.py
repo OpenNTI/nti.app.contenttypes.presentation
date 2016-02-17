@@ -34,12 +34,12 @@ from nti.coremetadata.interfaces import IPublishable
 from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
-from nti.contenttypes.courses.utils import get_parent_course
-from nti.contenttypes.courses.utils import get_course_packages
-
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import	CourseLessonSyncResults
 from nti.contenttypes.courses.interfaces import	ICourseOutlineContentNode
+
+from nti.contenttypes.courses.utils import get_parent_course
+from nti.contenttypes.courses.utils import get_course_packages
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIMediaRef
@@ -69,9 +69,10 @@ from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.recorder.record import copy_transaction_history
 from nti.recorder.record import remove_transaction_history
 
+from nti.site.site import get_component_hierarchy_names
+
 from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
-from nti.site.site import get_component_hierarchy_names
 
 ITEMS = StandardExternalFields.ITEMS
 
@@ -80,11 +81,10 @@ def prepare_json_text(s):
 	return result
 
 def _is_obj_locked(node):
-	return IRecordable.providedBy(node) and node.locked
+	return IRecordable.providedBy(node) and node.isLocked()
 
 def _can_be_removed(registered, force=False):
-	result = 	registered is not None \
-			and (force or not _is_obj_locked(registered))
+	result = registered is not None and (force or not _is_obj_locked(registered))
 	return result
 can_be_removed = _can_be_removed
 
@@ -106,8 +106,8 @@ def _removed_registered(provided, name, intids=None, registry=None,
 		catalog = get_library_catalog() if catalog is None else catalog
 		catalog.unindex(registered, intids=intids)
 		removeIntId(registered)
-		_unregister(registry, provided=provided, name=name)
 		registered.__parent__ = None
+		_unregister(registry, provided=provided, name=name)
 	elif registered is not None:
 		logger.warn("Object (%s,%s) is locked cannot be removed during sync",
 					provided.__name__, name)
