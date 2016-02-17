@@ -30,6 +30,7 @@ from pyramid.view import view_defaults
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.externalization.internalization import read_body_as_external_object
+
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
 from nti.app.contenttypes.presentation import iface_of_thing
@@ -67,8 +68,6 @@ from nti.dataserver.interfaces import IDataserverFolder
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 
-from nti.intid.common import removeIntId
-
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.recorder.record import remove_transaction_history
@@ -76,8 +75,6 @@ from nti.recorder.record import remove_transaction_history
 from nti.site.interfaces import IHostPolicyFolder
 
 from nti.site.hostpolicy import get_host_site
-
-from nti.site.utils import unregisterUtility
 
 from nti.traversal.traversal import find_interface
 
@@ -243,6 +240,11 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 			if provided in ifaces:
 				yield key, value, container
 
+	def _valid_parent(self, item, intids):
+		parent = item.__parent__
+		doc_id = intids.queryId(parent) if parent is not None else None
+		return parent is not None and doc_id is not None
+
 	def _do_call(self, result):
 		registered = 0
 		items = result[ITEMS] = []
@@ -254,19 +256,22 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 
 		# clean containers by removing those assets that either
 		# don't have an intid or cannot be found in the registry
+		# or don't have proper lineage
 		for course in yield_sync_courses():
 			# check every object in the course
 			folder = find_interface(course, IHostPolicyFolder, strict=False)
+			registry = folder.getSiteManager()
 			sites.add(folder.__name__)
 			for ntiid, asset, container in self._course_assets(course):
 				uid = intids.queryId(asset)
 				provided = iface_of_thing(asset)
-				if uid is None:
+				# check it can be found in registry
+				if component.queryUtility(provided, name=ntiid) is None:
 					container.pop(ntiid, None)
 					remove_transaction_history(asset)
-				elif component.queryUtility(provided, name=ntiid) is None:
-					catalog.unindex(uid)
-					removeIntId(asset)
+					remove_presentation_asset(asset, registry, catalog, package=False)
+				# check it has a valid uid and parent
+				elif uid is None or not self._valid_parent(asset, intids):
 					container.pop(ntiid, None)
 					remove_transaction_history(asset)
 				else:
@@ -277,16 +282,9 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 			registry = self._site_registry(site)
 			for ntiid, asset in self._registered_assets(registry):
 				uid = intids.queryId(asset)
-				provided = iface_of_thing(asset)
-				if uid is None or ntiid not in master:
+				if 	uid is None or ntiid not in master:
 					remove_transaction_history(asset)
-					unregisterUtility(registry,
-									  name=ntiid,
-								   	  provided=provided)
-					if uid is not None:
-						catalog.unindex(uid)
-						removeIntId(asset)
-
+					remove_presentation_asset(asset, registry, catalog, package=False)
 					items.append({
 						'IntId':uid,
 						NTIID:ntiid,
@@ -306,9 +304,8 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 				ntiid = asset.ntiid
 				provided = iface_of_thing(asset)
 				if component.queryUtility(provided, name=ntiid) is None:
-					catalog.unindex(uid)
-					removeIntId(asset)
 					remove_transaction_history(asset)
+					remove_presentation_asset(asset, catalog=catalog, package=False)
 					items.append({
 						'IntId':uid,
 						NTIID:ntiid,
