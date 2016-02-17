@@ -11,13 +11,13 @@ logger = __import__('logging').getLogger(__name__)
 
 generation = 14
 
-import functools
-
 from zope import component
 from zope import interface
 
-from zope.component.hooks import site
 from zope.component.hooks import setHooks
+from zope.component.hooks import site as current_site
+
+from nti.app.contenttypes.presentation.synchronizer import index_pacakge_assets
 
 from nti.contentlibrary.indexed_data import CATALOG_INDEX_NAME
 from nti.contentlibrary.indexed_data.interfaces import IContainedObjectCatalog
@@ -34,11 +34,9 @@ from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.coremetadata.interfaces import IPublishable
 from nti.coremetadata.interfaces import IDefaultPublished
 
-from nti.site.hostpolicy import run_job_in_all_host_sites
+from nti.site.hostpolicy import get_all_host_sites
 
 from nti.traversal.traversal import find_interface
-
-from ..synchronizer import index_pacakge_assets
 
 def _reindex_lesson(catalog, ntiid, lesson):
 	course = find_interface(lesson, ICourseInstance, strict=False)
@@ -92,14 +90,17 @@ def do_evolve(context, generation=generation):
 	root = conn.root()
 	dataserver_folder = root['nti.dataserver']
 
-	with site(dataserver_folder):
+	with current_site(dataserver_folder):
 		assert	component.getSiteManager() == dataserver_folder.getSiteManager(), \
 				"Hooks not installed?"
 
 		lsm = dataserver_folder.getSiteManager()
 		catalog = lsm.getUtility(IContainedObjectCatalog, name=CATALOG_INDEX_NAME)
 
-		run_job_in_all_host_sites(functools.partial(_process, catalog))
+		for site in get_all_host_sites():
+			with current_site(site):
+				_process(catalog)
+
 		logger.info('Evolution %s done.', generation)
 
 def evolve(context):

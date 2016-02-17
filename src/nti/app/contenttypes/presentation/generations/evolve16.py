@@ -18,9 +18,10 @@ from zope.component.hooks import site as current_site
 
 from persistent.list import PersistentList
 
-from nti.contenttypes.presentation.interfaces import INTITimeline
+from nti.contenttypes.presentation import iface_of_asset
+from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
+
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
-from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.site.hostpolicy import get_all_host_sites
@@ -29,9 +30,8 @@ def _process_groups(registry):
 	count = 0
 	for _, group in list(registry.getUtilitiesFor(INTICourseOverviewGroup)):
 		for item in group:
-			if INTITimeline.providedBy(item) or INTIRelatedWorkRef.providedBy(item):
-				continue
-			if item.__parent__ is None:
+			provided = iface_of_asset(item)
+			if provided not in PACKAGE_CONTAINER_INTERFACES and item.__parent__ is None:
 				item.__parent__ = group
 		count += 1
 	return count

@@ -20,6 +20,8 @@ from zope.intid.interfaces import IIntIds
 
 from zope.component.hooks import site, setHooks
 
+from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_courses
+
 from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import CATALOG_INDEX_NAME
 from nti.contentlibrary.indexed_data.interfaces import IContainedObjectCatalog
@@ -38,8 +40,6 @@ from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
 
 from nti.site.hostpolicy import run_job_in_all_host_sites
-
-from ..utils.course import get_presentation_asset_courses
 
 ITEM_INTERFACES = (INTIAudio, INTIVideo, INTITimeline, INTISlideDeck, INTIRelatedWorkRef)
 
