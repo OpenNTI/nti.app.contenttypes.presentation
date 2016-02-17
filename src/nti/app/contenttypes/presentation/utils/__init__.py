@@ -25,7 +25,6 @@ from nti.app.contenttypes.presentation.utils.common import yield_sync_courses
 
 # re-export
 from nti.app.contenttypes.presentation.utils.course import get_courses
-from nti.app.contenttypes.presentation.utils.course import get_course_packages
 from nti.app.contenttypes.presentation.utils.course import get_enrollment_record
 from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_courses
 from nti.app.contenttypes.presentation.utils.course import get_entry_by_relative_path_parts

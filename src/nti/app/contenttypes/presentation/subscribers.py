@@ -27,7 +27,6 @@ from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_
 from nti.app.contenttypes.presentation.synchronizer import remove_and_unindex_course_assets
 from nti.app.contenttypes.presentation.synchronizer import synchronize_course_lesson_overview
 
-from nti.app.contenttypes.presentation.utils import get_course_packages
 from nti.app.contenttypes.presentation.utils import remove_presentation_asset
 from nti.app.contenttypes.presentation.utils import get_presentation_asset_containers
 
@@ -42,6 +41,8 @@ from nti.contenttypes.courses.interfaces import	ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
+
+from nti.contenttypes.courses.utils import get_course_packages
 
 from nti.contenttypes.presentation.interfaces import TRX_ASSET_MOVE_TYPE
 from nti.contenttypes.presentation.interfaces import TRX_OVERVIEW_GROUP_MOVE_TYPE

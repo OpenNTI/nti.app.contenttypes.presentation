@@ -48,7 +48,6 @@ from nti.app.contenttypes.presentation.utils import intid_register
 from nti.app.contenttypes.presentation.utils import add_2_connection
 from nti.app.contenttypes.presentation.utils import make_asset_ntiid
 from nti.app.contenttypes.presentation.utils import registry_by_name
-from nti.app.contenttypes.presentation.utils import get_course_packages
 from nti.app.contenttypes.presentation.utils import remove_presentation_asset
 from nti.app.contenttypes.presentation.utils import get_presentation_asset_courses
 from nti.app.contenttypes.presentation.utils import resolve_discussion_course_bundle
@@ -98,6 +97,7 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
+from nti.contenttypes.courses.utils import get_course_packages
 from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation import iface_of_asset
