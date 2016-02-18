@@ -20,6 +20,8 @@ from zope.intid.interfaces import IIntIds
 
 from zope.security.interfaces import IPrincipal
 
+from nti.appserver.pyramid_authorization import has_permission
+
 from nti.contentlibrary.indexed_data import get_catalog
 
 from nti.contentlibrary.interfaces import IContentUnit
@@ -39,6 +41,8 @@ from nti.contenttypes.courses.utils import get_course_hierarchy
 from nti.contenttypes.courses.utils import is_course_instructor_or_editor
 
 from nti.coremetadata.mixins import CreatedAndModifiedTimeMixin
+
+from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -61,9 +65,10 @@ def get_enrollment_record(context, user):
 	if course is None:
 		return None
 	else:
+		is_editor = has_permission( ACT_CONTENT_EDIT, course )
 		# give priority to course in lineage before checking the rest
 		for instance in get_course_hierarchy(course):
-			if is_course_instructor_or_editor(instance, user):
+			if is_course_instructor_or_editor(instance, user) or is_editor:
 				# create a fake enrollment record w/ all scopes to signal an instructor
 				return ProxyEnrollmentRecord(course, IPrincipal(user), ES_ALL)
 		# find any enrollment
