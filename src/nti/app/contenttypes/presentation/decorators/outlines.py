@@ -40,12 +40,10 @@ from nti.contentlibrary.interfaces import IContentUnitHrefMapper
 
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
-from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 
-from nti.contenttypes.courses.utils import get_parent_course
-from nti.contenttypes.courses.utils import get_course_subinstances
+from nti.contenttypes.courses.utils import get_course_hierarchy
 
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 
@@ -117,19 +115,18 @@ class _CourseOutlineSharedDecorator(object):
 		return 		self._acl_decoration \
 				and has_permission(ACT_CONTENT_EDIT, context, self.request)
 
-	def _possible_courses(self, course):
-		if ICourseSubInstance.providedBy(course):
-			course = get_parent_course(course)
-		return get_course_subinstances(course)
-
 	def decorateExternalMapping(self, context, result):
-		course = context.__parent__
-		possible_courses = self._possible_courses(course)
-		if possible_courses:
+		context_course = context.__parent__
+		possible_courses = get_course_hierarchy(context_course)
+
+		if len( possible_courses ) > 1:
 			matches = []
 			is_shared = False
-			our_outline = course.Outline
+			our_outline = context_course.Outline
 			for course in possible_courses:
+				if context_course == course:
+					continue
+
 				if course.Outline == our_outline:
 					is_shared = True
 					catalog = ICourseCatalogEntry(course, None)
