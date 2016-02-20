@@ -9,6 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from collections import OrderedDict
+
 from zope import component
 
 from zope.interface.adapter import _lookupAll as zopeLookupAll
@@ -140,7 +142,7 @@ def remove_site_invalid_assets(current, intids=None, catalog=None, seen=None):
 
 def remove_all_invalid_assets():
 	seen = set()
-	result = dict()
+	result = OrderedDict()
 	catalog = get_library_catalog()
 	intids = component.getUtility(IIntIds)
 	for current in get_all_host_sites():

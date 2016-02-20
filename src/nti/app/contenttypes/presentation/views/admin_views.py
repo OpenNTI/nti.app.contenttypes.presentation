@@ -379,7 +379,7 @@ class RemoveInvalidPresentationAssetsView(AbstractAuthenticatedView,
 		result = LocatedExternalDict()
 		endInteraction()
 		try:
-			result[ITEMS] = remove_all_invalid_assets()
+			result[ITEMS] = dict(remove_all_invalid_assets())
 		finally:
 			restoreInteraction()
 			result['SyncTime'] = time.time() - now
