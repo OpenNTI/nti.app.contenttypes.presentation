@@ -78,7 +78,7 @@ def lookup_all_presentation_assets(site_registry):
 		break  # break on first
 	return result
 
-def _valid_parent(item, intids):
+def has_a_valid_parent(item, intids):
 	parent = item.__parent__
 	doc_id = intids.queryId(parent) if parent is not None else None
 	return parent is not None and doc_id is not None
@@ -109,7 +109,7 @@ def remove_site_invalid_assets(current, intids=None, catalog=None, seen=None):
 			continue
 
 		# invalid lesson overview
-		if INTILessonOverview.providedBy(item) and not _valid_parent(item, intids):
+		if INTILessonOverview.providedBy(item) and not has_a_valid_parent(item, intids):
 			logger.warn("Removing invalid lesson overview %s from site %s",
 						ntiid, site_name)
 			removed.add(ntiid)
@@ -117,14 +117,14 @@ def remove_site_invalid_assets(current, intids=None, catalog=None, seen=None):
 			continue
 
 		# invalid overview groups overview
-		if INTICourseOverviewGroup.providedBy(item) and not _valid_parent(item, intids):
+		if INTICourseOverviewGroup.providedBy(item) and not has_a_valid_parent(item, intids):
 			logger.warn("Removing invalid course overview %s from site %s",
 						ntiid, site_name)
 			remove_presentation_asset(item, registry, catalog, package=False)
 			continue
 
 		# invalid media roll overview
-		if INTIMediaRoll.providedBy(item) and not _valid_parent(item, intids):
+		if INTIMediaRoll.providedBy(item) and not has_a_valid_parent(item, intids):
 			logger.warn("Removing invalid media roll %s from site %s",
 						ntiid, site_name)
 			removed.add(ntiid)
