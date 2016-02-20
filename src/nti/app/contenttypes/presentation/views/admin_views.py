@@ -42,6 +42,7 @@ from nti.app.contenttypes.presentation.synchronizer import synchronize_course_le
 
 from nti.app.contenttypes.presentation.utils import yield_sync_courses
 from nti.app.contenttypes.presentation.utils import remove_presentation_asset
+from nti.app.contenttypes.presentation.utils.common import remove_all_invalid_assets
 
 from nti.app.products.courseware.views import CourseAdminPathAdapter
 
@@ -359,6 +360,26 @@ class SyncCoursePresentationAssetsView(AbstractAuthenticatedView,
 		endInteraction()
 		try:
 			self._do_call(result)
+		finally:
+			restoreInteraction()
+			result['SyncTime'] = time.time() - now
+		return result
+
+@view_config(context=IDataserverFolder)
+@view_config(context=CourseAdminPathAdapter)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   permission=nauth.ACT_NTI_ADMIN,
+			   name='RemoveInvalidPresentationAssets')
+class RemoveInvalidPresentationAssetsView(AbstractAuthenticatedView,
+									  	  ModeledContentUploadRequestUtilsMixin):
+
+	def __call__(self):
+		now = time.time()
+		result = LocatedExternalDict()
+		endInteraction()
+		try:
+			result[ITEMS] = remove_all_invalid_assets()
 		finally:
 			restoreInteraction()
 			result['SyncTime'] = time.time() - now
