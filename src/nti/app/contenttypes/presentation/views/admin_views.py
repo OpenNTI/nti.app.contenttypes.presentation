@@ -126,7 +126,7 @@ class GetCoursePresentationAssetsView(AbstractAuthenticatedView,
 		courses = list(yield_sync_courses(ntiids))
 
 		total = 0
-		result = LocatedExternalDict()		
+		result = LocatedExternalDict()
 		result[ITEMS] = items = {}
 		for course in courses:
 			entry = ICourseCatalogEntry(course)
@@ -164,7 +164,7 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 			folder = find_interface(course, IHostPolicyFolder, strict=False)
 			with current_site(get_host_site(folder.__name__)):
 				removed = []
-				
+
 				registry = folder.getSiteManager()
 				entry = ICourseCatalogEntry(course)
 
@@ -192,9 +192,9 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 					remove_transaction_history(obj)
 				# keep total
 				total += len(removed)
-				
+
 				# only return ntiids
-				items[entry.ntiid] = [x.ntiid for x in removed] 
+				items[entry.ntiid] = [x.ntiid for x in removed]
 
 		result['ItemCount'] = result['Total'] = total
 		return result

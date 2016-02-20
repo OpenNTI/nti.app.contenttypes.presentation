@@ -65,7 +65,7 @@ def get_enrollment_record(context, user):
 	if course is None:
 		return None
 	else:
-		is_editor = has_permission( ACT_CONTENT_EDIT, course )
+		is_editor = has_permission(ACT_CONTENT_EDIT, course)
 		# give priority to course in lineage before checking the rest
 		for instance in get_course_hierarchy(course):
 			if is_course_instructor_or_editor(instance, user) or is_editor:
@@ -107,7 +107,7 @@ def get_courses(ntiids=()):
 			course = ICourseInstance(context, None)
 		elif ICourseInstance.providedBy(context):
 			course = context
-		elif not IContentUnit.providedBy(context): # ignore content units
+		elif not IContentUnit.providedBy(context):  # ignore content units
 			course = ICourseInstance(context, None)
 		if course is not None:
 			result.add(course)

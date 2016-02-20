@@ -66,31 +66,31 @@ def lookup_all_presentation_assets(site_registry):
 	result = {}
 	required = ()
 	order = len(required)
-	for registry in site_registry.utilities.ro: # must keep order
+	for registry in site_registry.utilities.ro:  # must keep order
 		byorder = registry._adapters
 		if order >= len(byorder):
 			continue
 		components = byorder[order]
 		extendors = ALL_PRESENTATION_ASSETS_INTERFACES
-		zopeLookupAll(components, required, extendors, result, 0, order)  
-		break # break on first
+		zopeLookupAll(components, required, extendors, result, 0, order)
+		break  # break on first
 	return result
 
 def _valid_parent(item, intids):
 	parent = item.__parent__
 	doc_id = intids.queryId(parent) if parent is not None else None
 	return parent is not None and doc_id is not None
-		
+
 def remove_site_invalid_assets(current, intids=None, catalog=None, seen=None):
 	removed = set()
 	site_name = current.__name__
 	registry = current.getSiteManager()
-	
+
 	# get defaults
 	seen = set() if seen is None else seen
 	catalog = get_library_catalog() if catalog is None else catalog
 	intids = component.getUtility(IIntIds) if intids is None else intids
-	
+
 	# get all assets in site/no hierarchy
 	site_components = lookup_all_presentation_assets(registry)
 	logger.info("%s asset(s) found in %s", len(site_components), site_name)
@@ -120,7 +120,7 @@ def remove_site_invalid_assets(current, intids=None, catalog=None, seen=None):
 						ntiid, site_name)
 			remove_presentation_asset(item, registry, catalog, package=False)
 			continue
-		
+
 		# invalid media roll overview
 		if INTIMediaRoll.providedBy(item) and not _valid_parent(item, intids):
 			logger.warn("Removing invalid media roll %s from site %s",
@@ -128,7 +128,7 @@ def remove_site_invalid_assets(current, intids=None, catalog=None, seen=None):
 			removed.add(ntiid)
 			remove_presentation_asset(item, registry, catalog)
 			continue
-		
+
 		# registration not in base site
 		if ntiid in seen:
 			removed.add(ntiid)
@@ -147,4 +147,3 @@ def remove_all_invalid_assets():
 		removed = remove_site_invalid_assets(current, intids, catalog, seen)
 		result[current.__name__] = sorted(removed)
 	return result
-
