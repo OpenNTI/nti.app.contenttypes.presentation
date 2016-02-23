@@ -230,6 +230,18 @@ class DiscussionRefGetView(AbstractAuthenticatedView, PublishVisibilityMixin):
 		else:
 			raise hexc.HTTPNotAcceptable()
 
+@view_config(context=IPresentationAsset)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   permission=nauth.ACT_READ,
+			   request_method='GET',
+			   name="schema")
+class PresentationAssetSchemaView(AbstractAuthenticatedView):
+
+	def __call__(self):
+		result = self.context.schema()
+		return result
+
 # POST/PUT views
 
 def principalId():

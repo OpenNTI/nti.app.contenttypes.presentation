@@ -69,8 +69,7 @@ LINKS = StandardExternalFields.LINKS
 def _is_visible(item, request, show_unpublished=True):
 	return 	not IPublishable.providedBy(item) \
 			or 	item.is_published() \
-			or	(show_unpublished
-			 	 and has_permission(ACT_CONTENT_EDIT, item, request))
+			or	(show_unpublished and has_permission(ACT_CONTENT_EDIT, item, request))
 
 def _is_true(v):
 	return v and str(v).lower() in TRUE_VALUES
@@ -146,8 +145,7 @@ class _CourseOutlineEditLinkDecorator(AbstractAuthenticatedRequestAwareDecorator
 
 	@Lazy
 	def _acl_decoration(self):
-		request = self.request
-		result = getattr(request, 'acl_decoration', True)
+		result = getattr(self.request, 'acl_decoration', True)
 		return result
 
 	def _predicate(self, context, result):
@@ -169,8 +167,7 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 
 	@Lazy
 	def _acl_decoration(self):
-		request = self.request
-		result = getattr(request, 'acl_decoration', True)
+		result = getattr(self.request, 'acl_decoration', True)
 		return result
 
 	def _predicate(self, context, result):

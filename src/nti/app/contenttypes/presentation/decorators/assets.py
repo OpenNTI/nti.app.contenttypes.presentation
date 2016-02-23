@@ -147,7 +147,7 @@ class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecor
 
 @component.adapter(IPresentationAsset)
 @interface.implementer(IExternalMappingDecorator)
-class _PresentationAssetContainersDecorator(AbstractAuthenticatedRequestAwareDecorator):
+class _PresentationAssetRequestDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	@Lazy
 	def _acl_decoration(self):
@@ -159,10 +159,22 @@ class _PresentationAssetContainersDecorator(AbstractAuthenticatedRequestAwareDec
 				and self._is_authenticated \
 				and has_permission(ACT_CONTENT_EDIT, context, self.request)
 
-	def _do_decorate_external(self, context, result):
+	def _do_containers(self, context, result):
 		catalog = get_library_catalog()
 		containers = catalog.get_containers(context)
 		result['Containers'] = sorted(containers or ())
+	
+	def _do_schema_link(self, context, result):
+		_links = result.setdefault(LINKS, [])
+		link = Link(context, rel='schema', elements=('@@schema'))
+		interface.alsoProvides(link, ILocation)
+		link.__name__ = ''
+		link.__parent__ = context
+		_links.append(link)
+		
+	def _do_decorate_external(self, context, result):
+		self._do_containers(context, result)
+		self._do_schema_link(context, result)
 
 @component.adapter(INTILessonOverview)
 @interface.implementer(IExternalMappingDecorator)
