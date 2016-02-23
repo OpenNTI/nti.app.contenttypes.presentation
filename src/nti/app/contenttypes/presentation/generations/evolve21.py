@@ -118,6 +118,7 @@ def do_evolve(context, generation=generation):
 		for current in get_all_host_sites():
 			_process_items(current, sites, intids, catalog, seen)
 
+	component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
 	logger.info('Evolution %s done.', generation)
 
 def evolve(context):

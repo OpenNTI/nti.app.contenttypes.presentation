@@ -96,6 +96,7 @@ def do_evolve(context, generation=generation):
 				registry = component.getSiteManager()
 				_process_courses(registry, seen)
 
+	component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
 	logger.info('Evolution %s done.', generation)
 
 def evolve(context):

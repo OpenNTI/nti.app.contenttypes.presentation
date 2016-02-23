@@ -91,6 +91,7 @@ def do_evolve(context, generation=generation):
 				_process_pacakges(registry)
 				_process_slidedecks(registry)
 
+	component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
 	logger.info('Evolution %s done.', generation)
 
 def evolve(context):

@@ -143,6 +143,7 @@ def do_evolve(context, generation=generation):
 				registry = component.getSiteManager()
 				_process_nodes(registry, seen)
 
+	component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
 	logger.info('Evolution %s done.', generation)
 
 def evolve(context):
