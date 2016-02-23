@@ -659,8 +659,8 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		for a collision, if so, we want to index by our slide deck.
 		"""
 		packages = list(get_course_packages(self._course))
-		namespace = packages[0].ntiid if packages else None
-		if namespace:
+		if packages:
+			namespace = [x.ntiid for x in packages]
 			target = (item.ntiid,)
 			if INTIVideoRef.providedBy( item ):
 				target = (item.ntiid, getattr( item, 'target', '' ))
@@ -679,13 +679,15 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		Check if the given video is actually a slidedeck video and handle
 		the slidedeck accordingly.
 		"""
-		if provided in (INTIVideo, INTIVideoRef):
-			slide_deck = self._get_slide_deck_for_video( item )
-			if slide_deck is not None:
-				self._handle_package_asset(INTISlideDeck, slide_deck, creator, extended)
-				return
+		slide_deck = self._get_slide_deck_for_video( item )
+		if slide_deck is not None:
+			return self._handle_package_asset(INTISlideDeck, slide_deck, creator, extended)
 		# Just a video
-		self._handle_package_asset(provided, item, creator, extended)
+		if provided == INTIVideo:
+			self._handle_package_asset(provided, item, creator, extended)
+		else:
+			# Video refs need this path
+			self._handle_group_over_viewable(provided, item, creator, extended)
 
 	def _handle_asset(self, provided, item, creator, extended=()):
 		if INTIRelatedWorkRef.providedBy(item):
