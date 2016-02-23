@@ -426,7 +426,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(container, does_not(has_key(video_roll_ntiid)))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def test_slidedeck(self):
+	def test_slidedeck_container(self):
 		source = self._load_resource('ntislidedeck.json')
 
 		# post
@@ -466,6 +466,50 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(history, has_length(2))
 			# Only title shows up in history attributes.
 			assert_that(tuple(history.records())[-1].attributes, contains('title'))
+
+	@WithSharedApplicationMockDS(testapp=True, users=True)
+	def test_slidedeck(self):
+		"""
+		Posting a slidedeck video to an overview group will expose
+		our slidedeck in MediaByOutlineNode.
+		"""
+		group_ntiid = 'tag:nextthought.com,2011-10:OU-NTICourseOverviewGroup-CS1323_F_2015_Intro_to_Computer_Programming.lec:01.01_LESSON.0'
+		slide_video_ntiid = 'tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_02.01.02_How_to_Turingscraft'
+		slide_deck_ntiid = 'tag:nextthought.com,2011-10:OU-NTISlideDeck-CS1323_F_2015_Intro_to_Computer_Programming.nsd.pres:How_To_Use_Turingscraft'
+		res = self.testapp.get( '/dataserver2/Objects/%s' % group_ntiid )
+		res = res.json_body
+		group_ntiid = res.get('ntiid')
+		assert_that(res.get('Items'), has_length(1))
+		contents_link = self.require_link_href_with_rel(res, VIEW_ORDERED_CONTENTS)
+
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			slide_deck = find_object_with_ntiid( slide_deck_ntiid )
+			content_node = find_object_with_ntiid( group_ntiid ).__parent__.__parent__
+			content_ntiid = content_node.ContentNTIID
+			catalog = get_library_catalog()
+			original_containers = catalog.get_containers( slide_deck )
+			containers = ('tag:nextthought.com,2011-10:OU-HTML-CS1323_F_2015_Intro_to_Computer_Programming.lec:02.02_LESSON',)
+			catalog.remove_containers( slide_deck, containers=containers )
+
+		# Empty
+		media_res = self._media_by_outline()
+		assert_that( media_res.get( 'Items' ).get( slide_deck_ntiid ), none() )
+
+		# Insert
+		res = self.testapp.post_json(contents_link + '/index/0',
+									{'ntiid':slide_video_ntiid}, status=201)
+
+		# Not empty
+		media_res = self._media_by_outline()
+		assert_that( media_res.get( 'Items' ).get( slide_deck_ntiid ), not_none() )
+		assert_that( media_res.get( 'Containers' ), has_entry( 	content_ntiid,
+																has_item( slide_deck_ntiid )))
+
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			# Revert state
+			slide_deck = find_object_with_ntiid( slide_deck_ntiid )
+			catalog = get_library_catalog()
+			catalog.update_containers( slide_deck, containers=original_containers )
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	@fudge.patch('nti.app.contenttypes.presentation.views.asset_views.CourseOverviewGroupOrderedContentsView.readInput',
@@ -655,7 +699,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj, has_property('Items', has_length(1)))
 			history = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(2))
-			# FIXME: posting to href does not toggle flag.
+			# XXX: posting to href does not toggle flag.
 			# assert_that(obj.child_order_locked, is_( True ))
 			# obj.child_order_locked = False # Reset
 

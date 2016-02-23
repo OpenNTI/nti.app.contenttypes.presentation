@@ -112,7 +112,9 @@ from nti.contenttypes.presentation.discussion import is_nti_course_bundle
 
 from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
+from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTIMediaRef
+from nti.contenttypes.presentation.interfaces import INTIVideoRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIAudioRoll
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
@@ -433,7 +435,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 	def _get_ntiid(self, item):
 		ntiid = item.ntiid
-		# for return None for auto-generate NTIIDs,
+		# Return None for auto-generate NTIIDs
 		if 		ntiid \
 			and	(INTICourseOverviewGroup.providedBy(item) or IAssetRef.providedBy(item)) \
 			and TYPE_UUID in get_specific(ntiid):
@@ -651,19 +653,50 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		item_extended = tuple(extended or ()) + tuple(containers or ())
 		self._catalog.index(item, container_ntiids=item_extended, sites=self._site_name)
 
-	def _handle_package_container_asset(self, provided, item, creator, extended=None):
-		if INTIRelatedWorkRef.providedBy(item):
-			self._handle_related_work(provided, item, creator, extended)
-		else:
-			self._handle_package_asset(provided, item, creator, extended)
+	def _get_slide_deck_for_video(self, item):
+		"""
+		When inserting a video, iterate through any slide decks looking
+		for a collision, if so, we want to index by our slide deck.
+		"""
+		packages = list(get_course_packages(self._course))
+		namespace = packages[0].ntiid if packages else None
+		if namespace:
+			target = (item.ntiid,)
+			if INTIVideoRef.providedBy( item ):
+				target = (item.ntiid, getattr( item, 'target', '' ))
+			catalog = get_library_catalog()
+			slide_decks = tuple( catalog.search_objects( provided=INTISlideDeck,
+														namespace=namespace,
+														sites=self._site_name))
+			for slide_deck in slide_decks or ():
+				for video in slide_deck.videos or ():
+					if video.video_ntiid in target:
+						return slide_deck
+		return None
+
+	def _handle_video(self, provided, item, creator, extended=None):
+		"""
+		Check if the given video is actually a slidedeck video and handle
+		the slidedeck accordingly.
+		"""
+		if provided in (INTIVideo, INTIVideoRef):
+			slide_deck = self._get_slide_deck_for_video( item )
+			if slide_deck is not None:
+				self._handle_package_asset(INTISlideDeck, slide_deck, creator, extended)
+				return
+		# Just a video
+		self._handle_package_asset(provided, item, creator, extended)
 
 	def _handle_asset(self, provided, item, creator, extended=()):
-		if provided in PACKAGE_CONTAINER_INTERFACES:
-			self._handle_package_container_asset(provided, item, creator, extended)
+		if INTIRelatedWorkRef.providedBy(item):
+			self._handle_related_work(provided, item, creator, extended)
+		elif provided in (INTIVideo, INTIVideoRef):
+			self._handle_video(provided, item, creator, extended)
+		elif provided in PACKAGE_CONTAINER_INTERFACES:
+			self._handle_package_asset(provided, item, creator, extended)
 		elif INTIMediaRoll.providedBy(item):
 			self._handle_media_roll(provided, item, creator, extended)
 		elif IGroupOverViewable.providedBy(item):
-			# e.g. INTIVideoRef
 			self._handle_group_over_viewable(provided, item, creator, extended)
 		elif INTICourseOverviewGroup.providedBy(item):
 			self._handle_overview_group(item, creator, extended)
