@@ -30,6 +30,7 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.dataserver.authorization import ROLE_ADMIN
+from nti.dataserver.authorization import ROLE_CONTENT_ADMIN
 
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
@@ -50,6 +51,7 @@ class BasePresentationAssetACLProvider(object):
 	@property
 	def __acl__(self):
 		result = acl_from_aces(ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
+		result.append(ace_allowing(ROLE_CONTENT_ADMIN, ALL_PERMISSIONS, type(self)))
 		courses = get_presentation_asset_courses(self.context)
 		for course in courses or ():
 			result.extend(IACLProvider(course).__acl__)
