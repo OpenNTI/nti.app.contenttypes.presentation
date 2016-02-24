@@ -830,12 +830,6 @@ class TestAssetViews(ApplicationLayerTest):
 			course = ICourseInstance(entry)
 			self._check_containers(course, items=(obj,))
 
-			catalog = get_library_catalog()
-			containers = catalog.get_containers(obj)
-			assert_that(containers, has_length(greater_than(1)))
-
-			source = to_external_object(obj)
-
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_moves(self):
 		source = self._load_resource('lesson_overview.json')
