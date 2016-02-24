@@ -166,7 +166,7 @@ class _PresentationAssetRequestDecorator(AbstractAuthenticatedRequestAwareDecora
 	
 	def _do_schema_link(self, context, result):
 		_links = result.setdefault(LINKS, [])
-		link = Link(context, rel='schema', elements=('@@schema'))
+		link = Link(context, rel='schema', elements=('@@schema',))
 		interface.alsoProvides(link, ILocation)
 		link.__name__ = ''
 		link.__parent__ = context
