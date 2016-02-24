@@ -37,6 +37,7 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.presentation.interfaces import INTIVideo
+from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIVideoRef
 from nti.contenttypes.presentation.interfaces import INTIVideoRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
@@ -810,6 +811,30 @@ class TestAssetViews(ApplicationLayerTest):
 		group_items = group.get('Items')
 		assert_that(group_items, has_length(original_size))
 		assert_that(group_items[-1].get('NTIID'), is_(video_ntiid))
+
+	@WithSharedApplicationMockDS(testapp=True, users=True)
+	def test_timeline(self):
+		source = self._load_resource('ntitimeline.json')
+		source.pop('NTIID', None)
+
+		res = self.testapp.post_json(self.assets_url, source, status=201)
+		assert_that(res.json_body, has_entry('NTIID', is_not(none())))
+		assert_that(res.json_body, has_entry('href', is_not(none())))
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			ntiid = res.json_body['NTIID']
+			obj = find_object_with_ntiid(ntiid)
+			assert_that(obj, is_not(none()))
+			assert_that(obj, validly_provides(INTITimeline))
+
+			entry = find_object_with_ntiid(self.course_ntiid)
+			course = ICourseInstance(entry)
+			self._check_containers(course, items=(obj,))
+
+			catalog = get_library_catalog()
+			containers = catalog.get_containers(obj)
+			assert_that(containers, has_length(greater_than(1)))
+
+			source = to_external_object(obj)
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_moves(self):
