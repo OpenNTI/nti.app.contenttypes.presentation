@@ -64,6 +64,7 @@ class _MediaByOutlineNodeDecorator(PreviewCourseAccessPredicateDecorator):
 	def _predicate(self, context, result_map):
 		result = super(_MediaByOutlineNodeDecorator, self)._predicate(context, result_map)
 		course = ICourseInstance(context, None)
+		# XXX: Hmm, this breaks unauth access.
 		result = 	result \
 				and (	is_course_instructor(course, self.remoteUser)
 				 	 or get_enrollment_record(course, self.remoteUser) is not None
