@@ -82,6 +82,8 @@ def get_user_visibility(user):
 	return result
 
 def is_item_visible(item, user, context=None, record=None):
+	# TODO: If our context allows anonymous access, we should treat
+	# anonymous users as Open for visibility checks.
 	context = item if context is None else context
 	user_visibility = get_user_visibility(user)
 	if item.visibility != EVERYONE and user_visibility != item.visibility:

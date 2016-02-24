@@ -30,8 +30,6 @@ from nti.contenttypes.courses.discussions.utils import is_nti_course_bundle
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.courses.utils import is_course_editor
-from nti.contenttypes.courses.utils import is_course_instructor
-from nti.contenttypes.courses.utils import get_enrollment_record
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
@@ -61,15 +59,8 @@ class _CourseAssetsLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 @interface.implementer(IExternalMappingDecorator)
 class _MediaByOutlineNodeDecorator(PreviewCourseAccessPredicateDecorator):
 
-	def _predicate(self, context, result_map):
-		result = super(_MediaByOutlineNodeDecorator, self)._predicate(context, result_map)
-		course = ICourseInstance(context, None)
-		# XXX: Hmm, this breaks unauth access.
-		result = 	result \
-				and (	is_course_instructor(course, self.remoteUser)
-				 	 or get_enrollment_record(course, self.remoteUser) is not None
-				 	 or has_permission(ACT_CONTENT_EDIT, course, self.request))
-		return result
+	# We used to check enrollment/instructor access here, for visibility
+	# concerns. Since we allow anon access now, we simply provide the link.
 
 	def _do_decorate_external(self, context, result_map):
 		course = ICourseInstance(context, context)
