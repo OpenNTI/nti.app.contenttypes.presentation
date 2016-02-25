@@ -42,7 +42,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
-from nti.contenttypes.courses.utils import get_course_packages
+from nti.contenttypes.courses.common import get_course_packages
 
 from nti.contenttypes.presentation.interfaces import TRX_ASSET_MOVE_TYPE
 from nti.contenttypes.presentation.interfaces import TRX_OVERVIEW_GROUP_MOVE_TYPE
