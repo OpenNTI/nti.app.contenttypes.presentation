@@ -50,6 +50,8 @@ from nti.contentlibrary.interfaces import IContentUnitHrefMapper
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
+from nti.contenttypes.courses.common import get_course_packages
+
 from nti.contenttypes.courses.interfaces import OPEN
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import IN_CLASS
@@ -60,8 +62,6 @@ from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_for_user
-
-from nti.contenttypes.courses.utils import get_course_packages
 
 from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IMediaRef
@@ -87,11 +87,11 @@ from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
+from nti.externalization.externalization import to_external_object
+
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalObjectDecorator
 from nti.externalization.interfaces import IExternalMappingDecorator
-
-from nti.externalization.externalization import to_external_object
 
 from nti.externalization.singleton import SingletonDecorator
 

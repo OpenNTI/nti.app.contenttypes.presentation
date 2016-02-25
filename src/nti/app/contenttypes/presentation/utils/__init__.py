@@ -11,8 +11,8 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope.authentication.interfaces import IUnauthenticatedPrincipal
 
-from zope.security.management import getInteraction
 from zope.security.interfaces import NoInteraction
+from zope.security.management import getInteraction
 
 # re-export
 from nti.app.contenttypes.presentation.utils.asset import component_site
@@ -69,7 +69,7 @@ from nti.contenttypes.presentation.interfaces import IPresentationVisibility
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
-# : Visibility scope map
+#: Visibility scope map
 VISIBILITY_SCOPE_MAP = {
 	ES_ALL: EVERYONE,
 	ES_PUBLIC: PUBLIC,
