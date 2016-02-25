@@ -9,6 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from zope.authentication.interfaces import IUnauthenticatedPrincipal
+
 # re-export
 from nti.app.contenttypes.presentation.utils.asset import component_site
 from nti.app.contenttypes.presentation.utils.asset import intid_register
@@ -51,6 +53,7 @@ from nti.contenttypes.courses.discussions.utils import get_discussion_key
 from nti.contenttypes.courses.discussions.utils import get_course_for_discussion
 
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
+from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 
 from nti.contenttypes.courses.utils import get_any_enrollment
 
@@ -81,14 +84,22 @@ def get_user_visibility(user):
 	result = adapted.visibility() if adapted is not None else None
 	return result
 
+def _get_scope(user, context, record):
+	record = get_enrollment_record(context, user) if record is None else record
+	scope = record.Scope if record is not None else None
+	if 		scope is None \
+		and IAnonymouslyAccessibleCourseInstance.providedBy( context ) \
+		and IUnauthenticatedPrincipal.providedBy( user ):
+		# If our context allows anonymous access, we should treat
+		# anonymous users as Open for visibility checks.
+		scope = ES_PUBLIC
+	return scope
+
 def is_item_visible(item, user, context=None, record=None):
-	# TODO: If our context allows anonymous access, we should treat
-	# anonymous users as Open for visibility checks.
 	context = item if context is None else context
 	user_visibility = get_user_visibility(user)
 	if item.visibility != EVERYONE and user_visibility != item.visibility:
-		record = get_enrollment_record(context, user) if record is None else record
-		scope = record.Scope if record is not None else None
+		scope = _get_scope(user, context, record)
 		if scope != ES_ALL and get_visibility_for_scope(scope) != item.visibility:
 			# Our item is scoped and not-visible to us, but editors always have access.
 			return has_permission(ACT_CONTENT_EDIT, context)
