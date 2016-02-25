@@ -14,6 +14,8 @@ import simplejson
 
 from zope import component
 
+from zope.authentication.interfaces import IUnauthenticatedPrincipal
+
 from zope.component.hooks import getSite
 
 from zope.intid.interfaces import IIntIds
@@ -36,6 +38,7 @@ from nti.app.contenttypes.presentation.utils import is_item_visible
 from nti.app.contenttypes.presentation.utils import create_lesson_4_node
 from nti.app.contenttypes.presentation.utils import get_enrollment_record
 from nti.app.contenttypes.presentation.utils import remove_presentation_asset
+from nti.app.contenttypes.presentation.utils import get_participation_principal
 
 from nti.app.contenttypes.presentation.views.view_mixins import NTIIDPathMixin
 from nti.app.contenttypes.presentation.views.view_mixins import IndexedRequestMixin
@@ -72,6 +75,7 @@ from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 from nti.contenttypes.courses.interfaces import CourseOutlineNodeMovedEvent
+from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
@@ -511,7 +515,7 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 			_recur(outline)
 		return result
 
-	def _do_legacy(self, course, record):
+	def _do_legacy(self, course):
 		result = None
 		index_filename = "video_index.json"
 		bundle = course.ContentPackageBundle
@@ -646,20 +650,29 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 		result['Total'] = result['ItemCount'] = len(items)
 		return result
 
+	def _allow_anonymous_access(self, course):
+		# Or do we short-circuit this by allowing anyone with READ
+		# access on course. We could also bake this into a mixin.
+		prin = get_participation_principal()
+		return  prin is not None \
+			and IUnauthenticatedPrincipal.providedBy( prin ) \
+			and IAnonymouslyAccessibleCourseInstance.providedBy( course ) \
+
 	def _predicate(self, course, record):
 		return 		record is not None \
-				or	has_permission( ACT_CONTENT_EDIT, course, self.request )
+				or	has_permission( ACT_CONTENT_EDIT, course, self.request ) \
+				or  self._allow_anonymous_access( course )
 
 	def __call__(self):
 		course = ICourseInstance(self.request.context)
-		record = get_enrollment_record(course, self.remoteUser)
+		record = get_enrollment_record(course, self.remoteUser) if self.remoteUser else None
 		if not self._predicate( course, record ):
 			raise hexc.HTTPForbidden(_("Must be enrolled in a course."))
 
 		self.request.acl_decoration = False  # avoid acl decoration
 
 		if ILegacyCourseInstance.providedBy(course):
-			result = self._do_legacy(course, record)
+			result = self._do_legacy(course)
 		else:
 			result = self._do_current(course, record)
 		return result

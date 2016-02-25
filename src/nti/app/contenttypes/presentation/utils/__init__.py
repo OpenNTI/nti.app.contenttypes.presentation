@@ -11,6 +11,9 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope.authentication.interfaces import IUnauthenticatedPrincipal
 
+from zope.security.management import getInteraction
+from zope.security.interfaces import NoInteraction
+
 # re-export
 from nti.app.contenttypes.presentation.utils.asset import component_site
 from nti.app.contenttypes.presentation.utils.asset import intid_register
@@ -84,8 +87,18 @@ def get_user_visibility(user):
 	result = adapted.visibility() if adapted is not None else None
 	return result
 
+def get_participation_principal():
+	try:
+		return getInteraction().participations[0].principal
+	except (NoInteraction, IndexError, AttributeError):
+		return None
+
 def _get_scope(user, context, record):
-	record = get_enrollment_record(context, user) if record is None else record
+	if user is not None:
+		record = get_enrollment_record(context, user) if record is None else record
+	else:
+		user = get_participation_principal()
+
 	scope = record.Scope if record is not None else None
 	if 		scope is None \
 		and IAnonymouslyAccessibleCourseInstance.providedBy( context ) \
