@@ -34,12 +34,13 @@ from nti.coremetadata.interfaces import IPublishable
 from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
+from nti.contenttypes.courses.common import get_course_packages
+
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import	CourseLessonSyncResults
 from nti.contenttypes.courses.interfaces import	ICourseOutlineContentNode
 
 from nti.contenttypes.courses.utils import get_parent_course
-from nti.contenttypes.courses.utils import get_course_packages
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIMediaRef
