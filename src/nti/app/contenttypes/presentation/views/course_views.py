@@ -24,10 +24,10 @@ from nti.common.maps import CaseInsensitiveDict
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
+from nti.contenttypes.courses.common import get_course_packages
+
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
-
-from nti.contenttypes.courses.utils import get_course_packages
 
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
