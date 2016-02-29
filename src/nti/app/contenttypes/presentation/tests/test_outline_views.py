@@ -25,6 +25,7 @@ from hamcrest import contains_string
 does_not = is_not
 
 from datetime import datetime
+from datetime import timedelta
 from calendar import timegm as _calendar_timegm
 
 from urlparse import urlparse
@@ -452,8 +453,9 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		_first_node_size( 4, student_environ )
 		self._check_obj_state( content_node_ntiid2 )
 
-		content_beginning = datetime.utcnow().replace( year=2200 )
-		content_ending = datetime.utcnow().replace( year=2213 )
+		now = datetime.utcnow()
+		content_beginning = now + timedelta( days=365 * 10 )
+		content_ending = now + timedelta( days=365 * 11 )
 		self._publish_obj( content_node_ntiid2, start=content_beginning, end=content_ending )
 		# Based on dates, node is still not published
 		self._check_obj_state( content_node_ntiid2 )
@@ -505,7 +507,8 @@ class TestOutlineEditViews(ApplicationLayerTest):
 							environ=student_environ )
 
 		# Publish with end date boundary in past (unpublished).
-		last_year_content_ending = datetime.utcnow().replace( year=2014 )
+		now = datetime.utcnow()
+		last_year_content_ending = now - timedelta( days=365 )
 		self._publish_obj( lesson_ntiid2, end=last_year_content_ending )
 		self._check_obj_state( content_node_ntiid2, is_published=True )
 		self._check_obj_state( lesson_ntiid2 )
@@ -666,8 +669,10 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self._get_outline_ntiids( instructor_environ, node_count + 1 )
 		self._check_obj_state( new_ntiid2 )
 
-		content_beginning = datetime.utcnow().replace( year=2013 )
-		content_ending = datetime.utcnow().replace( year=2213 )
+
+		now = datetime.utcnow()
+		content_beginning = now.replace( year=2012 )
+		content_ending = now + timedelta( days=365 * 2 )
 		self._publish_obj( new_ntiid2, start=content_beginning, end=content_ending )
 		node_count += 1
 		self._check_obj_state( new_ntiid2, is_published=True )
