@@ -102,8 +102,6 @@ class _CourseOutlineSharedDecorator(AbstractAuthenticatedRequestAwareDecorator):
 	For course outline editors, display contextual information
 	if an outline is shared across multiple courses.
 	"""
-	__metaclass__ = SingletonDecorator
-
 	@Lazy
 	def _acl_decoration(self):
 		request = get_current_request()
