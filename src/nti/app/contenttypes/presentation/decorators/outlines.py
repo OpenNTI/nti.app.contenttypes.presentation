@@ -97,7 +97,7 @@ def _lesson_overview_links(context, request):
 
 @component.adapter(ICourseOutline)
 @interface.implementer(IExternalMappingDecorator)
-class _CourseOutlineSharedDecorator(object):
+class _CourseOutlineSharedDecorator(AbstractAuthenticatedRequestAwareDecorator):
 	"""
 	For course outline editors, display contextual information
 	if an outline is shared across multiple courses.
@@ -114,7 +114,7 @@ class _CourseOutlineSharedDecorator(object):
 		return 		self._acl_decoration \
 				and has_permission(ACT_CONTENT_EDIT, context, self.request)
 
-	def decorateExternalMapping(self, context, result):
+	def _do_decorate_external(self, context, result):
 		context_course = context.__parent__
 		possible_courses = get_course_hierarchy(context_course)
 
