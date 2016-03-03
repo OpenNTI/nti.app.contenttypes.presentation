@@ -464,6 +464,7 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 	for item in catalog.search_objects(intids=intids,
 									   provided=INTILessonOverview,
 									   container_ntiids=container_ntiids,
+									   container_all_of=False,
 									   namespace=namespace,
 									   sites=sites):
 		result.extend(_remove_registered_lesson_overview(name=item.ntiid,
@@ -474,6 +475,7 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 	if container_ntiids:  # unindex all other objects
 		container = IPresentationAssetContainer(course, None)
 		objs = catalog.search_objects(container_ntiids=container_ntiids,
+									  container_all_of=False,
 									  namespace=namespace, sites=sites, intids=intids)
 		for obj in list(objs):  # we are mutating
 			doc_id = intids.queryId(obj)
