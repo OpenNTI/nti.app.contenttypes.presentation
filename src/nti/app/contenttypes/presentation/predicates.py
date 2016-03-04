@@ -9,9 +9,9 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from functools import partial
-
 from zope import component
+
+from zope.component.hooks import site as current_site
 
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 
@@ -19,7 +19,7 @@ from nti.dataserver.interfaces import ISystemUserPrincipal
 
 from nti.metadata.predicates import BasePrincipalObjects
 
-from nti.site.hostpolicy import run_job_in_all_host_sites
+from nti.site.hostpolicy import get_all_host_sites
 
 @component.adapter(ISystemUserPrincipal)
 class _PresentationAssetObjects(BasePrincipalObjects):
@@ -33,5 +33,7 @@ class _PresentationAssetObjects(BasePrincipalObjects):
 	def iter_objects(self):
 		result = []
 		seen = set()
-		run_job_in_all_host_sites(partial(self.iter_assets, result, seen))
+		for site in get_all_host_sites():
+			with current_site(site):
+				self.iter_assets(result, seen)
 		return result
