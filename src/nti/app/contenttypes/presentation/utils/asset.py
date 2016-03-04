@@ -26,8 +26,9 @@ from zope.traversing.interfaces import IEtcNamespace
 
 from ZODB.interfaces import IConnection
 
-from nti.common.time import time_to_64bit_int
 from nti.common.random import generate_random_hex_string
+
+from nti.common.time import time_to_64bit_int
 
 from nti.coremetadata.interfaces import SYSTEM_USER_ID
 
@@ -37,15 +38,17 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
-from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
-from nti.contenttypes.presentation.lesson import NTILessonOverView
+from nti.contenttypes.presentation import iface_of_asset
+
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import WillRemovePresentationAssetEvent
+
+from nti.contenttypes.presentation.lesson import NTILessonOverView
 
 from nti.externalization.oids import to_external_ntiid_oid
 
@@ -56,9 +59,10 @@ from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
 
+from nti.site.site import get_component_hierarchy_names
+
 from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
-from nti.site.site import get_component_hierarchy_names
 
 from nti.traversal.traversal import find_interface
 
@@ -153,7 +157,7 @@ def remove_mediaroll(item, registry=None, catalog=None):
 	# remove roll
 	remove_asset(item, registry, catalog)
 
-def remove_group(group, registry=None, catalog=None, package=True):
+def remove_group(group, registry=None, catalog=None, package=False):
 	if isinstance(group, six.string_types):
 		group = component.queryUtility(INTICourseOverviewGroup, name=group)
 	if group is None:
@@ -171,7 +175,7 @@ def remove_group(group, registry=None, catalog=None, package=True):
 	# remove groups
 	remove_asset(group, registry, catalog)
 
-def remove_lesson(item, registry=None, catalog=None, package=True):
+def remove_lesson(item, registry=None, catalog=None, package=False):
 	if isinstance(item, six.string_types):
 		item = component.queryUtility(INTILessonOverview, name=item)
 	if item is None:
@@ -185,7 +189,7 @@ def remove_lesson(item, registry=None, catalog=None, package=True):
 	# remove asset
 	remove_asset(item, registry, catalog)
 
-def remove_presentation_asset(item, registry=None, catalog=None, package=True):
+def remove_presentation_asset(item, registry=None, catalog=None, package=False):
 	if INTILessonOverview.providedBy(item):
 		remove_lesson(item, registry, catalog, package=package)
 	elif INTICourseOverviewGroup.providedBy(item):
