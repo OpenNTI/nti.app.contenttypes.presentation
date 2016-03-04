@@ -59,6 +59,8 @@ from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
 
+from nti.site.interfaces import IHostPolicyFolder
+
 from nti.site.site import get_component_hierarchy_names
 
 from nti.site.utils import registerUtility
@@ -87,7 +89,7 @@ def intid_register(item, registry=None, connection=None, event=True):
 		return True
 	return False
 
-def registry_by_name(name):
+def get_registry_by_name(name):
 	hostsites = component.getUtility(IEtcNamespace, name='hostsites')
 	try:
 		folder = hostsites[name]
@@ -96,28 +98,37 @@ def registry_by_name(name):
 	except KeyError:
 		pass
 	return None
+registry_by_name = get_registry_by_name
 
-def component_site(context, provided, name=None):
-	sites_names = get_component_hierarchy_names()
-	name = name or getattr(context, 'ntiid', None)
-	hostsites = component.getUtility(IEtcNamespace, name='hostsites')
-	for idx in range(len(sites_names) - 1, -1, -1):  # higher sites first
-		try:
-			site_name = sites_names[idx]
-			folder = hostsites[site_name]
-			registry = folder.getSiteManager()
-			if registry.queryUtility(provided, name=name) == context:
-				return site_name
-		except KeyError:
-			pass
-	return None
+def get_component_site(context, provided, name=None):
+	result = None
+	folder = find_interface(context, IHostPolicyFolder, strict=False)
+	if folder is None:
+		sites_names = get_component_hierarchy_names()
+		name = name or getattr(context, 'ntiid', None)
+		hostsites = component.getUtility(IEtcNamespace, name='hostsites')
+		for idx in range(len(sites_names) - 1, -1, -1):  # higher sites first
+			try:
+				site_name = sites_names[idx]
+				folder = hostsites[site_name]
+				registry = folder.getSiteManager()
+				if registry.queryUtility(provided, name=name) == context:
+					result = site_name
+					break
+			except KeyError:
+				pass
+	else:
+		result = folder.__name__
+	return result
+component_site = get_component_site
 
-def component_registry(context, provided, name=None):
+def get_component_registry(context, provided, name=None):
 	site_name = component_site(context, provided, name)
 	if site_name:
 		folder = component.getUtility(IEtcNamespace, name='hostsites')[site_name]
 		return folder.getSiteManager()
 	return get_registry()
+component_registry = get_component_registry
 
 def notify_removed(item):
 	lifecycleevent.removed(item)
@@ -223,9 +234,10 @@ def make_asset_ntiid(nttype, creator=SYSTEM_USER_ID, base=None, extra=None):
 					   specific=specific)
 	return ntiid
 
-def course_for_node(node):
+def get_course_for_node(node):
 	course = find_interface(node, ICourseInstance, strict=False)
 	return course
+course_for_node = get_course_for_node
 
 def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None, sites=None):
 	creator = getattr(node, 'creator', None) or SYSTEM_USER_ID
