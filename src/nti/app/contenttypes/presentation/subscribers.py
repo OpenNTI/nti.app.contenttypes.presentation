@@ -32,7 +32,7 @@ from nti.app.contenttypes.presentation.utils import get_presentation_asset_conta
 
 from nti.coremetadata.interfaces import IRecordable
 
-from nti.contentlibrary.indexed_data import get_registry
+from nti.contentlibrary.indexed_data import get_site_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -137,7 +137,7 @@ def _on_outlinenode_unregistered(node, event):
 	lesson.__parent__ = None
 	
 	# unregister empty lesson overviews to avoid leaking
-	registry = get_registry()
+	registry = get_site_registry()
 	if not lesson.Items and registry != component.getGlobalSiteManager():
 		remove_presentation_asset(lesson, registry)
 
