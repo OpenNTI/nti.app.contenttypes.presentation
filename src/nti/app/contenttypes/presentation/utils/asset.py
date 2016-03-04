@@ -19,8 +19,9 @@ from zope.event import notify
 
 from zope.interface.interface import InterfaceClass
 
-from zope.location.location import locate
 from zope.location.interfaces import ILocation
+
+from zope.location.location import locate
 
 from zope.traversing.interfaces import IEtcNamespace
 
@@ -277,7 +278,7 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None, sites=No
 			node.src = to_external_ntiid_oid(result)
 
 		# XXX index lesson
-		course = course_for_node(node)
+		course = get_course_for_node(node)
 		if course is not None:
 			entry = ICourseCatalogEntry(course)
 			container = IPresentationAssetContainer(course)
