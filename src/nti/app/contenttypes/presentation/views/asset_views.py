@@ -103,6 +103,7 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation import AUDIO_MIMETYES
 from nti.contenttypes.presentation import VIDEO_MIMETYES
+from nti.contenttypes.presentation import TIMELINE_MIMETYES
 from nti.contenttypes.presentation import LESSON_OVERVIEW_MIMETYES
 from nti.contenttypes.presentation import ALL_MEDIA_ROLL_MIME_TYPES
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
@@ -456,7 +457,10 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 	def _check_exists(self, provided, item, creator):
 		ntiid = self._get_ntiid(item)
-		if ntiid:
+		if ntiid and INTITimeline.providedBy( item ):
+			# Timelines are the only item we allow to be placed as-is (non-ref).
+			pass
+		elif ntiid:
 			if self._registry.queryUtility(provided, name=ntiid):
 				raise hexc.HTTPUnprocessableEntity(_("Asset already exists."))
 		else:
@@ -1162,6 +1166,13 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 											 ModeledContentUploadRequestUtilsMixin,
 											 IndexedRequestMixin):  # order matters
+	"""
+	We accept asset items by index here. We handle two types specially here:
+
+	1. We turn media objects into media refs here, given an NTIID.
+	2. We turn timeline ntiids into timeline objects to place directly
+	in the overview group (since these objects do not have refs).
+	"""
 
 	content_predicate = IGroupOverViewable.providedBy
 
@@ -1170,13 +1181,13 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		# If we don't have a mimeType, we need the ntiid to fetch the (video) object.
 		mimeType = ext_obj.get(MIMETYPE) or ext_obj.get('mimeType')
 		is_media = bool(mimeType in VIDEO_MIMETYES or mimeType in AUDIO_MIMETYES)
-		if mimeType and not is_media:
+		if mimeType and not is_media and mimeType not in TIMELINE_MIMETYES:
 			super(CourseOverviewGroupOrderedContentsView, self)._remove_ntiids(ext_obj, do_remove)
 
-	def preflight_video(self, externalValue):
+	def _do_preflight_input(self, externalValue):
 		"""
 		Swizzle media into refs for overview groups. If we're missing a mimetype, the given
-		ntiid *must* resolve to a video. All other types should be fully defined (ref) objects.
+		ntiid *must* resolve to a video/timeline. All other types should be fully defined (ref) objects.
 		"""
 		if isinstance(externalValue, Mapping) and MIMETYPE not in externalValue:
 			ntiid = externalValue.get('ntiid') or externalValue.get(NTIID)
@@ -1184,9 +1195,15 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 			if not ntiid:
 				raise hexc.HTTPUnprocessableEntity(_('Missing overview group item NTIID'))
 			resolved = find_object_with_ntiid(ntiid)
+
 			if resolved is None:
 				raise hexc.HTTPUnprocessableEntity(_('Missing overview group item'))
-			if (INTIMedia.providedBy(resolved) or INTIMediaRef.providedBy(resolved)):
+
+			if INTITimeline.providedBy( resolved ):
+				# Short circuit; we need to use this.
+				return resolved
+			elif 	INTIMedia.providedBy(resolved) \
+				or 	INTIMediaRef.providedBy(resolved):
 				externalValue[MIMETYPE] = resolved.mimeType
 			else:
 				# We did not have a mimetype, and we have an ntiid the resolved
@@ -1195,12 +1212,10 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 
 		mimeType = externalValue.get(MIMETYPE) or externalValue.get('mimeType')
 		if mimeType in VIDEO_MIMETYES or mimeType in AUDIO_MIMETYES:
-			if not isinstance(externalValue, Mapping):
-				return externalValue
-
-			internalization_ntiaudioref_pre_hook(None, externalValue)
-			internalization_ntivideoref_pre_hook(None, externalValue)
-		return externalValue
+			if isinstance(externalValue, Mapping):
+				internalization_ntiaudioref_pre_hook(None, externalValue)
+				internalization_ntivideoref_pre_hook(None, externalValue)
+		return preflight_input(externalValue)
 
 	def checkContentObject(self, contentObject, externalValue):
 		if contentObject is None or not self.content_predicate(contentObject):
@@ -1211,17 +1226,16 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		return contentObject
 
 	def parseInput(self, creator, search_owner=False, externalValue=None):
-		# process input
-		externalValue = self.readInput() if not externalValue else externalValue
-		externalValue = self.preflight_video(externalValue)
-		externalValue = preflight_input(externalValue)
-		result = copy.deepcopy(externalValue)  # return original input
-		# create object
-		contentObject = create_from_external(externalValue, notify=False)
-		contentObject = self.checkContentObject(contentObject, externalValue)
-		# set creator
-		self._set_creator(contentObject, creator)
-		return contentObject, result
+		external_input = self.readInput() if not externalValue else externalValue
+		externalValue = self._do_preflight_input(external_input)
+		external_input = copy.deepcopy(external_input)  # return original input
+		if isinstance( externalValue, Mapping ):
+			contentObject = create_from_external(externalValue, notify=False)
+			contentObject = self.checkContentObject(contentObject, externalValue)
+			self._set_creator(contentObject, creator)
+		else:
+			contentObject = externalValue
+		return contentObject, external_input
 
 	def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
 		contentObject, externalValue = self.parseInput(creator, search_owner, externalValue)

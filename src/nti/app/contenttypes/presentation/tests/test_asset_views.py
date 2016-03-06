@@ -50,6 +50,8 @@ from nti.contenttypes.presentation.interfaces import TRX_OVERVIEW_GROUP_MOVE_TYP
 
 from nti.contenttypes.presentation.media import NTIVideoRoll
 
+from nti.contenttypes.presentation.timeline import NTITimeLine
+
 from nti.contenttypes.presentation.utils import prepare_json_text
 
 from nti.externalization.externalization import to_external_object
@@ -777,7 +779,8 @@ class TestAssetViews(ApplicationLayerTest):
 			obj.child_order_locked = False  # Reset
 
 	def _get_move_json(self, obj_ntiid, new_parent_ntiid, index=None, old_parent_ntiid=None):
-		result = { 'ObjectNTIID': obj_ntiid, 'ParentNTIID': new_parent_ntiid }
+		result = {  'ObjectNTIID': obj_ntiid,
+					'ParentNTIID': new_parent_ntiid }
 		if index is not None:
 			result['Index'] = index
 		if old_parent_ntiid is not None:
@@ -814,21 +817,52 @@ class TestAssetViews(ApplicationLayerTest):
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_timeline(self):
+		group_ntiid = 'tag:nextthought.com,2011-10:OU-NTICourseOverviewGroup-CS1323_F_2015_Intro_to_Computer_Programming.lec:01.01_LESSON.0'
+		res = self.testapp.get( '/dataserver2/Objects/%s' % group_ntiid )
+		res = res.json_body
+		group_ntiid = res.get('ntiid')
+		assert_that(res.get('Items'), has_length(1))
+		contents_link = self.require_link_href_with_rel(res, VIEW_ORDERED_CONTENTS)
+
 		source = self._load_resource('ntitimeline.json')
 		source.pop('NTIID', None)
 
 		res = self.testapp.post_json(self.assets_url, source, status=201)
-		assert_that(res.json_body, has_entry('NTIID', is_not(none())))
-		assert_that(res.json_body, has_entry('href', is_not(none())))
+		timeline_ntiid = res.json_body.get( 'NTIID' )
+		assert_that( timeline_ntiid, not_none() )
+		assert_that(res.json_body, has_entry('href', not_none()))
+
+		# Only timeline in assets call.
+		res = self.testapp.get( self.assets_url,
+								params={'MimeType':NTITimeLine.mime_type})
+		res = res.json_body
+		items = res.get( 'Items' )
+		assert_that( items, has_length( 1 ))
+		assert_that( items[0].get( 'NTIID' ), is_( timeline_ntiid ))
+
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
-			ntiid = res.json_body['NTIID']
-			obj = find_object_with_ntiid(ntiid)
-			assert_that(obj, is_not(none()))
+			obj = find_object_with_ntiid(timeline_ntiid)
+			assert_that(obj, not_none())
 			assert_that(obj, validly_provides(INTITimeline))
 
 			entry = find_object_with_ntiid(self.course_ntiid)
 			course = ICourseInstance(entry)
 			self._check_containers(course, items=(obj,))
+
+		self.testapp.post_json( contents_link,
+								{'ntiid':timeline_ntiid}, status=201 )
+
+		res = self.testapp.get( '/dataserver2/Objects/%s' % group_ntiid )
+		res = res.json_body
+		assert_that(res.get('Items'), has_length(2))
+
+		# Only timeline in assets call.
+		res = self.testapp.get( self.assets_url,
+								params={'MimeType':NTITimeLine.mime_type})
+		res = res.json_body
+		items = res.get( 'Items' )
+		assert_that( items, has_length( 1 ))
+		assert_that( items[0].get( 'NTIID' ), is_( timeline_ntiid ))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_moves(self):
