@@ -13,7 +13,7 @@ from collections import OrderedDict
 
 from zope import component
 
-from zope.interface.adapter import _lookupAll as zopeLookupAll
+from zope.interface.adapter import _lookupAll as zopeLookupAll # Private func
 
 from zope.intid.interfaces import IIntIds
 
@@ -29,9 +29,7 @@ from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.contenttypes.presentation import iface_of_asset
 
-from nti.contenttypes.presentation.interfaces import INTIMediaRoll
-from nti.contenttypes.presentation.interfaces import INTILessonOverview
-from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
@@ -64,6 +62,11 @@ def yield_sync_courses(ntiids=()):
 			else:
 				yield course
 
+def has_a_valid_parent(item, intids):
+	parent = item.__parent__
+	doc_id = intids.queryId(parent) if parent is not None else None
+	return parent is not None and doc_id is not None
+
 def lookup_all_presentation_assets(site_registry):
 	result = {}
 	required = ()
@@ -77,11 +80,6 @@ def lookup_all_presentation_assets(site_registry):
 		zopeLookupAll(components, required, extendors, result, 0, order)
 		break  # break on first
 	return result
-
-def has_a_valid_parent(item, intids):
-	parent = item.__parent__
-	doc_id = intids.queryId(parent) if parent is not None else None
-	return parent is not None and doc_id is not None
 
 def remove_site_invalid_assets(current, intids=None, catalog=None, seen=None):
 	removed = set()
@@ -103,30 +101,15 @@ def remove_site_invalid_assets(current, intids=None, catalog=None, seen=None):
 
 		# registration for a removed asset
 		if doc_id is None:
-			logger.warn("Removing invalid registration %s from site %s", ntiid, site_name)
+			logger.warn("Removing invalid registration (%s,%s) from site %s", 
+						provided.__name__, ntiid, site_name)
 			removed.add(ntiid)
-			remove_presentation_asset(item, registry, catalog, package=False)
+			remove_presentation_asset(item, registry, catalog)
 			continue
 
-		# invalid lesson overview
-		if INTILessonOverview.providedBy(item) and not has_a_valid_parent(item, intids):
-			logger.warn("Removing invalid lesson overview %s from site %s",
-						ntiid, site_name)
-			removed.add(ntiid)
-			remove_presentation_asset(item, registry, catalog, package=False)
-			continue
-
-		# invalid overview groups overview
-		if INTICourseOverviewGroup.providedBy(item) and not has_a_valid_parent(item, intids):
-			logger.warn("Removing invalid course overview %s from site %s",
-						ntiid, site_name)
-			remove_presentation_asset(item, registry, catalog, package=False)
-			continue
-
-		# invalid media roll overview
-		if INTIMediaRoll.providedBy(item) and not has_a_valid_parent(item, intids):
-			logger.warn("Removing invalid media roll %s from site %s",
-						ntiid, site_name)
+		if IItemAssetContainer.providedBy(item) and not has_a_valid_parent(item, intids):
+			logger.warn("Removing unreachable (%s,%s) from site %s",
+						provided.__name__, ntiid, site_name)
 			removed.add(ntiid)
 			remove_presentation_asset(item, registry, catalog)
 			continue
@@ -134,7 +117,8 @@ def remove_site_invalid_assets(current, intids=None, catalog=None, seen=None):
 		# registration not in base site
 		if ntiid in seen:
 			removed.add(ntiid)
-			logger.warn("Removing %s from site %s", ntiid, site_name)
+			logger.warn("Unregistering (%s,%s) from site %s", 
+						provided.__name__, ntiid, site_name)
 			unregisterUtility(registry, provided=provided, name=ntiid)
 
 		seen.add(ntiid)

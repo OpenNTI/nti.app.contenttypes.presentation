@@ -113,7 +113,7 @@ def get_courses(ntiids=()):
 			result.add(course)
 	return result
 
-def get_presentation_asset_courses(item, sort=False):
+def get_presentation_asset_courses(item):
 	catalog = get_library_catalog()
 	entries = catalog.get_containers(item)
 	result = get_courses(entries) if entries else ()
