@@ -19,19 +19,15 @@ from zope.component.hooks import getSite
 
 from zope.intid.interfaces import IIntIds
 
-from nti.app.contenttypes.presentation import iface_of_thing
-
-from nti.app.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
-
 from nti.app.contenttypes.presentation.interfaces import IItemRefValidator
 
+from nti.app.contenttypes.presentation.utils import db_connection
 from nti.app.contenttypes.presentation.utils import add_2_connection
 from nti.app.contenttypes.presentation.utils import create_lesson_4_node
 
 from nti.coremetadata.interfaces import IRecordable
-from nti.coremetadata.interfaces import IPublishable
 
-from nti.contentlibrary.indexed_data import get_registry
+from nti.contentlibrary.indexed_data import get_site_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.common import get_course_packages
@@ -42,12 +38,17 @@ from nti.contenttypes.courses.interfaces import	ICourseOutlineContentNode
 
 from nti.contenttypes.courses.utils import get_parent_course
 
+from  nti.contenttypes.presentation import iface_of_asset
+from  nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
+
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.contenttypes.presentation.media import NTIVideoRoll
@@ -77,9 +78,10 @@ from nti.site.utils import unregisterUtility
 
 ITEMS = StandardExternalFields.ITEMS
 
-def prepare_json_text(s):
+def _prepare_json_text(s):
 	result = unicode(s, 'utf-8') if isinstance(s, bytes) else s
 	return result
+prepare_json_text = _prepare_json_text
 
 def _is_obj_locked(node):
 	return IRecordable.providedBy(node) and node.isLocked()
@@ -98,16 +100,32 @@ def _unregister(registry, component=None, provided=None, name=None):
 		logger.debug("(%s,%s) has been unregistered", provided.__name__, name)
 	return result
 
+def _intid_register(item, intids=None, connection=None):
+	intids = component.queryUtility(IIntIds) if intids is None else intids
+	if 		intids is not None \
+		and intids.queryId(item) is None \
+		and add_2_connection(item, connection=connection):
+		addIntId(item)
+		return True
+	return False
+
+def _intid_unregister(item, intids=None):
+	intids = component.queryUtility(IIntIds) if intids is None else intids
+	if intids is not None and intids.queryId(item) is not None:
+		removeIntId(item)
+		return True
+	return False
+
 def _removed_registered(provided, name, intids=None, registry=None,
 						catalog=None, force=False):
-	registry = get_registry(registry)
+	registry = get_site_registry(registry)
 	registered = registry.queryUtility(provided, name=name)
 	intids = component.getUtility(IIntIds) if intids is None else intids
 	if _can_be_removed(registered, force=force):
 		catalog = get_library_catalog() if catalog is None else catalog
 		catalog.unindex(registered, intids=intids)
-		removeIntId(registered)
-		registered.__parent__ = None
+		_intid_unregister(registered, intids)
+		registered.__parent__ = None  # ground
 		_unregister(registry, provided=provided, name=name)
 	elif registered is not None:
 		logger.warn("Object (%s,%s) is locked cannot be removed during sync",
@@ -115,23 +133,13 @@ def _removed_registered(provided, name, intids=None, registry=None,
 		registered = None  # set to None since it was not removed
 	return registered
 
-def intid_register(item, registry, connection=None):
-	if add_2_connection(item, registry, connection):
-		addIntId(item)
-		return True
-	return False
-
-def _register_utility(item, provided, ntiid, registry=None, intids=None, connection=None):
-	intids = component.getUtility(IIntIds) if intids is None else intids
+def _register_utility(item, provided, ntiid, registry=None):
 	if provided.providedBy(item):
-		registry = get_registry(registry)
+		registry = get_site_registry(registry)
 		registered = registry.queryUtility(provided, name=ntiid)
-		if registered is None or intids.queryId(registered) is None:
+		if registered is None:
 			assert is_valid_ntiid_string(ntiid), "invalid NTIID %s" % ntiid
-			if registered is not None and intids.queryId(registered) is None:  # remove if invalid
-				_unregister(registry, provided=provided, name=ntiid)
 			registerUtility(registry, item, provided=provided, name=ntiid)
-			intid_register(item, registry, connection=connection)
 			logger.debug("(%s,%s) has been registered", provided.__name__, ntiid)
 			return (True, item)
 		return (False, registered)
@@ -139,44 +147,44 @@ def _register_utility(item, provided, ntiid, registry=None, intids=None, connect
 
 # Courses
 
+def _asset_container(context):
+	container = IPresentationAssetContainer(context, None)
+	return container if container is not None else dict()
+
 def _remove_registered_course_overview(name=None, registry=None, course=None, force=False):
 	result = []
-	container = IPresentationAssetContainer(course, None)
+	container = _asset_container(course)
+
+	# unregister group
 	group = _removed_registered(INTICourseOverviewGroup,
 								name=name,
 								force=force,
 								registry=registry)
 	if group is not None:
 		result.append(group)
-		if container is not None:
-			container.pop(name, None)
+		container.pop(name, None)
 	else:
 		group = ()
 
-	def _do_remove(iface, obj):
+	def _do_remove(obj):
 		ntiid = obj.ntiid
-		removed = _removed_registered(iface,
+		removed = _removed_registered(iface_of_asset(obj),
 									  name=ntiid,
 								   	  registry=registry,
 								  	  force=force)
 		if removed is not None:
 			result.append(removed)
-			if container is not None:
-				container.pop(ntiid, None)
+			container.pop(ntiid, None)
 
 		if INTIMediaRoll.providedBy(obj):
-			# Remove each item in our roll
+			# remove each item in our roll
 			for roll_item in item:
-				iface = iface_of_thing(roll_item)
-				_do_remove(iface, roll_item)
+				_do_remove(roll_item)
 
-	# For each group remove anything that is not synced in the content package.
-	# As of 20150404 we don't have a way to edit and register common group
-	# overview items so we need to remove the old and re-register the new
-	for item in group:  # this should resolve weak refs
-		iface = iface_of_thing(item)
-		if iface not in PACKAGE_CONTAINER_INTERFACES:
-			_do_remove(iface, item)
+	# unregister child elements
+	for item in group:
+		if not IPackagePresentationAsset.providedBy(item):
+			_do_remove(item)
 
 	return result
 
@@ -190,9 +198,8 @@ def _remove_registered_lesson_overview(name, registry=None, course=None, force=F
 	if overview is None:
 		return result
 	else:  # remove from container
-		container = IPresentationAssetContainer(course, None)
-		if container is not None:
-			container.pop(name, None)
+		container = _asset_container(course)
+		container.pop(name, None)
 		result.append(overview)
 
 	# remove all groups
@@ -207,11 +214,11 @@ remove_registered_lesson_overview = _remove_registered_lesson_overview
 def _register_media_rolls(roll, registry=None, validate=False):
 	idx = 0
 	items = roll.Items
-	registry = get_registry(registry)
+	registry = get_site_registry(registry)
 
-	while idx < len(items):
+	while idx < len(items):  # mutating
 		item = items[idx]
-		item_iface = iface_of_thing(item)
+		item_iface = iface_of_asset(item)
 		result, registered = _register_utility(item,
 										 	   ntiid=item.ntiid,
 										  	   registry=registry,
@@ -228,20 +235,19 @@ def _register_media_rolls(roll, registry=None, validate=False):
 	return roll
 
 def _is_auto_roll_coalesce(item):
-	return (	INTIMedia.providedBy(item)
-			or 	INTIMediaRef.providedBy(item)) \
-		and not _is_obj_locked(item)
+	return 		(INTIMedia.providedBy(item) or INTIMediaRef.providedBy(item)) \
+			and not _is_obj_locked(item)
 
 def _validate_ref(item, validate):
 	validator = IItemRefValidator(item, None)
 	return (not validate or validator is None or validator.validate())
 
 def _do_register(item, registry):
-	item_iface = iface_of_thing(item)
-	return  _register_utility(item,
-							  ntiid=item.ntiid,
-							  registry=registry,
-							  provided=item_iface)
+	item_iface = iface_of_asset(item)
+	return _register_utility(item,
+							 ntiid=item.ntiid,
+							 registry=registry,
+							 provided=item_iface)
 
 def _is_lesson_sync_locked(existing_overview):
 	"""
@@ -256,7 +262,7 @@ def _is_lesson_sync_locked(existing_overview):
 	locked_items = []
 	def _recur(item):
 		if 		_is_obj_locked(item) \
-			or  getattr( item, 'child_order_locked', False ):
+			or  getattr(item, 'child_order_locked', False):
 			locked_items.append(item.ntiid)
 			return True
 		children = getattr(item, 'Items', None) or ()
@@ -268,14 +274,12 @@ def _is_lesson_sync_locked(existing_overview):
 	result = _recur(existing_overview)
 	return result, locked_items
 
-def _add_2_package_containers(course, catalog, item):
+def _add_2_package_containers(course, item, catalog):
 	ntiids = []
-	packages = get_course_packages(course)
-	for package in packages or ():
+	for package in get_course_packages(course):
 		ntiids.append(package.ntiid)
-		container = IPresentationAssetContainer(package, None)
-		if container is not None:
-			container[item.ntiid] = item
+		container = _asset_container(package)
+		container[item.ntiid] = item
 	if ntiids:
 		catalog.index(item, container_ntiids=ntiids,
 				  	  namespace=ntiids[0], sites=getSite().__name__)  # pick first
@@ -291,11 +295,11 @@ def _update_sync_results(lesson_ntiid, sync_results, lesson_locked):
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 											validate=False, course=None, node=None,
 											sync_results=None):
-	registry = get_registry(registry)
+	registry = get_site_registry(registry)
 
 	# read and parse json text
 	catalog = get_library_catalog()
-	data = simplejson.loads(prepare_json_text(jtext))
+	data = simplejson.loads(_prepare_json_text(jtext))
 	overview = create_lessonoverview_from_external(data, notify=False)
 
 	existing_overview = registry.queryUtility(INTILessonOverview, name=overview.ntiid)
@@ -310,7 +314,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 									   			 registry=registry,
 									   			 course=course)
 
-	overview.__parent__ = node # set lineage
+	overview.__parent__ = node  # set lineage
 	_register_utility(overview, INTILessonOverview, overview.ntiid, registry)
 
 	# canonicalize group
@@ -350,7 +354,8 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 					# only contain refs
 					if INTIMedia.providedBy(registered):
 						# register media w/ course packges
-						_add_2_package_containers(course, catalog, registered)
+						_add_2_package_containers(course, registered, catalog)
+						_intid_register(registered)
 						# create mediaref and register it
 						media_ref = media_to_mediaref(registered)
 						_, registered = _do_register(media_ref, registry)
@@ -392,16 +397,15 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 
 		# set lineage just in case for non pacakge assets
 		for item in items or ():
-			provided = iface_of_thing(item)
-			if provided not in PACKAGE_CONTAINER_INTERFACES:
+			if not IPackagePresentationAsset.providedBy(item):
 				item.__parent__ = group
 
 	return overview, removed
 
 def _copy_remove_transactions(items, registry=None):
-	registry = get_registry(registry)
+	registry = get_site_registry(registry)
 	for item in items or ():
-		provided = iface_of_thing(item)
+		provided = iface_of_asset(item)
 		obj = registry.queryUtility(provided, name=item.ntiid)
 		if obj is None:
 			remove_transaction_history(item)
@@ -473,7 +477,7 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 										   			  	 course=course))
 
 	if container_ntiids:  # unindex all other objects
-		container = IPresentationAssetContainer(course, None)
+		container = _asset_container(course)
 		objs = catalog.search_objects(container_ntiids=container_ntiids,
 									  container_all_of=False,
 									  namespace=namespace, sites=sites, intids=intids)
@@ -481,7 +485,7 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 			doc_id = intids.queryId(obj)
 			if doc_id is not None:
 				catalog.remove_containers(doc_id, container_ntiids)
-			if _can_be_removed(obj, force) and container is not None:
+			if _can_be_removed(obj, force):
 				container.pop(obj.ntiid, None)
 	return result
 remove_and_unindex_course_assets = _remove_and_unindex_course_assets
@@ -502,13 +506,13 @@ def _recurse_copy(ntiids, *items):
 
 def _index_overview_items(items, container_ntiids=None, namespace=None,
 						  intids=None, catalog=None, node=None, course=None,
-						  parent=None):
+						  parent=None, connection=None):
 	# make it a set
 	container_ntiids = _make_set(container_ntiids)
 
+	container = _asset_container(course)
 	sites = get_component_hierarchy_names()
 	catalog = get_library_catalog() if catalog is None else catalog
-	container = IPresentationAssetContainer(course, None)
 
 	if parent is not None:
 		to_index = _recurse_copy(container_ntiids, parent.ntiid)
@@ -517,23 +521,14 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 
 	for item in items or ():
 
-		if container is not None:
-			container[item.ntiid] = item
+		container[item.ntiid] = item
 
 		# set lesson overview NTIID on the outline node
 		if INTILessonOverview.providedBy(item) and node is not None:
 			item.__parent__ = node  # lineage
 			node.LessonOverviewNTIID = item.ntiid
 
-		if 	INTILessonOverview.providedBy(item) or \
-			INTICourseOverviewGroup.providedBy(item) or \
-			INTIMediaRoll.providedBy(item):
-
-			catalog.index(item,
-						  sites=sites,
-						  intids=intids,
-						  namespace=namespace,
-						  container_ntiids=to_index)
+		if 	IItemAssetContainer.providedBy(item):
 
 			_index_overview_items(item.Items,
 								  namespace=namespace,
@@ -543,10 +538,19 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 								  node=node,
 								  course=course,
 								  parent=item)
-		else:
-			provided = iface_of_thing(item)
-			namespace = None if provided in PACKAGE_CONTAINER_INTERFACES else namespace
 
+			# register and index
+			_intid_register(item, intids, connection=connection)
+			catalog.index(item,
+						  sites=sites,
+						  intids=intids,
+						  namespace=namespace,
+						  container_ntiids=to_index)
+		else:
+			namespace = None if IPackagePresentationAsset.providedBy(item) else namespace
+
+			# register and index
+			_intid_register(item, intids, connection=connection)
 			catalog.index(item,
 						  sites=sites,
 						  intids=intids,
@@ -581,11 +585,13 @@ def get_cataloged_namespaces(ntiid, catalog=None, sites=None):
 def synchronize_course_lesson_overview(course, intids=None, catalog=None, **kwargs):
 	result = []
 	namespaces = set()
+
 	course_packages = get_course_packages(course)
 	catalog = get_library_catalog() if catalog is None else catalog
 	intids = component.getUtility(IIntIds) if intids is None else intids
 
-	registry = get_registry()
+	registry = get_site_registry()
+	connection = db_connection(registry)
 	entry = ICourseCatalogEntry(course, None)
 	ntiid = entry.ntiid if entry is not None else course.__name__
 	name = entry.ProviderUniqueID if entry is not None else course.__name__
@@ -632,7 +638,8 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, **kwar
 									  catalog=catalog,
 									  intids=intids,
 									  node=node,
-									  course=course)
+									  course=course,
+									  connection=connection)
 
 				continue
 
@@ -667,10 +674,11 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, **kwar
 								  catalog=catalog,
 								  intids=intids,
 								  node=node,
-								  course=course)
+								  course=course,
+								  connection=connection)
 
-			if IPublishable.providedBy(overview):
-				overview.publish()  # by default
+			# publish by default
+			overview.publish()
 
 			_set_source_lastModified(namespace, sibling_lastModified, catalog)
 
@@ -685,14 +693,13 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, **kwar
 	return result
 
 def _clear_course_assets(course):
-	container = IPresentationAssetContainer(course, None)
-	if container is not None:
-		container.clear()
+	container = _asset_container(course)
+	container.clear()
 clear_course_assets = _clear_course_assets
 
 def _clear_namespace_last_modified(course, catalog=None):
 	nodes = _outline_nodes(course.Outline)
 	for node in nodes or ():
-		namespace = node.src or u'' # this is ntiid based file (unique)
+		namespace = node.src or u''  # this is ntiid based file (unique)
 		_remove_source_lastModified(namespace, catalog)
 clear_namespace_last_modified = _clear_namespace_last_modified
