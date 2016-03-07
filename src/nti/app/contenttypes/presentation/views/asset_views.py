@@ -76,9 +76,10 @@ from nti.app.products.courseware import VIEW_RECURSIVE_TX_HISTORY
 
 from nti.app.products.courseware.views.view_mixins import AbstractRecursiveTransactionHistoryView
 
+from nti.appserver.dataserver_pyramid_views import GenericGetView
+
 from nti.appserver.ugd_edit_views import UGDPutView
 from nti.appserver.ugd_edit_views import UGDDeleteView
-from nti.appserver.dataserver_pyramid_views import GenericGetView
 
 from nti.assessment.interfaces import IQInquiry
 from nti.assessment.interfaces import IQAssessment
@@ -91,7 +92,7 @@ from nti.coremetadata.interfaces import IPublishable
 
 from nti.contentfolder.interfaces import IContentFolder
 
-from nti.contentlibrary.indexed_data import get_registry
+from nti.contentlibrary.indexed_data import get_site_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -289,7 +290,7 @@ def _add_2_container(context, item, packages=False):
 
 def _canonicalize(items, creator, base=None, registry=None):
 	result = []
-	registry = get_registry(registry)
+	registry = get_site_registry(registry)
 	for idx, item in enumerate(items or ()):
 		created = True
 		provided = iface_of_asset(item)
@@ -419,7 +420,7 @@ class PresentationAssetMixin(object):
 
 	@Lazy
 	def _registry(self):
-		return get_registry()
+		return get_site_registry()
 
 class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 									   AbstractAuthenticatedView):
