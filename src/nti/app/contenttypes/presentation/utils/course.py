@@ -22,7 +22,7 @@ from zope.security.interfaces import IPrincipal
 
 from nti.appserver.pyramid_authorization import has_permission
 
-from nti.contentlibrary.indexed_data import get_catalog
+from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contentlibrary.interfaces import IContentUnit
 
@@ -114,13 +114,13 @@ def get_courses(ntiids=()):
 	return result
 
 def get_presentation_asset_courses(item, sort=False):
-	catalog = get_catalog()
+	catalog = get_library_catalog()
 	entries = catalog.get_containers(item)
 	result = get_courses(entries) if entries else ()
 	return result
 
 def get_presentation_asset_containers(item):
-	catalog = get_catalog()
+	catalog = get_library_catalog()
 	entries = catalog.get_containers(item)
 	result = get_containers(entries) if entries else ()
 	return result
