@@ -15,6 +15,7 @@ from zope.security.interfaces import NoInteraction
 from zope.security.management import getInteraction
 
 # re-export
+from nti.app.contenttypes.presentation.utils.asset import db_connection
 from nti.app.contenttypes.presentation.utils.asset import component_site
 from nti.app.contenttypes.presentation.utils.asset import intid_register
 from nti.app.contenttypes.presentation.utils.asset import add_2_connection
