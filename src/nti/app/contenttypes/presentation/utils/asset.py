@@ -33,7 +33,7 @@ from nti.common.time import time_to_64bit_int
 
 from nti.coremetadata.interfaces import SYSTEM_USER_ID
 
-from nti.contentlibrary.indexed_data import get_registry
+from nti.contentlibrary.indexed_data import get_site_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -69,10 +69,11 @@ from nti.site.utils import unregisterUtility
 
 from nti.traversal.traversal import find_interface
 
-def db_connection(registry=None):
-	registry = get_registry(registry)
+def get_db_connection(registry=None):
+	registry = get_site_registry(registry)
 	result = IConnection(registry, None)
 	return result
+db_connection = get_db_connection
 
 def add_2_connection(item, registry=None, connection=None):
 	connection = db_connection(registry) if connection is None else connection
@@ -128,7 +129,7 @@ def get_component_registry(context, provided, name=None):
 	if site_name:
 		folder = component.getUtility(IEtcNamespace, name='hostsites')[site_name]
 		return folder.getSiteManager()
-	return get_registry()
+	return get_site_registry()
 component_registry = get_component_registry
 
 def notify_removed(item):
