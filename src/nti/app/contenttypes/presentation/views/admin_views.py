@@ -57,10 +57,10 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.courses.utils import get_course_hierarchy
 
-from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
-from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
+from nti.contenttypes.presentation import COURSE_CONTAINER_INTERFACES
 
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
+from nti.contenttypes.presentation.interfaces import ICoursePresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.dataserver import authorization as nauth
@@ -83,13 +83,6 @@ ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID
 MIMETYPE = StandardExternalFields.MIMETYPE
 LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
-
-def _course_asset_interfaces():
-	result = []
-	for iface in ALL_PRESENTATION_ASSETS_INTERFACES:
-		if iface not in PACKAGE_CONTAINER_INTERFACES:
-			result.append(iface)
-	return result
 
 def _get_course_ntiids(values):
 	ntiids = values.get('ntiid') or	values.get('ntiids')
@@ -155,7 +148,6 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 		values = self.readInput()
 		ntiids = _get_course_ntiids(values)
 		force = _is_true(values.get('force'))
-		course_ifaces = _course_asset_interfaces()
 
 		total = 0
 		items = result[ITEMS] = {}
@@ -181,8 +173,8 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 				# remove anything left in containers
 				container = IPresentationAssetContainer(course)
 				for ntiid, item in list(container.items()):  # mutating
-					provided = iface_of_thing(item)
-					if provided in course_ifaces and can_be_removed(item, force=force):
+					if 		ICoursePresentationAsset.providedBy(item) \
+						and can_be_removed(item, force=force):
 						container.pop(ntiid, None)
 						remove_presentation_asset(item, registry, catalog)
 						removed.append(item)
@@ -223,9 +215,8 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 		return _read_input(self.request)
 
 	def _registered_assets(self, registry):
-		for iface in _course_asset_interfaces():
-			for ntiid, asset in list(registry.getUtilitiesFor(iface)):
-				yield ntiid, asset
+		for ntiid, asset in list(registry.getUtilitiesFor(ICoursePresentationAsset)):
+			yield ntiid, asset
 
 	def _site_registry(self, site_name):
 		hostsites = component.getUtility(IEtcNamespace, name='hostsites')
@@ -234,11 +225,9 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 		return registry
 
 	def _course_assets(self, course):
-		ifaces = _course_asset_interfaces()
 		container = IPresentationAssetContainer(course)
-		for key, value in list(container.items()):  # mutating
-			provided = iface_of_thing(value)
-			if provided in ifaces:
+		for key, value in list(container.items()):  # snapshot
+			if ICoursePresentationAsset.providedBy(value):
 				yield key, value, container
 
 	def _valid_parent(self, item, intids):
@@ -296,7 +285,7 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 
 		# unindex invalid entries in catalog
 		references = catalog.get_references(sites=sites,
-										 	provided=_course_asset_interfaces())
+										 	provided=COURSE_CONTAINER_INTERFACES)
 		for uid in references or ():
 			asset = intids.queryObject(uid)
 			if asset is None or not IPresentationAsset.providedBy(asset):
