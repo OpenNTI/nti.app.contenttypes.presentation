@@ -13,25 +13,22 @@ from zope.deprecation import deprecated
 
 from persistent import Persistent
 
-import zope.deferredimport
-zope.deferredimport.initialize()
+deprecated('KeepSetIndex', 'Use lastest library index implementation')
+class KeepSetIndex(Persistent):
+	pass
 
-zope.deferredimport.deprecated(
-	"Import from KeepSetIndex instead",
-	KeepSetIndex='nti.contentlibrary.indexed_data.index:KeepSetIndex')
+deprecated('NamespaceIndex', 'Use lastest library index implementation')
+class NamespaceIndex(Persistent):
+	pass
 
-zope.deferredimport.deprecated(
-	"Import from NamespaceIndex instead",
-	NamespaceIndex='nti.contentlibrary.indexed_data.index:NamespaceIndex')
-
-zope.deferredimport.deprecated(
-	"Import from TypeIndex instead",
-	TypeIndex='nti.contentlibrary.indexed_data.index:TypeIndex')
-
-deprecated('PresentationAssetCatalog', 'Use lastest library index implementation')
-class PresentationAssetCatalog(Persistent):
+deprecated('TypeIndex', 'Use lastest library index implementation')
+class TypeIndex(Persistent):
 	pass
 
 deprecated('PACatalogIndex', 'Use lastest library index implementation')
 class PACatalogIndex(Persistent):
+	pass
+
+deprecated('PresentationAssetCatalog', 'Use lastest library index implementation')
+class PresentationAssetCatalog(Persistent):
 	pass
