@@ -276,13 +276,15 @@ def _is_lesson_sync_locked(existing_overview):
 
 def _add_2_package_containers(course, item, catalog):
 	ntiids = []
-	for package in get_course_packages(course):
+	packages = get_course_packages(course)
+	for package in packages:
 		ntiids.append(package.ntiid)
 		container = _asset_container(package)
 		container[item.ntiid] = item
 	if ntiids:
+		item.__parent__ = packages[0]  # pick first
 		catalog.index(item, container_ntiids=ntiids,
-				  	  namespace=ntiids[0], sites=getSite().__name__)  # pick first
+				  	  namespace=ntiids[0], sites=getSite().__name__) 
 
 def _update_sync_results(lesson_ntiid, sync_results, lesson_locked):
 	field = 'LessonsSyncLocked' if lesson_locked else 'LessonsUpdated'
