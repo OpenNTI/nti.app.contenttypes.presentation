@@ -12,6 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from zope.interface.interfaces import IMethod
+
 from nti.appserver._adapters import _AbstractExternalFieldTraverser
 
 from nti.appserver.interfaces import IExternalFieldTraversable
@@ -134,7 +136,7 @@ class _PresentationAssetExternalFieldTraverser(_AbstractExternalFieldTraverser):
 		asset_iface = iface_of_asset(context)
 		for k, v in asset_iface.namesAndDescriptions(all=True):
 			__traceback_info__ = k, v
-			if interface.interfaces.IMethod.providedBy(v):
+			if IMethod.providedBy(v):
 				continue
 			# v could be a schema field or an interface.Attribute
 			if v.queryTaggedValue(TAG_HIDDEN_IN_UI):
