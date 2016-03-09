@@ -889,7 +889,7 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 		contentObject, externalValue = self.parseInput(creator, search_owner, externalValue)
 		sources = get_all_sources(self.request)
 		if sources:  # multi-part data
-			validate_sources(contentObject, sources)
+			validate_sources(self.remoteUser, contentObject, sources)
 			_handle_multipart(self._course, contentObject, sources)
 		return contentObject, externalValue
 
@@ -945,7 +945,7 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 		if sources:
 			courses = get_presentation_asset_courses(self.context)
 			if courses:  # pick first to store assets
-				validate_sources(result, sources)
+				validate_sources(self.remoteUser, result, sources)
 				_handle_multipart(courses.__iter__().next(), self.context, sources)
 
 		self.postflight(contentObject, externalValue, data)
@@ -1242,7 +1242,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		contentObject, externalValue = self.parseInput(creator, search_owner, externalValue)
 		sources = get_all_sources(self.request)
 		if sources:  # multi-part data
-			validate_sources(contentObject, sources)
+			validate_sources(self.remoteUser, contentObject, sources)
 			_handle_multipart(self._course, contentObject, sources)
 		return contentObject, externalValue
 
