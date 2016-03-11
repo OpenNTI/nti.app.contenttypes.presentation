@@ -217,11 +217,11 @@ class _VisibleMixinDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	def _predicate(self, context, result):
 		if self._is_authenticated:
-			return True
-		
-		course = find_interface(context, ICourseInstance, strict=False)
-		return IAnonymouslyAccessibleCourseInstance.providedBy(course)
-
+			result = True
+		else:
+			course = find_interface(context, ICourseInstance, strict=False)
+			result = IAnonymouslyAccessibleCourseInstance.providedBy(course)
+		return result
 
 	def _handle_media_ref(self, items, item, idx):
 		source = INTIMedia(item, None)
