@@ -478,7 +478,8 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		self._set_creator(item, creator)
 
 		packages = list(get_course_packages(self._course))
-		item.__parent__ = packages[0] if packages else None  # set lineage
+		# Set lineage; prefer package, but fall back to group.
+		item.__parent__ = packages[0] if packages else getattr( item, '__parent__', None )
 
 		containers = _add_2_container(self._course, item, packages=True)
 		namespace = containers[0] if containers else None  # first pkg

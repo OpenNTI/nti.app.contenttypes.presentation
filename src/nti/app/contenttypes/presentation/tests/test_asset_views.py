@@ -148,6 +148,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj, is_not(none()))
 			assert_that(obj, validly_provides(INTIVideo))
 			assert_that(obj, has_property('description', is_('Human')))
+			assert_that(obj.__parent__, not_none())
 
 			entry = find_object_with_ntiid(self.course_ntiid)
 			course = ICourseInstance(entry)
@@ -195,6 +196,7 @@ class TestAssetViews(ApplicationLayerTest):
 			roll_obj = find_object_with_ntiid(video_roll_ntiid)
 			assert_that(roll_obj, not_none())
 			assert_that(roll_obj, validly_provides(INTIVideoRoll))
+			# assert_that(roll_obj.__parent__, not_none())
 
 			entry = find_object_with_ntiid(self.course_ntiid)
 			course = ICourseInstance(entry)
@@ -386,6 +388,7 @@ class TestAssetViews(ApplicationLayerTest):
 				assert_that(item.ntiid, is_not(item.target))
 				assert_that(item, validly_provides(INTIVideoRef))
 				assert_that(item.locked, is_(True))
+				assert_that(item.__parent__, not_none())
 
 		# Insert new video ntiid into overview group
 		res = self.testapp.post_json(self.assets_url, video_source, status=201)
@@ -439,7 +442,8 @@ class TestAssetViews(ApplicationLayerTest):
 			ntiid = res.json_body['ntiid']
 			href = res.json_body['href']
 			obj = find_object_with_ntiid(ntiid)
-			assert_that(obj, is_not(none()))
+			assert_that(obj, not_none())
+			assert_that(obj.__parent__, not_none())
 			assert_that(obj, has_property('locked', is_(True)))
 			assert_that(obj, validly_provides(INTISlideDeck))
 			assert_that(obj, has_property('title', is_('Install Software on a Macintosh')))
@@ -596,6 +600,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj, has_property('Items', has_length(1)))
 			actual_video = find_object_with_ntiid(video_ntiid)
 			assert_that(actual_video, not_none())
+			assert_that(actual_video.__parent__, not_none())
 
 		# Insert at index 0
 		res = self.testapp.post_json(contents_url + '/index/0',
@@ -654,6 +659,7 @@ class TestAssetViews(ApplicationLayerTest):
 			rel_obj = obj.items[0]
 			assert_that(rel_obj.ntiid, is_(rel_ntiid))
 			assert_that(rel_obj.href, is_(external_link))
+			assert_that(rel_obj.__parent__, not_none())
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_lesson(self):
@@ -834,7 +840,7 @@ class TestAssetViews(ApplicationLayerTest):
 
 		# Only timeline in assets call.
 		res = self.testapp.get( self.assets_url,
-								params={'MimeType':NTITimeLine.mime_type})
+								params={'accept':NTITimeLine.mime_type})
 		res = res.json_body
 		items = res.get( 'Items' )
 		assert_that( items, has_length( 1 ))
@@ -843,6 +849,7 @@ class TestAssetViews(ApplicationLayerTest):
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			obj = find_object_with_ntiid(timeline_ntiid)
 			assert_that(obj, not_none())
+			assert_that(obj.__parent__, not_none())
 			assert_that(obj, validly_provides(INTITimeline))
 
 			entry = find_object_with_ntiid(self.course_ntiid)
@@ -858,7 +865,7 @@ class TestAssetViews(ApplicationLayerTest):
 
 		# Only timeline in assets call.
 		res = self.testapp.get( self.assets_url,
-								params={'MimeType':NTITimeLine.mime_type})
+								params={'accept':NTITimeLine.mime_type})
 		res = res.json_body
 		items = res.get( 'Items' )
 		assert_that( items, has_length( 1 ))
