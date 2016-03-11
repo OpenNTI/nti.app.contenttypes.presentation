@@ -61,6 +61,7 @@ from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_for_user
 
 from nti.contenttypes.presentation.interfaces import IVisible
@@ -213,6 +214,14 @@ class _VisibleMixinDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		if self._record is None:
 			self._record = get_any_enrollment_record(context, self.remoteUser)
 		return self._record
+
+	def _predicate(self, context, result):
+		if self._is_authenticated:
+			return True
+		
+		course = find_interface(context, ICourseInstance, strict=False)
+		return IAnonymouslyAccessibleCourseInstance.providedBy(course)
+
 
 	def _handle_media_ref(self, items, item, idx):
 		source = INTIMedia(item, None)
