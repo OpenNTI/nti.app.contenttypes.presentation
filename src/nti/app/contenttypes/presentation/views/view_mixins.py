@@ -32,6 +32,9 @@ from nti.app.contenttypes.presentation import MessageFactory as _
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
+from nti.app.products.courseware.resources import CourseContentFile
+from nti.app.products.courseware.resources import CourseContentImage
+
 from nti.app.products.courseware.utils import get_assets_folder
 
 from nti.appserver.pyramid_authorization import has_permission
@@ -40,9 +43,6 @@ from nti.common.maps import CaseInsensitiveDict
 from nti.common.random import generate_random_hex_string
 
 from nti.coremetadata.interfaces import IPublishable
-
-from nti.contentfile.model import ContentBlobFile
-from nti.contentfile.model import ContentBlobImage
 
 from nti.dataserver import authorization as nauth
 
@@ -71,11 +71,11 @@ def slugify(text, container):
 def get_namedfile(source, name=None):
 	contentType = getattr(source, 'contentType', None)
 	if contentType:
-		factory = ContentBlobFile
+		factory = CourseContentFile
 	else:
 		contentType, _, _ = getImageInfo(source)
 		source.seek(0)  # reset
-		factory = ContentBlobImage if contentType else ContentBlobFile
+		factory = CourseContentFile if contentType else CourseContentImage
 	contentType = contentType or u'application/octet-stream'
 	result = factory()
 	result.name = name
