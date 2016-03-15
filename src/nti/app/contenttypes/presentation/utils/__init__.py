@@ -155,6 +155,8 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 
 	# get course pointed by the discussion ref
 	course = get_course_for_discussion(item, context=record.CourseInstance)
+	if course is None:
+		return None
 
 	# if course is a subinstance, make sure we are enrolled in it and
 	# we are not an instructor
