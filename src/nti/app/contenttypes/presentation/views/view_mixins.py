@@ -9,110 +9,34 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-import re
-import os
 import hashlib
-from urllib import unquote
-from urlparse import urlparse
 
 from pyramid import httpexceptions as hexc
 
 from zope.event import notify
 
-from plone.namedfile.file import getImageInfo
-from plone.namedfile.interfaces import INamed
-
-from slugify import slugify_filename
-
 from nti.app.base.abstract_views import AbstractAuthenticatedView
-
-from nti.app.contentfile import to_external_href
 
 from nti.app.contenttypes.presentation import MessageFactory as _
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
-from nti.app.products.courseware.resources import CourseContentFile
-from nti.app.products.courseware.resources import CourseContentImage
-
-from nti.app.products.courseware.utils import get_assets_folder
-
 from nti.appserver.pyramid_authorization import has_permission
 
 from nti.common.maps import CaseInsensitiveDict
-from nti.common.random import generate_random_hex_string
 
 from nti.coremetadata.interfaces import IPublishable
 
 from nti.dataserver import authorization as nauth
 
+from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
-from nti.ntiids.ntiids import is_valid_ntiid_string as is_valid_ntiid
-
-get_assets_folder = get_assets_folder # re-export
 
 def hexdigest(data, hasher=None):
 	hasher = hashlib.sha256() if hasher is None else hasher
 	hasher.update(data)
 	result = hasher.hexdigest()
 	return result
-
-def slugify(text, container):
-	separator = '_'
-	newtext = slugify_filename(text)
-	text_noe, ext = os.path.splitext(newtext)
-	while True:
-		s = generate_random_hex_string(6)
-		newtext = "%s%s%s%s" % (text_noe, separator, s, ext)
-		if newtext not in container:
-			break
-	return newtext
-
-def get_namedfile(source, name=None):
-	contentType = getattr(source, 'contentType', None)
-	if contentType:
-		factory = CourseContentFile
-	else:
-		contentType, _, _ = getImageInfo(source)
-		source.seek(0)  # reset
-		factory = CourseContentFile if contentType else CourseContentImage
-	contentType = contentType or u'application/octet-stream'
-	result = factory()
-	result.name = name
-	# for filename we want to use the filename as originally provided on the source, not
-	# the sluggified internal name. This allows us to give it back in the
-	# Content-Disposition header on download
-	result.filename = getattr(source, 'filename', None) or getattr(source, 'name', name)
-	result.data = source.read()
-	result.contentType = contentType
-	return result
-
-def get_download_href(item):
-	try:
-		result = to_external_href(item, True)
-		return result
-	except Exception:
-		pass  # Nope
-	return None
-
-def get_file_from_link(link):
-	result = None
-	try:
-		# check for @@view/@@download href
-		if re.match('(.+)/(@@)?[view|download](\/.*)?', link):
-			path = urlparse(link).path
-			path = os.path.split(path)[0]
-			if path.endswith('download') or path.endswith('view'):
-				path = os.path.split(path)[0]
-		else:
-			path = link
-		ntiid = unquote(os.path.split(path)[1] or u'')  # last part of path
-		result = find_object_with_ntiid(ntiid) if is_valid_ntiid(ntiid) else None
-		if INamed.providedBy(result):
-			return result
-	except Exception:
-		pass  # Nope
-	return None
 
 class AbstractChildMoveView(AbstractAuthenticatedView,
 							ModeledContentUploadRequestUtilsMixin):
@@ -196,15 +120,15 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 		old_parent_ntiid = values.get('OldParentNTIID')
 		context_ntiid = self._get_context_ntiid()
 
-		new_parent = self._get_new_parent( context_ntiid, new_parent_ntiid )
-		old_parent = self._get_old_parent( old_parent_ntiid )
+		new_parent = self._get_new_parent(context_ntiid, new_parent_ntiid)
+		old_parent = self._get_old_parent(old_parent_ntiid)
 		if old_parent is None:
 			old_parent = new_parent
-		obj = self._get_object_to_move( ntiid, old_parent )
+		obj = self._get_object_to_move(ntiid, old_parent)
 
 		children_ntiids = self._get_children_ntiids(context_ntiid)
 		if 		new_parent_ntiid not in children_ntiids \
-			or (	old_parent_ntiid
+			or (old_parent_ntiid
 				and old_parent_ntiid not in children_ntiids):
 			raise hexc.HTTPUnprocessableEntity(_('Cannot move between root objects.'))
 
@@ -234,7 +158,7 @@ class PublishVisibilityMixin(object):
 		Define whether this possibly publishable object is visible to the
 		remote user.
 		"""
-		return (	not IPublishable.providedBy(item)
+		return (not IPublishable.providedBy(item)
 				or 	item.is_published()
 				or	has_permission(nauth.ACT_CONTENT_EDIT, item, self.request))
 
@@ -246,8 +170,7 @@ class IndexedRequestMixin(object):
 		path: '.../index/<index_number>'
 		"""
 		index = None
-		if (	self.request.subpath
-			and self.request.subpath[0] == 'index'):
+		if self.request.subpath and self.request.subpath[0] == 'index':
 			try:
 				index = self.request.subpath[1]
 				index = int(index)
@@ -263,12 +186,11 @@ class NTIIDPathMixin(object):
 		Looks for a user supplied ntiid in the context path: '.../ntiid/<ntiid>'.
 		"""
 		result = None
-		if (	self.request.subpath
-			and self.request.subpath[0] == 'ntiid'):
+		if self.request.subpath and self.request.subpath[0] == 'ntiid':
 			try:
 				result = self.request.subpath[1]
 			except (TypeError, IndexError):
 				pass
-		if result is None or not is_valid_ntiid( result ):
+		if result is None or not is_valid_ntiid_string(result):
 			raise hexc.HTTPUnprocessableEntity(_('Invalid ntiid %s' % result))
 		return result

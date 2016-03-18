@@ -520,9 +520,8 @@ class TestAssetViews(ApplicationLayerTest):
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	@fudge.patch('nti.app.contenttypes.presentation.views.asset_views.CourseOverviewGroupOrderedContentsView.readInput',
-				 'nti.app.contenttypes.presentation.views.asset_views.get_assets_folder',
-				 'nti.app.contenttypes.presentation.views.asset_views.get_download_href')
-	def test_overview_group(self, mc_ri, mc_gaf, mc_lnk):
+				 'nti.app.contenttypes.presentation.views.asset_views.get_course_filer')
+	def test_overview_group(self, mc_ri, mc_cf):
 		source = self._load_resource('nticourseoverviewgroup.json')
 		video_source = source.get('Items')[1]
 		video_res = self.testapp.post_json(self.assets_url, video_source, status=201)
@@ -566,9 +565,14 @@ class TestAssetViews(ApplicationLayerTest):
 		assert_that(source, has_entry('icon', 'http://bleach.com/aizen.jpg'))
 
 		mc_ri.is_callable().with_args().returns(source)
-		mc_gaf.is_callable().with_args().returns({})
-		mc_lnk.is_callable().with_args().returns('http://bleach.org/ichigo.png')
-
+		
+		class CF(object):
+			def save(self, *args, **kwargs):
+				return 'http://bleach.org/ichigo.png'
+			def remove(self, *args, **kwargs):
+				return True
+		mc_cf.is_callable().with_args().returns(CF())
+		
 		contents_url = href + '/@@contents'
 		res = self.testapp.post(contents_url,
 								upload_files=[('icon', 'ichigo.png', b'ichigo')],
@@ -604,8 +608,8 @@ class TestAssetViews(ApplicationLayerTest):
 
 		# Insert at index 0
 		res = self.testapp.post_json(contents_url + '/index/0',
-									upload_files=[('icon', 'ichigo.png', b'ichigo')],
-									status=201)
+									 upload_files=[('icon', 'ichigo.png', b'ichigo')],
+									 status=201)
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			obj = find_object_with_ntiid(ntiid)
 			rel_ntiid = res.json_body['ntiid']
@@ -624,8 +628,8 @@ class TestAssetViews(ApplicationLayerTest):
 		invalid_source['label'] = INVALID_TITLE
 		mc_ri.is_callable().with_args().returns(invalid_source)
 		self.testapp.post(contents_url,
-						upload_files=[('icon', 'ichigo.png', b'ichigo')],
-						status=422)
+						  upload_files=[('icon', 'ichigo.png', b'ichigo')],
+						  status=422)
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_overview_group_post(self):

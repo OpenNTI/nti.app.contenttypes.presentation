@@ -37,6 +37,7 @@ from pyramid.threadlocal import get_current_request
 from nti.app.renderers.interfaces import INoHrefInResponse
 
 from nti.app.base.abstract_views import get_all_sources
+from nti.app.base.abstract_views import get_source_filer
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.contentfile import validate_sources
@@ -56,13 +57,8 @@ from nti.app.contenttypes.presentation.views import VIEW_ASSETS
 from nti.app.contenttypes.presentation.views import VIEW_CONTENTS
 from nti.app.contenttypes.presentation.views import VIEW_NODE_MOVE
 
-from nti.app.contenttypes.presentation.views.view_mixins import slugify
 from nti.app.contenttypes.presentation.views.view_mixins import hexdigest
-from nti.app.contenttypes.presentation.views.view_mixins import get_namedfile
 from nti.app.contenttypes.presentation.views.view_mixins import NTIIDPathMixin
-from nti.app.contenttypes.presentation.views.view_mixins import get_assets_folder
-from nti.app.contenttypes.presentation.views.view_mixins import get_download_href
-from nti.app.contenttypes.presentation.views.view_mixins import get_file_from_link
 from nti.app.contenttypes.presentation.views.view_mixins import IndexedRequestMixin
 from nti.app.contenttypes.presentation.views.view_mixins import AbstractChildMoveView
 from nti.app.contenttypes.presentation.views.view_mixins import PublishVisibilityMixin
@@ -71,8 +67,11 @@ from nti.app.externalization.error import raise_json_error
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
+from nti.app.products.courseware import ASSETS_FOLDER
 from nti.app.products.courseware import VIEW_RECURSIVE_AUDIT_LOG
 from nti.app.products.courseware import VIEW_RECURSIVE_TX_HISTORY
+
+from nti.app.products.courseware.resources.interfaces import ICourseSourceFiler
 
 from nti.app.products.courseware.views.view_mixins import AbstractRecursiveTransactionHistoryView
 
@@ -89,8 +88,6 @@ from nti.common.maps import CaseInsensitiveDict
 from nti.common.property import Lazy
 
 from nti.coremetadata.interfaces import IPublishable
-
-from nti.contentfolder.interfaces import IContentFolder
 
 from nti.contentlibrary.indexed_data import get_site_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
@@ -309,31 +306,27 @@ def _canonicalize(items, creator, base=None, registry=None):
 			registerUtility(registry, item, provided, name=item.ntiid)
 	return result
 
-def _get_unique_filename(folder, context, name):
-	name = getattr(context, 'filename', None) or getattr(context, 'name', None) or name
-	name = safe_filename(name_finder(name))
-	result = slugify(name, folder)
+def _get_filename(context, name):
+	result = getattr(context, 'filename', None) or getattr(context, 'name', None) or name
+	result = safe_filename(name_finder(result))
 	return result
 
-def _remove_file(href):
-	named = get_file_from_link(href) if href and isinstance(href, six.string_types) else None
-	container = getattr(named, '__parent__', None)
-	if IContentFolder.providedBy(container):
-		return container.remove(named)
-	return False
+def get_course_filer(context, user=None):
+	filer = get_source_filer(context, user, ICourseSourceFiler)
+	return filer
 
-def _handle_multipart(context, contentObject, sources, provided=None):
+def _handle_multipart(context, user, contentObject, sources, provided=None):
+	filer = get_course_filer(context, user)
 	provided = iface_of_asset(contentObject) if provided is None else provided
-	assets = get_assets_folder(context)
 	for name, source in sources.items():
 		if name in provided:
 			# remove existing
-			_remove_file(getattr(contentObject, name, None))
-			# save a new file
-			file_key = _get_unique_filename(assets, source, name)
-			namedfile = get_namedfile(source, file_key)
-			assets[file_key] = namedfile  # add to container
-			location = get_download_href(namedfile)
+			location = getattr(contentObject, name, None)
+			if location:
+				filer.remove(location)
+			# save a in a new file
+			key = _get_filename(source, name)
+			location = filer.save(source, key, overwrite=False, bucket=ASSETS_FOLDER)
 			setattr(contentObject, name, location)
 
 @view_config(route_name='objects.generic.traversal',
@@ -515,9 +508,11 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 		# if client has uploaded a file, capture contentType and target ntiid
 		if self.request.POST and 'href' in self.request.POST:
-			named = get_file_from_link(href) if href else None
-			contentType = unicode(named.contentType or u'') if named else contentType
-			ntiid = to_external_ntiid_oid(named) if named is not None else ntiid
+			filer = get_source_filer(self._course, constraint=ICourseSourceFiler)
+			named = filer.get(href) if href else None
+			if named is not None:
+				ntiid = to_external_ntiid_oid(named)
+				contentType = unicode(named.contentType or u'') or contentType
 
 		# parse href
 		parsed = urlparse(href) if href else None
@@ -891,7 +886,7 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 		sources = get_all_sources(self.request)
 		if sources:  # multi-part data
 			validate_sources(self.remoteUser, contentObject, sources)
-			_handle_multipart(self._course, contentObject, sources)
+			_handle_multipart(self._course, self.remoteUser, contentObject, sources)
 		return contentObject, externalValue
 
 	def _do_call(self):
@@ -947,7 +942,10 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 			courses = get_presentation_asset_courses(self.context)
 			if courses:  # pick first to store assets
 				validate_sources(self.remoteUser, result, sources)
-				_handle_multipart(courses.__iter__().next(), self.context, sources)
+				_handle_multipart(courses.__iter__().next(),
+								  self.remoteUser, 
+								  self.context, 
+								  sources)
 
 		self.postflight(contentObject, externalValue, data)
 		notify_modified(contentObject, originalSource)
@@ -1244,7 +1242,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		sources = get_all_sources(self.request)
 		if sources:  # multi-part data
 			validate_sources(self.remoteUser, contentObject, sources)
-			_handle_multipart(self._course, contentObject, sources)
+			_handle_multipart(self._course, self.remoteUser, contentObject, sources)
 		return contentObject, externalValue
 
 	def _do_call(self):
