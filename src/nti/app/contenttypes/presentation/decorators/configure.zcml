@@ -83,6 +83,11 @@
 				for="nti.contenttypes.presentation.interfaces.INTILessonOverview
 					 pyramid.interfaces.IRequest" />
 
+	<subscriber factory=".assets._NTILessonOverviewDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTILessonOverview
+					 pyramid.interfaces.IRequest" />
+
 	<subscriber factory=".assets._NTIAssetOrderedContentsLinkDecorator"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"
 				for="nti.contenttypes.presentation.interfaces.INTICourseOverviewGroup

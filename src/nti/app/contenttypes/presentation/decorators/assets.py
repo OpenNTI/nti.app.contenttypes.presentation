@@ -64,6 +64,8 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_for_user
 
+from nti.contenttypes.courses.utils import is_course_instructor_or_editor
+
 from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
@@ -357,6 +359,7 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 		removal = set()
 		discussions = []
 		items = result[ITEMS]
+
 		# loop through sources
 		for idx, item in enumerate(context):
 			if IVisible.providedBy(item) and not self._allow_visible(context, item):
@@ -385,6 +388,26 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 		if removal:
 			result[ITEMS] = [x for idx, x in enumerate(items) if idx not in removal]
 
+@component.adapter(INTILessonOverview)
+class _NTILessonOverviewDecorator(AbstractAuthenticatedRequestAwareDecorator):
+	
+	def is_editor_or_instructor(self, context):
+		course = find_interface(context, ICourseInstance, strict=False)
+		result = 	is_course_instructor_or_editor(course, self.remoteUser) \
+				 or has_permission(ACT_CONTENT_EDIT, context, self.request)
+		return result
+
+	def _do_decorate_external(self, context, result):
+		if not self.is_editor_or_instructor(context):
+			removal = set()
+			items = result.get(ITEMS) or () # groups
+			for idx, group in enumerate(items):
+				if not group.get(ITEMS):
+					removal.add(idx)
+			# remove empty items
+			if removal:
+				result[ITEMS] = [x for idx, x in enumerate(items) if idx not in removal]
+			
 def _get_content_package(ntiids=()):
 	# XXX: We would like context from clients.
 	# Get the first available content package from the given ntiids.
