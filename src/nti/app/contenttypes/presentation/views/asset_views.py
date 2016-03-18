@@ -37,7 +37,6 @@ from pyramid.threadlocal import get_current_request
 from nti.app.renderers.interfaces import INoHrefInResponse
 
 from nti.app.base.abstract_views import get_all_sources
-from nti.app.base.abstract_views import get_source_filer
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.contentfile import validate_sources
@@ -71,7 +70,7 @@ from nti.app.products.courseware import ASSETS_FOLDER
 from nti.app.products.courseware import VIEW_RECURSIVE_AUDIT_LOG
 from nti.app.products.courseware import VIEW_RECURSIVE_TX_HISTORY
 
-from nti.app.products.courseware.resources.interfaces import ICourseSourceFiler
+from nti.app.products.courseware.resources.utils import get_course_filer
 
 from nti.app.products.courseware.views.view_mixins import AbstractRecursiveTransactionHistoryView
 
@@ -311,10 +310,6 @@ def _get_filename(context, name):
 	result = safe_filename(name_finder(result))
 	return result
 
-def get_course_filer(context, user=None):
-	filer = get_source_filer(context, user, ICourseSourceFiler)
-	return filer
-
 def _handle_multipart(context, user, contentObject, sources, provided=None):
 	filer = get_course_filer(context, user)
 	provided = iface_of_asset(contentObject) if provided is None else provided
@@ -508,7 +503,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 		# if client has uploaded a file, capture contentType and target ntiid
 		if self.request.POST and 'href' in self.request.POST:
-			filer = get_source_filer(self._course, constraint=ICourseSourceFiler)
+			filer = get_course_filer(self._course)
 			named = filer.get(href) if href else None
 			if named is not None:
 				ntiid = to_external_ntiid_oid(named)
