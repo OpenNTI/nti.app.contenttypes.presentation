@@ -167,6 +167,8 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.site.interfaces import IHostPolicyFolder
 
+from nti.site.site import get_component_hierarchy_names
+
 from nti.site.utils import registerUtility
 
 from nti.traversal.traversal import find_interface
@@ -976,12 +978,15 @@ class PackagePresentationAssetPutView(PresentationAssetPutView):
 
 	@Lazy
 	def _course(self):
+		result = find_interface(self.context, ICourseInstance, strict=False)
+		if result is not None: # direct check in case course w/ no pkg
+			return result
 		package = find_interface(self.context, IContentPackage, strict=False)
 		if package is not None:
-			courses = get_courses_for_packages(self._site_name, package.ntiid)
-			result = courses[0] if courses else None
-			return result
-		return None
+			sites = get_component_hierarchy_names() # check all sites
+			courses = get_courses_for_packages(sites, package.ntiid)
+			result = courses[0] if courses else None # should always find one
+		return result
 
 @view_config(context=ICoursePresentationAsset)
 @view_defaults(route_name='objects.generic.traversal',
@@ -993,11 +998,7 @@ class CoursePresentationAssetPutView(PresentationAssetPutView):
 	@Lazy
 	def _site_name(self):
 		folder = find_interface(self.context, IHostPolicyFolder, strict=False)
-		if folder is None:
-			result = super(CoursePresentationAssetPutView, self)._site_name
-		else:
-			result = folder.__name__
-		return result
+		return folder.__name__
 
 	@Lazy
 	def _course(self):
