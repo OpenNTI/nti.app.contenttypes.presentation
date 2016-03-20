@@ -91,11 +91,14 @@ from nti.coremetadata.interfaces import IPublishable
 from nti.contentlibrary.indexed_data import get_site_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
+from nti.contentlibrary.interfaces import IContentPackage
+
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.courses.common import get_course_packages
 from nti.contenttypes.courses.utils import get_course_subinstances
+from nti.contenttypes.courses.utils import get_courses_for_packages
 
 from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation import AUDIO_MIMETYES
@@ -128,9 +131,12 @@ from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
-from nti.contenttypes.presentation.interfaces import OverviewGroupMovedEvent
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+from nti.contenttypes.presentation.interfaces import ICoursePresentationAsset
+from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
+
+from nti.contenttypes.presentation.interfaces import OverviewGroupMovedEvent
 from nti.contenttypes.presentation.interfaces import PresentationAssetMovedEvent
 from nti.contenttypes.presentation.interfaces import PresentationAssetCreatedEvent
 
@@ -950,6 +956,53 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 		result = UGDPutView.__call__(self)
 		self._handle_asset(iface_of_asset(result), result, result.creator)
 		return self.transformOutput(result)
+
+@view_config(context=IPackagePresentationAsset)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='PUT',
+			   permission=nauth.ACT_CONTENT_EDIT)
+class PackagePresentationAssetPutView(PresentationAssetPutView):
+
+	@Lazy
+	def _site_name(self):
+		package = find_interface(self.context, IContentPackage, strict=False)
+		if package is None:
+			result = super(PackagePresentationAssetPutView, self)._site_name
+		else:
+			folder = find_interface(self.context, IHostPolicyFolder, strict=False)
+			result = folder.__name__
+		return result
+
+	@Lazy
+	def _course(self):
+		package = find_interface(self.context, IContentPackage, strict=False)
+		if package is not None:
+			courses = get_courses_for_packages(self._site_name, package.ntiid)
+			result = courses[0] if courses else None
+			return result
+		return None
+
+@view_config(context=ICoursePresentationAsset)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='PUT',
+			   permission=nauth.ACT_CONTENT_EDIT)
+class CoursePresentationAssetPutView(PresentationAssetPutView):
+
+	@Lazy
+	def _site_name(self):
+		folder = find_interface(self.context, IHostPolicyFolder, strict=False)
+		if folder is None:
+			result = super(CoursePresentationAssetPutView, self)._site_name
+		else:
+			result = folder.__name__
+		return result
+
+	@Lazy
+	def _course(self):
+		course = find_interface(self.context, ICourseInstance, strict=False)
+		return course
 
 @view_config(context=INTILessonOverview)
 @view_defaults(route_name='objects.generic.traversal',
