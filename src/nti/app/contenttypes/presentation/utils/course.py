@@ -38,6 +38,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 from nti.contenttypes.courses.utils import get_any_enrollment
 from nti.contenttypes.courses.utils import get_courses_catalog
 from nti.contenttypes.courses.utils import get_course_hierarchy
+from nti.contenttypes.courses.utils import get_courses_for_packages
 from nti.contenttypes.courses.utils import is_course_instructor_or_editor
 
 from nti.coremetadata.mixins import CreatedAndModifiedTimeMixin
@@ -76,16 +77,8 @@ def get_enrollment_record(context, user):
 		return result
 
 def get_courses_for_pacakge(ntiid):
-	result = []
-	catalog = get_courses_catalog()
-	intids = component.getUtility(IIntIds)
 	sites = get_component_hierarchy_names()
-	query = { IX_SITE: {'any_of':sites},
-			  IX_PACKAGES: {'any_of':(ntiid,) }}
-	for uid in catalog.apply(query) or ():
-		course = intids.queryObject(uid)
-		if ICourseInstance.providedBy(course):
-			result.append(course)
+	result = get_courses_for_packages(sites, ntiid)
 	return result
 
 def get_containers(ntiids=()):
