@@ -16,8 +16,6 @@ from zope import interface
 
 from zope.container.contained import Contained
 
-from zope.intid.interfaces import IIntIds
-
 from zope.security.interfaces import IPrincipal
 
 from nti.appserver.pyramid_authorization import has_permission
@@ -26,9 +24,6 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contentlibrary.interfaces import IContentUnit
 
-from nti.contenttypes.courses.index import IX_SITE
-from nti.contenttypes.courses.index import IX_PACKAGES
-
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -36,7 +31,6 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.contenttypes.courses.utils import get_any_enrollment
-from nti.contenttypes.courses.utils import get_courses_catalog
 from nti.contenttypes.courses.utils import get_course_hierarchy
 from nti.contenttypes.courses.utils import get_courses_for_packages
 from nti.contenttypes.courses.utils import is_course_instructor_or_editor
