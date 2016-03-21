@@ -329,7 +329,8 @@ def _handle_multipart(context, user, contentObject, sources, provided=None):
 				filer.remove(location)
 			# save a in a new file
 			key = _get_filename(source, name)
-			location = filer.save(source, key, overwrite=False, bucket=ASSETS_FOLDER)
+			location = filer.save(source, key, overwrite=False,
+								  bucket=ASSETS_FOLDER, context=contentObject)
 			setattr(contentObject, name, location)
 
 @view_config(route_name='objects.generic.traversal',
@@ -887,14 +888,11 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 	def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
 		contentObject, externalValue = self.parseInput(creator, search_owner, externalValue)
 		sources = get_all_sources(self.request)
-		if sources:  # multi-part data
-			validate_sources(self.remoteUser, contentObject, sources)
-			_handle_multipart(self._course, self.remoteUser, contentObject, sources)
-		return contentObject, externalValue
+		return contentObject, externalValue, sources
 
 	def _do_call(self):
 		creator = self.remoteUser
-		contentObject, externalValue = self.readCreateUpdateContentObject(creator)
+		contentObject, externalValue, sources = self.readCreateUpdateContentObject(creator)
 		contentObject.creator = creator.username  # use string
 		provided = iface_of_asset(contentObject)
 
@@ -909,6 +907,11 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 						provided=provided,
 						name=contentObject.ntiid)
 
+		# handle multi-part data
+		if sources:
+			validate_sources(self.remoteUser, contentObject, sources)
+			_handle_multipart(self._course, self.remoteUser, contentObject, sources)
+	
 		self.request.response.status_int = 201
 		self._handle_asset(provided, contentObject, creator.username)
 		return self.transformOutput(contentObject)
