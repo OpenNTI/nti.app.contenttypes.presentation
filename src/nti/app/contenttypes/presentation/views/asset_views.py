@@ -37,6 +37,7 @@ from pyramid.threadlocal import get_current_request
 from nti.app.renderers.interfaces import INoHrefInResponse
 
 from nti.app.base.abstract_views import get_all_sources
+from nti.app.base.abstract_views import get_safe_source_filename
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.contentfile import validate_sources
@@ -97,6 +98,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.courses.common import get_course_packages
+
 from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.courses.utils import get_courses_for_packages
 
@@ -156,9 +158,6 @@ from nti.externalization.externalization import StandardExternalFields
 from nti.externalization.internalization import notify_modified
 
 from nti.externalization.oids import to_external_ntiid_oid
-
-from nti.namedfile.file import name_finder
-from nti.namedfile.file import safe_filename
 
 from nti.ntiids.ntiids import TYPE_UUID
 from nti.ntiids.ntiids import make_ntiid
@@ -313,11 +312,6 @@ def _canonicalize(items, creator, base=None, registry=None):
 			registerUtility(registry, item, provided, name=item.ntiid)
 	return result
 
-def _get_filename(context, name):
-	result = getattr(context, 'filename', None) or getattr(context, 'name', None) or name
-	result = safe_filename(name_finder(result))
-	return result
-
 def _handle_multipart(context, user, contentObject, sources, provided=None):
 	filer = get_course_filer(context, user)
 	provided = iface_of_asset(contentObject) if provided is None else provided
@@ -328,7 +322,7 @@ def _handle_multipart(context, user, contentObject, sources, provided=None):
 			if location:
 				filer.remove(location)
 			# save a in a new file
-			key = _get_filename(source, name)
+			key = get_safe_source_filename(source, name)
 			location = filer.save(source, key, overwrite=False,
 								  bucket=ASSETS_FOLDER, context=contentObject)
 			setattr(contentObject, name, location)
