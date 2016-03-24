@@ -52,10 +52,7 @@ from nti.coremetadata.interfaces import IPublishable
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.externalization.interfaces import StandardExternalFields
-from nti.externalization.interfaces import IExternalObjectDecorator
 from nti.externalization.interfaces import IExternalMappingDecorator
-
-from nti.externalization.singleton import SingletonDecorator
 
 from nti.links.externalization import render_link
 
@@ -197,16 +194,6 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 	def _do_decorate_external(self, context, result):
 		if not self._overview_decorate_external(context, result):
 			self._legacy_decorate_external(context, result)
-
-@component.adapter(ICourseOutlineNode)
-@interface.implementer(IExternalObjectDecorator)
-class _CourseOutlineNodeDecorator(object):
-
-	__metaclass__ = SingletonDecorator
-
-	def decorateExternalObject(self, original, external):
-		if not original.LessonOverviewNTIID:
-			external.pop('LessonOverviewNTIID', None)
 
 @component.adapter(ICourseOutlineContentNode)
 @interface.implementer(IExternalMappingDecorator)
