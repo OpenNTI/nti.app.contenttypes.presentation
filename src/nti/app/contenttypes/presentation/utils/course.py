@@ -12,6 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from zope.component.hooks import getSite
+
 from zope.container.contained import Contained
 
 from zope.security.interfaces import IPrincipal
@@ -126,6 +128,8 @@ def get_course_by_relative_path_parts(*parts):
 		except TypeError:
 			logger.exception("context %s is not a valid map", context)
 			break
+	logger.debug("Could not find a course for paths '%s' under site '%s'",
+				 parts, getSite().__name__)
 	return None
 
 def get_entry_by_relative_path_parts(*parts):
