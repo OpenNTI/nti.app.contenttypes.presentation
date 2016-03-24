@@ -9,8 +9,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-import os
-
 from zope import component
 from zope import interface
 
@@ -25,9 +23,9 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 from nti.contentlibrary.interfaces import IContentUnit
 
 from nti.contenttypes.courses.interfaces import ES_ALL
-from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.contenttypes.courses.utils import get_any_enrollment
@@ -112,16 +110,25 @@ def get_presentation_asset_containers(item):
 	result = get_containers(entries) if entries else ()
 	return result
 
-def get_entry_by_relative_path_parts(*parts):
-	original = os.path.sep.join(parts)
-	transformed = os.path.sep.join([x.replace('_', ' ') for x in parts])
-	catalog = component.getUtility(ICourseCatalog)
-	for entry in catalog.iterCatalogEntries():
-		relative_path = getattr(entry, 'relative_path', None)
-		if relative_path == original or relative_path == transformed:
-			return entry
+def get_course_by_relative_path_parts(*parts):
+	context = component.getUtility(IPersistentCourseCatalog)
+	for name in parts:
+		transformed = name.replace('_', ' ')
+		try:
+			if name in context:
+				context = context[name]
+			elif transformed in context:
+				context = context[transformed]
+			else:
+				return None
+			if ICourseInstance.providedBy(context):
+				return context
+		except TypeError:
+			logger.exception("context %s is not a valid map", context)
+			break
 	return None
 
-def get_course_by_relative_path_parts(*parts):
-	result = ICourseInstance(get_entry_by_relative_path_parts(*parts), None)
+def get_entry_by_relative_path_parts(*parts):
+	course = get_course_by_relative_path_parts(*parts)
+	result = ICourseCatalogEntry(course, None)
 	return result
