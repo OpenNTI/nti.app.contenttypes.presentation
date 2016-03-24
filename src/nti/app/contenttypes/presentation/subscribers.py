@@ -125,12 +125,9 @@ def _clear_data_when_course_removed(course, event):
 
 @component.adapter(ICourseOutlineNode, IUnregistered)
 def _on_outlinenode_unregistered(node, event):
-	try:
-		ntiid = node.LessonOverviewNTIID
-		lesson = find_object_with_ntiid(ntiid or u'')
-		if lesson is None:
-			return
-	except AttributeError: # pragma no cover
+	ntiid = node.LessonOverviewNTIID
+	lesson = find_object_with_ntiid(ntiid) if ntiid else None
+	if lesson is None:
 		return
 
 	# ground lesson

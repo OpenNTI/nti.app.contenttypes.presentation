@@ -82,17 +82,14 @@ def _lesson_overview_links(context, request):
 	except ValueError:
 		pass
 
-	try:
-		name = context.LessonOverviewNTIID
-		lesson = component.queryUtility(INTILessonOverview, name=name) if name else None
-		if lesson is not None and _is_visible(lesson, request, not omit_unpublished):
-			overview_link = Link(context, rel=VIEW_OVERVIEW_CONTENT,
-								 elements=(VIEW_OVERVIEW_CONTENT,))
-			summary_link = Link(context, rel=VIEW_OVERVIEW_SUMMARY,
-								elements=(VIEW_OVERVIEW_SUMMARY,))
-			return (overview_link, summary_link)
-	except AttributeError:
-		pass
+	name = context.LessonOverviewNTIID
+	lesson = component.queryUtility(INTILessonOverview, name=name) if name else None
+	if lesson is not None and _is_visible(lesson, request, not omit_unpublished):
+		overview_link = Link(context, rel=VIEW_OVERVIEW_CONTENT,
+							 elements=(VIEW_OVERVIEW_CONTENT,))
+		summary_link = Link(context, rel=VIEW_OVERVIEW_SUMMARY,
+							elements=(VIEW_OVERVIEW_SUMMARY,))
+		return (overview_link, summary_link)
 	return None
 
 @component.adapter(ICourseOutline)
@@ -208,10 +205,8 @@ class _CourseOutlineNodeDecorator(object):
 	__metaclass__ = SingletonDecorator
 
 	def decorateExternalObject(self, original, external):
-		try:
-			external['LessonOverviewNTIID'] = original.LessonOverviewNTIID
-		except AttributeError:
-			pass
+		if not original.LessonOverviewNTIID:
+			external.pop('LessonOverviewNTIID', None)
 
 @component.adapter(ICourseOutlineContentNode)
 @interface.implementer(IExternalMappingDecorator)

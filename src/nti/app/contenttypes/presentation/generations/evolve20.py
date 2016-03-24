@@ -92,38 +92,35 @@ def _process_nodes(registry, seen):
 		if ntiid in seen:
 			continue
 		seen.add(ntiid)
-		try:
-			name = node.LessonOverviewNTIID or u''
-			lesson = registry.queryUtility(INTILessonOverview, name=name)
-			if lesson is None or lesson.__parent__ is not None:
-				continue
+		name = node.LessonOverviewNTIID or u''
+		lesson = registry.queryUtility(INTILessonOverview, name=name)
+		if lesson is None or lesson.__parent__ is not None:
+			continue
 
-			lesson.__parent__ = node
-			course = find_interface(node, ICourseInstance, strict=False)
-			if course is None:
-				continue
+		lesson.__parent__ = node
+		course = find_interface(node, ICourseInstance, strict=False)
+		if course is None:
+			continue
 
-			logger.info("Reparenting %s", name)
+		logger.info("Reparenting %s", name)
 
-			_add_2_container(course, lesson, packages=False)
-			for group in lesson:
-				group.__parent__ = lesson
-				_add_2_container(course, group, packages=False)
-				for item in group:
-					provided = iface_of_asset(item)
-					if not provided in PACKAGE_CONTAINER_INTERFACES:
-						item.__parent__ = group
-						_add_2_container(course, item, packages=False)
-					else:
-						_add_2_container(course, item, packages=True)
-						if item.__parent__ is None:
-							# Parent is first content package available.
-							packages = get_course_packages(course)
-							package = packages[0] if packages else None
-							if package is not None:
-								item.__parent__ = package
-		except AttributeError:
-			pass
+		_add_2_container(course, lesson, packages=False)
+		for group in lesson:
+			group.__parent__ = lesson
+			_add_2_container(course, group, packages=False)
+			for item in group:
+				provided = iface_of_asset(item)
+				if not provided in PACKAGE_CONTAINER_INTERFACES:
+					item.__parent__ = group
+					_add_2_container(course, item, packages=False)
+				else:
+					_add_2_container(course, item, packages=True)
+					if item.__parent__ is None:
+						# Parent is first content package available.
+						packages = get_course_packages(course)
+						package = packages[0] if packages else None
+						if package is not None:
+							item.__parent__ = package
 
 def do_evolve(context, generation=generation):
 	conn = context.connection

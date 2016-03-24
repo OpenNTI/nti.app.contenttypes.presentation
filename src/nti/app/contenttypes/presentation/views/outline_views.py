@@ -125,19 +125,15 @@ class OutlineLessonOverviewMixin(object):
 
 	def _get_lesson(self):
 		context = self.request.context
-		try:
-			ntiid = context.LessonOverviewNTIID
-			if not ntiid:
-				raise hexc.HTTPServerError(
-						_("Outline does not have a valid lesson overview."))
-
-			lesson = component.getUtility(INTILessonOverview, name=ntiid)
-			if lesson is None:
-				raise hexc.HTTPUnprocessableEntity(_("Cannot find lesson overview."))
-			return lesson
-		except AttributeError:
+		ntiid = context.LessonOverviewNTIID
+		if not ntiid:
 			raise hexc.HTTPServerError(
-						_("Outline does not have a lesson overview attribute."))
+					_("Outline does not have a valid lesson overview."))
+
+		lesson = component.getUtility(INTILessonOverview, name=ntiid)
+		if lesson is None:
+			raise hexc.HTTPUnprocessableEntity(_("Cannot find lesson overview."))
+		return lesson
 
 	def _can_edit_lesson(self, lesson=None):
 		lesson = self._get_lesson() if lesson is None else lesson
@@ -387,12 +383,9 @@ class OutlineNodeDeleteMixIn(AbstractAuthenticatedView, NTIIDPathMixin):
 			remove_presentation_asset(lesson, registry=self._registry)
 
 	def _delete_lesson(self, context):
-		try:
-			if context.LessonOverviewNTIID:
-				self._remove_lesson(context.LessonOverviewNTIID)
-				return True
-		except AttributeError:
-			pass
+		if context.LessonOverviewNTIID:
+			self._remove_lesson(context.LessonOverviewNTIID)
+			return True
 		return False
 
 	def _delete_node(self, parent, ntiid):
@@ -429,7 +422,7 @@ class OutlineNodeDeleteContentsView(OutlineNodeDeleteMixIn):
 		# the user to recover/undo these deleted lesson nodes, or
 		# through administrative action.
 		# if self.context.LessonOverviewNTIID:
-		#	self._remove_lesson(self.context.LessonOverviewNTIID)
+		# 	self._remove_lesson(self.context.LessonOverviewNTIID)
 		# TODO: Do we want to permanently delete nodes, or delete placeholder
 		# mark them (to undo and save transaction history)?
 		self._delete_node(self.context, ntiid)
@@ -543,13 +536,11 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 		ntiids = set()
 		lesson_to_content_map = {}
 		for node in nodes:
-			ntiids.add( node.ContentNTIID )
-			try:
-				if node.ContentNTIID != node.LessonOverviewNTIID:
-					ntiids.add( node.LessonOverviewNTIID )
-					lesson_to_content_map[ node.LessonOverviewNTIID ] = node.ContentNTIID
-			except AttributeError:
-				pass
+			ntiids.add(node.ContentNTIID)
+			if node.ContentNTIID != node.LessonOverviewNTIID:
+				ntiids.add(node.LessonOverviewNTIID)
+				lesson_to_content_map[node.LessonOverviewNTIID] = node.ContentNTIID
+		ntiids.discard(None)
 		return ntiids, lesson_to_content_map
 
 	def _do_current(self, course, record):
@@ -567,13 +558,13 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 
 		nodes = self._outline_nodes(course)
 		namespaces = {node.src for node in nodes}
-		ntiids, lesson_to_content_map = self._get_node_ntiids( nodes )
+		ntiids, lesson_to_content_map = self._get_node_ntiids(nodes)
 		result['ContainerOrder'] = [node.ContentNTIID for node in nodes]
 
 		def _add_item_to_container(container_ntiid, item):
 			# We only want to map to our ContentNTIID here, for clients.
 			if container_ntiid in lesson_to_content_map:
-				container_ntiid = lesson_to_content_map.get( container_ntiid )
+				container_ntiid = lesson_to_content_map.get(container_ntiid)
 			containers_seen.setdefault(container_ntiid, set())
 			seen = containers_seen[container_ntiid]
 			# Avoid dupes but retain order.
@@ -606,7 +597,7 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 					if ntiid in ntiids:
 						_add_item_to_container(ntiid, item)
 			items[item.ntiid] = to_external_object(item)
-			return max( item.lastModified, ref_obj.lastModified )
+			return max(item.lastModified, ref_obj.lastModified)
 
 		sites = get_component_hierarchy_names()
 		for group in catalog.search_objects(
@@ -616,7 +607,7 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 
 			for item in group or ():
 				# ignore non media items
-				if 	(	 not IMediaRef.providedBy(item)
+				if 	(not IMediaRef.providedBy(item)
 					 and not INTIMedia.providedBy(item)
 					 and not INTIMediaRoll.providedBy(item)
 					 and not INTISlideDeck.providedBy(item)):
@@ -655,18 +646,18 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 		# access on course. We could also bake this into a mixin.
 		prin = get_participation_principal()
 		return  prin is not None \
-			and IUnauthenticatedPrincipal.providedBy( prin ) \
-			and IAnonymouslyAccessibleCourseInstance.providedBy( course ) \
+			and IUnauthenticatedPrincipal.providedBy(prin) \
+			and IAnonymouslyAccessibleCourseInstance.providedBy(course) \
 
 	def _predicate(self, course, record):
 		return 		record is not None \
-				or	has_permission( ACT_CONTENT_EDIT, course, self.request ) \
-				or  self._allow_anonymous_access( course )
+				or	has_permission(ACT_CONTENT_EDIT, course, self.request) \
+				or  self._allow_anonymous_access(course)
 
 	def __call__(self):
 		course = ICourseInstance(self.request.context)
 		record = get_enrollment_record(course, self.remoteUser) if self.remoteUser else None
-		if not self._predicate( course, record ):
+		if not self._predicate(course, record):
 			raise hexc.HTTPForbidden(_("Must be enrolled in a course."))
 
 		self.request.acl_decoration = False  # avoid acl decoration
@@ -684,10 +675,10 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 			   request_method='GET',
 			   permission=nauth.ACT_CONTENT_EDIT,
 			   context=ICourseOutlineNode)
-class RecursiveCourseTransactionHistoryView( AbstractRecursiveTransactionHistoryView ):
+class RecursiveCourseTransactionHistoryView(AbstractRecursiveTransactionHistoryView):
 	"""
 	A batched view to get all edits that have occurred in this outline node, recursively.
 	"""
 
 	def _get_items(self):
-		return self._get_node_items( self.context )
+		return self._get_node_items(self.context)
