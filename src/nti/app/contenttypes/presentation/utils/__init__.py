@@ -148,6 +148,7 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 	context = item if context is None else item
 	record = get_enrollment_record(context, user) if record is None else record
 	if record is None:
+		logger.warn("No enrollment record for user %s under %s", user, context)
 		return None
 
 	# enrollment scope. When scope is equals to 'All' it means user is an instructor
@@ -156,6 +157,7 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 	# get course pointed by the discussion ref
 	course = get_course_for_discussion(item, context=record.CourseInstance)
 	if course is None:
+		logger.warn("No course found for discussion %s", item)
 		return None
 
 	# if course is a subinstance, make sure we are enrolled in it and
@@ -169,10 +171,12 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 	key = get_discussion_key(item)
 	discussion = ICourseDiscussions(course).get(key) if key else None
 	scopes = get_implied_by_scopes(discussion.scopes) if discussion is not None else ()
+	logger.debug("Implied scopes for %s are %s", key, scopes)
 
 	if		(not scope) \
 		or	(not scopes) \
 		or	(scope != ES_ALL and ES_ALL not in scopes and scope not in scopes):
+		logger.warn("User scope %s did not match implied scopes %s", scope, scopes)
 		return None
 	else:
 		topic = None
