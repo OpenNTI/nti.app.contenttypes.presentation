@@ -323,7 +323,7 @@ def _handle_multipart(context, user, contentObject, sources, provided=None):
 				filer.remove(location)
 			# save a in a new file
 			key = get_safe_source_filename(source, name)
-			location = filer.save(source, key, overwrite=False,
+			location = filer.save(key, source, overwrite=False,
 								  bucket=ASSETS_FOLDER, context=contentObject)
 			setattr(contentObject, name, location)
 
