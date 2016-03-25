@@ -965,11 +965,10 @@ class PackagePresentationAssetPutView(PresentationAssetPutView):
 
 	@Lazy
 	def _site_name(self):
-		package = find_interface(self.context, IContentPackage, strict=False)
-		if package is None:
+		folder = find_interface(self.context, IHostPolicyFolder, strict=False)
+		if folder is None:
 			result = super(PackagePresentationAssetPutView, self)._site_name
 		else:
-			folder = find_interface(self.context, IHostPolicyFolder, strict=False)
 			result = folder.__name__
 		return result
 
@@ -980,7 +979,7 @@ class PackagePresentationAssetPutView(PresentationAssetPutView):
 			return result
 		package = find_interface(self.context, IContentPackage, strict=False)
 		if package is not None:
-			sites = get_component_hierarchy_names() # check all sites
+			sites = get_component_hierarchy_names() # check sites
 			courses = get_courses_for_packages(sites, package.ntiid)
 			result = courses[0] if courses else None # should always find one
 		return result
