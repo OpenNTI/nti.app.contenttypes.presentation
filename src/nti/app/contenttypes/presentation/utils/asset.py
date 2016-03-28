@@ -71,12 +71,15 @@ from nti.traversal.traversal import find_interface
 
 def get_db_connection(registry=None):
 	registry = get_site_registry(registry)
-	result = IConnection(registry, None)
+	if registry == component.getGlobalSiteManager():
+		result = None
+	else:
+		result = IConnection(registry)
 	return result
 db_connection = get_db_connection
 
 def add_2_connection(item, registry=None, connection=None):
-	connection = db_connection(registry) if connection is None else connection
+	connection = get_db_connection(registry) if connection is None else connection
 	if connection is not None and getattr(item, '_p_jar', None) is None:
 		connection.add(item)
 	result = getattr(item, '_p_jar', None) is not None
