@@ -23,6 +23,8 @@ from nti.contentlibrary.interfaces import IContentPackageLibrary
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
+from nti.contenttypes.presentation.interfaces import INTIMedia
+from nti.contenttypes.presentation.interfaces import INTIMediaRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
@@ -108,6 +110,8 @@ def _update_assets(seen):
 		for item in group or ():
 			if not IPackagePresentationAsset.providedBy( item ):
 				continue
+			if INTIMediaRef.providedBy( item ):
+				item = INTIMedia(item)
 			try:
 				# Easiest way is to check if our lineage reaches a site folder.
 				find_nearest_site( item )
