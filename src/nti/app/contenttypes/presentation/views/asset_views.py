@@ -905,7 +905,7 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 		if sources:
 			validate_sources(self.remoteUser, contentObject, sources)
 			_handle_multipart(self._course, self.remoteUser, contentObject, sources)
-	
+
 		self.request.response.status_int = 201
 		self._handle_asset(provided, contentObject, creator.username)
 		return self.transformOutput(contentObject)
@@ -943,8 +943,8 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 			if courses:  # pick first to store assets
 				validate_sources(self.remoteUser, result, sources)
 				_handle_multipart(courses.__iter__().next(),
-								  self.remoteUser, 
-								  self.context, 
+								  self.remoteUser,
+								  self.context,
 								  sources)
 
 		self.postflight(contentObject, externalValue, data)

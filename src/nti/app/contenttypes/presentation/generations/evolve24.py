@@ -147,7 +147,7 @@ def _index_asset( current_site, item, course, package, lesson, group, site_name,
 
 	if INTISlideDeck.providedBy( item ):
 		containers.append( item.ntiid )
-		for slide_item in chain(item.Slides, item.Videos):
+		for slide_item in chain(item.Slides or (), item.Videos or ()):
 			_do_index( slide_item, containers, namespace, site_name, current_site, intids, catalog )
 	return True
 
