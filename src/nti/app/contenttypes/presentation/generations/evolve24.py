@@ -108,10 +108,10 @@ def _update_assets(seen):
 			continue
 		seen.add(name)
 		for item in group or ():
-			if not IPackagePresentationAsset.providedBy( item ):
-				continue
 			if INTIMediaRef.providedBy( item ):
 				item = INTIMedia(item)
+			if not IPackagePresentationAsset.providedBy( item ):
+				continue
 			try:
 				# Easiest way is to check if our lineage reaches a site folder.
 				find_nearest_site( item )
