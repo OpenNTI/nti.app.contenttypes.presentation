@@ -5,7 +5,6 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import
-
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -18,6 +17,8 @@ from zope import component
 from zope import interface
 
 from zope.component.hooks import site, setHooks
+
+from zope.intid.interfaces import IIntIds
 
 from nti.app.contenttypes.presentation.utils import component_site
 
@@ -44,6 +45,8 @@ from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
 
 from nti.dataserver.traversal import find_nearest_site
+
+from nti.intid.common import addIntId
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -112,7 +115,19 @@ def _get_site_name( group ):
 						  provided=provided,
 						  name=group.ntiid)
 
-def _index_asset( current_site, item, course, package, lesson, group, site_name ):
+def _do_index( item, containers, namespace, site_name, current_site, intids, catalog ):
+	# Validate intid before indexing
+	item_intid = intids.queryId(item)
+	if item_intid is None:
+		logger.info( '[%s] Item without intid (%s)',
+					 current_site.__name__, item.ntiid )
+		addIntId( item )
+	catalog.index(item,
+				  container_ntiids=containers,
+				  namespace=namespace,
+				  sites=site_name)
+
+def _index_asset( current_site, item, course, package, lesson, group, site_name, intids ):
 	catalog = get_library_catalog()
 	entry = ICourseCatalogEntry( course, None )
 	if package is None:
@@ -127,21 +142,16 @@ def _index_asset( current_site, item, course, package, lesson, group, site_name 
 		containers.append( package.ntiid )
 	if entry is not None:
 		containers.append( entry.ntiid )
-	catalog.index(item,
-				  container_ntiids=containers,
-				  namespace=namespace,
-				  sites=site_name)
+
+	_do_index( item, containers, namespace, site_name, current_site, intids, catalog )
 
 	if INTISlideDeck.providedBy( item ):
 		containers.append( item.ntiid )
 		for slide_item in chain(item.Slides, item.Videos):
-			catalog.index(slide_item,
-					  	container_ntiids=containers,
-					  	namespace=namespace,
-					  	sites=site_name)
+			_do_index( slide_item, containers, namespace, site_name, current_site, intids, catalog )
 	return True
 
-def _update_assets( seen, current_site ):
+def _update_assets( seen, current_site, intids ):
 	result = index_count = 0
 	library = component.queryUtility(IContentPackageLibrary)
 	if library is None:
@@ -175,9 +185,9 @@ def _update_assets( seen, current_site ):
 			except TypeError:
 				if _update_asset_lineage( current_site, item, lesson, package ):
 					result += 1
-			# Now update index
 			index_count += 1
-			if _index_asset( current_site, item, course, package, lesson, group, site_name ):
+			# Now update index
+			if _index_asset( current_site, item, course, package, lesson, group, site_name, intids ):
 				index_count += 1
 
 	logger.info('[%s] Lineage fixed (%s) and indexed (%s)',
@@ -204,16 +214,19 @@ def do_evolve(context, generation=generation):
 		if library is not None:
 			library.syncContentPackages()
 
+		lsm = dataserver_folder.getSiteManager()
+		intids = lsm.getUtility(IIntIds)
 		seen = set()
 		# Do not need to do this in global site.
 		for current_site in get_all_host_sites():
 			with site(current_site):
-				_update_assets( seen, current_site )
+				_update_assets( seen, current_site, intids )
 		logger.info('Dataserver evolution %s done.', generation)
 
 def evolve(context):
 	"""
 	Evolve to 24 by fixing lineage for authored assets, putting them in
-	the correct container, and making sure everything is indexed correctly.
+	the correct container, and making sure everything has an intid and
+	is indexed correctly.
 	"""
 	do_evolve(context, generation)
