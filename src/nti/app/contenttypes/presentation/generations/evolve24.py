@@ -92,7 +92,7 @@ def _update_asset_lineage( current_site, item, lesson, package ):
 		if lesson_node is not None:
 			new_unit = find_object_with_ntiid( lesson_node.ContentNTIID )
 
-	if new_unit is None:
+	if new_unit is None or not IContentUnit.providedBy( new_unit ):
 		# None of the above, use our course content package.
 		new_unit = package
 
