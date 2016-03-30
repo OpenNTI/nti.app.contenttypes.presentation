@@ -99,3 +99,15 @@ class TestLesson(unittest.TestCase):
 		assert_that(lesson.remove(lesson.Items[0]), is_(True))
 		assert_that(lesson, has_length(4))
 
+	def test_ntilessonoverview_exporter(self):
+		path = os.path.join(os.path.dirname(__file__), 'ntilessonoverview.json')
+		with open(path, "r") as fp:
+			source = simplejson.loads(prepare_json_text(fp.read()))
+
+		lesson = create_lessonoverview_from_external(source)
+		ext_obj = to_external_object(lesson, name="exporter")
+		assert_that(ext_obj, has_key('Class'))
+		assert_that(ext_obj, has_entry('NTIID', is_(u"tag:nextthought.com,2011-10:OU-NTILessonOverview-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:11.06_LESSON")))
+		assert_that(ext_obj, has_entry('MimeType', is_(u"application/vnd.nextthought.ntilessonoverview")))
+		assert_that(ext_obj, has_entry('title', is_(u"11.6 Apply Your Knowledge")))
+		assert_that(ext_obj, has_entry('Items', has_length(5)))
