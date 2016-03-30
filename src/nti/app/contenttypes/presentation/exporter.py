@@ -77,6 +77,7 @@ class LessonOverviewsExporer(object):
 				and is_internal_file_link(value):
 				# get resource
 				resource = get_file_from_external_link(value)
+				contentType = resource.contentType
 				if ICourseContentResource.providedBy(resource):
 					path = resource.path
 					path = os.path.split(path)[0] # remove resource name
@@ -84,7 +85,8 @@ class LessonOverviewsExporer(object):
 				else:
 					path = ASSETS_FOLDER
 				# save resource
-				filer.save(resource.name, resource, bucket=path, overwrite=True)
+				filer.save(resource.name, resource, bucket=path, 
+						   contentType=contentType, overwrite=True)
 				# replace href
 				internal = NTI_COURSE_FILE_SCHEME + path + "/" + resource.name
 				ext_obj[name] = internal  # replace
