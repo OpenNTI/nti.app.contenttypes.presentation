@@ -96,7 +96,7 @@ class LessonOverviewsExporer(object):
 		course = ICourseInstance(context)
 		nodes = _outline_nodes(course.Outline, seen)
 		for node, lesson in nodes:
-			ext_obj = to_external_object(lesson, name="exporter")
+			ext_obj = to_external_object(lesson, name="exporter", decorate=False)
 			# save to json
 			source = StringIO()
 			simplejson.dump(ext_obj, source, indent=4)
