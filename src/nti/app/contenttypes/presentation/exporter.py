@@ -75,15 +75,18 @@ class LessonOverviewsExporer(object):
 			if 	value is not None \
 				and isinstance(value, six.string_types) \
 				and is_internal_file_link(value):
+				# get resource
 				resource = get_file_from_external_link(value)
 				if ICourseContentResource.providedBy(resource):
 					path = resource.path
-					path = os.path.split(path)[0]
+					path = os.path.split(path)[0] # remove resource name
+					path = path[1:] if path.startswith('/') else path
 				else:
 					path = ASSETS_FOLDER
+				# save resource
 				filer.save(resource.name, resource, bucket=path, overwrite=True)
-				path = "/" + path if not path.startswith('/') else path
-				internal = NTI_COURSE_FILE_SCHEME + path
+				# replace href
+				internal = NTI_COURSE_FILE_SCHEME + path + "/" + resource.name
 				ext_obj[name] = internal  # replace
 		# check 'children'
 		if IItemAssetContainer.providedBy(asset):
