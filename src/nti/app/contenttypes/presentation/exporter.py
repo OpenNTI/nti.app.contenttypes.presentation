@@ -9,23 +9,14 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-import os
 import re
-import six
 from StringIO import StringIO
 
 import simplejson
 
 from zope import interface
 
-from nti.app.products.courseware import ASSETS_FOLDER
-
-from nti.app.products.courseware.resources.interfaces import ICourseContentResource
-
-from nti.app.products.courseware.resources.utils import is_internal_file_link
-from nti.app.products.courseware.resources.utils import get_file_from_external_link
-
-from nti.contenttypes.courses.interfaces import NTI_COURSE_FILE_SCHEME
+from nti.app.products.courseware.utils.exporter import save_resources_to_filer
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSectionExporter
@@ -67,29 +58,9 @@ def safe_filename(s):
 class LessonOverviewsExporer(object):
 
 	def _process_asset_resources(self, asset, ext_obj, filer):
-		# examine interface
-		for name in iface_of_asset(asset):
-			if name.startswith('_'):
-				continue
-			value = getattr(asset, name, None)
-			if 	value is not None \
-				and isinstance(value, six.string_types) \
-				and is_internal_file_link(value):
-				# get resource
-				resource = get_file_from_external_link(value)
-				contentType = resource.contentType
-				if ICourseContentResource.providedBy(resource):
-					path = resource.path
-					path = os.path.split(path)[0] # remove resource name
-					path = path[1:] if path.startswith('/') else path
-				else:
-					path = ASSETS_FOLDER
-				# save resource
-				filer.save(resource.name, resource, bucket=path, 
-						   contentType=contentType, overwrite=True)
-				# replace href
-				internal = NTI_COURSE_FILE_SCHEME + path + "/" + resource.name
-				ext_obj[name] = internal  # replace
+		# save asset resources
+		provided = iface_of_asset(asset)
+		save_resources_to_filer(provided, asset, filer, ext_obj)
 		# check 'children'
 		if IItemAssetContainer.providedBy(asset):
 			ext_items = ext_obj.get(ITEMS) or ()
