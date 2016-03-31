@@ -25,6 +25,7 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation import iface_of_asset
 
+from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 
 from nti.externalization.externalization import to_external_object
@@ -63,10 +64,17 @@ class LessonOverviewsExporer(object):
 		save_resources_to_filer(provided, asset, filer, ext_obj)
 		# check 'children'
 		if IItemAssetContainer.providedBy(asset):
-			ext_items = ext_obj.get(ITEMS) or ()
-			asset_items = asset.Items if asset.Items is not None else ()
-			for item, item_ext in zip(asset_items, ext_items):
-				self._process_asset_resources(item, item_ext, filer)
+			if INTISlideDeck.providedBy(asset):
+				for name in ('Videos', 'Slides'):
+					ext_items = ext_obj.get(name) or ()
+					deck_items = getattr(asset, name, None) or ()
+					for item, item_ext in zip(deck_items, ext_items):
+						self._process_asset_resources(item, item_ext, filer)
+			else:
+				ext_items = ext_obj.get(ITEMS) or ()
+				asset_items = asset.Items if asset.Items is not None else ()
+				for item, item_ext in zip(asset_items, ext_items):
+					self._process_asset_resources(item, item_ext, filer)
 
 	def _do_export(self, context, filer, seen):
 		course = ICourseInstance(context)
