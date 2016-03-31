@@ -115,7 +115,7 @@ def get_presentation_asset_containers(item):
 	return result
 
 def get_course_by_relative_path_parts(*parts):
-	for site in get_component_hierarchy_names(reverse=True):
+	for site in get_component_hierarchy_names():
 		with current_site(get_host_site(site)):
 			context = component.getUtility(IPersistentCourseCatalog)
 			for name in parts:
