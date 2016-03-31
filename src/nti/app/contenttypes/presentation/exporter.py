@@ -90,7 +90,7 @@ class LessonOverviewsExporer(object):
 			# save to filer
 			name = safe_filename(node.src or lesson.ntiid)
 			name = name + '.json' if not name.endswith('.json') else name
-			filer.save(name, source, overwrite=True, contentType=u"text/x-json")
+			filer.save(name, source, overwrite=True, contentType=u"application/x-json")
 
 	def export(self, context, filer):
 		seen = set()
