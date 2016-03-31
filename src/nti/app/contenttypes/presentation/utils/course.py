@@ -5,6 +5,7 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+from nti.site.hostpolicy import get_host_site
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -13,6 +14,7 @@ from zope import component
 from zope import interface
 
 from zope.component.hooks import getSite
+from zope.component.hooks import site as current_site
 
 from zope.container.contained import Contained
 
@@ -113,24 +115,23 @@ def get_presentation_asset_containers(item):
 	return result
 
 def get_course_by_relative_path_parts(*parts):
-	context = component.getUtility(IPersistentCourseCatalog)
-	for name in parts:
-		transformed = name.replace('_', ' ')
-		try:
-			if name in context:
-				context = context[name]
-			elif transformed in context:
-				context = context[transformed]
-			else:
-				return None
-			if ICourseInstance.providedBy(context):
-				return context
-		except TypeError:
-			logger.exception("context %s is not a valid map", context)
-			break
+	for site in get_component_hierarchy_names(reverse=True):
+		with current_site(get_host_site(site)):
+			context = component.getUtility(IPersistentCourseCatalog)
+			for name in parts:
+				transformed = name.replace('_', ' ')
+				try:
+					if name in context:
+						context = context[name]
+					elif transformed in context:
+						context = context[transformed]
+					if ICourseInstance.providedBy(context):
+						return context
+				except TypeError:
+					logger.exception("context %s is not a valid map", context)
+					break
 	logger.debug("Could not find a course for paths '%s' under site '%s'",
-				 parts, getSite().__name__)
-	return None
+			 	 parts, getSite().__name__)
 
 def get_entry_by_relative_path_parts(*parts):
 	course = get_course_by_relative_path_parts(*parts)
