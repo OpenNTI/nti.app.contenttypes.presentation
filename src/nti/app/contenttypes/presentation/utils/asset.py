@@ -23,8 +23,6 @@ from zope.location.interfaces import ILocation
 
 from zope.location.location import locate
 
-from zope.traversing.interfaces import IEtcNamespace
-
 from ZODB.interfaces import IConnection
 
 from nti.common.random import generate_random_hex_string
@@ -59,6 +57,8 @@ from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
+
+from nti.site.hostpolicy import get_host_site
 
 from nti.site.interfaces import IHostPolicyFolder
 
@@ -95,14 +95,9 @@ def intid_register(item, registry=None, connection=None, event=True):
 	return False
 
 def get_registry_by_name(name):
-	hostsites = component.getUtility(IEtcNamespace, name='hostsites')
-	try:
-		folder = hostsites[name]
-		registry = folder.getSiteManager()
-		return registry
-	except KeyError:
-		pass
-	return None
+	folder = get_host_site(name, safe=True)
+	result = folder.getSiteManager() if folder is not None else None
+	return result
 registry_by_name = get_registry_by_name
 
 def get_component_site(context, provided, name=None):
@@ -111,17 +106,13 @@ def get_component_site(context, provided, name=None):
 	if folder is None:
 		sites_names = get_component_hierarchy_names()
 		name = name or getattr(context, 'ntiid', None)
-		hostsites = component.getUtility(IEtcNamespace, name='hostsites')
 		for idx in range(len(sites_names) - 1, -1, -1):  # higher sites first
-			try:
-				site_name = sites_names[idx]
-				folder = hostsites[site_name]
-				registry = folder.getSiteManager()
-				if registry.queryUtility(provided, name=name) == context:
-					result = site_name
-					break
-			except KeyError:
-				pass
+			site_name = sites_names[idx]
+			registry = get_registry_by_name(site_name)
+			if 		registry is not None \
+				and registry.queryUtility(provided, name=name) == context:
+				result = site_name
+				break
 	else:
 		result = folder.__name__
 	return result
@@ -130,8 +121,7 @@ component_site = get_component_site
 def get_component_registry(context, provided, name=None):
 	site_name = component_site(context, provided, name)
 	if site_name:
-		folder = component.getUtility(IEtcNamespace, name='hostsites')[site_name]
-		return folder.getSiteManager()
+		return get_registry_by_name(site_name)
 	return get_site_registry()
 component_registry = get_component_registry
 
