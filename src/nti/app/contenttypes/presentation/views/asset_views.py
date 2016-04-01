@@ -92,6 +92,7 @@ from nti.coremetadata.interfaces import IPublishable
 from nti.contentlibrary.indexed_data import get_site_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
+from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackage
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -162,6 +163,7 @@ from nti.externalization.oids import to_external_ntiid_oid
 from nti.ntiids.ntiids import TYPE_UUID
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_specific
+from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.site.interfaces import IHostPolicyFolder
@@ -512,9 +514,15 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 				ntiid = to_external_ntiid_oid(named)
 				contentType = unicode(named.contentType or u'') or contentType
 
+		# If we do not have a target, and we have a ContentUnit href, use it.
+		if ntiid is None and is_valid_ntiid_string( item.href ):
+			href_obj = find_object_with_ntiid( item.href )
+			if href_obj is not None and IContentUnit.providedBy( href_obj ):
+				ntiid = item.href
+
 		# parse href
 		parsed = urlparse(href) if href else None
-		if parsed is not None and (parsed.scheme or parsed.netloc):  # full url
+		if ntiid is None and parsed is not None and (parsed.scheme or parsed.netloc):  # full url
 			ntiid = make_ntiid(nttype=TYPE_UUID,
 							   provider='NTI',
 							   specific=hexdigest(href.lower()))

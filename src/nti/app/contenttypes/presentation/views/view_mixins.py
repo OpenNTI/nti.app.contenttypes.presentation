@@ -128,7 +128,7 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 
 		children_ntiids = self._get_children_ntiids(context_ntiid)
 		if 		new_parent_ntiid not in children_ntiids \
-			or (old_parent_ntiid
+			or (	old_parent_ntiid
 				and old_parent_ntiid not in children_ntiids):
 			raise hexc.HTTPUnprocessableEntity(_('Cannot move between root objects.'))
 
