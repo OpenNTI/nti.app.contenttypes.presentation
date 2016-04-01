@@ -565,14 +565,14 @@ class TestAssetViews(ApplicationLayerTest):
 		assert_that(source, has_entry('icon', 'http://bleach.com/aizen.jpg'))
 
 		mc_ri.is_callable().with_args().returns(source)
-		
+
 		class CF(object):
 			def save(self, *args, **kwargs):
 				return 'http://bleach.org/ichigo.png'
 			def remove(self, *args, **kwargs):
 				return True
 		mc_cf.is_callable().with_args().returns(CF())
-		
+
 		contents_url = href + '/@@contents'
 		res = self.testapp.post(contents_url,
 								upload_files=[('icon', 'ichigo.png', b'ichigo')],
@@ -824,6 +824,47 @@ class TestAssetViews(ApplicationLayerTest):
 		group_items = group.get('Items')
 		assert_that(group_items, has_length(original_size))
 		assert_that(group_items[-1].get('NTIID'), is_(video_ntiid))
+
+	@WithSharedApplicationMockDS(testapp=True, users=True)
+	def test_relatedwork(self):
+		group_ntiid = 'tag:nextthought.com,2011-10:OU-NTICourseOverviewGroup-CS1323_F_2015_Intro_to_Computer_Programming.lec:01.01_LESSON.0'
+		res = self.testapp.get( '/dataserver2/Objects/%s' % group_ntiid )
+		res = res.json_body
+		group_ntiid = res.get('ntiid')
+		assert_that(res.get('Items'), has_length(1))
+		contents_link = self.require_link_href_with_rel(res, VIEW_ORDERED_CONTENTS)
+
+		source = self._load_resource('relatedwork.json')
+		source.pop('NTIID', None)
+		# In some cases, the client only gives us an href that points to content.
+		# Validate we handle that and the given target case.
+		non_target_source = dict( source )
+		non_target_source.pop('target-ntiid', None )
+		non_target_source.pop('target', None)
+		unit_ntiid = source.get( 'href' )
+
+		def _test_reading( reading_source ):
+			res = self.testapp.post_json(contents_link, reading_source, status=201)
+			res = res.json_body
+			ref_ntiid = res.get( 'NTIID' )
+			assert_that( ref_ntiid, not_none() )
+			assert_that( res.get( 'href' ), unit_ntiid )
+			assert_that( res.get( 'target' ), unit_ntiid )
+
+		_test_reading( non_target_source )
+		_test_reading( source )
+
+		# Now an external link
+		external_link = dict( non_target_source )
+		external_link['href'] = 'www.google.com'
+		external_link['targetMimeType'] = "application/vnd.nextthought.externallink"
+		res = self.testapp.post_json(contents_link, external_link, status=201)
+		res = res.json_body
+		ref_ntiid = res.get( 'NTIID' )
+		assert_that( ref_ntiid, not_none() )
+		assert_that( res.get('href'), is_( 'www.google.com' ) )
+		assert_that( res.get('target'), is_not( 'www.google.com' ) )
+		assert_that( res.get('type'), is_( "application/vnd.nextthought.externallink" ) )
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_timeline(self):
