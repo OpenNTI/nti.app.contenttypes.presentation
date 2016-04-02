@@ -584,9 +584,21 @@ def get_cataloged_namespaces(ntiid, catalog=None, sites=None):
 	result.discard(None)
 	return result
 
-def synchronize_course_lesson_overview(course, intids=None, catalog=None, **kwargs):
+def get_sibling_key(source, unit=None, buckets=None):
+	result = None
+	for bucket in buckets or ():
+		result = bucket.getChildNamed(source)
+		if result is not None:
+			break
+	if result is None and unit is not None:
+		result = unit.does_sibling_entry_exist(source)
+	return result
+
+def synchronize_course_lesson_overview(course, intids=None, catalog=None,
+									   buckets=None, **kwargs):
 	result = []
 	namespaces = set()
+	buckets = (course.root,) if not buckets else buckets
 
 	course_packages = get_course_packages(course)
 	catalog = get_library_catalog() if catalog is None else catalog
@@ -622,7 +634,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None, **kwar
 		# ready to sync
 		namespaces.add(namespace)  # this is ntiid based file (unique)
 		for content_package in course_packages:
-			sibling_key = content_package.does_sibling_entry_exist(namespace)
+			sibling_key = get_sibling_key(namespace, content_package, buckets)
 			if not sibling_key:
 				break
 
