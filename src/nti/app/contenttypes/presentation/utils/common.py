@@ -104,14 +104,14 @@ def remove_site_invalid_assets(current, intids=None, catalog=None, seen=None):
 			logger.warn("Removing invalid registration (%s,%s) from site %s", 
 						provided.__name__, ntiid, site_name)
 			removed.add(ntiid)
-			remove_presentation_asset(item, registry, catalog)
+			remove_presentation_asset(item, registry, catalog, name=ntiid)
 			continue
 
 		if IItemAssetContainer.providedBy(item) and not has_a_valid_parent(item, intids):
 			logger.warn("Removing unreachable (%s,%s) from site %s",
 						provided.__name__, ntiid, site_name)
 			removed.add(ntiid)
-			remove_presentation_asset(item, registry, catalog)
+			remove_presentation_asset(item, registry, catalog, name=ntiid)
 			continue
 
 		# registration not in base site
