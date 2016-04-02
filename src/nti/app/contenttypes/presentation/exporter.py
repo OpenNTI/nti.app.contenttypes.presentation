@@ -9,7 +9,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-import re
 from StringIO import StringIO
 
 import simplejson
@@ -17,6 +16,8 @@ import simplejson
 from zope import interface
 
 from nti.app.products.courseware.utils.exporter import save_resources_to_filer
+
+from nti.common.file import safe_filename
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSectionExporter
@@ -51,9 +52,6 @@ def _outline_nodes(outline, seen):
 	if outline is not None:
 		_recur(outline)
 	return result
-
-def safe_filename(s):
-	return re.sub(r'[/<>:"\\|?*]+', '_', s) if s else s
 
 @interface.implementer(ICourseSectionExporter)
 class LessonOverviewsExporer(object):
