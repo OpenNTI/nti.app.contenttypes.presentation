@@ -247,9 +247,11 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None, sites=No
 								 base=node.ntiid,
 								 extra=extra)
 
-	result = NTILessonOverView(ntiid=ntiid, title=getattr(node, 'title', None))
-	result.__parent__ = node
+	result = NTILessonOverView()
+	result.__parent__ = node # lineage
+	result.ntiid = ntiid
 	result.creator = creator
+	result.title = getattr(node, 'title', None)
 
 	# XXX If there is no lesson set it to the overview
 	if hasattr(node, 'ContentNTIID') and not node.ContentNTIID:
@@ -263,6 +265,16 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None, sites=No
 
 	# XXX: if registry is specified register the new node
 	if registry is not None:
+		# add to course container
+		course = get_course_for_node(node)
+		if course is not None:
+			entry = ICourseCatalogEntry(course)
+			container = IPresentationAssetContainer(course)
+			ntiids = (entry.ntiid,)  # container ntiid
+			container[ntiid] = result  # add to container
+		else:
+			ntiids = None
+			
 		# register lesson
 		intid_register(result, registry=registry, event=False)
 		registerUtility(registry,
@@ -273,16 +285,8 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None, sites=No
 		# XXX: set the src field to be unique for indexing see MediaByOutlineNode
 		if not getattr(node, 'src', None):
 			node.src = to_external_ntiid_oid(result)
-
-		# XXX index lesson
-		course = get_course_for_node(node)
-		if course is not None:
-			entry = ICourseCatalogEntry(course)
-			container = IPresentationAssetContainer(course)
-			ntiids = (entry.ntiid,)  # container ntiid
-			container[ntiid] = result  # add to container
-		else:
-			ntiids = None
+			
+		# index
 		catalog = get_library_catalog() if catalog is None else catalog
 		catalog.index(result, container_ntiids=ntiids,
 					  namespace=node.src, sites=sites)
