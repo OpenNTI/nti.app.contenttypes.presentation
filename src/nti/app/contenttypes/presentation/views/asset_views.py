@@ -1075,8 +1075,9 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 
 	@Lazy
 	def _site_name(self):
-		folder = find_interface(self.context, IHostPolicyFolder, strict=False)
-		result = folder.__name__
+		result = component_site(self.context, 
+								iface_of_asset(self.context),
+								self.context.ntiid)
 		return result
 
 	@Lazy
