@@ -584,14 +584,24 @@ def get_cataloged_namespaces(ntiid, catalog=None, sites=None):
 	result.discard(None)
 	return result
 
-def get_sibling_key(source, unit=None, buckets=None):
-	result = None
+def does_sibling_entry_exist(source, unit=None, buckets=None):
+	# seek in buckets first
 	for bucket in buckets or ():
 		result = bucket.getChildNamed(source)
 		if result is not None:
-			break
-	if result is None and unit is not None:
-		result = unit.does_sibling_entry_exist(source)
+			return True
+	if unit is not None:
+		return unit.does_sibling_entry_exist(source)
+	return False
+
+def read_contents_of_sibling_entry(source, unit=None, buckets=None):
+	# asumme the source exists either the buckets or in unit
+	for bucket in buckets or ():
+		result = bucket.getChildNamed(source)
+		if result is not None: # it's a Key
+			return result.readContents()
+	if  unit is not None:
+		result = unit.read_contents_of_sibling_entry(source)
 	return result
 
 def synchronize_course_lesson_overview(course, intids=None, catalog=None,
@@ -634,7 +644,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 		# ready to sync
 		namespaces.add(namespace)  # this is ntiid based file (unique)
 		for content_package in course_packages:
-			sibling_key = get_sibling_key(namespace, content_package, buckets)
+			sibling_key = does_sibling_entry_exist(namespace, content_package, buckets)
 			if not sibling_key:
 				break
 
@@ -670,7 +680,9 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 															 course=course))
 
 			logger.debug("Synchronizing %s", namespace)
-			index_text = content_package.read_contents_of_sibling_entry(namespace)
+			index_text = read_contents_of_sibling_entry(namespace,
+														content_package, 
+														buckets)
 			overview, rmv = _load_and_register_lesson_overview_json(index_text,
 																	node=node,
 																	validate=True,
