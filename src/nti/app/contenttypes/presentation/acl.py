@@ -24,6 +24,8 @@ from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTISlideVideo
+from nti.contenttypes.presentation.interfaces import INTITimelineRef
+from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -70,10 +72,6 @@ class NTIAudioACLProvider(BasePresentationAssetACLProvider):
 class NTIVideoACLProvider(BasePresentationAssetACLProvider):
 	pass
 
-@component.adapter(INTISlideDeck)
-class NTISlideDeckACLProvider(BasePresentationAssetACLProvider):
-	pass
-
 @component.adapter(INTIRelatedWorkRef)
 class NTIRelatedWorkRefACLProvider(BasePresentationAssetACLProvider):
 	pass
@@ -82,8 +80,20 @@ class NTIRelatedWorkRefACLProvider(BasePresentationAssetACLProvider):
 class NTITimelineACLProvider(BasePresentationAssetACLProvider):
 	pass
 
+@component.adapter(INTITimelineRef)
+class NTITimelineRefACLProvider(BasePresentationAssetACLProvider):
+	pass
+
+@component.adapter(INTISlideDeck)
+class NTISlideDeckACLProvider(BasePresentationAssetACLProvider):
+	pass
+
 @component.adapter(INTISlideVideo)
 class NTISlideVideoACLProvider(BasePresentationAssetACLProvider):
+	pass
+
+@component.adapter(INTISlideDeckRef)
+class NTISlideDeckRefACLProvider(BasePresentationAssetACLProvider):
 	pass
 
 class AbstractCourseLineageACLProvider(object):

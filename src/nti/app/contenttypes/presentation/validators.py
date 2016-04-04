@@ -21,7 +21,11 @@ from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTIPollRef
 from nti.contenttypes.presentation.interfaces import INTIAudioRef
 from nti.contenttypes.presentation.interfaces import INTIVideoRef
+from nti.contenttypes.presentation.interfaces import INTITimeline
+from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
+from nti.contenttypes.presentation.interfaces import INTITimelineRef
+from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 
 from .interfaces import IItemRefValidator
@@ -72,3 +76,15 @@ class _AudioRefValidator(_ItemRefValidator):
 	field_name = 'ntiid'
 	item_type = 'Audio'
 	provided = INTIAudio
+
+@component.adapter(INTISlideDeckRef)
+class _SlideDeckRefValidator(_ItemRefValidator):
+	field_name = 'ntiid'
+	item_type = 'SlideDeck'
+	provided = INTISlideDeck
+
+@component.adapter(INTITimelineRef)
+class _TimelineRefValidator(_ItemRefValidator):
+	field_name = 'ntiid'
+	item_type = 'Timeline'
+	provided = INTITimeline

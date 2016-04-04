@@ -29,16 +29,20 @@ from nti.contenttypes.presentation import iface_of_asset
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
-from nti.contenttypes.presentation.interfaces import INTIAudio
+from nti.contenttypes.presentation.interfaces import INTIAudio 
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTIPollRef
 from nti.contenttypes.presentation.interfaces import INTIAudioRef
 from nti.contenttypes.presentation.interfaces import INTIMediaRef
 from nti.contenttypes.presentation.interfaces import INTIVideoRef
+from nti.contenttypes.presentation.interfaces import INTITimeline
+from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import INTIInquiryRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionRef
+from nti.contenttypes.presentation.interfaces import INTITimelineRef
+from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import IGroupOverViewable
@@ -124,6 +128,18 @@ def _pollref_to_poll(context):
 @component.adapter(INTIInquiryRef)
 def _inquiryref_to_inquiry(context):
 	result = component.queryUtility(IQInquiry, name=context.target)
+	return result
+
+@component.adapter(INTISlideDeckRef)
+@interface.implementer(INTISlideDeck)
+def _slideckref_to_slidedeck(context):
+	result = component.queryUtility(INTISlideDeck, name=context.target)
+	return result
+
+@interface.implementer(INTITimeline)
+@component.adapter(INTITimelineRef)
+def _timelineref_to_timeline(context):
+	result = component.queryUtility(INTITimeline, name=context.target)
 	return result
 
 @component.adapter(IPresentationAsset)

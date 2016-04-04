@@ -23,6 +23,8 @@
 	<adapter factory=".validators._AudioRefValidator" />
 	<adapter factory=".validators._VideoRefValidator" />
 	<adapter factory=".validators._SurveyRefValidator" />
+	<adapter factory=".validators._TimelineRefValidator" />
+	<adapter factory=".validators._SlideDeckRefValidator" />
 	<adapter factory=".validators._AssignmentRefValidator" />
 
 	<adapter factory=".adapters._pollref_to_poll" />
@@ -32,6 +34,8 @@
 	<adapter factory=".adapters._surveyref_to_survey" />
 	<adapter factory=".adapters._inquiryref_to_inquiry" />
 	<adapter factory=".adapters._questionref_to_question" />
+	<adapter factory=".adapters._slideckref_to_slidedeck" />
+	<adapter factory=".adapters._timelineref_to_timeline" />
 	<adapter factory=".adapters._assignmentref_to_assignment" />
 	<adapter factory=".adapters._questionsetref_to_questionset" />
 
@@ -54,9 +58,11 @@
 	<adapter factory=".acl.NTIMediaRollACLProvider" />
 	<adapter factory=".acl.NTISlideDeckACLProvider" />
 	<adapter factory=".acl.NTISlideVideoACLProvider" />
+	<adapter factory=".acl.NTITimelineRefACLProvider" />
+	<adapter factory=".acl.NTISlideDeckRefACLProvider" />
 	<adapter factory=".acl.NTIRelatedWorkRefACLProvider" />
-	<adapter factory=".acl.PresentationAssetACLProvider" />
 	<adapter factory=".acl.NTILessonOverviewACLProvider" />
+	<adapter factory=".acl.PresentationAssetACLProvider" />
 	<adapter factory=".acl.NTICourseOverviewGroupACLProvider" />
 
 	<!-- Traversal-ish stuff -->
@@ -69,13 +75,17 @@
 	<utility factory=".ntiids._NTIAudioRollResolver" name="NTIAudioRoll" />
 	<utility factory=".ntiids._NTIVideoRollResolver" name="NTIVideoRoll" />
 
-	<utility factory=".ntiids._NTITimeLineResolver" name="Timeline" />
-	<utility factory=".ntiids._NTITimeLineResolver" name="NTITimeline" />
-	<utility factory=".ntiids._NTITimeLineResolver" name="JSON:Timeline" />
+	<utility factory=".ntiids._NTITimelineResolver" name="Timeline" />
+	<utility factory=".ntiids._NTITimelineResolver" name="NTITimeline" />
+	<utility factory=".ntiids._NTITimelineResolver" name="JSON:Timeline" />
+
+	<utility factory=".ntiids._NTITimelineRefResolver" name="NTITimelineRef" />
 
 	<utility factory=".ntiids._NTISlideResolver" name="NTISlide" />
 	<utility factory=".ntiids._NTISlideDeckResolver" name="NTISlideDeck" />
 	<utility factory=".ntiids._NTISlideVideoResolver" name="NTISlideVideo" />
+
+	<utility factory=".ntiids._NTISlideDeckRefResolver" name="NTISlideDeckRef" />
 
 	<utility factory=".ntiids._NTIRelatedWorkRefResolver" name="RelatedWork" />
 	<utility factory=".ntiids._NTIRelatedWorkRefResolver" name="RelatedWorkRef" />
