@@ -76,10 +76,12 @@ from nti.contenttypes.presentation.interfaces import INTIVideoRef
 from nti.contenttypes.presentation.interfaces import INTIAudioRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
-from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
+from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import INTISlideVideo
 from nti.contenttypes.presentation.interfaces import INTIQuestionRef
+from nti.contenttypes.presentation.interfaces import INTITimelineRef
+from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -116,7 +118,7 @@ IN_CLASS_SAFE = make_provider_safe(IN_CLASS)
 CREATED_TIME = StandardExternalFields.CREATED_TIME
 LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 
-#: Legacy ipad key for item video rolls
+# : Legacy ipad key for item video rolls
 COLLECTION_ITEMS = u'collectionItems'
 
 @component.adapter(IPresentationAsset)
@@ -166,7 +168,7 @@ class _PresentationAssetRequestDecorator(AbstractAuthenticatedRequestAwareDecora
 		catalog = get_library_catalog()
 		containers = catalog.get_containers(context)
 		result['Containers'] = sorted(containers or ())
-	
+
 	def _do_schema_link(self, context, result):
 		_links = result.setdefault(LINKS, [])
 		link = Link(context, rel='schema', elements=('@@schema',))
@@ -174,7 +176,7 @@ class _PresentationAssetRequestDecorator(AbstractAuthenticatedRequestAwareDecora
 		link.__name__ = ''
 		link.__parent__ = context
 		_links.append(link)
-		
+
 	def _do_decorate_external(self, context, result):
 		self._do_containers(context, result)
 		self._do_schema_link(context, result)
@@ -287,7 +289,7 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 
 	@property
 	def _is_editor(self):
-		return has_permission( ACT_CONTENT_EDIT, self.request.context )
+		return has_permission(ACT_CONTENT_EDIT, self.request.context)
 
 	def _filter_legacy_discussions(self, context, indexes, removal):
 		items = context.Items
@@ -354,6 +356,20 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 		value = ext_item.get(key)
 		return bool(value)
 
+	def _handle_slidedeck_ref(self, items, item, idx):
+		source = INTISlideDeck(item, None)
+		if source is not None:
+			items[idx] = to_external_object(source)
+			return True
+		return False
+
+	def _handle_timeline_ref(self, items, item, idx):
+		source = INTITimeline(item, None)
+		if source is not None:
+			items[idx] = to_external_object(source)
+			return True
+		return False
+
 	def _decorate_external_impl(self, context, result):
 		idx = 0
 		removal = set()
@@ -373,9 +389,17 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 					discussions.append(idx)
 			elif IMediaRef.providedBy(item):
 				self._handle_media_ref(items, item, idx)
-			elif INTIAssignmentRef.providedBy(item) and not self.allow_assignmentref(context, item):
+			elif	INTISlideDeckRef.providedBy(item) \
+				and not self._handle_slidedeck_ref(items, item, idx):
 				removal.add(idx)
-			elif INTISurveyRef.providedBy(item) and not self.allow_surveyref(context, item):
+			elif	INTITimelineRef.providedBy(item) \
+				and not self._handle_timeline_ref(items, item, idx):
+				removal.add(idx)
+			elif	INTIAssignmentRef.providedBy(item) \
+				and not self.allow_assignmentref(context, item):
+				removal.add(idx)
+			elif	INTISurveyRef.providedBy(item) \
+				and not self.allow_surveyref(context, item):
 				removal.add(idx)
 			elif INTIMediaRoll.providedBy(item) and not self.allow_mediaroll(items[idx]):
 				removal.add(idx)
@@ -390,7 +414,7 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 
 @component.adapter(INTILessonOverview)
 class _NTILessonOverviewDecorator(AbstractAuthenticatedRequestAwareDecorator):
-	
+
 	def is_editor_or_instructor(self, context):
 		course = find_interface(context, ICourseInstance, strict=False)
 		result = 	is_course_instructor_or_editor(course, self.remoteUser) \
@@ -400,14 +424,14 @@ class _NTILessonOverviewDecorator(AbstractAuthenticatedRequestAwareDecorator):
 	def _do_decorate_external(self, context, result):
 		if not self.is_editor_or_instructor(context):
 			removal = set()
-			items = result.get(ITEMS) or () # groups
+			items = result.get(ITEMS) or ()  # groups
 			for idx, group in enumerate(items):
 				if not group.get(ITEMS):
 					removal.add(idx)
 			# remove empty items
 			if removal:
 				result[ITEMS] = [x for idx, x in enumerate(items) if idx not in removal]
-			
+
 def _get_content_package(ntiids=()):
 	# XXX: We would like context from clients.
 	# Get the first available content package from the given ntiids.
@@ -504,6 +528,16 @@ class _BaseAssetDecorator(object):
 @component.adapter(INTIQuestionRef)
 @interface.implementer(IExternalObjectDecorator)
 class _NTIQuestionRefDecorator(_BaseAssetDecorator):
+	pass
+
+@component.adapter(INTISlideDeckRef)
+@interface.implementer(IExternalObjectDecorator)
+class _NTISlideDeckRefDecorator(_BaseAssetDecorator):
+	pass
+
+@component.adapter(INTITimelineRef)
+@interface.implementer(IExternalObjectDecorator)
+class _NTITimelineRefDecorator(_BaseAssetDecorator):
 	pass
 
 @interface.implementer(IExternalObjectDecorator)

@@ -58,7 +58,7 @@ class _CourseAssetsLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 @interface.implementer(IExternalMappingDecorator)
 class _MediaByOutlineNodeDecorator(PreviewCourseAccessPredicateDecorator,
-								AbstractAuthenticatedRequestAwareDecorator):
+								   AbstractAuthenticatedRequestAwareDecorator):
 
 	# We used to check enrollment/instructor access here, for visibility
 	# concerns. Since we allow anon access now, we simply provide the link.

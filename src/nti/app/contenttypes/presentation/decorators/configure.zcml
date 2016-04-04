@@ -158,6 +158,14 @@
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"
 				for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef" />
 
+	<subscriber factory=".assets._NTITimelineRefDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTITimelineRef" />
+
+	<subscriber factory=".assets._NTISlideDeckRefDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTISlideDeckRef" />
+
 	<subscriber factory=".assets._NTITimelineDecorator"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"
 				for="nti.contenttypes.presentation.interfaces.INTITimeline" />
