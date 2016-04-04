@@ -107,6 +107,7 @@ from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation import AUDIO_MIMETYES
 from nti.contenttypes.presentation import VIDEO_MIMETYES
 from nti.contenttypes.presentation import TIMELINE_MIMETYES
+from nti.contenttypes.presentation import TIMELINE_REF_MIMETYES
 from nti.contenttypes.presentation import LESSON_OVERVIEW_MIMETYES
 from nti.contenttypes.presentation import ALL_MEDIA_ROLL_MIME_TYPES
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
@@ -126,6 +127,7 @@ from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import INTIVideoRoll
 from nti.contenttypes.presentation.interfaces import INTIInquiryRef
+from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
@@ -583,7 +585,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 				item.label = reference.title if not item.label else item.label
 
 			# set container id
-			if reference.__parent__ is not None:
+			if reference.__parent__ is not None: # TODO: Use __home__ attr
 				item.containerId = reference.__parent__.ntiid
 
 		elif INTIDiscussionRef.providedBy(item):
@@ -1252,11 +1254,9 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 			if resolved is None:
 				raise hexc.HTTPUnprocessableEntity(_('Missing overview group item'))
 
-			if INTITimeline.providedBy( resolved ):
-				# Short circuit; we need to use this.
-				return resolved
-			elif 	INTIMedia.providedBy(resolved) \
-				or 	INTIMediaRef.providedBy(resolved):
+			if INTITimeline.providedBy(resolved) or INTITimelineRef.providedBy(resolved):
+				externalValue[MIMETYPE] = TIMELINE_REF_MIMETYES[0] # make a ref always
+			elif INTIMedia.providedBy(resolved) or INTIMediaRef.providedBy(resolved):
 				externalValue[MIMETYPE] = resolved.mimeType
 			else:
 				# We did not have a mimetype, and we have an ntiid the resolved
@@ -1333,6 +1333,8 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		# So don't here either.
 		if INTIMediaRef.providedBy(contentObject):
 			contentObject = INTIMedia(contentObject)
+		elif INTITimelineRef.providedBy(contentObject):
+			contentObject = INTITimeline(contentObject)
 		return self.transformOutput(contentObject)
 
 @view_config(name=VIEW_RECURSIVE_AUDIT_LOG)
