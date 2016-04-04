@@ -52,8 +52,9 @@ class MockDataserver(object):
 		return None
 
 def _update_refs(current_site, catalog, intids, seen):
+	result = 0
 	registry = current_site.getSiteManager()
-	for name, group in list(component.getUtilitiesFor(INTICourseOverviewGroup)):
+	for name, group in list(registry.getUtilitiesFor(INTICourseOverviewGroup)):
 		if name in seen:
 			continue
 		seen.add(name)
@@ -77,6 +78,7 @@ def _update_refs(current_site, catalog, intids, seen):
 				namespace = catalog.get_namespace(group)
 
 				# remove containers from hard item
+				# group and lesson overview
 				ntiids = (group.ntiid, group.__parent__.ntiid)
 				catalog.update_containers(item, ntiids)
 
@@ -90,7 +92,8 @@ def _update_refs(current_site, catalog, intids, seen):
 							  intids=intids)
 
 				group[idx] = reference
-
+				result += 1
+	return result
 
 def do_evolve(context, generation=generation):
 	setHooks()
@@ -109,13 +112,15 @@ def do_evolve(context, generation=generation):
 		lsm = dataserver_folder.getSiteManager()
 		intids = lsm.getUtility(IIntIds)
 
+		result = 0
 		seen = set()
 		catalog = get_library_catalog()
 
 		for current_site in get_all_host_sites():
 			with site(current_site):
-				_update_refs(current_site, catalog, intids, seen)
-		logger.info('Dataserver evolution %s done.', generation)
+				result += _update_refs(current_site, catalog, intids, seen)
+		logger.info('Dataserver evolution %s done. %s item(s) created',
+					generation, result)
 
 def evolve(context):
 	"""
