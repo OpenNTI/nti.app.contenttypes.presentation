@@ -80,20 +80,12 @@ class NTIRelatedWorkRefACLProvider(BasePresentationAssetACLProvider):
 class NTITimelineACLProvider(BasePresentationAssetACLProvider):
 	pass
 
-@component.adapter(INTITimelineRef)
-class NTITimelineRefACLProvider(BasePresentationAssetACLProvider):
-	pass
-
 @component.adapter(INTISlideDeck)
 class NTISlideDeckACLProvider(BasePresentationAssetACLProvider):
 	pass
 
 @component.adapter(INTISlideVideo)
 class NTISlideVideoACLProvider(BasePresentationAssetACLProvider):
-	pass
-
-@component.adapter(INTISlideDeckRef)
-class NTISlideDeckRefACLProvider(BasePresentationAssetACLProvider):
 	pass
 
 class AbstractCourseLineageACLProvider(object):
@@ -113,6 +105,14 @@ class AbstractCourseLineageACLProvider(object):
 			result.extend(IACLProvider(course).__acl__)
 		result.append(ACE_DENY_ALL)
 		return result
+
+@component.adapter(INTITimelineRef)
+class NTITimelineRefACLProvider(AbstractCourseLineageACLProvider):
+	pass
+
+@component.adapter(INTISlideDeckRef)
+class NTISlideDeckRefACLProvider(AbstractCourseLineageACLProvider):
+	pass
 
 @component.adapter(INTIMediaRoll)
 @interface.implementer(IACLProvider)
