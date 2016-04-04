@@ -27,14 +27,19 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.presentation import iface_of_asset
 
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 
 from nti.externalization.externalization import to_external_object
 
 from nti.externalization.interfaces import StandardExternalFields
 
+from nti.ntiids.ntiids import TYPE_OID
+from nti.ntiids.ntiids import is_ntiid_of_type
+from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
 
+OID = StandardExternalFields.OID
 ITEMS = StandardExternalFields.ITEMS
 
 def _outline_nodes(outline, seen):
@@ -56,7 +61,8 @@ def _outline_nodes(outline, seen):
 @interface.implementer(ICourseSectionExporter)
 class LessonOverviewsExporer(object):
 
-	def _process_asset_resources(self, asset, ext_obj, filer):
+	def _post_process_asset(self, asset, ext_obj, filer):
+		ext_obj.pop(OID, None)
 		# save asset resources
 		provided = iface_of_asset(asset)
 		save_resources_to_filer(provided, asset, filer, ext_obj)
@@ -67,12 +73,16 @@ class LessonOverviewsExporer(object):
 					ext_items = ext_obj.get(name) or ()
 					deck_items = getattr(asset, name, None) or ()
 					for item, item_ext in zip(deck_items, ext_items):
-						self._process_asset_resources(item, item_ext, filer)
+						self._post_process_asset(item, item_ext, filer)
 			else:
 				ext_items = ext_obj.get(ITEMS) or ()
 				asset_items = asset.Items if asset.Items is not None else ()
 				for item, item_ext in zip(asset_items, ext_items):
-					self._process_asset_resources(item, item_ext, filer)
+					self._post_process_asset(item, item_ext, filer)
+		if 		INTIRelatedWorkRef.providedBy(asset) \
+			and is_valid_ntiid_string(asset.target or u'') \
+			and is_ntiid_of_type(asset.target, TYPE_OID):
+			ext_obj['target'] = None # don't leak internal OIDs
 
 	def _do_export(self, context, filer, seen):
 		course = ICourseInstance(context)
@@ -80,7 +90,7 @@ class LessonOverviewsExporer(object):
 		for node, lesson in nodes:
 			ext_obj = to_external_object(lesson, name="exporter", decorate=False)
 			# process internal resources 
-			self._process_asset_resources(lesson, ext_obj, filer)
+			self._post_process_asset(lesson, ext_obj, filer)
 			# save to json
 			source = StringIO()
 			simplejson.dump(ext_obj, source, indent=4)
