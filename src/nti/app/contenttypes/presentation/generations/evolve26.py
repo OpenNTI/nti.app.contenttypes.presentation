@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-generation = 25
+generation = 26
 
 from zope import component
 from zope import interface
@@ -17,26 +17,31 @@ from zope import interface
 from zope.component.hooks import site
 from zope.component.hooks import setHooks
 
-from zope.intid.interfaces import IIntIds
+from nti.app.contenttypes.presentation.utils import registry_by_name
 
-from nti.contentlibrary.indexed_data import get_library_catalog
+from nti.contentlibrary.interfaces import IContentUnit
+from nti.contentlibrary.interfaces import IContentPackageLibrary
 
 from nti.contenttypes.presentation import iface_of_asset
 
-from nti.contenttypes.presentation.interfaces import INTITimeline
-from nti.contenttypes.presentation.interfaces import INTISlideDeck
-from nti.contenttypes.presentation.interfaces import INTITimelineRef
-from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+
+from nti.coremetadata.interfaces import IRecordable
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
 
-from nti.intid.common import addIntId
+from nti.ntiids.ntiids import is_valid_ntiid_string
+from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.site.hostpolicy import get_all_host_sites
 
+from nti.site.interfaces import IHostPolicyFolder
+
 from nti.site.utils import registerUtility
+
+from nti.traversal.traversal import find_interface
 
 @interface.implementer(IDataserver)
 class MockDataserver(object):
@@ -51,46 +56,61 @@ class MockDataserver(object):
 			return resolver.get_object_by_oid(oid, ignore_creator=ignore_creator)
 		return None
 
-def _update_refs(current_site, catalog, intids, seen):
-	registry = current_site.getSiteManager()
+def _is_obj_locked( obj ):
+	return IRecordable.providedBy(obj) and obj.isLocked()
+
+def _fix_related_work_ref_target( current_site, work_ref ):
+	# Only need authored objects with ntiid hrefs.
+	if 		_is_obj_locked( work_ref ) \
+		and is_valid_ntiid_string( work_ref.href ):
+
+		href_obj = find_object_with_ntiid( work_ref.href )
+		# Only pointing to content units
+		if href_obj is not None and IContentUnit.providedBy( href_obj ):
+			logger.info('[%s] NTIRelatedWorkRef target fixed (ntiid=%s) (old=%s) (new=%s)',
+						 current_site.__name__,
+						 work_ref.ntiid,
+						 work_ref.target, work_ref.href)
+			work_ref.target = work_ref.href
+
+def _get_site_name(group):
+	folder = find_interface(group, IHostPolicyFolder, strict=False)
+	return folder.__name__ if folder is not None else None
+
+def _get_host_registry(group):
+	return registry_by_name( _get_site_name( group ))
+
+def _update_assets(seen, current_site):
+	library = component.queryUtility(IContentPackageLibrary)
+	if library is None:
+		return
+
+	# Loop through all assets in all groups.
 	for name, group in list(component.getUtilitiesFor(INTICourseOverviewGroup)):
 		if name in seen:
 			continue
 		seen.add(name)
+		if not group:
+			continue
+		for item in group:
+			asset_interface = iface_of_asset(item)
+			registered = component.queryUtility( asset_interface, name=item.ntiid )
+			if registered is None:
+				host_registry = _get_host_registry(group)
+				if item.ntiid:
+					registerUtility(host_registry,
+									provided=asset_interface,
+									component=item,
+									name=item.ntiid)
+					logger.info('[%s] Asset registered (ntiid=%s) (site=%s)',
+							 	current_site.__name__,
+								item.ntiid,
+								_get_site_name( group ))
+				else:
+					logger.info( 'No ntiid for (%s)', item)
 
-		for idx, item in enumerate(group or ()):  # mutating
-			reference = None
-
-			if INTITimeline.providedBy(item):
-				reference = INTITimelineRef(item)
-			elif INTISlideDeck.providedBy(item):
-				reference = INTISlideDeckRef(item)
-
-			if reference is not None:
-				reference.__parent__ = group
-				addIntId(reference)
-				registerUtility(registry,
-								reference,
-								iface_of_asset(reference),
-								name=reference.ntiid)
-
-				namespace = catalog.get_namespace(group)
-
-				# remove containers from hard item
-				ntiids = (group.ntiid, group.__parent__.ntiid)
-				catalog.update_containers(item, ntiids)
-
-				containers = set(catalog.get_containers(group) or ())
-				containers.update(ntiids)
-
-				catalog.index(reference,
-							  namespace=namespace,
-							  container_ntiids=containers,
-							  sites=(current_site.__name__,),
-							  intids=intids)
-
-				group[idx] = reference
-
+			if INTIRelatedWorkRef.providedBy( item ):
+				_fix_related_work_ref_target( current_site, item )
 
 def do_evolve(context, generation=generation):
 	setHooks()
@@ -106,19 +126,21 @@ def do_evolve(context, generation=generation):
 		assert	component.getSiteManager() == dataserver_folder.getSiteManager(), \
 				"Hooks not installed?"
 
-		lsm = dataserver_folder.getSiteManager()
-		intids = lsm.getUtility(IIntIds)
+		# Load library
+		library = component.queryUtility(IContentPackageLibrary)
+		if library is not None:
+			library.syncContentPackages()
 
 		seen = set()
-		catalog = get_library_catalog()
-
+		# Do not need to do this in global site.
 		for current_site in get_all_host_sites():
 			with site(current_site):
-				_update_refs(current_site, catalog, intids, seen)
+				_update_assets(seen, current_site)
 		logger.info('Dataserver evolution %s done.', generation)
 
 def evolve(context):
 	"""
-	Evolve to 26 by moving timeline and slidedeck to refs objects inside groups
+	Evolve to 26 by making sure assets are registered and related work refs
+	have proper targets.
 	"""
 	do_evolve(context, generation)
