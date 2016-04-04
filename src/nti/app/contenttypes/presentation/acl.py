@@ -107,10 +107,12 @@ class AbstractCourseLineageACLProvider(object):
 		return result
 
 @component.adapter(INTITimelineRef)
+@interface.implementer(IACLProvider)
 class NTITimelineRefACLProvider(AbstractCourseLineageACLProvider):
 	pass
 
 @component.adapter(INTISlideDeckRef)
+@interface.implementer(IACLProvider)
 class NTISlideDeckRefACLProvider(AbstractCourseLineageACLProvider):
 	pass
 
