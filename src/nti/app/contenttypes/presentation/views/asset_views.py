@@ -1340,6 +1340,8 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 			contentObject = INTIMedia(contentObject)
 		elif INTITimelineRef.providedBy(contentObject):
 			contentObject = INTITimeline(contentObject)
+		elif INTISlideDeckRef.providedBy(contentObject):
+			contentObject = INTISlideDeck(contentObject)
 		return self.transformOutput(contentObject)
 
 @view_config(name=VIEW_RECURSIVE_AUDIT_LOG)
