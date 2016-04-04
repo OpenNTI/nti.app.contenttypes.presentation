@@ -22,8 +22,6 @@ from zope.intid.interfaces import IIntIds
 from zope.security.management import endInteraction
 from zope.security.management import restoreInteraction
 
-from zope.traversing.interfaces import IEtcNamespace
-
 from pyramid.view import view_config
 from pyramid.view import view_defaults
 
@@ -219,8 +217,7 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 			yield ntiid, asset
 
 	def _site_registry(self, site_name):
-		hostsites = component.getUtility(IEtcNamespace, name='hostsites')
-		folder = hostsites[site_name]
+		folder = get_host_site(site_name,)
 		registry = folder.getSiteManager()
 		return registry
 
