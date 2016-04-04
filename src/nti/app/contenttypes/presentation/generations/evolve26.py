@@ -84,8 +84,8 @@ def _update_refs(current_site, catalog, intids, seen):
 				containers.update(ntiids)
 
 				catalog.index(reference,
-							  container_ntiids=containers,
 							  namespace=namespace,
+							  container_ntiids=containers,
 							  sites=(current_site.__name__,),
 							  intids=intids)
 
