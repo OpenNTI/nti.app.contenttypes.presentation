@@ -104,10 +104,12 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.courses.utils import get_courses_for_packages
 
 from nti.contenttypes.presentation import iface_of_asset
+	
 from nti.contenttypes.presentation import AUDIO_MIMETYES
 from nti.contenttypes.presentation import VIDEO_MIMETYES
 from nti.contenttypes.presentation import TIMELINE_MIMETYES
 from nti.contenttypes.presentation import TIMELINE_REF_MIMETYES
+from nti.contenttypes.presentation import SLIDE_DECK_REF_MIMETYES
 from nti.contenttypes.presentation import LESSON_OVERVIEW_MIMETYES
 from nti.contenttypes.presentation import ALL_MEDIA_ROLL_MIME_TYPES
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
@@ -128,14 +130,15 @@ from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import INTIVideoRoll
 from nti.contenttypes.presentation.interfaces import INTIInquiryRef
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
+from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
 from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
+from nti.contenttypes.presentation.interfaces import INTIAssignmentRef 
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
-from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import IGroupOverViewable
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
-from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import ICoursePresentationAsset
 from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
@@ -1254,7 +1257,9 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 			if resolved is None:
 				raise hexc.HTTPUnprocessableEntity(_('Missing overview group item'))
 
-			if INTITimeline.providedBy(resolved) or INTITimelineRef.providedBy(resolved):
+			if INTISlideDeck.providedBy(resolved) or INTISlideDeckRef.providedBy(resolved):
+				externalValue[MIMETYPE] = SLIDE_DECK_REF_MIMETYES[0] # make a ref always
+			elif INTITimeline.providedBy(resolved) or INTITimelineRef.providedBy(resolved):
 				externalValue[MIMETYPE] = TIMELINE_REF_MIMETYES[0] # make a ref always
 			elif INTIMedia.providedBy(resolved) or INTIMediaRef.providedBy(resolved):
 				externalValue[MIMETYPE] = resolved.mimeType
