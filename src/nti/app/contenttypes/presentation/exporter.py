@@ -93,12 +93,13 @@ class LessonOverviewsExporer(object):
 			self._post_process_asset(lesson, ext_obj, filer)
 			# save to json
 			source = StringIO()
-			simplejson.dump(ext_obj, source, indent=4)
+			simplejson.dump(ext_obj, source, indent=4, sort_keys=True)
 			source.seek(0)
 			# save to filer
 			name = safe_filename(node.src or lesson.ntiid)
 			name = name + '.json' if not name.endswith('.json') else name
-			filer.save(name, source, overwrite=True, contentType=u"application/x-json")
+			filer.save(name, source, overwrite=True, 
+					   bucket="Lessons", contentType=u"application/x-json")
 
 	def export(self, context, filer):
 		seen = set()
