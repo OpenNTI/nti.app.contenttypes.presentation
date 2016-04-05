@@ -331,11 +331,11 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 	def _allow_assessmentref(self, iface, context, item):
 		if self._is_editor:
 			return True
-		record = self.record(context)
 		assg = iface(item, None)
-		if assg is None or record is None:
+		if assg is None:
 			return False
 		# Instructor
+		record = self.record(context)
 		if record.Scope == ES_ALL:
 			return True
 		course = record.CourseInstance
