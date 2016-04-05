@@ -59,7 +59,7 @@ def _outline_nodes(outline, seen):
 	return result
 
 @interface.implementer(ICourseSectionExporter)
-class LessonOverviewsExporer(object):
+class LessonOverviewsExporter(object):
 
 	def _post_process_asset(self, asset, ext_obj, filer):
 		ext_obj.pop(OID, None)

@@ -136,7 +136,7 @@
 					 zope.lifecycleevent.IObjectRemovedEvent" />
 
 	<!-- Exporters -->
-	<utility factory=".exporter.LessonOverviewsExporer" name="lessons" />
+	<utility factory=".exporter.LessonOverviewsExporter" name="015:Lesson_Overviews" />
 	
 	<!-- Decorators -->
 	<include package=".decorators" />
