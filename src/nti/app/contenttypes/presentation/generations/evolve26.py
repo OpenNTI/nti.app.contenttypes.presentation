@@ -97,7 +97,8 @@ def _update_assets(seen, current_site):
 			registered = component.queryUtility( asset_interface, name=item.ntiid )
 			if registered is None:
 				host_registry = _get_host_registry(group)
-				if item.ntiid:
+				# Some dev machines have weird state.
+				if item.ntiid and host_registry is not None:
 					registerUtility(host_registry,
 									provided=asset_interface,
 									component=item,
@@ -107,7 +108,7 @@ def _update_assets(seen, current_site):
 								item.ntiid,
 								_get_site_name( group ))
 				else:
-					logger.info( 'No ntiid for (%s)', item)
+					logger.info( 'No ntiid/registry for (%s) (%s)', item, host_registry)
 
 			if INTIRelatedWorkRef.providedBy( item ):
 				_fix_related_work_ref_target( current_site, item )
