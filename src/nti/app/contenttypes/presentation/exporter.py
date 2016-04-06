@@ -9,10 +9,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from StringIO import StringIO
-
-import simplejson
-
 from zope import interface
 
 from nti.app.products.courseware.utils.exporter import save_resources_to_filer
@@ -21,6 +17,8 @@ from nti.common.file import safe_filename
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSectionExporter
+
+from nti.contenttypes.courses.exporter import BaseSectionExporter
 
 from nti.contenttypes.courses.utils import get_course_subinstances
 
@@ -59,7 +57,7 @@ def _outline_nodes(outline, seen):
 	return result
 
 @interface.implementer(ICourseSectionExporter)
-class LessonOverviewsExporter(object):
+class LessonOverviewsExporter(BaseSectionExporter):
 
 	def _post_process_asset(self, asset, ext_obj, filer):
 		ext_obj.pop(OID, None)
@@ -79,6 +77,7 @@ class LessonOverviewsExporter(object):
 				asset_items = asset.Items if asset.Items is not None else ()
 				for item, item_ext in zip(asset_items, ext_items):
 					self._post_process_asset(item, item_ext, filer)
+		# check related work
 		if 		INTIRelatedWorkRef.providedBy(asset) \
 			and is_valid_ntiid_string(asset.target or u'') \
 			and is_ntiid_of_type(asset.target, TYPE_OID):
@@ -92,9 +91,7 @@ class LessonOverviewsExporter(object):
 			# process internal resources 
 			self._post_process_asset(lesson, ext_obj, filer)
 			# save to json
-			source = StringIO()
-			simplejson.dump(ext_obj, source, indent=4, sort_keys=True)
-			source.seek(0)
+			source = self.dump(ext_obj)
 			# save to filer
 			name = safe_filename(node.src or lesson.ntiid)
 			name = name + '.json' if not name.endswith('.json') else name
