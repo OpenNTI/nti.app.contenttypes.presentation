@@ -17,7 +17,7 @@ import tempfile
 
 from zope import component
 
-from nti.app.contenttypes.presentation.exporter import LessonOverviewsExporer
+from nti.app.contenttypes.presentation.exporter import LessonOverviewsExporter
 
 from nti.cabinet.filer import DirectoryFiler
 
@@ -53,7 +53,7 @@ class TestExporter(ApplicationLayerTest):
 			with mock_dataserver.mock_db_trans(self.ds, site_name='platform.ou.edu'):
 				course = ICourseInstance(self.course_entry())
 				filer = DirectoryFiler(tmp_dir)
-				exporter = LessonOverviewsExporer()
+				exporter = LessonOverviewsExporter()
 				exporter.export(course, filer)
 				assert_that(filer.list(), has_length(17))
 		finally:
