@@ -256,7 +256,8 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 				if component.queryUtility(provided, name=ntiid) is None:
 					container.pop(ntiid, None)
 					remove_transaction_history(asset)
-					remove_presentation_asset(asset, registry, catalog, package=False)
+					remove_presentation_asset(asset, registry, catalog, 
+											  package=False, name=ntiid)
 				# check it has a valid uid and parent
 				elif uid is None or not self._valid_parent(asset, intids):
 					container.pop(ntiid, None)
@@ -271,7 +272,8 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 				uid = intids.queryId(asset)
 				if 	uid is None or ntiid not in master:
 					remove_transaction_history(asset)
-					remove_presentation_asset(asset, registry, catalog, package=False)
+					remove_presentation_asset(asset, registry, catalog,
+											  package=False, name=ntiid)
 					items.append({
 						'IntId':uid,
 						NTIID:ntiid,
@@ -292,7 +294,8 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 				provided = iface_of_thing(asset)
 				if component.queryUtility(provided, name=ntiid) is None:
 					remove_transaction_history(asset)
-					remove_presentation_asset(asset, catalog=catalog, package=False)
+					remove_presentation_asset(asset, catalog=catalog, 
+											  package=False, name=ntiid)
 					items.append({
 						'IntId':uid,
 						NTIID:ntiid,
