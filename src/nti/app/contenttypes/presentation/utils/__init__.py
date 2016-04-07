@@ -112,7 +112,10 @@ def _get_scope(user, context, record):
 def is_item_visible(item, user, context=None, record=None):
 	context = item if context is None else context
 	user_visibility = get_user_visibility(user)
-	if item.visibility != EVERYONE and user_visibility != item.visibility:
+	# If it has non-everyone visibility, unequal to our user's, check scope.
+	if 		item.visibility \
+		and item.visibility != EVERYONE \
+		and user_visibility != item.visibility:
 		scope = _get_scope(user, context, record)
 		if scope != ES_ALL and get_visibility_for_scope(scope) != item.visibility:
 			# Our item is scoped and not-visible to us, but editors always have access.
