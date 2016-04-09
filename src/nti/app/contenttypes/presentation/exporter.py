@@ -88,14 +88,14 @@ class LessonOverviewsExporter(BaseSectionExporter):
 		nodes = _outline_nodes(course.Outline, seen)
 		for node, lesson in nodes:
 			ext_obj = to_external_object(lesson, name="exporter", decorate=False)
-			# process internal resources 
+			# process internal resources
 			self._post_process_asset(lesson, ext_obj, filer)
 			# save to json
 			source = self.dump(ext_obj)
 			# save to filer
 			name = safe_filename(node.src or lesson.ntiid)
 			name = name + '.json' if not name.endswith('.json') else name
-			filer.save(name, source, overwrite=True, 
+			filer.save(name, source, overwrite=True,
 					   bucket="Lessons", contentType=u"application/x-json")
 
 	def export(self, context, filer):

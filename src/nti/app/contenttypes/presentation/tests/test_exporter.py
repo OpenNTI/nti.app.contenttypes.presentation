@@ -8,6 +8,7 @@ __docformat__ = "restructuredtext en"
 # pylint: disable=W0212,R0904
 
 from hamcrest import is_not
+from hamcrest import contains
 from hamcrest import has_length
 from hamcrest import assert_that
 does_not = is_not
@@ -55,6 +56,7 @@ class TestExporter(ApplicationLayerTest):
 				filer = DirectoryFiler(tmp_dir)
 				exporter = LessonOverviewsExporter()
 				exporter.export(course, filer)
-				assert_that(filer.list(), has_length(17))
+				assert_that(filer.list(), contains( 'Lessons' ))
+				assert_that(filer.list("Lessons"), has_length( 17 ))
 		finally:
 			shutil.rmtree(tmp_dir, True)
