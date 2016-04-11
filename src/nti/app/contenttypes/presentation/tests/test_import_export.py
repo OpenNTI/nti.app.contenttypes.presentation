@@ -17,6 +17,7 @@ import shutil
 import tempfile
 
 from nti.app.contenttypes.presentation.exporter import LessonOverviewsExporter
+from nti.app.contenttypes.presentation.importer import LessonOverviewsImporter
 
 from nti.cabinet.filer import DirectoryFiler
 
@@ -47,11 +48,20 @@ class TestExporter(ApplicationLayerTest):
 	def test_lesson_exporter(self):
 		tmp_dir = tempfile.mkdtemp(dir="/tmp")
 		try:
+			filer = DirectoryFiler(tmp_dir)
+			# export
 			with mock_dataserver.mock_db_trans(self.ds, site_name='platform.ou.edu'):
 				course = ICourseInstance(self.course_entry())
-				filer = DirectoryFiler(tmp_dir)
 				exporter = LessonOverviewsExporter()
 				exporter.export(course, filer)
+				assert_that(filer.list(), contains('Lessons'))
+				assert_that(filer.list("Lessons"), has_length(17))
+			return
+			# import
+			with mock_dataserver.mock_db_trans(self.ds, site_name='platform.ou.edu'):
+				course = ICourseInstance(self.course_entry())
+				importer = LessonOverviewsImporter()
+				importer.process(course, filer)
 				assert_that(filer.list(), contains('Lessons'))
 				assert_that(filer.list("Lessons"), has_length(17))
 		finally:
