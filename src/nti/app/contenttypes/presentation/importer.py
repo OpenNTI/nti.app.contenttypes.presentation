@@ -16,6 +16,7 @@ from zope.component.hooks import site as current_site
 from plone.namedfile.interfaces import INamed as IPloneNamed
 
 from nti.app.contenttypes.presentation.synchronizer import clear_course_assets
+from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
 from nti.app.contenttypes.presentation.synchronizer import remove_and_unindex_course_assets
 from nti.app.contenttypes.presentation.synchronizer import synchronize_course_lesson_overview
 
@@ -88,8 +89,9 @@ class LessonOverviewsImporter(BaseSectionImporter):
 			bucket = source_filer.get("Lessons")
 			with current_site(site):
 				registry = site.getSiteManager()
-				# clear assets
-				clear_course_assets(course)  # not merging
+				# clear assets - not merging
+				clear_course_assets(course)  
+				clear_namespace_last_modified(course)
 				remove_and_unindex_course_assets(namespace=entry.ntiid,
 										  		 registry=registry,
 										  		 course=course,
