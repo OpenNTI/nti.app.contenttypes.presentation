@@ -15,10 +15,10 @@ from nti.app.products.courseware.utils.exporter import save_resources_to_filer
 
 from nti.common.file import safe_filename
 
+from nti.contenttypes.courses.exporter import BaseSectionExporter
+
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSectionExporter
-
-from nti.contenttypes.courses.exporter import BaseSectionExporter
 
 from nti.contenttypes.courses.utils import get_course_subinstances
 

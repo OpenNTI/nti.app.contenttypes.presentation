@@ -138,6 +138,9 @@
 	<!-- Exporters -->
 	<utility factory=".exporter.LessonOverviewsExporter" name="015:Lesson_Overviews" />
 	
+	<!-- Importers -->
+	<utility factory=".importer.LessonOverviewsImporter" name="015:Lesson_Overviews" />
+
 	<!-- Decorators -->
 	<include package=".decorators" />
 

@@ -16,14 +16,13 @@ does_not = is_not
 import shutil
 import tempfile
 
-from zope import component
-
 from nti.app.contenttypes.presentation.exporter import LessonOverviewsExporter
 
 from nti.cabinet.filer import DirectoryFiler
 
-from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
+
+from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.app.products.courseware.tests import PersistentInstructedCourseApplicationTestLayer
 
@@ -42,10 +41,7 @@ class TestExporter(ApplicationLayerTest):
 
 	@classmethod
 	def course_entry(cls):
-		catalog = component.getUtility(ICourseCatalog)
-		for entry in catalog.iterCatalogEntries():
-			if entry.ntiid == cls.entry_ntiid:
-				return entry
+		return find_object_with_ntiid(cls.entry_ntiid)
 
 	@WithSharedApplicationMockDS(testapp=False, users=True)
 	def test_lesson_exporter(self):
@@ -56,7 +52,7 @@ class TestExporter(ApplicationLayerTest):
 				filer = DirectoryFiler(tmp_dir)
 				exporter = LessonOverviewsExporter()
 				exporter.export(course, filer)
-				assert_that(filer.list(), contains( 'Lessons' ))
-				assert_that(filer.list("Lessons"), has_length( 17 ))
+				assert_that(filer.list(), contains('Lessons'))
+				assert_that(filer.list("Lessons"), has_length(17))
 		finally:
 			shutil.rmtree(tmp_dir, True)

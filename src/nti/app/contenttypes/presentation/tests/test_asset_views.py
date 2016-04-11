@@ -32,6 +32,9 @@ from itertools import chain
 
 import simplejson
 
+from nti.app.contenttypes.presentation import VIEW_NODE_MOVE
+from nti.app.contenttypes.presentation import VIEW_ORDERED_CONTENTS
+
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -60,17 +63,15 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.recorder.interfaces import ITransactionRecordHistory
 
-from nti.app.testing.decorators import WithSharedApplicationMockDS
-from nti.app.testing.application_webtest import ApplicationLayerTest
-
-from nti.dataserver.tests import mock_dataserver
+from nti.app.contenttypes.presentation.tests import INVALID_TITLE_LENGTH
 
 from nti.app.products.courseware.tests import InstructedCourseApplicationTestLayer
 
-from nti.app.contenttypes.presentation import VIEW_NODE_MOVE
-from nti.app.contenttypes.presentation import VIEW_ORDERED_CONTENTS
+from nti.app.testing.application_webtest import ApplicationLayerTest
 
-from nti.app.contenttypes.presentation.tests import INVALID_TITLE_LENGTH
+from nti.app.testing.decorators import WithSharedApplicationMockDS
+
+from nti.dataserver.tests import mock_dataserver
 
 INVALID_TITLE = 'x' * INVALID_TITLE_LENGTH
 
