@@ -56,13 +56,12 @@ class TestExporter(ApplicationLayerTest):
 				exporter.export(course, filer)
 				assert_that(filer.list(), contains('Lessons'))
 				assert_that(filer.list("Lessons"), has_length(17))
-			return
+
 			# import
 			with mock_dataserver.mock_db_trans(self.ds, site_name='platform.ou.edu'):
 				course = ICourseInstance(self.course_entry())
 				importer = LessonOverviewsImporter()
-				importer.process(course, filer)
-				assert_that(filer.list(), contains('Lessons'))
-				assert_that(filer.list("Lessons"), has_length(17))
+				result = importer.process(course, filer)
+				assert_that(result, has_length(17))
 		finally:
 			shutil.rmtree(tmp_dir, True)

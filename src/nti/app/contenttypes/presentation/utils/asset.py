@@ -25,6 +25,8 @@ from zope.location.location import locate
 
 from ZODB.interfaces import IConnection
 
+from nti.common.file import safe_filename
+
 from nti.common.random import generate_random_hex_string
 
 from nti.common.time import time_to_64bit_int
@@ -284,7 +286,8 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None, sites=No
 
 		# XXX: set the src field to be unique for indexing see MediaByOutlineNode
 		if not getattr(node, 'src', None):
-			node.src = to_external_ntiid_oid(result)
+			oid = to_external_ntiid_oid(result)
+			node.src = safe_filename(oid) + '.json' # make it a json file
 			
 		# index
 		catalog = get_library_catalog() if catalog is None else catalog
