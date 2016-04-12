@@ -587,7 +587,7 @@ def get_cataloged_namespaces(ntiid, catalog=None, sites=None):
 def get_sibling_entry(source, unit=None, buckets=None):
 	# seek in buckets first
 	for bucket in buckets or ():
-		result = bucket.getChildNamed(source)
+		result = bucket.getChildNamed(source) if bucket is not None else None
 		if result is not None:
 			return result
 	if unit is not None:
