@@ -70,6 +70,8 @@ from nti.contenttypes.presentation.interfaces import IPresentationVisibility
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
+from nti.ntiids.ntiids import make_specific_safe
+
 #: Visibility scope map
 VISIBILITY_SCOPE_MAP = {
 	ES_ALL: EVERYONE,
@@ -184,6 +186,7 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 	else:
 		topic = None
 		topic_key = get_topic_key(discussion)
+		topic_title = make_specific_safe( discussion.title )
 		m_scope = ES_ALL if scope == ES_ALL else ENROLLMENT_LINEAGE_MAP.get(scope)[0]
 		m_scope_term = get_scope_term(m_scope) if m_scope != ES_ALL else None
 		m_scope_implies = set(getattr(m_scope_term, 'implies', None) or ())
@@ -193,7 +196,7 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 			if 	(m_scope == ES_ALL or
 				 m_scope in forum_scopes or
 				 m_scope_implies.intersection(forum_scopes)) and \
-				topic_key in v:
+				(topic_key in v or topic_title in v):
 				topic = v[topic_key]  # found the topic
 				break
 		if topic is not None:
