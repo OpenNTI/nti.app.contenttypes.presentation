@@ -193,12 +193,15 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 		for v in course.Discussions.values():
 			# check the forum scopes against the mapped enrollment scope
 			forum_scopes = get_forum_scopes(v) if m_scope != ES_ALL else ()
-			if 	(m_scope == ES_ALL or
-				 m_scope in forum_scopes or
-				 m_scope_implies.intersection(forum_scopes)) and \
-				(topic_key in v or topic_title in v):
-				topic = v[topic_key]  # found the topic
-				break
+			if		m_scope == ES_ALL \
+				or	m_scope in forum_scopes \
+				or	m_scope_implies.intersection(forum_scopes):
+				if topic_key in v:
+					topic = v[topic_key]
+					break
+				elif topic_title in v:
+					topic = v[topic_title]
+					break
 		if topic is not None:
 			return (discussion, topic)
 		return None
