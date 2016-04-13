@@ -114,10 +114,10 @@ class TestOutlineViews(ApplicationLayerTest):
 
 		lesson = 'tag:nextthought.com,2011-10:OU-HTML-CS1323_F_2015_Intro_to_Computer_Programming.lec:01.01_LESSON'
 		children = [ "tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_01.01.01_Welcome",
-				"tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_01.01.01_Code",
-				"tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_01.01.01_Obama",
-				"tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_01.01.01_Java",
-				"tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_01.01.01_Academic_Integrity"]
+					 "tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_01.01.01_Code",
+					 "tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_01.01.01_Obama",
+					 "tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_01.01.01_Java",
+					 "tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_01.01.01_Academic_Integrity"]
 
 		assert_that( data.get('Containers').get( lesson ), is_( children ))
 
@@ -261,7 +261,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		elif has_lesson:
 			# Content node with published/visible lesson contents.
 			assert_that( obj, has_entries( 'contents', not_none(),
-										'ContentNTIID', not_none() ))
+										   'ContentNTIID', not_none() ))
 			overview_link = self.require_link_href_with_rel( obj, VIEW_OVERVIEW_CONTENT )
 			self.require_link_href_with_rel( obj, VIEW_OVERVIEW_SUMMARY )
 			self._check_lesson_ext_state( overview_link, environ )
@@ -294,7 +294,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 			assert_that(obj, not_none())
 			obj.child_order_locked = child_locked
 
-	def _check_obj_state(self, ntiid, is_published=False, is_locked=True, is_child_locked=False):
+	def _check_obj_state(self, ntiid, is_published=False, is_locked=True, is_child_locked=False, parent_ntiid=None):
 		"""
 		Check our server state, specifically, whether an object is locked,
 		published, and registered. If given a lesson, validate lesson props.
@@ -305,6 +305,9 @@ class TestOutlineEditViews(ApplicationLayerTest):
 			assert_that(obj.locked, is_(is_locked))
 			assert_that(obj.isPublished(), is_(is_published))
 			assert_that(obj.child_order_locked, is_(is_child_locked))
+
+			if parent_ntiid is not None:
+				assert_that( obj.__parent__.ntiid, is_( parent_ntiid ))
 
 			if INTILessonOverview.providedBy( obj ):
 				# Lessons have same titles as content nodes.
@@ -412,9 +415,9 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		_first_node_size( 3, student_environ )
 		self._check_obj_state( content_node_ntiid )
 		self._publish_obj( content_node_ntiid )
-		self._check_obj_state( content_node_ntiid, is_published=True )
-		self._check_obj_state( lesson_ntiid )
-		self._check_ext_state( content_node_ntiid,  has_lesson=True )
+		self._check_obj_state( content_node_ntiid, parent_ntiid=first_unit_ntiid, is_published=True )
+		self._check_obj_state( lesson_ntiid, parent_ntiid=content_node_ntiid )
+		self._check_ext_state( content_node_ntiid, has_lesson=True )
 		# Parent is child order locked.
 		self._check_obj_state( first_unit_ntiid, is_published=True,
 							is_locked=False, is_child_locked=True )
@@ -427,8 +430,8 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		content_data = {'title':'new content title2'}
 		self.testapp.put_json(content_href, content_data,
 							extra_environ=instructor_environ)
-		self._check_obj_state( content_node_ntiid, is_published=True )
-		self._check_obj_state( lesson_ntiid )
+		self._check_obj_state( content_node_ntiid, parent_ntiid=first_unit_ntiid, is_published=True )
+		self._check_obj_state( lesson_ntiid, parent_ntiid=content_node_ntiid )
 
 		# Insert at index 0 with dates
 		new_content_title2 = 'new content node title2'
@@ -442,8 +445,8 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		lesson_ntiid2 = res.get('ContentNTIID')
 		self.require_link_href_with_rel(res, VIEW_PUBLISH)
 		self.require_link_href_with_rel(res, VIEW_UNPUBLISH)
-		self._check_obj_state(content_node_ntiid2)
-		self._check_obj_state(lesson_ntiid2)
+		self._check_obj_state(content_node_ntiid2, parent_ntiid=first_unit_ntiid)
+		self._check_obj_state(lesson_ntiid2, parent_ntiid=content_node_ntiid2)
 		# Parent is child order locked.
 		self._check_obj_state( first_unit_ntiid, is_published=True,
 							is_locked=False, is_child_locked=True )
@@ -451,7 +454,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		# Must publish for students to see
 		_first_node_size( 5 )
 		_first_node_size( 4, student_environ )
-		self._check_obj_state( content_node_ntiid2 )
+		self._check_obj_state( content_node_ntiid2, parent_ntiid=first_unit_ntiid )
 
 		now = datetime.utcnow()
 		content_beginning = now + timedelta( days=365 * 10 )
@@ -466,7 +469,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 
 		# Unpublish, dates are gone
 		self._publish_obj( content_node_ntiid2, unpublish=True )
-		self._check_obj_state( content_node_ntiid2 )
+		self._check_obj_state( content_node_ntiid2, parent_ntiid=first_unit_ntiid )
 		self._check_ext_state( content_node_ntiid2,
 							published=False, has_lesson=True )
 
@@ -560,6 +563,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self._reset_obj_state( src_unit_ntiid )
 		self._check_obj_state( target_unit_ntiid, is_locked=False, is_published=True )
 		self._check_obj_state( src_unit_ntiid, is_locked=False, is_published=True )
+		self._check_obj_state( moved_ntiid, parent_ntiid=src_unit_ntiid, is_locked=True, is_published=True )
 
 		# Move to our target
 		move_data = self._get_move_json(moved_ntiid, target_unit_ntiid, 0, src_unit_ntiid)
@@ -577,9 +581,11 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that( target_child_ntiids[0], is_(moved_ntiid) )
 
 		self._check_obj_state( target_unit_ntiid, is_locked=False,
-							is_child_locked=True, is_published=True )
+							   is_child_locked=True, is_published=True )
 		self._check_obj_state( src_unit_ntiid, is_locked=False,
-							is_child_locked=True, is_published=True )
+							   is_child_locked=True, is_published=True )
+		self._check_obj_state( moved_ntiid, parent_ntiid=target_unit_ntiid,
+							   is_locked=True, is_published=True )
 
 		# Move back
 		move_data = self._get_move_json(moved_ntiid, src_unit_ntiid, 0, target_unit_ntiid)
@@ -599,6 +605,8 @@ class TestOutlineEditViews(ApplicationLayerTest):
 							is_child_locked=True, is_published=True )
 		self._check_obj_state( src_unit_ntiid, is_locked=False,
 							is_child_locked=True, is_published=True )
+		self._check_obj_state( moved_ntiid, parent_ntiid=src_unit_ntiid,
+							   is_locked=True, is_published=True )
 
 	def _test_unit_node_inserts(self):
 		"""
