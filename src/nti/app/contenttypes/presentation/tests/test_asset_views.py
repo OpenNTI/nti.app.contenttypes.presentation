@@ -958,6 +958,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj.child_order_locked, is_(True))
 			obj.child_order_locked = False  # Reset
 			moved_group = find_object_with_ntiid(last_group_ntiid)
+			assert_that( moved_group.__parent__.ntiid, is_( lesson_ntiid ) )
 			self._test_transaction_history(moved_group, TRX_OVERVIEW_GROUP_MOVE_TYPE)
 
 		# Move the item back to the end
@@ -993,6 +994,8 @@ class TestAssetViews(ApplicationLayerTest):
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			obj = find_object_with_ntiid(source_group_ntiid)
 			assert_that(obj.child_order_locked, is_(False))
+			asset = find_object_with_ntiid( first_asset_ntiid )
+			assert_that( asset.__parent__.ntiid, is_( source_group_ntiid ) )
 
 		move_data = self._get_move_json(first_asset_ntiid, source_group_ntiid)
 		self.testapp.post_json(move_link, move_data)
@@ -1011,6 +1014,7 @@ class TestAssetViews(ApplicationLayerTest):
 			obj = find_object_with_ntiid(source_group_ntiid)
 			assert_that(obj.child_order_locked, is_(True))
 			obj.child_order_locked = False  # Reset
+			assert_that( asset.__parent__.ntiid, is_( source_group_ntiid ) )
 
 		# Move between overview groups
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
@@ -1040,6 +1044,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(tar.child_order_locked, is_(True))
 			obj.child_order_locked = tar.child_order_locked = False  # Reset
 			moved_asset = find_object_with_ntiid(first_asset_ntiid)
+			assert_that( moved_asset.__parent__.ntiid, is_( target_group_ntiid ) )
 			self._test_transaction_history(moved_asset, TRX_ASSET_MOVE_TYPE)
 
 		# Move back to original group
@@ -1065,6 +1070,7 @@ class TestAssetViews(ApplicationLayerTest):
 			tar = find_object_with_ntiid(source_group_ntiid)
 			assert_that(tar.child_order_locked, is_(True))
 			obj.child_order_locked = tar.child_order_locked = False  # Reset
+			assert_that( moved_asset.__parent__.ntiid, is_( source_group_ntiid ) )
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_lesson_media_outline(self):

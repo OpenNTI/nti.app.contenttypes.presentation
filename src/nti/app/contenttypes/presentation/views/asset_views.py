@@ -476,8 +476,11 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		self._set_creator(item, creator)
 
 		packages = list(get_course_packages(self._course))
-		# Set lineage; prefer package, but fall back to group.
-		item.__parent__ = packages[0] if packages else getattr( item, '__parent__', None )
+		# If we don't have parent, use package.
+		# TODO: Do we want to force all assets (non IAssetRef) to have package
+		# parents (updated on sync?) and all refs have group parent?
+		if item.__parent__ is None and packages:
+			item.__parent__ = packages[0]
 
 		containers = _add_2_container(self._course, item, packages=True)
 		namespace = containers[0] if containers else None  # first pkg
