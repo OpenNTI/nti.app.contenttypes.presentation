@@ -104,7 +104,7 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.courses.utils import get_courses_for_packages
 
 from nti.contenttypes.presentation import iface_of_asset
-	
+
 from nti.contenttypes.presentation import AUDIO_MIMETYES
 from nti.contenttypes.presentation import VIDEO_MIMETYES
 from nti.contenttypes.presentation import TIMELINE_MIMETYES
@@ -132,7 +132,7 @@ from nti.contenttypes.presentation.interfaces import INTIInquiryRef
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
 from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
-from nti.contenttypes.presentation.interfaces import INTIAssignmentRef 
+from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import IGroupOverViewable
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
@@ -1080,7 +1080,7 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 
 	@Lazy
 	def _site_name(self):
-		result = component_site(self.context, 
+		result = component_site(self.context,
 								iface_of_asset(self.context),
 								self.context.ntiid)
 		return result

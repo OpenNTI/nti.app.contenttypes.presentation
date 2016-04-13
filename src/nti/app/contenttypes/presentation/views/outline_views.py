@@ -106,6 +106,7 @@ from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
+from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.site.interfaces import IHostPolicyFolder
 
@@ -534,14 +535,20 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 		content so we can return items by ContentNTIID for clients.
 		"""
 		ntiids = set()
+		namespaces = set()
 		lesson_to_content_map = {}
 		for node in nodes:
+			namespaces.add( node.src )
 			ntiids.add(node.ContentNTIID)
+			# Authored items are namespaced underneath the lesson.
+			lesson = find_object_with_ntiid( node.LessonOverviewNTIID )
+			namespaces.add( to_external_ntiid_oid( lesson ))
 			if node.ContentNTIID != node.LessonOverviewNTIID:
 				ntiids.add(node.LessonOverviewNTIID)
 				lesson_to_content_map[node.LessonOverviewNTIID] = node.ContentNTIID
 		ntiids.discard(None)
-		return ntiids, lesson_to_content_map
+		namespaces.discard(None)
+		return namespaces, ntiids, lesson_to_content_map
 
 	def _do_current(self, course, record):
 		result = LocatedExternalDict()
@@ -557,8 +564,8 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 		containers_seen = {}
 
 		nodes = self._outline_nodes(course)
-		namespaces = {node.src for node in nodes}
-		ntiids, lesson_to_content_map = self._get_node_ntiids(nodes)
+		namespaces, ntiids, lesson_to_content_map = self._get_node_ntiids(nodes)
+
 		result['ContainerOrder'] = [node.ContentNTIID for node in nodes]
 
 		def _add_item_to_container(container_ntiid, item):

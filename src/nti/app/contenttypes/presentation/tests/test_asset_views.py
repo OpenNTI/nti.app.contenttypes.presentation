@@ -1065,3 +1065,36 @@ class TestAssetViews(ApplicationLayerTest):
 			tar = find_object_with_ntiid(source_group_ntiid)
 			assert_that(tar.child_order_locked, is_(True))
 			obj.child_order_locked = tar.child_order_locked = False  # Reset
+
+	@WithSharedApplicationMockDS(testapp=True, users=True)
+	def test_lesson_media_outline(self):
+		outline_node_ntiid = "tag:nextthought.com,2011-10:NTI-NTICourseOutlineNode-Fall2015_CS_1323.0"
+		node_data = { 'MimeType': "application/vnd.nextthought.courses.courseoutlinecontentnode",
+					  'title': "Chapter 1 - The First Chapter"}
+		# Create node and publish it
+		content_node = self.testapp.post_json( '/dataserver2/Objects/%s/contents' % outline_node_ntiid,
+											   node_data )
+		content_node = content_node.json_body
+		lesson_node_href = content_node.get( 'href' )
+		self.testapp.post( '%s/@@publish' % lesson_node_href )
+		lesson_ntiid = content_node.get( 'LessonOverviewNTIID' )
+
+		# Add our overview group and registered video.
+		group_source = self._load_resource('nticourseoverviewgroup.json')
+		video_source = group_source.get( 'Items' )[-1]
+		video_res = self.testapp.post_json(self.assets_url, video_source, status=201)
+		video_ntiid = video_res.json_body.get( 'ntiid' )
+		video_source['NTIID' ] = video_ntiid
+		self.testapp.post_json( '/dataserver2/Objects/%s/contents' % lesson_ntiid,
+							    group_source )
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			video_obj = find_object_with_ntiid(video_ntiid)
+			assert_that( video_obj, not_none() )
+
+		# Our media by outline contains just the single video
+		# for this lesson.
+		media_outline = self._media_by_outline()
+		containers = media_outline.get( 'Containers' )
+		lesson_media = containers.get( lesson_ntiid )
+		assert_that( lesson_media, not_none() )
+		assert_that( lesson_media, contains( video_ntiid ))
