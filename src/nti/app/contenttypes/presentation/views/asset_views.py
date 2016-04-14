@@ -1039,6 +1039,9 @@ class LessonOverviewPutView(PresentationAssetPutView):
 		data = {x.ntiid:x for x in contentObject}  # save groups
 		return data
 
+	def _get_containers(self):
+		return ()
+
 	def postflight(self, updatedObject, externalValue, preflight):
 		updated = {x.ntiid for x in updatedObject}
 		for ntiid, group in preflight.items():
@@ -1056,6 +1059,12 @@ class CourseOverviewGroupPutView(PresentationAssetPutView):
 		preflight_overview_group(externalValue)
 		data = {x.ntiid:x for x in contentObject}
 		return data
+
+	def _get_containers(self):
+		lesson = find_interface(self.context, INTILessonOverview, strict=False)
+		if lesson:
+			return (lesson.ntiid,)
+		return ()
 
 	def postflight(self, updatedObject, externalValue, preflight):
 		updated = {x.ntiid for x in updatedObject}
@@ -1240,9 +1249,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 	"""
 	We accept asset items by index here. We handle two types specially here:
 
-	1. We turn media objects into media refs here, given an NTIID.
-	2. We turn timeline ntiids into timeline objects to place directly
-	in the overview group (since these objects do not have refs).
+	We turn media, timeline, and slidedecks into refs here, given an NTIID.
 	"""
 
 	content_predicate = IGroupOverViewable.providedBy
