@@ -967,9 +967,19 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 		notify_modified(contentObject, originalSource)
 		return result
 
+	def _get_containers(self):
+		result = []
+		for iface in (INTICourseOverviewGroup, INTILessonOverview):
+			parent = find_interface(self.context, iface, strict=False)
+			if parent is not None:
+				result.append( parent )
+		return result
+
 	def __call__(self):
 		result = UGDPutView.__call__(self)
-		self._handle_asset(iface_of_asset(result), result, result.creator)
+		containers = self._get_containers()
+		self._handle_asset(iface_of_asset(result), result,
+						   result.creator, containers)
 		return self.transformOutput(result)
 
 @view_config(context=IPackagePresentationAsset)
