@@ -945,7 +945,7 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 	def updateContentObject(self, contentObject, externalValue, set_id=False, notify=True):
 		data = self.preflight(contentObject, externalValue)
 
-		originalSource = copy.copy(externalValue)
+		originalSource = copy.deepcopy(externalValue)
 		pre_hook = get_external_pre_hook(externalValue)
 		result = UGDPutView.updateContentObject(self,
 												contentObject,
