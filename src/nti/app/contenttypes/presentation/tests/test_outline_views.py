@@ -664,7 +664,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		at_index_url = self.outline_ordered_contents_url + '/index/0'
 		new_unit_title2 = 'new unit title2'
 		unit_data2 = {'title': new_unit_title2,
-					'MimeType': self.unit_mime_type}
+					  'MimeType': self.unit_mime_type}
 		res = self.testapp.post_json(at_index_url, unit_data2,
 									 extra_environ=instructor_environ)
 		res = res.json_body
@@ -697,7 +697,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		at_index_url = self.outline_ordered_contents_url + '/index/9'
 		new_unit_title3 = 'new unit title3'
 		unit_data3 = {'title': new_unit_title3,
-					'MimeType': self.unit_mime_type}
+					  'MimeType': self.unit_mime_type}
 		res = self.testapp.post_json(at_index_url, unit_data3,
 									 extra_environ=instructor_environ)
 		new_ntiid3 = res.json_body.get('NTIID')
@@ -721,7 +721,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 
 		# Invalid
 		invalid_data = {'title': INVALID_TITLE,
-					'MimeType': self.unit_mime_type}
+						'MimeType': self.unit_mime_type}
 		self.testapp.post_json(at_index_url, invalid_data,
 								extra_environ=instructor_environ,
 								status=422)

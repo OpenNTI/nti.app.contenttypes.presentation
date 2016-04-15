@@ -95,7 +95,7 @@ def _on_course_instance_available(course, event):
 	catalog = get_library_catalog()
 	if catalog is not None and not ILegacyCourseInstance.providedBy(course):
 		sync_results = _get_course_sync_results( event )
-		synchronize_course_lesson_overview(course, 
+		synchronize_course_lesson_overview(course,
 										   catalog=catalog,
 										   sync_results=sync_results)
 
@@ -132,7 +132,7 @@ def _on_outlinenode_unregistered(node, event):
 
 	# ground lesson
 	lesson.__parent__ = None
-	
+
 	# unregister empty lesson overviews to avoid leaking
 	registry = get_site_registry()
 	if not lesson.Items and registry != component.getGlobalSiteManager():
@@ -168,6 +168,13 @@ def on_group_moved(group, event):
 @component.adapter(IPresentationAsset, IPresentationAssetMovedEvent)
 def on_asset_moved(asset, event):
 	ntiid = getattr(asset, 'ntiid', None)
+	# Update our index. IPresentationAssets are the only movable
+	# entity that needs to update its index containers.
+	# If no old_parent_ntiid, it was an internal move.
+	if event.old_parent_ntiid:
+		catalog = get_library_catalog()
+		catalog.remove_containers( asset, event.old_parent_ntiid )
+		catalog.update_containers( asset, asset.__parent__.ntiid )
 	if ntiid:
 		record_transaction(asset, principal=event.principal,
 						   type_=TRX_ASSET_MOVE_TYPE)

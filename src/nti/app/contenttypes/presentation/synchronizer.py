@@ -530,7 +530,7 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 			item.__parent__ = node  # lineage
 			node.LessonOverviewNTIID = item.ntiid
 
-		if 	IItemAssetContainer.providedBy(item):
+		if IItemAssetContainer.providedBy(item):
 
 			_index_overview_items(item.Items,
 								  namespace=namespace,

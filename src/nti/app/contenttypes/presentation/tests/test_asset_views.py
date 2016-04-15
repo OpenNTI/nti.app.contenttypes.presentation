@@ -9,18 +9,16 @@ __docformat__ = "restructuredtext en"
 
 from hamcrest import is_
 from hamcrest import none
-from hamcrest import is_in
 from hamcrest import is_not
 from hamcrest import has_key
 from hamcrest import contains
 from hamcrest import not_none
 from hamcrest import has_item
-from hamcrest import has_items
 from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
-from hamcrest import greater_than
 from hamcrest import has_property
+from hamcrest import contains_inanyorder
 does_not = is_not
 
 from nti.schema.testing import validly_provides
@@ -32,12 +30,17 @@ from itertools import chain
 
 import simplejson
 
+from zope import component
+
+from zope.intid.interfaces import IIntIds
+
 from nti.app.contenttypes.presentation import VIEW_NODE_MOVE
 from nti.app.contenttypes.presentation import VIEW_ORDERED_CONTENTS
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseSubInstance
 
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTITimeline
@@ -86,6 +89,10 @@ class TestAssetViews(ApplicationLayerTest):
 	assets_url = course_url + '/assets'
 
 	@property
+	def intids(self):
+		return component.getUtility(IIntIds)
+
+	@property
 	def _media_href(self):
 		res = self.testapp.get( self.course_url )
 		res = self.require_link_href_with_rel( res.json_body, 'MediaByOutlineNode' )
@@ -110,6 +117,36 @@ class TestAssetViews(ApplicationLayerTest):
 				packs = course.ContentPackageBundle.ContentPackages
 				container = IPresentationAssetContainer(packs[0])
 				assert_that(container, has_key(ntiid))
+
+	def _check_container_index(self, obj, container_ids=None, packages=False, course=True):
+		"""
+		Validate the container index for the given object.
+		"""
+		catalog = get_library_catalog()
+		containers = catalog.get_containers( obj )
+		# For convenience, we pop any subinstances in our containers. Stuff
+		# sync'd from disk will have all subinstances (when the outline is
+		# shared); API created items will not. TODO: Is this correct?
+		for container_id in tuple(containers):
+			container_obj = find_object_with_ntiid( container_id )
+			container_course = ICourseInstance( container_obj, None )
+			if ICourseSubInstance.providedBy( container_course ):
+				containers.discard( container_id )
+
+		expected_containers = []
+		if course:
+			expected_containers.append( self.course_ntiid )
+		package_ids = ()
+		if packages:
+			entry = find_object_with_ntiid( self.course_ntiid )
+			course = ICourseInstance( entry )
+			package_ids = [x.ntiid for x in course.ContentPackageBundle.ContentPackages]
+		if container_ids:
+			expected_containers.extend( container_ids )
+		expected_containers.extend( package_ids )
+		assert_that( containers, contains_inanyorder( *expected_containers ))
+		# Validate intid (must have an intid to be indexed anyway).
+		assert_that( self.intids.queryId( obj ), not_none() )
 
 	def _test_transaction_history(self, obj, *args):
 		# Call within a ds transaction
@@ -154,10 +191,7 @@ class TestAssetViews(ApplicationLayerTest):
 			entry = find_object_with_ntiid(self.course_ntiid)
 			course = ICourseInstance(entry)
 			self._check_containers(course, items=(obj,))
-
-			catalog = get_library_catalog()
-			containers = catalog.get_containers(obj)
-			assert_that(containers, has_length(greater_than(1)))
+			self._check_container_index( obj, packages=True )
 
 			source = to_external_object(obj)
 
@@ -203,9 +237,7 @@ class TestAssetViews(ApplicationLayerTest):
 			course = ICourseInstance(entry)
 			self._check_containers(course, packages=False, items=(roll_obj,))
 
-			catalog = get_library_catalog()
-			containers = catalog.get_containers(roll_obj)
-			assert_that(containers, contains(self.course_ntiid))
+			self._check_container_index( roll_obj )
 			self._check_containers(course, packages=False, items=roll_obj.Items)
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
@@ -225,7 +257,11 @@ class TestAssetViews(ApplicationLayerTest):
 
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			group = find_object_with_ntiid(group_ntiid)
+			lesson_ntiid = group.__parent__.ntiid
 			assert_that(group.child_order_locked, is_(False))
+			for item in group:
+				self._check_container_index( item, container_ids=( group_ntiid,
+																   lesson_ntiid ) )
 
 		# Permissions
 		non_perm_env = self._get_non_perm_environ()
@@ -271,12 +307,16 @@ class TestAssetViews(ApplicationLayerTest):
 			video_obj = find_object_with_ntiid(target_ntiid)
 			assert_that(video_obj, validly_provides(INTIVideo))
 
+			for item in group:
+				self._check_container_index( item, container_ids=( group_ntiid,
+																   lesson_ntiid ) )
+
 			# Reset child move status
 			group.child_order_locked = False
 
 		# Upload/append roll into group
 		roll_source = {"MimeType": NTIVideoRoll.mime_type,
-						"Items": [video_ntiid] }
+					   "Items": [video_ntiid] }
 		res = self.testapp.post_json(contents_link, roll_source, status=201)
 		res = res.json_body
 		roll_href = res.get('href')
@@ -318,12 +358,8 @@ class TestAssetViews(ApplicationLayerTest):
 # 			course = ICourseInstance(entry)
 # 			self._check_containers(course, items=(roll_obj,))
 # 			self._check_containers(course, packages=False, items=roll_obj.Items)
-
-			catalog = get_library_catalog()
-			containers = catalog.get_containers(roll_obj)
-			assert_that(containers, has_items(	group_ntiid,
-												self.course_ntiid,
-												group.__parent__.ntiid))
+			self._check_container_index( roll_obj, container_ids=( group_ntiid,
+																   lesson_ntiid ) )
 
 			assert_that(roll_obj.locked, is_(True))
 			new_item = roll_obj.Items[0]
@@ -362,10 +398,13 @@ class TestAssetViews(ApplicationLayerTest):
 			for item in roll_obj.Items:
 				assert_that(item.ntiid, is_not(item.target))
 				assert_that(item, validly_provides(INTIVideoRef))
+				self._check_container_index( item, container_ids=( video_roll_ntiid,
+																   group_ntiid,
+																   lesson_ntiid ) )
 
 		# Now append another video ntiid to video roll, just on the ITEMS field.
 		items.append({"MimeType": "application/vnd.nextthought.ntivideo",
-						"NTIID": video_ntiid})
+					  "NTIID": video_ntiid})
 		new_source = {}
 		new_source['Items'] = items
 		res = self.testapp.put_json(roll_href, new_source, status=200)
@@ -390,6 +429,9 @@ class TestAssetViews(ApplicationLayerTest):
 				assert_that(item, validly_provides(INTIVideoRef))
 				assert_that(item.locked, is_(True))
 				assert_that(item.__parent__, not_none())
+				self._check_container_index( item, container_ids=( video_roll_ntiid,
+																   group_ntiid,
+																   lesson_ntiid ) )
 
 		# Insert new video ntiid into overview group
 		res = self.testapp.post_json(self.assets_url, video_source, status=201)
@@ -413,6 +455,9 @@ class TestAssetViews(ApplicationLayerTest):
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			group = find_object_with_ntiid(group_ntiid)
 			assert_that(group.child_order_locked, is_(True))
+			for item in group:
+				self._check_container_index( item, container_ids=( group_ntiid,
+																   lesson_ntiid ) )
 
 		# Cannot have duplicate videos (by ntiid) in a group
 		# self.testapp.post_json( contents_link, {'ntiid':new_video_ntiid}, status=422 )
@@ -539,6 +584,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj, is_not(none()))
 			assert_that(obj, validly_provides(INTICourseOverviewGroup))
 			assert_that(obj, has_property('Items', has_length(2)))
+			self._check_container_index( obj )
 
 			entry = find_object_with_ntiid(self.course_ntiid)
 			course = ICourseInstance(entry)
@@ -557,6 +603,7 @@ class TestAssetViews(ApplicationLayerTest):
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, has_property('locked', is_(True)))
 			assert_that(obj, has_property('Items', has_length(1)))
+			self._check_container_index( obj )
 			history = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(2))
 
@@ -589,11 +636,11 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj.Items[-1].ntiid, is_(rel_ntiid))
 			history = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(3))
+			self._check_container_index( obj )
 
 			obj = find_object_with_ntiid(rel_ntiid)
-			catalog = get_library_catalog()
-			containers = catalog.get_containers(obj)
-			assert_that(ntiid, is_in(containers))
+			# Our group does not adapt to a course (since no parent).
+			self._check_container_index( obj, container_ids=( ntiid, ), course=False )
 
 		# Delete video from group; but asset still exists.
 		delete_suffix = self._get_delete_url_suffix(0, video_ntiid)
@@ -618,11 +665,10 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj.Items[0].ntiid, is_(rel_ntiid))
 			history = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(4))
+			self._check_container_index( obj )
 
 			obj = find_object_with_ntiid(rel_ntiid)
-			catalog = get_library_catalog()
-			containers = catalog.get_containers(obj)
-			assert_that(ntiid, is_in(containers))
+			self._check_container_index( obj, container_ids=( ntiid, ), course=False )
 
 		# Label length validation
 		invalid_source = dict(source)
@@ -661,10 +707,12 @@ class TestAssetViews(ApplicationLayerTest):
 
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			obj = find_object_with_ntiid(ntiid)
+			self._check_container_index( obj )
 			rel_obj = obj.items[0]
 			assert_that(rel_obj.ntiid, is_(rel_ntiid))
 			assert_that(rel_obj.href, is_(external_link))
 			assert_that(rel_obj.__parent__, not_none())
+			self._check_container_index( rel_obj, container_ids=( ntiid, ), course=False )
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_lesson(self):
@@ -692,9 +740,8 @@ class TestAssetViews(ApplicationLayerTest):
 			course = ICourseInstance(entry)
 			self._check_containers(course, False, obj.Items)
 
-			catalog = get_library_catalog()
-			containers = catalog.get_containers(obj.Items[0])
-			assert_that(lesson_ntiid, is_in(containers))
+			group = obj.Items[0]
+			self._check_container_index( group, container_ids=( lesson_ntiid, ) )
 
 			source = to_external_object(obj)
 
@@ -728,10 +775,9 @@ class TestAssetViews(ApplicationLayerTest):
 			history = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(3))
 
+			# No course since we do not have course lineage through lesson.
 			obj = find_object_with_ntiid(group_ntiid)
-			catalog = get_library_catalog()
-			containers = catalog.get_containers(obj)
-			assert_that(lesson_ntiid, is_in(containers))
+			self._check_container_index( obj, container_ids=( lesson_ntiid, ), course=False )
 
 		# Long title validation
 		invalid_source = {'title': INVALID_TITLE}
@@ -748,9 +794,7 @@ class TestAssetViews(ApplicationLayerTest):
 			obj.child_order_locked = False  # Reset
 
 			obj = find_object_with_ntiid(group_ntiid)
-			catalog = get_library_catalog()
-			containers = catalog.get_containers(obj)
-			assert_that(lesson_ntiid, is_in(containers))
+			self._check_container_index( obj, container_ids=( lesson_ntiid, ), course=False )
 
 		# Another append
 		utz_special = {
@@ -940,6 +984,7 @@ class TestAssetViews(ApplicationLayerTest):
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
 			obj = find_object_with_ntiid(lesson_ntiid)
 			assert_that(obj.child_order_locked, is_(False))
+			self._check_container_index( obj )
 
 		# Move our last item to first
 		move_data = self._get_move_json(last_group_ntiid, lesson_ntiid, 0, lesson_ntiid)
@@ -957,9 +1002,12 @@ class TestAssetViews(ApplicationLayerTest):
 			obj = find_object_with_ntiid(lesson_ntiid)
 			assert_that(obj.child_order_locked, is_(True))
 			obj.child_order_locked = False  # Reset
+			self._check_container_index( obj )
 			moved_group = find_object_with_ntiid(last_group_ntiid)
 			assert_that( moved_group.__parent__.ntiid, is_( lesson_ntiid ) )
 			self._test_transaction_history(moved_group, TRX_OVERVIEW_GROUP_MOVE_TYPE)
+			self._check_container_index( moved_group,
+										 container_ids=(lesson_ntiid,))
 
 		# Move the item back to the end
 		move_data = self._get_move_json(last_group_ntiid, lesson_ntiid)
@@ -976,6 +1024,8 @@ class TestAssetViews(ApplicationLayerTest):
 			obj = find_object_with_ntiid(lesson_ntiid)
 			assert_that(obj.child_order_locked, is_(True))
 			obj.child_order_locked = False  # Reset
+			self._check_container_index( moved_group,
+										 container_ids=(lesson_ntiid,) )
 
 		# Overview groups
 		source_group_index = 0
@@ -996,6 +1046,8 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj.child_order_locked, is_(False))
 			asset = find_object_with_ntiid( first_asset_ntiid )
 			assert_that( asset.__parent__.ntiid, is_( source_group_ntiid ) )
+			self._check_container_index( asset,
+										 container_ids=(lesson_ntiid, source_group_ntiid))
 
 		move_data = self._get_move_json(first_asset_ntiid, source_group_ntiid)
 		self.testapp.post_json(move_link, move_data)
@@ -1015,6 +1067,8 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(obj.child_order_locked, is_(True))
 			obj.child_order_locked = False  # Reset
 			assert_that( asset.__parent__.ntiid, is_( source_group_ntiid ) )
+			self._check_container_index( asset,
+										 container_ids=(lesson_ntiid, source_group_ntiid))
 
 		# Move between overview groups
 		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
@@ -1046,6 +1100,8 @@ class TestAssetViews(ApplicationLayerTest):
 			moved_asset = find_object_with_ntiid(first_asset_ntiid)
 			assert_that( moved_asset.__parent__.ntiid, is_( target_group_ntiid ) )
 			self._test_transaction_history(moved_asset, TRX_ASSET_MOVE_TYPE)
+			self._check_container_index( moved_asset,
+										 container_ids=(lesson_ntiid, target_group_ntiid))
 
 		# Move back to original group
 		move_data = self._get_move_json(first_asset_ntiid, source_group_ntiid, 0, target_group_ntiid)
@@ -1071,6 +1127,8 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(tar.child_order_locked, is_(True))
 			obj.child_order_locked = tar.child_order_locked = False  # Reset
 			assert_that( moved_asset.__parent__.ntiid, is_( source_group_ntiid ) )
+			self._check_container_index( moved_asset,
+										 container_ids=(lesson_ntiid, source_group_ntiid))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_lesson_media_outline(self):

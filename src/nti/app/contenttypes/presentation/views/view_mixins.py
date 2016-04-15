@@ -145,7 +145,8 @@ class AbstractChildMoveView(AbstractAuthenticatedView,
 			old_parent.child_order_locked = True
 
 		if self.notify_type:
-			notify(self.notify_type(obj, self.remoteUser.username, index))
+			notify(self.notify_type(obj, self.remoteUser.username,
+									index, old_parent_ntiid=old_parent_ntiid))
 		logger.info('Moved item (%s) at index (%s) (to=%s) (from=%s)',
 					ntiid, index, new_parent_ntiid, old_parent_ntiid)
 		new_parent.child_order_locked = True
