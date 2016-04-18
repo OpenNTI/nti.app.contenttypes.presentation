@@ -52,7 +52,7 @@ from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
-from nti.namedfile.file import FileConstraints
+from nti.namedfile.constraints import FileConstraints
 
 from nti.schema.jsonschema import TAG_HIDDEN_IN_UI
 
