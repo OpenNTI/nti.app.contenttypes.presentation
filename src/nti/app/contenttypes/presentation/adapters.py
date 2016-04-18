@@ -54,6 +54,8 @@ from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.namedfile.constraints import FileConstraints
 
+from nti.namedfile.interfaces import IFileConstraints
+
 from nti.schema.jsonschema import TAG_HIDDEN_IN_UI
 
 from nti.traversal.traversal import find_interface
@@ -163,13 +165,16 @@ class _PresentationAssetExternalFieldTraverser(_AbstractExternalFieldTraverser):
 # constraints
 
 @component.adapter(INTIDiscussionRef)
+@interface.implementer(IFileConstraints)
 class _DiscussionRefFileConstraints(FileConstraints):
 	max_file_size = 10485760  # 10 MB
 
 @component.adapter(INTIRelatedWorkRef)
+@interface.implementer(IFileConstraints)
 class _RelatedWorkRefFileConstraints(FileConstraints):
 	max_file_size = 104857600  # 100 MB
 
 @component.adapter(INTIMedia)
+@interface.implementer(IFileConstraints)
 class _MediaFileConstraints(FileConstraints):
 	max_file_size = 104857600  # 100 MB

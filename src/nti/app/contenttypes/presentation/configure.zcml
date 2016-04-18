@@ -47,9 +47,17 @@
 			 for="nti.contenttypes.courses.interfaces.ICourseInstance"
 			 provides="nti.contenttypes.presentation.interfaces.IPresentationAssetContainer" />
 
-	<adapter factory=".adapters._MediaFileConstraints" />
-	<adapter factory=".adapters._DiscussionRefFileConstraints" />
-	<adapter factory=".adapters._RelatedWorkRefFileConstraints" />
+	<adapter factory=".adapters._MediaFileConstraints"
+			 for="nti.contenttypes.presentation.interfaces.INTIMedia"
+			 provides="nti.namedfile.interfaces.IFileConstraints" />
+
+	<adapter factory=".adapters._DiscussionRefFileConstraints" 
+			 for="nti.contenttypes.presentation.interfaces.INTIDiscussionRef"
+			 provides="nti.namedfile.interfaces.IFileConstraints" />
+
+	<adapter factory=".adapters._RelatedWorkRefFileConstraints"
+			 for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef"
+			 provides="nti.namedfile.interfaces.IFileConstraints" />
 
 	<!-- ACLs -->
 	<adapter factory=".acl.NTIAudioACLProvider" />
