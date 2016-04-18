@@ -5,6 +5,7 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+from nti.site.site import get_component_hierarchy_names
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -240,11 +241,12 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 		master = set()
 		catalog = get_library_catalog()
 		intids = component.getUtility(IIntIds)
+		all_courses = tuple(yield_sync_courses())
 
 		# clean containers by removing those assets that either
 		# don't have an intid or cannot be found in the registry
 		# or don't have proper lineage
-		for course in yield_sync_courses():
+		for course in all_courses:
 			# check every object in the course
 			folder = find_interface(course, IHostPolicyFolder, strict=False)
 			registry = folder.getSiteManager()
@@ -264,6 +266,9 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 					remove_transaction_history(asset)
 				else:
 					master.add(ntiid)
+					
+		if not all_courses:
+			sites = get_component_hierarchy_names()
 
 		# unregister those utilities that cannot be found in the course containers
 		for site in sites:
