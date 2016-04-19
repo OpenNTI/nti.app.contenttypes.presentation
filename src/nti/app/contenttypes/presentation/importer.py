@@ -26,6 +26,8 @@ from nti.app.products.courseware.resources.utils import get_file_from_external_l
 
 from nti.app.products.courseware.utils.importer import transfer_resources_from_filer
 
+from nti.contenttypes.courses.common import get_course_site
+
 from nti.contenttypes.courses.importer import BaseSectionImporter
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -45,11 +47,7 @@ from nti.ntiids.ntiids import is_valid_ntiid_string
 
 from nti.site.hostpolicy import get_host_site
 
-from nti.site.interfaces import IHostPolicyFolder
-
 from nti.site.site import get_component_hierarchy_names
-
-from nti.traversal.traversal import find_interface
 
 @interface.implementer(ICourseSectionImporter)
 class LessonOverviewsImporter(BaseSectionImporter):
@@ -75,7 +73,7 @@ class LessonOverviewsImporter(BaseSectionImporter):
 				asset.target = to_external_ntiid_oid(ext)
 
 	def _get_course_site(self, course):
-		site_name = find_interface(course, IHostPolicyFolder, strict=False).__name__
+		site_name = get_course_site(course)
 		site = get_host_site(site_name)
 		return site
 
