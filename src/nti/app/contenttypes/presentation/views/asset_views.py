@@ -72,6 +72,7 @@ from nti.app.products.courseware import VIEW_RECURSIVE_AUDIT_LOG
 from nti.app.products.courseware import VIEW_RECURSIVE_TX_HISTORY
 
 from nti.app.products.courseware.resources.utils import get_course_filer
+from nti.app.products.courseware.resources.utils import is_internal_file_link	
 
 from nti.app.products.courseware.views.view_mixins import AbstractRecursiveTransactionHistoryView
 
@@ -326,7 +327,7 @@ def _handle_multipart(context, user, contentObject, sources, provided=None):
 		if name in provided:
 			# remove existing
 			location = getattr(contentObject, name, None)
-			if location:
+			if location and is_internal_file_link(location):
 				filer.remove(location)
 			# save a in a new file
 			key = get_safe_source_filename(source, name)
