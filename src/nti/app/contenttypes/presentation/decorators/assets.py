@@ -35,6 +35,9 @@ from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_SECTION_TOP
 
 from nti.app.products.courseware.decorators import BaseRecursiveAuditLogLinkDecorator
 
+from nti.app.products.courseware.resources.utils import is_internal_file_link
+from nti.app.products.courseware.resources.utils import get_file_from_external_link
+
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
 from nti.appserver.pyramid_authorization import has_permission
@@ -484,6 +487,20 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 					if self.is_legacy_ipad:  # for legacy ipad
 						value = urljoin(self.request.host_url, value)
 					result[name] = value
+
+@component.adapter(INTIRelatedWorkRef, IRequest)
+@interface.implementer(IExternalMappingDecorator)
+class _RelatedWorkContentFileDecorator(AbstractAuthenticatedRequestAwareDecorator):
+
+	def _predicate(self, context, result):
+		result = self._is_authenticated
+		return result
+
+	def _do_decorate_external(self, context, result):
+		if is_internal_file_link(context.href):
+			internal = get_file_from_external_link(context.href)
+			ext_obj = to_external_object(internal)
+			result['ContentFile'] = ext_obj
 
 @interface.implementer(IExternalMappingDecorator)
 class _IPADLegacyReferenceDecorator(AbstractAuthenticatedRequestAwareDecorator):
