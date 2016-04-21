@@ -32,6 +32,7 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.common import get_course_packages
 
+from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import	CourseLessonSyncResults
 from nti.contenttypes.courses.interfaces import	ICourseOutlineContentNode
@@ -562,7 +563,7 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 def _index_pacakge_assets(course, catalog=None, sites=None):
 	entry = ICourseCatalogEntry(course)
 	packs = get_course_packages(course)
-	packs = [x.ntiid for x in packs]
+	packs = tuple(x.ntiid for x in packs)
 
 	catalog = get_library_catalog() if catalog is None else catalog
 	sites = get_component_hierarchy_names() if not sites else sites
@@ -594,13 +595,25 @@ def get_sibling_entry(source, unit=None, buckets=None):
 		return unit.does_sibling_entry_exist(source) # returns a key
 	return None
 
+def _add_buckets(course, buckets):
+	root = course.root
+	if root is not None:
+		lessons = root.getChildNamed('Lessons')
+		if lessons is not None:
+			buckets.append(lessons)
+		buckets.append(root)
+	return buckets
+
 def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 									   buckets=None, **kwargs):
 	result = []
 	namespaces = set()
-	if not buckets:
-		lessons = course.root.getChildNamed('Lessons')
-		buckets = (lessons, course.root) if lessons is not None else (course.root,)
+	parent = get_parent_course(course)
+	if not buckets: # XXX seek in Lesson directories
+		buckets = list()
+		if ICourseSubInstance.providedBy(course):
+			_add_buckets(parent, buckets)
+		_add_buckets(course, buckets)
 
 	course_packages = get_course_packages(course)
 	catalog = get_library_catalog() if catalog is None else catalog
@@ -612,7 +625,6 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 	ntiid = entry.ntiid if entry is not None else course.__name__
 	name = entry.ProviderUniqueID if entry is not None else course.__name__
 
-	parent = get_parent_course(course)
 	parent = ICourseCatalogEntry(parent, None)
 	ref_ntiid = parent.ntiid if parent is not None else ntiid
 
