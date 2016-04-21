@@ -598,7 +598,9 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 									   buckets=None, **kwargs):
 	result = []
 	namespaces = set()
-	buckets = (course.root,) if not buckets else buckets
+	if not buckets:
+		lessons = course.root.getChildNamed('Lessons')
+		buckets = (lessons, course.root) if lessons is not None else (course.root,)
 
 	course_packages = get_course_packages(course)
 	catalog = get_library_catalog() if catalog is None else catalog
