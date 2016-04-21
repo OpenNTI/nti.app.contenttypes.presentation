@@ -5,7 +5,6 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-from nti.site.site import get_component_hierarchy_names
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -75,6 +74,8 @@ from nti.recorder.record import remove_transaction_history
 from nti.site.interfaces import IHostPolicyFolder
 
 from nti.site.hostpolicy import get_host_site
+
+from nti.site.site import get_component_hierarchy_names
 
 from nti.traversal.traversal import find_interface
 
