@@ -40,6 +40,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseSectionImporter
 
+from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation import iface_of_asset
@@ -111,8 +112,9 @@ class LessonOverviewsImporter(BaseSectionImporter):
 				for lesson in lessons or ():
 					self._post_process_asset(lesson, source_filer, target_filer)
 
-			# save sources
-			root = course.root
+			# save sources in main course
+			parent = get_parent_course(course)
+			root = parent.root
 			if save_sources and IFilesystemBucket.providedBy(root):
 				out_path = os.path.join(root.absolute_path, self.__LESSONS__)
 				self.makedirs(out_path)
