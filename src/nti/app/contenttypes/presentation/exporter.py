@@ -54,7 +54,7 @@ def _outline_nodes(outline, seen):
 			_recur(child)
 	if outline is not None:
 		_recur(outline)
-	return result
+	return tuple(result)
 
 @interface.implementer(ICourseSectionExporter)
 class LessonOverviewsExporter(BaseSectionExporter):

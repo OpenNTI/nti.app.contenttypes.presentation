@@ -112,7 +112,7 @@ class LessonOverviewsImporter(BaseSectionImporter):
 				for lesson in lessons or ():
 					self._post_process_asset(lesson, source_filer, target_filer)
 
-			# save sources in main course
+			# save sources in main course Lessos folder
 			parent = get_parent_course(course)
 			root = parent.root
 			if save_sources and IFilesystemBucket.providedBy(root):

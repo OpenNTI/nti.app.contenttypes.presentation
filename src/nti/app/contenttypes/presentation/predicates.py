@@ -36,4 +36,4 @@ class _PresentationAssetObjects(BasePrincipalObjects):
 		for site in get_all_host_sites():
 			with current_site(site):
 				self.iter_assets(result, seen)
-		return result
+		return tuple(result)
