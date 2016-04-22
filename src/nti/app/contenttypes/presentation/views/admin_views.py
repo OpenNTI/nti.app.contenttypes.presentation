@@ -172,7 +172,7 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 
 				# remove anything left in containers
 				container = IPresentationAssetContainer(course)
-				for ntiid, item in list(container.items()):  # mutating
+				for ntiid, item in tuple(container.items()):  # mutating
 					if 		ICoursePresentationAsset.providedBy(item) \
 						and can_be_removed(item, force=force):
 						container.pop(ntiid, None)
@@ -223,7 +223,7 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 
 	def _course_assets(self, course):
 		container = IPresentationAssetContainer(course)
-		for key, value in list(container.items()):  # snapshot
+		for key, value in tuple(container.items()):  # snapshot
 			if ICoursePresentationAsset.providedBy(value):
 				yield key, value, container
 

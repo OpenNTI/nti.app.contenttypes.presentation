@@ -162,7 +162,7 @@ def remove_mediaroll(item, registry=None, catalog=None, name=None):
 	registry = get_registry_4_item(item, INTIMediaRoll, name, registry=registry)
 	catalog = get_library_catalog() if catalog is None else catalog
 	# remove mediarefs first
-	for media in list(item):  # mutating
+	for media in tuple(item):  # mutating
 		remove_asset(media, registry, catalog)
 	# remove roll
 	remove_asset(item, registry, catalog, name=name)
@@ -176,7 +176,7 @@ def remove_group(group, registry=None, catalog=None, package=False, name=None):
 	registry = get_registry_4_item(group, INTICourseOverviewGroup, name, registry=registry)
 	catalog = get_library_catalog() if catalog is None else catalog
 	# remove items first
-	for item in list(group):  # mutating
+	for item in tuple(group):  # mutating
 		provided = iface_of_asset(item)
 		if INTIMediaRoll.providedBy(item):
 			remove_mediaroll(item, registry, catalog)
@@ -194,7 +194,7 @@ def remove_lesson(item, registry=None, catalog=None, package=False, name=None):
 	registry = get_registry_4_item(item, INTILessonOverview, name, registry=registry)
 	catalog = get_library_catalog() if catalog is None else catalog
 	# remove groups first
-	for group in list(item):  # mutating
+	for group in tuple(item):  # mutating
 		remove_group(group, registry, catalog, package=package)
 	# remove asset
 	remove_asset(item, registry, catalog, name=name)

@@ -102,7 +102,7 @@ def clean_containers(current, intids, seen):
 			seen.add(entry.ntiid)
 			course = ICourseInstance(entry)
 			container = IPresentationAssetContainer(course)
-			for ntiid, item in list(container.items()): # mutating
+			for ntiid, item in tuple(container.items()): # mutating
 				doc_id = intids.queryId(item)
 				if doc_id is None or not _valid_parent(item, intids):
 					logger.warn("Removing %s from course container %s",

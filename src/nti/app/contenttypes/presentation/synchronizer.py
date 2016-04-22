@@ -484,7 +484,7 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 		objs = catalog.search_objects(container_ntiids=container_ntiids,
 									  container_all_of=False,
 									  namespace=namespace, sites=sites, intids=intids)
-		for obj in list(objs):  # we are mutating
+		for obj in tuple(objs):  # we are mutating
 			doc_id = intids.queryId(obj)
 			if doc_id is not None:
 				catalog.remove_containers(doc_id, container_ntiids)
