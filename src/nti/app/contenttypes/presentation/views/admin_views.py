@@ -192,14 +192,12 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 		return result
 
 	def __call__(self):
-		now = time.time()
 		result = LocatedExternalDict()
 		endInteraction()
 		try:
 			self._do_call(result)
 		finally:
 			restoreInteraction()
-			result['SyncTime'] = time.time() - now
 		return result
 
 @view_config(context=IDataserverFolder)
@@ -370,14 +368,12 @@ class RemoveInvalidPresentationAssetsView(AbstractAuthenticatedView,
 									  	  ModeledContentUploadRequestUtilsMixin):
 
 	def __call__(self):
-		now = time.time()
 		result = LocatedExternalDict()
 		endInteraction()
 		try:
 			result[ITEMS] = dict(remove_all_invalid_assets())
 		finally:
 			restoreInteraction()
-			result['SyncTime'] = time.time() - now
 		return result
 
 @view_config(route_name='objects.generic.traversal',
@@ -402,9 +398,7 @@ class OutlineObjectCourseResolverView(AbstractAuthenticatedView):
 		ntiid = params.get('ntiid')
 		obj = find_object_with_ntiid(ntiid)
 		course = find_interface(obj, ICourseInstance, strict=False)
-
-		if course is None:
-			course = ICourseInstance(obj, None)
+		course = ICourseInstance(obj, None) if course is None else course
 
 		if course is not None:
 			possible_courses = self._possible_courses(course)
