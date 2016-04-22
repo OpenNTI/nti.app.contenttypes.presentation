@@ -5,7 +5,6 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-from nti.site.hostpolicy import get_host_site
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -42,6 +41,8 @@ from nti.coremetadata.mixins import CreatedAndModifiedTimeMixin
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.ntiids.ntiids import find_object_with_ntiid
+
+from nti.site.hostpolicy import get_host_site
 
 from nti.site.site import get_component_hierarchy_names
 
