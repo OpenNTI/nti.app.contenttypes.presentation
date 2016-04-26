@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+from nti.app.products.courseware.resources.utils import is_internal_file_link
 __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
@@ -910,6 +911,18 @@ class TestAssetViews(ApplicationLayerTest):
 		assert_that( res.get('href'), is_( 'www.google.com' ) )
 		assert_that( res.get('target'), is_not( 'www.google.com' ) )
 		assert_that( res.get('type'), is_( "application/vnd.nextthought.externallink" ) )
+
+		internal_link = dict( non_target_source )
+		internal_link.pop('href', None)
+		internal_link.pop('targetMimeType', 'text/plain')
+		res = self.testapp.post(contents_link, internal_link,
+								upload_files=[ ('href', 'ichigo.txt', b'ichigo') ])
+		res = res.json_body
+		ref_ntiid = res.get( 'NTIID' )
+		assert_that( ref_ntiid, not_none() )
+		href = res.get( 'href' )
+		assert_that( href, not_none() )
+		assert_that( is_internal_file_link(href), is_(True))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_timeline(self):
