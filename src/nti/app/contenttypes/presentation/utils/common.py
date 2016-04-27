@@ -179,7 +179,7 @@ def remove_course_inaccessible_assets():
 			uid = intids.queryId(asset)
 			provided = iface_of_asset(asset)
 			# check it can be found in registry
-			if component.queryUtility(provided, name=ntiid) is None:
+			if registry.queryUtility(provided, name=ntiid) is None:
 				container.pop(ntiid, None)
 				remove_transaction_history(asset)
 				remove_presentation_asset(asset, registry, catalog, 
