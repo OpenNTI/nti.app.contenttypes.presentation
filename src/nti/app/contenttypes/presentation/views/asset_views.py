@@ -81,8 +81,12 @@ from nti.appserver.dataserver_pyramid_views import GenericGetView
 from nti.appserver.ugd_edit_views import UGDPutView
 from nti.appserver.ugd_edit_views import UGDDeleteView
 
-from nti.assessment.interfaces import IQInquiry
+from nti.assessment.interfaces import IQPoll
+from nti.assessment.interfaces import IQSurvey
+from nti.assessment.interfaces import IQInquiry 
 from nti.assessment.interfaces import IQAssessment
+from nti.assessment.interfaces import IQAssignment
+from nti.assessment.interfaces import IQuestionSet
 
 from nti.common.maps import CaseInsensitiveDict
 
@@ -108,10 +112,14 @@ from nti.contenttypes.presentation import iface_of_asset
 
 from nti.contenttypes.presentation import AUDIO_MIMETYES
 from nti.contenttypes.presentation import VIDEO_MIMETYES
+from nti.contenttypes.presentation import POLL_REF_MIMETYES
 from nti.contenttypes.presentation import TIMELINE_MIMETYES
+from nti.contenttypes.presentation import SURVEY_REF_MIMETYES
 from nti.contenttypes.presentation import TIMELINE_REF_MIMETYES
+from nti.contenttypes.presentation import ASSIGNMENT_REF_MIMETYES
 from nti.contenttypes.presentation import SLIDE_DECK_REF_MIMETYES
 from nti.contenttypes.presentation import LESSON_OVERVIEW_MIMETYES
+from nti.contenttypes.presentation import QUESTIONSET_REF_MIMETYES
 from nti.contenttypes.presentation import ALL_MEDIA_ROLL_MIME_TYPES
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import COURSE_OVERVIEW_GROUP_MIMETYES
@@ -121,6 +129,7 @@ from nti.contenttypes.presentation.discussion import is_nti_course_bundle
 from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIVideo
+from nti.contenttypes.presentation.interfaces import INTIPollRef 
 from nti.contenttypes.presentation.interfaces import INTIMediaRef
 from nti.contenttypes.presentation.interfaces import INTIVideoRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
@@ -1273,17 +1282,32 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 			__traceback_info__ = ntiid
 			if not ntiid:
 				raise hexc.HTTPUnprocessableEntity(_('Missing overview group item NTIID'))
+			
 			resolved = find_object_with_ntiid(ntiid)
-
 			if resolved is None:
 				raise hexc.HTTPUnprocessableEntity(_('Missing overview group item'))
 
-			if INTISlideDeck.providedBy(resolved) or INTISlideDeckRef.providedBy(resolved):
+			if 		INTISlideDeck.providedBy(resolved) \
+				or	INTISlideDeckRef.providedBy(resolved):
 				externalValue[MIMETYPE] = SLIDE_DECK_REF_MIMETYES[0] # make a ref always
-			elif INTITimeline.providedBy(resolved) or INTITimelineRef.providedBy(resolved):
+			elif 	INTITimeline.providedBy(resolved) \
+				or	INTITimelineRef.providedBy(resolved):
 				externalValue[MIMETYPE] = TIMELINE_REF_MIMETYES[0] # make a ref always
-			elif INTIMedia.providedBy(resolved) or INTIMediaRef.providedBy(resolved):
+			elif	INTIMedia.providedBy(resolved) \
+				or	INTIMediaRef.providedBy(resolved):
 				externalValue[MIMETYPE] = resolved.mimeType
+			elif	IQAssignment.providedBy(resolved) \
+				or	INTIAssignmentRef.providedBy(resolved):
+				externalValue[MIMETYPE] = ASSIGNMENT_REF_MIMETYES[0]
+			elif	IQPoll.providedBy(resolved) \
+				or	INTIPollRef.providedBy(resolved):
+				externalValue[MIMETYPE] = POLL_REF_MIMETYES[0]
+			elif	IQSurvey.providedBy(resolved) \
+				or	INTISurveyRef.providedBy(resolved):
+				externalValue[MIMETYPE] = SURVEY_REF_MIMETYES[0]
+			elif	IQuestionSet.providedBy(resolved) \
+				or	INTIQuestionSetRef.providedBy(resolved):
+				externalValue[MIMETYPE] = QUESTIONSET_REF_MIMETYES[0]
 			else:
 				# We did not have a mimetype, and we have an ntiid the resolved
 				# into an unexpected type; blow chunks.
