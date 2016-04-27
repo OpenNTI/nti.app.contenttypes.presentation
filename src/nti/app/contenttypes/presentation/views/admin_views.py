@@ -12,12 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 import six
 import time
 
-from zope import component
-
 from zope.component.hooks import getSite
 from zope.component.hooks import site as current_site
-
-from zope.intid.interfaces import IIntIds
 
 from zope.security.management import endInteraction
 from zope.security.management import restoreInteraction
@@ -31,8 +27,6 @@ from nti.app.externalization.internalization import read_body_as_external_object
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
-from nti.app.contenttypes.presentation import iface_of_thing
-
 from nti.app.contenttypes.presentation.synchronizer import can_be_removed
 from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
 from nti.app.contenttypes.presentation.synchronizer import remove_and_unindex_course_assets
@@ -42,7 +36,7 @@ from nti.app.contenttypes.presentation.utils import yield_sync_courses
 from nti.app.contenttypes.presentation.utils import remove_presentation_asset
 
 from nti.app.contenttypes.presentation.utils.common import remove_all_invalid_assets
-from nti.app.contenttypes.presentation.utils.common import lookup_all_presentation_assets
+from nti.app.contenttypes.presentation.utils.common import remove_course_inaccessible_assets
 
 from nti.app.products.courseware.views import CourseAdminPathAdapter
 
@@ -57,9 +51,6 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.courses.utils import get_course_hierarchy
 
-from nti.contenttypes.presentation import COURSE_CONTAINER_INTERFACES
-
-from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import ICoursePresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
@@ -77,14 +68,9 @@ from nti.site.interfaces import IHostPolicyFolder
 
 from nti.site.hostpolicy import get_host_site
 
-from nti.site.site import get_component_hierarchy_names
-
 from nti.traversal.traversal import find_interface
 
 ITEMS = StandardExternalFields.ITEMS
-NTIID = StandardExternalFields.NTIID
-MIMETYPE = StandardExternalFields.MIMETYPE
-LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 
 def _get_course_ntiids(values):
 	ntiids = values.get('ntiid') or	values.get('ntiids')
@@ -93,7 +79,7 @@ def _get_course_ntiids(values):
 	return ntiids
 
 def _is_true(v):
-	return v and str(v).lower() in TRUE_VALUES
+	return bool(v and str(v).lower() in TRUE_VALUES)
 
 def _read_input(request):
 	result = CaseInsensitiveDict()
@@ -207,133 +193,6 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   permission=nauth.ACT_NTI_ADMIN,
-			   name='RemoveCourseInaccessibleAssets')
-class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
-							  	   		 ModeledContentUploadRequestUtilsMixin):
-
-	def readInput(self, value=None):
-		return _read_input(self.request)
-
-	def _registered_assets(self, registry):
-		for ntiid, asset in lookup_all_presentation_assets(registry).items():
-			if ICoursePresentationAsset.providedBy(asset):
-				yield ntiid, asset
-
-	def _site_registry(self, site_name):
-		folder = get_host_site(site_name)
-		registry = folder.getSiteManager()
-		return registry
-
-	def _course_assets(self, course):
-		container = IPresentationAssetContainer(course)
-		for key, value in list(container.items()):  # snapshot
-			if ICoursePresentationAsset.providedBy(value):
-				yield key, value, container
-
-	def _valid_parent(self, item, intids):
-		parent = item.__parent__
-		doc_id = intids.queryId(parent) if parent is not None else None
-		return parent is not None and doc_id is not None
-
-	def _site_name_registry(self, course):
-		folder = find_interface(course, IHostPolicyFolder, strict=False)
-		registry = folder.getSiteManager()
-		return folder.__name__, registry
-
-	def _do_call(self, result):
-		registered = 0
-		items = result[ITEMS] = []
-
-		sites = set()
-		master = set()
-		catalog = get_library_catalog()
-		intids = component.getUtility(IIntIds)
-		all_courses = list(yield_sync_courses())
-
-		# clean containers by removing those assets that either
-		# don't have an intid or cannot be found in the registry
-		# or don't have proper lineage
-		for course in all_courses:
-			# check every object in the course
-			site_name, registry = self._site_name_registry(course)
-			for ntiid, asset, container in self._course_assets(course):
-				uid = intids.queryId(asset)
-				provided = iface_of_thing(asset)
-				# check it can be found in registry
-				if component.queryUtility(provided, name=ntiid) is None:
-					container.pop(ntiid, None)
-					remove_transaction_history(asset)
-					remove_presentation_asset(asset, registry, catalog, 
-											  package=False, name=ntiid)
-				# check it has a valid uid and parent
-				elif uid is None or not self._valid_parent(asset, intids):
-					container.pop(ntiid, None)
-					remove_transaction_history(asset)
-				else:
-					master.add(ntiid)
-			sites.add(site_name)
-	
-		if not all_courses:
-			sites = get_component_hierarchy_names()
-
-		# unregister those utilities that cannot be found in the course containers
-		for site in sites:
-			registry = self._site_registry(site)
-			for ntiid, asset in self._registered_assets(registry):
-				uid = intids.queryId(asset)
-				if uid is None or ntiid not in master:
-					remove_transaction_history(asset)
-					remove_presentation_asset(asset, registry, catalog,
-											  package=False, name=ntiid)
-					items.append({
-						'IntId':uid,
-						NTIID:ntiid,
-						MIMETYPE:asset.mimeType,
-					})
-				else:
-					registered += 1
-
-		# unindex invalid entries in catalog
-		references = catalog.get_references(sites=sites,
-										 	provided=COURSE_CONTAINER_INTERFACES)
-		for uid in references or ():
-			asset = intids.queryObject(uid)
-			if asset is None or not IPresentationAsset.providedBy(asset):
-				catalog.unindex(uid)
-			else:
-				ntiid = asset.ntiid
-				provided = iface_of_thing(asset)
-				if component.queryUtility(provided, name=ntiid) is None:
-					remove_transaction_history(asset)
-					remove_presentation_asset(asset, catalog=catalog, 
-											  package=False, name=ntiid)
-					items.append({
-						'IntId':uid,
-						NTIID:ntiid,
-						MIMETYPE:asset.mimeType,
-					})
-
-		items.sort(key=lambda x:x[NTIID])
-		result['Sites'] = list(sites)
-		result['TotalContainedAssets'] = len(master)
-		result['TotalRegisteredAssets'] = registered
-		result['Total'] = result['ItemCount'] = len(items)
-		return result
-
-	def __call__(self):
-		result = LocatedExternalDict()
-		endInteraction()
-		try:
-			self._do_call(result)
-		finally:
-			restoreInteraction()
-		return result
-
-@view_config(context=IDataserverFolder)
-@view_config(context=CourseAdminPathAdapter)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   permission=nauth.ACT_NTI_ADMIN,
 			   name='SyncCoursePresentationAssets')
 class SyncCoursePresentationAssetsView(AbstractAuthenticatedView,
 									   ModeledContentUploadRequestUtilsMixin):
@@ -363,6 +222,26 @@ class SyncCoursePresentationAssetsView(AbstractAuthenticatedView,
 		finally:
 			restoreInteraction()
 			result['SyncTime'] = time.time() - now
+		return result
+
+@view_config(context=IDataserverFolder)
+@view_config(context=CourseAdminPathAdapter)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   permission=nauth.ACT_NTI_ADMIN,
+			   name='RemoveCourseInaccessibleAssets')
+class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
+							  	   		 ModeledContentUploadRequestUtilsMixin):
+
+	def readInput(self, value=None):
+		return _read_input(self.request)
+
+	def __call__(self):
+		endInteraction()
+		try:
+			result = remove_course_inaccessible_assets()
+		finally:
+			restoreInteraction()
 		return result
 
 @view_config(context=IDataserverFolder)

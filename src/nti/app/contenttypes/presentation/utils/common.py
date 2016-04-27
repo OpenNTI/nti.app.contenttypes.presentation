@@ -25,21 +25,39 @@ from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 
+from nti.contenttypes.presentation import COURSE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.contenttypes.presentation import iface_of_asset
 
+from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
+from nti.contenttypes.presentation.interfaces import ICoursePresentationAsset
+from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
+
+from nti.contenttypes.courses.common import get_course_site
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.courses.utils import get_course_subinstances
 
+from nti.externalization.interfaces import LocatedExternalDict
+from nti.externalization.interfaces import StandardExternalFields
+
 from nti.ntiids.ntiids import find_object_with_ntiid
 
-from nti.site.hostpolicy import get_all_host_sites
+from nti.recorder.record import remove_transaction_history
+
+from nti.site.hostpolicy import get_host_site 
+from nti.site.hostpolicy import get_all_host_sites 
+
+from nti.site.site import get_component_hierarchy_names
 
 from nti.site.utils import unregisterUtility
+
+ITEMS = StandardExternalFields.ITEMS
+NTIID = StandardExternalFields.NTIID
+MIMETYPE = StandardExternalFields.MIMETYPE
 
 def yield_sync_courses(ntiids=()):
 	catalog = component.getUtility(ICourseCatalog)
@@ -132,4 +150,94 @@ def remove_all_invalid_assets():
 	for current in get_all_host_sites():
 		removed = remove_site_invalid_assets(current, intids, catalog, seen)
 		result[current.__name__] = sorted(removed)
+	return result
+
+def course_assets(course):
+	container = IPresentationAssetContainer(course)
+	for key, value in list(container.items()):  # snapshot
+		if ICoursePresentationAsset.providedBy(value):
+			yield key, value, container
+				
+def remove_course_inaccessible_assets():
+	sites = set()
+	master = set()
+	items = list()
+	registered = 0
+	result = LocatedExternalDict()
+	catalog = get_library_catalog()
+	intids = component.getUtility(IIntIds)
+	all_courses = list(yield_sync_courses())
+	
+	# clean containers by removing those assets that either
+	# don't have an intid or cannot be found in the registry
+	# or don't have proper lineage
+	for course in all_courses:
+		# check every object in the course
+		site_name = get_course_site(course)
+		registry = get_host_site(site_name).getSiteManager()
+		for ntiid, asset, container in course_assets(course):
+			uid = intids.queryId(asset)
+			provided = iface_of_asset(asset)
+			# check it can be found in registry
+			if component.queryUtility(provided, name=ntiid) is None:
+				container.pop(ntiid, None)
+				remove_transaction_history(asset)
+				remove_presentation_asset(asset, registry, catalog, 
+										  package=False, name=ntiid)
+			# check it has a valid uid and parent
+			elif uid is None or not has_a_valid_parent(asset, intids):
+				container.pop(ntiid, None)
+				remove_transaction_history(asset)
+			else:
+				master.add(ntiid)
+		sites.add(site_name)
+
+	# always have sites
+	sites = get_component_hierarchy_names() if not all_courses else sites
+
+	# unregister those utilities that cannot be found in the course containers
+	for site in sites:
+		registry = get_host_site(site).getSiteManager()
+		for ntiid, asset in lookup_all_presentation_assets(registry).items():
+			if not ICoursePresentationAsset.providedBy(asset):
+				continue
+			uid = intids.queryId(asset)
+			if uid is None or ntiid not in master:
+				remove_transaction_history(asset)
+				remove_presentation_asset(asset, registry, catalog,
+										  package=False, name=ntiid)
+				items.append({
+					'IntId':uid,
+					NTIID:ntiid,
+					MIMETYPE:asset.mimeType,
+				})
+			else:
+				registered += 1
+
+	# unindex invalid entries in catalog
+	references = catalog.get_references(sites=sites,
+									 	provided=COURSE_CONTAINER_INTERFACES)
+	for uid in references or ():
+		asset = intids.queryObject(uid)
+		if asset is None or not IPresentationAsset.providedBy(asset):
+			catalog.unindex(uid)
+		else:
+			ntiid = asset.ntiid
+			provided = iface_of_asset(asset)
+			if component.queryUtility(provided, name=ntiid) is None:
+				remove_transaction_history(asset)
+				remove_presentation_asset(asset, catalog=catalog, 
+										  package=False, name=ntiid)
+				items.append({
+					'IntId':uid,
+					NTIID:ntiid,
+					MIMETYPE:asset.mimeType,
+				})
+
+	items.sort(key=lambda x:x[NTIID])
+	result[ITEMS] = items
+	result['Sites'] = list(sites)
+	result['TotalContainedAssets'] = len(master)
+	result['TotalRegisteredAssets'] = registered
+	result['Total'] = result['ItemCount'] = len(items)
 	return result
