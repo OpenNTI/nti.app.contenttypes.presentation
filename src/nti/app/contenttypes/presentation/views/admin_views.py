@@ -40,7 +40,9 @@ from nti.app.contenttypes.presentation.synchronizer import synchronize_course_le
 
 from nti.app.contenttypes.presentation.utils import yield_sync_courses
 from nti.app.contenttypes.presentation.utils import remove_presentation_asset
+
 from nti.app.contenttypes.presentation.utils.common import remove_all_invalid_assets
+from nti.app.contenttypes.presentation.utils.common import lookup_all_presentation_assets
 
 from nti.app.products.courseware.views import CourseAdminPathAdapter
 
@@ -213,17 +215,18 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 		return _read_input(self.request)
 
 	def _registered_assets(self, registry):
-		for ntiid, asset in list(registry.getUtilitiesFor(ICoursePresentationAsset)):
-			yield ntiid, asset
+		for ntiid, asset in lookup_all_presentation_assets(registry).items():
+			if ICoursePresentationAsset.providedBy(asset):
+				yield ntiid, asset
 
 	def _site_registry(self, site_name):
-		folder = get_host_site(site_name,)
+		folder = get_host_site(site_name)
 		registry = folder.getSiteManager()
 		return registry
 
 	def _course_assets(self, course):
 		container = IPresentationAssetContainer(course)
-		for key, value in tuple(container.items()):  # snapshot
+		for key, value in list(container.items()):  # snapshot
 			if ICoursePresentationAsset.providedBy(value):
 				yield key, value, container
 
@@ -231,6 +234,11 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 		parent = item.__parent__
 		doc_id = intids.queryId(parent) if parent is not None else None
 		return parent is not None and doc_id is not None
+
+	def _site_name_registry(self, course):
+		folder = find_interface(course, IHostPolicyFolder, strict=False)
+		registry = folder.getSiteManager()
+		return folder.__name__, registry
 
 	def _do_call(self, result):
 		registered = 0
@@ -240,16 +248,14 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 		master = set()
 		catalog = get_library_catalog()
 		intids = component.getUtility(IIntIds)
-		all_courses = tuple(yield_sync_courses())
+		all_courses = list(yield_sync_courses())
 
 		# clean containers by removing those assets that either
 		# don't have an intid or cannot be found in the registry
 		# or don't have proper lineage
 		for course in all_courses:
 			# check every object in the course
-			folder = find_interface(course, IHostPolicyFolder, strict=False)
-			registry = folder.getSiteManager()
-			sites.add(folder.__name__)
+			site_name, registry = self._site_name_registry(course)
 			for ntiid, asset, container in self._course_assets(course):
 				uid = intids.queryId(asset)
 				provided = iface_of_thing(asset)
@@ -265,7 +271,8 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 					remove_transaction_history(asset)
 				else:
 					master.add(ntiid)
-					
+			sites.add(site_name)
+	
 		if not all_courses:
 			sites = get_component_hierarchy_names()
 
@@ -274,7 +281,7 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 			registry = self._site_registry(site)
 			for ntiid, asset in self._registered_assets(registry):
 				uid = intids.queryId(asset)
-				if 	uid is None or ntiid not in master:
+				if uid is None or ntiid not in master:
 					remove_transaction_history(asset)
 					remove_presentation_asset(asset, registry, catalog,
 											  package=False, name=ntiid)
