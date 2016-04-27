@@ -17,19 +17,24 @@ import argparse
 from nti.app.contenttypes.presentation.utils.common import remove_course_inaccessible_assets
 
 from nti.dataserver.utils import run_with_dataserver
+from nti.dataserver.utils.base_script import set_site
 from nti.dataserver.utils.base_script import create_context
 
 def _process_args(args):
+	set_site(args.site)
 	result = remove_course_inaccessible_assets()
 	if args.verbose:
+		print()
 		pprint.pprint(result)
+		print()
 
 def main():
 	arg_parser = argparse.ArgumentParser(description="Remove remove course inaccessible assets")
 	arg_parser.add_argument('-v', '--verbose', help="Be Verbose", action='store_true',
 							dest='verbose')
-
+	arg_parser.add_argument('-s', '--site', dest='site', help="Application SITE.")
 	args = arg_parser.parse_args()
+
 	env_dir = os.getenv('DATASERVER_DIR')
 	if not env_dir or not os.path.exists(env_dir) and not os.path.isdir(env_dir):
 		raise IOError("Invalid dataserver environment root directory")
