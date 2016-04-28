@@ -29,7 +29,7 @@ def _process_args(args):
 		print()
 
 def main():
-	arg_parser = argparse.ArgumentParser(description="Remove remove course inaccessible assets")
+	arg_parser = argparse.ArgumentParser(description="Remove course inaccessible assets")
 	arg_parser.add_argument('-v', '--verbose', help="Be Verbose", action='store_true',
 							dest='verbose')
 	arg_parser.add_argument('-s', '--site', dest='site', help="Application SITE.")
