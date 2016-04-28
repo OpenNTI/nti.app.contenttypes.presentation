@@ -166,7 +166,9 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 		return self._acl_decoration
 
 	def _legacy_decorate_external(self, context, result):
-		if context.src and not is_ntiid_of_type(context.src, TYPE_OID):
+		# We want to decorate the old legacy content driven overviews
+		# with proper links. These objects do not have LessonOverviewNTIIDs.
+		if context.LessonOverviewNTIID is None:
 			library = component.queryUtility(IContentPackageLibrary)
 			paths = library.pathToNTIID(context.ContentNTIID) if library else ()
 			if paths:
