@@ -162,7 +162,7 @@ def remove_course_inaccessible_assets():
 	sites = set()
 	master = set()
 	items = list()
-	registered = 0
+	registered = set()
 	result = LocatedExternalDict()
 	catalog = get_library_catalog()
 	intids = component.getUtility(IIntIds)
@@ -212,7 +212,7 @@ def remove_course_inaccessible_assets():
 					MIMETYPE:asset.mimeType,
 				})
 			else:
-				registered += 1
+				registered.add(ntiid)
 
 	# unindex invalid entries in catalog
 	references = catalog.get_references(sites=sites,
@@ -238,6 +238,7 @@ def remove_course_inaccessible_assets():
 	result[ITEMS] = items
 	result['Sites'] = list(sites)
 	result['TotalContainedAssets'] = len(master)
-	result['TotalRegisteredAssets'] = registered
+	result['TotalRegisteredAssets'] = len(registered)
+	result['Difference'] = sorted(master.difference(registered))
 	result['Total'] = result['ItemCount'] = len(items)
 	return result
