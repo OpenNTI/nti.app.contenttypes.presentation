@@ -290,7 +290,7 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 		nttype = get_type(item.target)
 		return nttype in (NTIID_TYPE_COURSE_TOPIC, NTIID_TYPE_COURSE_SECTION_TOPIC)
 
-	@property
+	@Lazy
 	def _is_editor(self):
 		return has_permission(ACT_CONTENT_EDIT, self.request.context)
 

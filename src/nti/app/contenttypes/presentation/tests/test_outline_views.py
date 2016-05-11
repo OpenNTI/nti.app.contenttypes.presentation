@@ -85,16 +85,18 @@ class TestOutlineViews(ApplicationLayerTest):
 		# Students do not in have access in preview mode.
 		ichigo_environ = self._make_extra_environ(username=STUDENT)
 		res = self.testapp.get( course_href, extra_environ=ichigo_environ)
-		self.forbid_link_with_rel( res.json_body, 'MediaByOutlineNode' )
+		for rel in ( 'MediaByOutlineNode', 'AssetByOutlineNode' ):
+			self.forbid_link_with_rel( res.json_body, rel )
 
 		# Now verify our link shows up outside of preview mode.
 		mock_preview.is_callable().returns( False )
 		res = self.testapp.get( course_href, extra_environ=ichigo_environ )
 		course_ext = res.json_body
-		self.require_link_href_with_rel(course_ext, 'MediaByOutlineNode')
+		for rel in ( 'MediaByOutlineNode', 'AssetByOutlineNode' ):
+			self.require_link_href_with_rel( res.json_body, rel )
 
 	@WithSharedApplicationMockDS(testapp=True, users=(STUDENT,))
-	def test_media_by_outline(self):
+	def test_media_asset_by_outline(self):
 		res = self._do_enroll()
 
 		# request media by outline
@@ -104,13 +106,7 @@ class TestOutlineViews(ApplicationLayerTest):
 		res = self.testapp.get( course_href, extra_environ=ichigo_environ )
 		course_ext = res.json_body
 		media_href = self.require_link_href_with_rel(course_ext, 'MediaByOutlineNode')
-		res = self.testapp.get(media_href, extra_environ=ichigo_environ)
-
-		data = res.json_body
-		assert_that(data, has_entry('ItemCount', is_(63)))
-		assert_that(data, has_entry('Items', has_length(63)))
-		assert_that(data, has_entry('Containers', has_length(24)))
-		assert_that(data, has_entry('ContainerOrder', has_length(53)))
+		asset_href = self.require_link_href_with_rel(course_ext, 'AssetByOutlineNode')
 
 		lesson = 'tag:nextthought.com,2011-10:OU-HTML-CS1323_F_2015_Intro_to_Computer_Programming.lec:01.01_LESSON'
 		children = [ "tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_01.01.01_Welcome",
@@ -119,7 +115,94 @@ class TestOutlineViews(ApplicationLayerTest):
 					 "tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_01.01.01_Java",
 					 "tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_01.01.01_Academic_Integrity"]
 
+		# Check videos
+		video_asset_href = '%s?mimetypes=%s' % (asset_href, 'application/vnd.nextthought.ntivideo')
+		res = self.testapp.get(video_asset_href, extra_environ=ichigo_environ)
+		data = res.json_body
+		# We do not have all the lessons setup in test course.
+		assert_that( data.get( 'ItemCount' ), is_( 12 ))
+		assert_that( data.get( 'Total' ), is_( 12 ))
+		assert_that( data.get( 'Items' ), has_length(12))
+		assert_that( data.get( 'Containers' ), has_length(4))
+		assert_that( data.get( 'ContainerOrder'), has_length(53))
+		assert_that( data.get( 'Items' ).get( children[0] ),
+					 has_entries( 'mimeType', 'application/vnd.nextthought.ntivideo',
+								  'ntiid', children[0] ))
+		assert_that( data.get( 'Containers').get( lesson ), is_( children ))
+
+		# Multiple filters (empty audio) returns the same results.
+		video_asset_href = '%s?mimetypes=%s,%s' % (asset_href,
+												  'application/vnd.nextthought.ntivideo',
+												  'application/vnd.nextthought.ntiaudio')
+		res = self.testapp.get(video_asset_href, extra_environ=ichigo_environ)
+		data = res.json_body
+		# We do not have all the lessons setup in test course.
+		assert_that( data.get( 'ItemCount' ), is_( 12 ))
+		assert_that( data.get( 'Total' ), is_( 12 ))
+		assert_that( data.get( 'Items' ), has_length(12))
+		assert_that( data.get( 'Containers' ), has_length(4))
+		assert_that( data.get( 'ContainerOrder'), has_length(53))
+		assert_that( data.get( 'Items' ).get( children[0] ),
+					 has_entries( 'mimeType', 'application/vnd.nextthought.ntivideo',
+								  'ntiid', children[0] ))
+		assert_that( data.get( 'Containers').get( lesson ), is_( children ))
+
+		# MediaByOutlineNode
+		res = self.testapp.get(media_href, extra_environ=ichigo_environ)
+		data = res.json_body
+		assert_that(data, has_entry('ItemCount', is_(63)))
+		assert_that(data, has_entry('Items', has_length(63)))
+		assert_that(data, has_entry('Containers', has_length(24)))
+		assert_that(data, has_entry('ContainerOrder', has_length(53)))
+
 		assert_that( data.get('Containers').get( lesson ), is_( children ))
+
+	@WithSharedApplicationMockDS(testapp=True, users=(STUDENT,))
+	def test_assessment_asset_by_outline(self):
+		res = self._do_enroll()
+		course_ext = res.json_body['CourseInstance']
+		course_href = course_ext.get( 'href' )
+		ichigo_environ = self._make_extra_environ(username=STUDENT)
+		res = self.testapp.get( course_href, extra_environ=ichigo_environ )
+		course_ext = res.json_body
+		base_asset_href = self.require_link_href_with_rel(course_ext, 'AssetByOutlineNode')
+
+		lesson = 'tag:nextthought.com,2011-10:OU-HTML-CS1323_F_2015_Intro_to_Computer_Programming.lec:02.03_LESSON'
+		children = [u'tag:nextthought.com,2011-10:OU-NAQ-CS1323_F_2015_Intro_to_Computer_Programming.naq.asg.assignment:Turingscraft_Changing_Primitive_Data_995',
+				    u'tag:nextthought.com,2011-10:OU-NAQ-CS1323_F_2015_Intro_to_Computer_Programming.naq.asg.assignment:Problets_Arithmetic_Tutor_995',
+				    u'tag:nextthought.com,2011-10:OU-NAQ-CS1323_F_2015_Intro_to_Computer_Programming.naq.asg.assignment:Zybook_Changing_Primitive_Data']
+
+		# Assignments
+		asset_href = '%s?mimetypes=%s' % (base_asset_href, 'application/vnd.nextthought.assignment')
+		res = self.testapp.get(asset_href, extra_environ=ichigo_environ)
+		data = res.json_body
+		# We do not have all the lessons setup in test course.
+		assert_that( data.get( 'ItemCount' ), is_( 4 ))
+		assert_that( data.get( 'Total' ), is_( 4 ))
+		items = data.get( 'Items' )
+		assert_that( items, has_length(4))
+		for item in items.values():
+			assert_that( item.get( 'MimeType' ), is_('application/vnd.nextthought.assessment.assignment') )
+		assert_that( data.get( 'Containers' ), has_length(2))
+		assert_that( data.get( 'ContainerOrder'), has_length(53))
+		assert_that( data.get( 'Containers').get( lesson ), is_( children ))
+
+		# QuestionSets
+		lesson = 'tag:nextthought.com,2011-10:OU-HTML-CS1323_F_2015_Intro_to_Computer_Programming.lec:hmwk_15_LESSON'
+		children = [u'tag:nextthought.com,2011-10:OU-NAQ-CS1323_F_2015_Intro_to_Computer_Programming.naq.set.qset:Lab_10']
+		asset_href = '%s?mimetypes=%s' % (base_asset_href, 'application/vnd.nextthought.naquestionset')
+		res = self.testapp.get(asset_href, extra_environ=ichigo_environ)
+		data = res.json_body
+		# We do not have all the lessons setup in test course.
+		assert_that( data.get( 'ItemCount' ), is_( 1 ))
+		assert_that( data.get( 'Total' ), is_( 1 ))
+		items = data.get( 'Items' )
+		assert_that( items, has_length(1))
+		for item in items.values():
+			assert_that( item.get( 'MimeType' ), is_('application/vnd.nextthought.naquestionset') )
+		assert_that( data.get( 'Containers' ), has_length(1))
+		assert_that( data.get( 'ContainerOrder'), has_length(53))
+		assert_that( data.get( 'Containers').get( lesson ), is_( children ))
 
 class TestOutlineEditViews(ApplicationLayerTest):
 

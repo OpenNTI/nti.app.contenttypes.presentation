@@ -57,8 +57,8 @@ class _CourseAssetsLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		_links.append(link)
 
 @interface.implementer(IExternalMappingDecorator)
-class _MediaByOutlineNodeDecorator(PreviewCourseAccessPredicateDecorator,
-								   AbstractAuthenticatedRequestAwareDecorator):
+class _ByOutlineNodeDecorator(PreviewCourseAccessPredicateDecorator,
+							  AbstractAuthenticatedRequestAwareDecorator):
 
 	# We used to check enrollment/instructor access here, for visibility
 	# concerns. Since we allow anon access now, we simply provide the link.
@@ -66,10 +66,9 @@ class _MediaByOutlineNodeDecorator(PreviewCourseAccessPredicateDecorator,
 	def _do_decorate_external(self, context, result_map):
 		course = ICourseInstance(context, context)
 		links = result_map.setdefault(LINKS, [])
-		link = Link(course,
-					rel='MediaByOutlineNode',
-					elements=('@@MediaByOutlineNode',))
-		links.append(link)
+		for rel in ('MediaByOutlineNode', 'AssetByOutlineNode'):
+			link = Link(course, rel=rel, elements=(rel,))
+			links.append(link)
 
 @component.adapter(ICourseDiscussion)
 @interface.implementer(IExternalMappingDecorator)

@@ -58,9 +58,6 @@ from nti.links.externalization import render_link
 
 from nti.links.links import Link
 
-from nti.ntiids.ntiids import TYPE_OID
-from nti.ntiids.ntiids import is_ntiid_of_type
-
 LINKS = StandardExternalFields.LINKS
 
 def _is_visible(item, request, show_unpublished=True):

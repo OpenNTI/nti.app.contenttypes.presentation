@@ -39,6 +39,7 @@ from nti.app.contenttypes.presentation.utils import create_lesson_4_node
 from nti.app.contenttypes.presentation.utils import get_enrollment_record
 from nti.app.contenttypes.presentation.utils import remove_presentation_asset
 from nti.app.contenttypes.presentation.utils import get_participation_principal
+from nti.app.contenttypes.presentation.utils import get_enrollment_record as get_any_enrollment_record
 
 from nti.app.contenttypes.presentation.views.view_mixins import NTIIDPathMixin
 from nti.app.contenttypes.presentation.views.view_mixins import IndexedRequestMixin
@@ -61,7 +62,13 @@ from nti.appserver.ugd_query_views import RecursiveUGDView
 
 from nti.appserver.pyramid_authorization import has_permission
 
+from nti.assessment.interfaces import IQSurvey
+from nti.assessment.interfaces import IQAssignment
+
+from nti.common.maps import CaseInsensitiveDict
+
 from nti.common.property import Lazy
+
 from nti.common.time import time_to_64bit_int
 
 from nti.contentlibrary.indexed_data import get_library_catalog
@@ -76,16 +83,40 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 from nti.contenttypes.courses.interfaces import CourseOutlineNodeMovedEvent
 from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
+from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_for_user
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
+
+from nti.contenttypes.courses.interfaces import ES_ALL
+
+from nti.contenttypes.presentation import AUDIO_MIMETYES
+from nti.contenttypes.presentation import VIDEO_MIMETYES
+from nti.contenttypes.presentation import TIMELINE_MIMETYES
+from nti.contenttypes.presentation import VIDEO_REF_MIMETYES
+from nti.contenttypes.presentation import AUDIO_REF_MIMETYES
+from nti.contenttypes.presentation import AUDIO_ROLL_MIMETYES
+from nti.contenttypes.presentation import SLIDE_DECK_MIMETYES
+from nti.contenttypes.presentation import VIDEO_ROLL_MIMETYES
+from nti.contenttypes.presentation import TIMELINE_REF_MIMETYES
+from nti.contenttypes.presentation import SLIDE_DECK_REF_MIMETYES
+from nti.contenttypes.presentation import DISCUSSION_REF_MIMETYES
+from nti.contenttypes.presentation import ASSIGNMENT_REF_MIMETYES
+from nti.contenttypes.presentation import QUESTIONSET_REF_MIMETYES
+from nti.contenttypes.presentation import RELATED_WORK_REF_MIMETYES
 
 from nti.contenttypes.presentation import NTI_LESSON_OVERVIEW
 
 from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
+from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
+from nti.contenttypes.presentation.interfaces import INTISurveyRef
+from nti.contenttypes.presentation.interfaces import INTITimelineRef
+from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
+from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
+from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
@@ -485,6 +516,265 @@ class OutlineNodeGetView(AbstractAuthenticatedView, PublishVisibilityMixin):
 
 # Misc Views
 
+def _get_group_accept_types( accept_types ):
+	"""
+	Map the given mimetypes to types found in overview groups.
+	"""
+	if not accept_types:
+		return None
+	result = set()
+	for accept_type in accept_types:
+		if accept_type in AUDIO_MIMETYES:
+			result.update( AUDIO_MIMETYES )
+			result.update( AUDIO_REF_MIMETYES )
+			result.update( AUDIO_ROLL_MIMETYES )
+		elif accept_type in VIDEO_MIMETYES:
+			result.update( VIDEO_MIMETYES )
+			result.update( VIDEO_REF_MIMETYES )
+			result.update( VIDEO_ROLL_MIMETYES )
+		elif accept_type in RELATED_WORK_REF_MIMETYES:
+			result.update( RELATED_WORK_REF_MIMETYES )
+		elif accept_type in VIDEO_ROLL_MIMETYES:
+			result.update( VIDEO_ROLL_MIMETYES )
+		elif accept_type in AUDIO_ROLL_MIMETYES:
+			result.update( AUDIO_ROLL_MIMETYES )
+		elif accept_type in TIMELINE_MIMETYES:
+			result.update( TIMELINE_MIMETYES )
+			result.update( TIMELINE_REF_MIMETYES )
+		elif accept_type in SLIDE_DECK_MIMETYES:
+			result.update( SLIDE_DECK_MIMETYES )
+			result.update( SLIDE_DECK_REF_MIMETYES )
+		elif accept_type in DISCUSSION_REF_MIMETYES:
+			result.update( DISCUSSION_REF_MIMETYES )
+		elif accept_type in QUESTIONSET_REF_MIMETYES:
+			result.update( QUESTIONSET_REF_MIMETYES )
+		elif accept_type in ASSIGNMENT_REF_MIMETYES:
+			result.update( ASSIGNMENT_REF_MIMETYES )
+	return result
+
+class _MimeFilter(object):
+
+	def __init__( self, accept_types ):
+		self.accept_types = _get_group_accept_types( accept_types )
+
+	def include( self, obj ):
+		result = True
+		if self.accept_types:
+			mime_type =    getattr( obj, 'mime_type', None ) \
+						or getattr( obj, 'MimeType', None ) \
+						or getattr( obj, 'mimeType', None )
+			result = mime_type in self.accept_types
+		return result
+
+@view_config(context=ICourseInstance)
+@view_config(context=ICourseCatalogEntry)
+@view_config(context=ICourseInstanceEnrollment)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   permission=nauth.ACT_READ,
+			   request_method='GET',
+			   name='AssetByOutlineNode')
+class AssetByOutlineNodeView(AbstractAuthenticatedView):
+	"""
+	Return a mapping of asset ntiids, filtered by comma separated
+	`mimetypes`, to their containers. We also
+	return the ContainerOrder (via ContentNTIIDs found depth-first
+	in the tree) and the items found in the outline.
+
+	Currently we do not handle discussions.
+
+	# FIXME: Needs to handle legacy slide deck behavior.
+	# Pull slidedecks for course, iterate through, grabbing videos
+	# that are slide videos.
+	"""
+
+	@Lazy
+	def course(self):
+		return ICourseInstance(self.request.context)
+
+	@Lazy
+	def _is_editor(self):
+		return has_permission(ACT_CONTENT_EDIT, self.request.context)
+
+	@Lazy
+	def record(self):
+		return get_any_enrollment_record(self.course, self.remoteUser)
+
+	def _allow_assessmentref(self, iface, item):
+		if self._is_editor:
+			return True
+		assg = iface(item, None)
+		if assg is None:
+			return False
+		# Instructor
+		if self.record.Scope == ES_ALL:
+			return True
+		course = self.record.CourseInstance
+		predicate = get_course_assessment_predicate_for_user(self.remoteUser, course)
+		result = predicate is not None and predicate(assg)
+		return result
+
+	def _allow_assignmentref(self, item):
+		result = self._allow_assessmentref(IQAssignment, item)
+		return result
+
+	def _allow_surveyref(self, item):
+		result = self._allow_assessmentref(IQSurvey, item)
+		return result
+
+	def _include_assessment(self, item):
+		result = True
+		if	INTIAssignmentRef.providedBy(item):
+			result = self._allow_assignmentref(item)
+		elif INTISurveyRef.providedBy(item):
+			result = self._allow_surveyref(item)
+		return result
+
+	def _get_all_items(self, item):
+		"""
+		Expand our overview group item into all items needed.
+		"""
+		if INTIMediaRoll.providedBy(item):
+			result = tuple( item.items )
+		elif INTISlideDeck.providedBy( item ):
+			result = list( item.items )
+			result.append( item )
+		else:
+			result = (item,)
+		return result
+
+	def _get_return_item(self, item):
+		"""
+		Convert refs to objects the clients expect.
+		"""
+		result = item
+		if IMediaRef.providedBy(item):
+			result = INTIMedia( item )
+		elif INTISlideDeckRef.providedBy( item ):
+			result = INTISlideDeck( item )
+		elif INTITimelineRef.providedBy( item ):
+			result = INTITimeline( item )
+		elif INTIAssignmentRef.providedBy( item ):
+			result = find_object_with_ntiid( item.target )
+		elif INTIQuestionSetRef.providedBy( item ):
+			result = find_object_with_ntiid( item.target )
+		return result
+
+	def _is_published(self, obj):
+		return not IPublishable.providedBy(obj) or obj.is_published()
+
+	def _get_lesson(self, ntiid):
+		"""
+		Return the lesson for the given ntiid, if published.
+		"""
+		lesson = find_object_with_ntiid( ntiid )
+		result = None
+		if 		lesson is not None \
+			and self._is_published( lesson ):
+			result = lesson
+		return result
+
+	def _is_visible(self, item, course, record):
+		return 	not IVisible.providedBy(item) \
+			or  is_item_visible(item, self.remoteUser,
+								context=course, record=record)
+
+	def _include(self, item, course, record):
+		return	self.mime_filter.include( item ) \
+			and self._is_visible( item, course, record ) \
+			and self._include_assessment( item )
+
+	def _do_call(self, course, record):
+		result = LocatedExternalDict()
+		result.__name__ = self.request.view_name
+		result.__parent__ = self.request.context
+
+		result[ITEMS] = items = {}
+		result['Containers'] = containers = {}
+		result['ContainerOrder'] = container_order = []
+
+		def add_item(item, container_id):
+			# Only add if it passes filter and is visible.
+			if not self._is_visible( item, course, record ):
+				return
+			item = self._get_return_item( item )
+			items[item.ntiid] = item
+			containers.setdefault(container_id, [])
+			containers[container_id].append(item.ntiid)
+
+		def _recur(node):
+			if ICourseOutlineContentNode.providedBy(node):
+				if node.src and node.ContentNTIID:
+					container_order.append( node.ContentNTIID )
+				lesson = self._get_lesson( node.LessonOverviewNTIID )
+				if lesson is not None:
+					container_id = node.ContentNTIID or node.LessonOverviewNTIID
+					for group in lesson or ():
+						for item in group or ():
+							if self._include(item, course, record):
+								# Expand and add
+								all_items = self._get_all_items( item )
+								for item in all_items:
+									add_item(item, container_id)
+
+			for child in node.values():
+				_recur(child)
+
+		outline = course.Outline
+		if outline is not None:
+			_recur(outline)
+
+		last_mod = None
+		if items:
+			try:
+				last_mod = max( x.lastModified for x in items.values() if getattr( x, 'lastModified', 0 ))
+			except ValueError:
+				# QQuestionSet with no 'lastModified'
+				pass
+		result.lastModified = result[LAST_MODIFIED] = last_mod
+		result['Total'] = result['ItemCount'] = len(items)
+		return result
+
+	@Lazy
+	def _mime_filter_params(self):
+		result =   self.params.get( 'mimetypes' ) \
+				or self.params.get( 'mime_types') \
+				or self.params.get( 'types')
+		if result:
+			result = result.split(',')
+		return result
+
+	@Lazy
+	def mime_filter(self):
+		return _MimeFilter( self._mime_filter_params )
+
+	@Lazy
+	def params(self):
+		return CaseInsensitiveDict( self.request.params )
+
+	def _allow_anonymous_access(self, course):
+		# Or do we short-circuit this by allowing anyone with READ
+		# access on course. We could also bake this into a mixin.
+		prin = get_participation_principal()
+		return  prin is not None \
+			and IUnauthenticatedPrincipal.providedBy(prin) \
+			and IAnonymouslyAccessibleCourseInstance.providedBy(course) \
+
+	def _predicate(self, course, record):
+		return 		record is not None \
+				or	has_permission(ACT_CONTENT_EDIT, course, self.request) \
+				or  self._allow_anonymous_access(course)
+
+	def __call__(self):
+		course = self.course
+		record = get_enrollment_record(course, self.remoteUser) if self.remoteUser else None
+		if not self._predicate(course, record):
+			raise hexc.HTTPForbidden(_("Must be enrolled in a course."))
+
+		self.request.acl_decoration = False  # avoid acl decoration
+		result = self._do_call(course, record)
+		return result
+
 @view_config(context=ICourseInstance)
 @view_config(context=ICourseCatalogEntry)
 @view_config(context=ICourseInstanceEnrollment)
@@ -493,7 +783,10 @@ class OutlineNodeGetView(AbstractAuthenticatedView, PublishVisibilityMixin):
 			   permission=nauth.ACT_READ,
 			   request_method='GET',
 			   name='MediaByOutlineNode')  # See decorators
-class MediaByOutlineNodeView(AbstractAuthenticatedView):
+class MediaByOutlineNodeView( AssetByOutlineNodeView ):
+	"""
+	Legacy view to fetch media by outline node.
+	"""
 
 	def _outline_nodes(self, course):
 		result = []
@@ -646,19 +939,6 @@ class MediaByOutlineNodeView(AbstractAuthenticatedView):
 		result.lastModified = result[LAST_MODIFIED] = lastModified
 		result['Total'] = result['ItemCount'] = len(items)
 		return result
-
-	def _allow_anonymous_access(self, course):
-		# Or do we short-circuit this by allowing anyone with READ
-		# access on course. We could also bake this into a mixin.
-		prin = get_participation_principal()
-		return  prin is not None \
-			and IUnauthenticatedPrincipal.providedBy(prin) \
-			and IAnonymouslyAccessibleCourseInstance.providedBy(course) \
-
-	def _predicate(self, course, record):
-		return 		record is not None \
-				or	has_permission(ACT_CONTENT_EDIT, course, self.request) \
-				or  self._allow_anonymous_access(course)
 
 	def __call__(self):
 		course = ICourseInstance(self.request.context)
