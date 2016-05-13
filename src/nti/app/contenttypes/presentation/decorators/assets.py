@@ -417,23 +417,23 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 
 @component.adapter(INTILessonOverview)
 class _NTILessonOverviewDecorator(AbstractAuthenticatedRequestAwareDecorator):
+	"""
+	Remove empty groups for non-editors.
+	"""
 
-	def is_editor_or_instructor(self, context):
-		course = find_interface(context, ICourseInstance, strict=False)
-		result = 	is_course_instructor_or_editor(course, self.remoteUser) \
-				 or has_permission(ACT_CONTENT_EDIT, context, self.request)
-		return result
+	def _predicate(self, context, result):
+		result = has_permission(ACT_CONTENT_EDIT, context, self.request)
+		return not result
 
 	def _do_decorate_external(self, context, result):
-		if not self.is_editor_or_instructor(context):
-			removal = set()
-			items = result.get(ITEMS) or ()  # groups
-			for idx, group in enumerate(items):
-				if not group.get(ITEMS):
-					removal.add(idx)
-			# remove empty items
-			if removal:
-				result[ITEMS] = [x for idx, x in enumerate(items) if idx not in removal]
+		removal = set()
+		items = result.get(ITEMS) or ()  # groups
+		for idx, group in enumerate(items):
+			if not group.get(ITEMS):
+				removal.add(idx)
+		# remove empty items
+		if removal:
+			result[ITEMS] = [x for idx, x in enumerate(items) if idx not in removal]
 
 def _get_content_package(ntiids=()):
 	# XXX: We would like context from clients.
