@@ -59,8 +59,6 @@ from nti.app.contenttypes.presentation.views import VIEW_NODE_MOVE
 
 from nti.app.contenttypes.presentation.views.view_mixins import hexdigest
 from nti.app.contenttypes.presentation.views.view_mixins import NTIIDPathMixin
-from nti.app.contenttypes.presentation.views.view_mixins import IndexedRequestMixin
-from nti.app.contenttypes.presentation.views.view_mixins import AbstractChildMoveView
 from nti.app.contenttypes.presentation.views.view_mixins import PublishVisibilityMixin
 
 from nti.app.externalization.error import raise_json_error
@@ -72,8 +70,10 @@ from nti.app.products.courseware import VIEW_RECURSIVE_AUDIT_LOG
 from nti.app.products.courseware import VIEW_RECURSIVE_TX_HISTORY
 
 from nti.app.products.courseware.resources.utils import get_course_filer
-from nti.app.products.courseware.resources.utils import is_internal_file_link	
+from nti.app.products.courseware.resources.utils import is_internal_file_link
 
+from nti.app.products.courseware.views.view_mixins import IndexedRequestMixin
+from nti.app.products.courseware.views.view_mixins import AbstractChildMoveView
 from nti.app.products.courseware.views.view_mixins import AbstractRecursiveTransactionHistoryView
 
 from nti.appserver.dataserver_pyramid_views import GenericGetView
@@ -83,7 +83,7 @@ from nti.appserver.ugd_edit_views import UGDDeleteView
 
 from nti.assessment.interfaces import IQPoll
 from nti.assessment.interfaces import IQSurvey
-from nti.assessment.interfaces import IQInquiry 
+from nti.assessment.interfaces import IQInquiry
 from nti.assessment.interfaces import IQAssessment
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQuestionSet
@@ -129,7 +129,7 @@ from nti.contenttypes.presentation.discussion import is_nti_course_bundle
 from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIVideo
-from nti.contenttypes.presentation.interfaces import INTIPollRef 
+from nti.contenttypes.presentation.interfaces import INTIPollRef
 from nti.contenttypes.presentation.interfaces import INTIMediaRef
 from nti.contenttypes.presentation.interfaces import INTIVideoRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
@@ -1282,7 +1282,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 			__traceback_info__ = ntiid
 			if not ntiid:
 				raise hexc.HTTPUnprocessableEntity(_('Missing overview group item NTIID'))
-			
+
 			resolved = find_object_with_ntiid(ntiid)
 			if resolved is None:
 				raise hexc.HTTPUnprocessableEntity(_('Missing overview group item'))

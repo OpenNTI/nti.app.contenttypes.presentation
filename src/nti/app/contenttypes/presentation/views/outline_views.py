@@ -42,8 +42,6 @@ from nti.app.contenttypes.presentation.utils import get_participation_principal
 from nti.app.contenttypes.presentation.utils import get_enrollment_record as get_any_enrollment_record
 
 from nti.app.contenttypes.presentation.views.view_mixins import NTIIDPathMixin
-from nti.app.contenttypes.presentation.views.view_mixins import IndexedRequestMixin
-from nti.app.contenttypes.presentation.views.view_mixins import AbstractChildMoveView
 from nti.app.contenttypes.presentation.views.view_mixins import PublishVisibilityMixin
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
@@ -55,6 +53,8 @@ from nti.app.products.courseware.interfaces import ICourseInstanceEnrollment
 
 from nti.app.products.courseware.views.course_views import CourseOutlineContentsView
 
+from nti.app.products.courseware.views.view_mixins import IndexedRequestMixin
+from nti.app.products.courseware.views.view_mixins import AbstractChildMoveView
 from nti.app.products.courseware.views.view_mixins import AbstractRecursiveTransactionHistoryView
 
 from nti.appserver.ugd_edit_views import UGDPutView
