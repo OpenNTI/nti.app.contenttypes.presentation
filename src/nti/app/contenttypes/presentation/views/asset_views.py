@@ -58,7 +58,6 @@ from nti.app.contenttypes.presentation.views import VIEW_CONTENTS
 from nti.app.contenttypes.presentation.views import VIEW_NODE_MOVE
 
 from nti.app.contenttypes.presentation.views.view_mixins import hexdigest
-from nti.app.contenttypes.presentation.views.view_mixins import NTIIDPathMixin
 from nti.app.contenttypes.presentation.views.view_mixins import PublishVisibilityMixin
 
 from nti.app.externalization.error import raise_json_error
@@ -74,6 +73,7 @@ from nti.app.products.courseware.resources.utils import is_internal_file_link
 
 from nti.app.products.courseware.views.view_mixins import IndexedRequestMixin
 from nti.app.products.courseware.views.view_mixins import AbstractChildMoveView
+from nti.app.products.courseware.views.view_mixins import DeleteChildViewMixin
 from nti.app.products.courseware.views.view_mixins import AbstractRecursiveTransactionHistoryView
 
 from nti.appserver.dataserver_pyramid_views import GenericGetView
@@ -87,8 +87,6 @@ from nti.assessment.interfaces import IQInquiry
 from nti.assessment.interfaces import IQAssessment
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQuestionSet
-
-from nti.common.maps import CaseInsensitiveDict
 
 from nti.common.property import Lazy
 
@@ -1132,7 +1130,7 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 			   name=VIEW_CONTENTS,
 			   request_method='DELETE',
 			   permission=nauth.ACT_CONTENT_EDIT)
-class AssetDeleteChildView(AbstractAuthenticatedView, NTIIDPathMixin):
+class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
 	"""
 	A view to delete a child underneath the given context.
 
@@ -1145,41 +1143,19 @@ class AssetDeleteChildView(AbstractAuthenticatedView, NTIIDPathMixin):
 	:raises HTTPConflict if state has changed out from underneath user
 	"""
 
-	def _get_item(self, ntiid, index):
-		"""
-		Find the item/ref for the given ntiid.
-		"""
-		found = []
-		for idx, child in enumerate(self.context):
-			if 		ntiid == getattr(child, 'target', '') \
-				or 	ntiid == getattr(child, 'ntiid', ''):
-				if idx == index:
-					# We have an exact ref hit.
-					return child
-				else:
-					found.append(child)
+	def _is_target(self, obj, ntiid):
+		return 		ntiid == getattr(obj, 'target', '') \
+				or 	ntiid == getattr(obj, 'ntiid', '')
 
-		if len(found) == 1:
-			# Inconsistent match, but it's unambiguous.
-			return found[0]
-
-		if found:
-			# Multiple matches, none at index
-			raise hexc.HTTPConflict(_('Ambiguous item ref no longer exists at this index.'))
-
-	def __call__(self):
-		values = CaseInsensitiveDict(self.request.params)
-		index = values.get('index')
-		ntiid = self._get_ntiid()
-		item = self._get_item(ntiid, index)
-
+	def _remove(self, item, index):
 		# We remove the item from our context, and clean it
 		# up. We want to make sure we clean up the underlying asset.
-		if item is not None:  # tests
-			self.context.remove(item)  # safe op if gone already
-			remove_presentation_asset(item)
-			self.context.child_order_locked = True
-		return hexc.HTTPOk()
+		# Safe if already gone.
+		if item is not None:
+			self.context.remove( item )
+		else:
+			self.context.pop( index )
+		remove_presentation_asset(item)
 
 # ordered contents
 

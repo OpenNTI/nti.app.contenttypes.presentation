@@ -41,7 +41,6 @@ from nti.app.contenttypes.presentation.utils import remove_presentation_asset
 from nti.app.contenttypes.presentation.utils import get_participation_principal
 from nti.app.contenttypes.presentation.utils import get_enrollment_record as get_any_enrollment_record
 
-from nti.app.contenttypes.presentation.views.view_mixins import NTIIDPathMixin
 from nti.app.contenttypes.presentation.views.view_mixins import PublishVisibilityMixin
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
@@ -53,6 +52,7 @@ from nti.app.products.courseware.interfaces import ICourseInstanceEnrollment
 
 from nti.app.products.courseware.views.course_views import CourseOutlineContentsView
 
+from nti.app.products.courseware.views.view_mixins import NTIIDPathMixin
 from nti.app.products.courseware.views.view_mixins import IndexedRequestMixin
 from nti.app.products.courseware.views.view_mixins import AbstractChildMoveView
 from nti.app.products.courseware.views.view_mixins import AbstractRecursiveTransactionHistoryView
@@ -401,7 +401,7 @@ class OutlineNodeMoveView(AbstractChildMoveView,
 			result[ITEMS] = self.externalize_node_contents(self.context)
 		return result
 
-class OutlineNodeDeleteMixIn(AbstractAuthenticatedView, NTIIDPathMixin):
+class OutlineNodeDeleteMixin(AbstractAuthenticatedView, NTIIDPathMixin):
 
 	@Lazy
 	def _registry(self):
@@ -441,7 +441,7 @@ class OutlineNodeDeleteMixIn(AbstractAuthenticatedView, NTIIDPathMixin):
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest',
 			 name=VIEW_NODE_CONTENTS)
-class OutlineNodeDeleteContentsView(OutlineNodeDeleteMixIn):
+class OutlineNodeDeleteContentsView(OutlineNodeDeleteMixin):
 	"""
 	Delete the given ntiid in our context. We may be given an `index`
 	param, which we will ignore.
@@ -465,7 +465,7 @@ class OutlineNodeDeleteContentsView(OutlineNodeDeleteMixIn):
 			 request_method='DELETE',
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest')
-class OutlineNodeDeleteView(OutlineNodeDeleteMixIn):
+class OutlineNodeDeleteView(OutlineNodeDeleteMixin):
 
 	def __call__(self):
 		self._delete_lesson(self.context)
