@@ -598,9 +598,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 				item.question_count = len(reference)
 				item.label = reference.title if not item.label else item.label
 
-			# set container id
-			if reference.__parent__ is not None: # TODO: Use __home__ attr
-				item.containerId = reference.__parent__.ntiid
+			item.containerId = reference.containerId
 
 		elif INTIDiscussionRef.providedBy(item):
 			if is_nti_course_bundle(item.target):
