@@ -67,7 +67,7 @@ class _ByOutlineNodeDecorator(PreviewCourseAccessPredicateDecorator,
 		course = ICourseInstance(context, context)
 		links = result_map.setdefault(LINKS, [])
 		for rel in ('MediaByOutlineNode', 'AssetByOutlineNode'):
-			link = Link(course, rel=rel, elements=(rel,))
+			link = Link(course, rel=rel, elements=('@@%s' % rel,))
 			links.append(link)
 
 @component.adapter(ICourseDiscussion)

@@ -33,7 +33,8 @@ from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecora
 from nti.appserver.pyramid_authorization import has_permission
 
 from nti.common.property import Lazy
-from nti.common.string import TRUE_VALUES
+
+from nti.common.string import is_true
 
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentUnitHrefMapper
@@ -65,14 +66,11 @@ def _is_visible(item, request, show_unpublished=True):
 			or 	item.is_published() \
 			or	(show_unpublished and has_permission(ACT_CONTENT_EDIT, item, request))
 
-def _is_true(v):
-	return v and str(v).lower() in TRUE_VALUES
-
 def _lesson_overview_links(context, request):
 	omit_unpublished = False
 
 	try:
-		omit_unpublished = _is_true(request.params.get('omit_unpublished', False))
+		omit_unpublished = is_true(request.params.get('omit_unpublished', False))
 	except ValueError:
 		pass
 

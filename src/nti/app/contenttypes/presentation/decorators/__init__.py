@@ -51,7 +51,6 @@ def is_legacy_uas(request, legacy_uas=LEGACY_UAS_40):
 	ua = request.environ.get(b'HTTP_USER_AGENT', '')
 	if not ua:
 		return False
-
 	for lua in legacy_uas:
 		if ua.startswith(lua):
 			return True
