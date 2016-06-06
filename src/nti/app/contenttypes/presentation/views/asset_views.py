@@ -237,7 +237,7 @@ class DiscussionRefGetView(AbstractAuthenticatedView, PublishVisibilityMixin):
 				raise hexc.HTTPForbidden(_("Item not visible."))
 			return self.context
 		elif self.context.isCourseBundle():
-			course = ICourseInstance(self.context)
+			course = ICourseInstance(self.context, None)
 			resolved = resolve_discussion_course_bundle(user=self.remoteUser,
 														item=self.context,
 														context=course)
