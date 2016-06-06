@@ -516,7 +516,7 @@ class OutlineNodeGetView(AbstractAuthenticatedView, PublishVisibilityMixin):
 
 # Misc Views
 
-def _get_group_accept_types( accept_types ):
+def _get_group_accept_types(accept_types):
 	"""
 	Map the given mimetypes to types found in overview groups.
 	"""
@@ -525,44 +525,44 @@ def _get_group_accept_types( accept_types ):
 	result = set()
 	for accept_type in accept_types:
 		if accept_type in AUDIO_MIMETYES:
-			result.update( AUDIO_MIMETYES )
-			result.update( AUDIO_REF_MIMETYES )
-			result.update( AUDIO_ROLL_MIMETYES )
+			result.update(AUDIO_MIMETYES)
+			result.update(AUDIO_REF_MIMETYES)
+			result.update(AUDIO_ROLL_MIMETYES)
 		elif accept_type in VIDEO_MIMETYES:
-			result.update( VIDEO_MIMETYES )
-			result.update( VIDEO_REF_MIMETYES )
-			result.update( VIDEO_ROLL_MIMETYES )
+			result.update(VIDEO_MIMETYES)
+			result.update(VIDEO_REF_MIMETYES)
+			result.update(VIDEO_ROLL_MIMETYES)
 		elif accept_type in RELATED_WORK_REF_MIMETYES:
-			result.update( RELATED_WORK_REF_MIMETYES )
+			result.update(RELATED_WORK_REF_MIMETYES)
 		elif accept_type in VIDEO_ROLL_MIMETYES:
-			result.update( VIDEO_ROLL_MIMETYES )
+			result.update(VIDEO_ROLL_MIMETYES)
 		elif accept_type in AUDIO_ROLL_MIMETYES:
-			result.update( AUDIO_ROLL_MIMETYES )
+			result.update(AUDIO_ROLL_MIMETYES)
 		elif accept_type in TIMELINE_MIMETYES:
-			result.update( TIMELINE_MIMETYES )
-			result.update( TIMELINE_REF_MIMETYES )
+			result.update(TIMELINE_MIMETYES)
+			result.update(TIMELINE_REF_MIMETYES)
 		elif accept_type in SLIDE_DECK_MIMETYES:
-			result.update( SLIDE_DECK_MIMETYES )
-			result.update( SLIDE_DECK_REF_MIMETYES )
+			result.update(SLIDE_DECK_MIMETYES)
+			result.update(SLIDE_DECK_REF_MIMETYES)
 		elif accept_type in DISCUSSION_REF_MIMETYES:
-			result.update( DISCUSSION_REF_MIMETYES )
+			result.update(DISCUSSION_REF_MIMETYES)
 		elif accept_type in QUESTIONSET_REF_MIMETYES:
-			result.update( QUESTIONSET_REF_MIMETYES )
+			result.update(QUESTIONSET_REF_MIMETYES)
 		elif accept_type in ASSIGNMENT_REF_MIMETYES:
-			result.update( ASSIGNMENT_REF_MIMETYES )
+			result.update(ASSIGNMENT_REF_MIMETYES)
 	return result
 
 class _MimeFilter(object):
 
-	def __init__( self, accept_types ):
-		self.accept_types = _get_group_accept_types( accept_types )
+	def __init__(self, accept_types):
+		self.accept_types = _get_group_accept_types(accept_types)
 
-	def include( self, obj ):
+	def include(self, obj):
 		result = True
 		if self.accept_types:
-			mime_type =    getattr( obj, 'mime_type', None ) \
-						or getattr( obj, 'MimeType', None ) \
-						or getattr( obj, 'mimeType', None )
+			mime_type = 	getattr(obj, 'mime_type', None) \
+						or	getattr(obj, 'MimeType', None) \
+						or	getattr(obj, 'mimeType', None)
 			result = mime_type in self.accept_types
 		return result
 
@@ -635,10 +635,10 @@ class AssetByOutlineNodeView(AbstractAuthenticatedView):
 		Expand our overview group item into all items needed.
 		"""
 		if INTIMediaRoll.providedBy(item):
-			result = tuple( item.items )
-		elif INTISlideDeck.providedBy( item ):
-			result = list( item.items )
-			result.append( item )
+			result = tuple(item.items)
+		elif INTISlideDeck.providedBy(item):
+			result = list(item.items)
+			result.append(item)
 		else:
 			result = (item,)
 		return result
@@ -649,15 +649,15 @@ class AssetByOutlineNodeView(AbstractAuthenticatedView):
 		"""
 		result = item
 		if IMediaRef.providedBy(item):
-			result = INTIMedia( item )
-		elif INTISlideDeckRef.providedBy( item ):
-			result = INTISlideDeck( item )
-		elif INTITimelineRef.providedBy( item ):
-			result = INTITimeline( item )
-		elif INTIAssignmentRef.providedBy( item ):
-			result = find_object_with_ntiid( item.target )
-		elif INTIQuestionSetRef.providedBy( item ):
-			result = find_object_with_ntiid( item.target )
+			result = INTIMedia(item)
+		elif INTISlideDeckRef.providedBy(item):
+			result = INTISlideDeck(item)
+		elif INTITimelineRef.providedBy(item):
+			result = INTITimeline(item)
+		elif INTIAssignmentRef.providedBy(item):
+			result = find_object_with_ntiid(item.target)
+		elif INTIQuestionSetRef.providedBy(item):
+			result = find_object_with_ntiid(item.target)
 		return result
 
 	def _is_published(self, obj):
@@ -667,10 +667,10 @@ class AssetByOutlineNodeView(AbstractAuthenticatedView):
 		"""
 		Return the lesson for the given ntiid, if published.
 		"""
-		lesson = find_object_with_ntiid( ntiid )
+		lesson = find_object_with_ntiid(ntiid)
 		result = None
 		if 		lesson is not None \
-			and self._is_published( lesson ):
+			and self._is_published(lesson):
 			result = lesson
 		return result
 
@@ -680,9 +680,9 @@ class AssetByOutlineNodeView(AbstractAuthenticatedView):
 								context=course, record=record)
 
 	def _include(self, item, course, record):
-		return	self.mime_filter.include( item ) \
-			and self._is_visible( item, course, record ) \
-			and self._include_assessment( item )
+		return	self.mime_filter.include(item) \
+			and self._is_visible(item, course, record) \
+			and self._include_assessment(item)
 
 	def _do_call(self, course, record):
 		result = LocatedExternalDict()
@@ -695,9 +695,9 @@ class AssetByOutlineNodeView(AbstractAuthenticatedView):
 
 		def add_item(item, container_id):
 			# Only add if it passes filter and is visible.
-			if not self._is_visible( item, course, record ):
+			if not self._is_visible(item, course, record):
 				return
-			item = self._get_return_item( item )
+			item = self._get_return_item(item)
 			items[item.ntiid] = item
 			containers.setdefault(container_id, [])
 			containers[container_id].append(item.ntiid)
@@ -705,15 +705,15 @@ class AssetByOutlineNodeView(AbstractAuthenticatedView):
 		def _recur(node):
 			if ICourseOutlineContentNode.providedBy(node):
 				if node.src and node.ContentNTIID:
-					container_order.append( node.ContentNTIID )
-				lesson = self._get_lesson( node.LessonOverviewNTIID )
+					container_order.append(node.ContentNTIID)
+				lesson = self._get_lesson(node.LessonOverviewNTIID)
 				if lesson is not None:
 					container_id = node.ContentNTIID or node.LessonOverviewNTIID
 					for group in lesson or ():
 						for item in group or ():
 							if self._include(item, course, record):
 								# Expand and add
-								all_items = self._get_all_items( item )
+								all_items = self._get_all_items(item)
 								for item in all_items:
 									add_item(item, container_id)
 
@@ -727,7 +727,7 @@ class AssetByOutlineNodeView(AbstractAuthenticatedView):
 		last_mod = None
 		if items:
 			try:
-				last_mod = max( x.lastModified for x in items.values() if getattr( x, 'lastModified', 0 ))
+				last_mod = max(x.lastModified for x in items.values() if getattr(x, 'lastModified', 0))
 			except ValueError:
 				# QQuestionSet with no 'lastModified'
 				pass
@@ -737,20 +737,20 @@ class AssetByOutlineNodeView(AbstractAuthenticatedView):
 
 	@Lazy
 	def _mime_filter_params(self):
-		result =   self.params.get( 'mimetypes' ) \
-				or self.params.get( 'mime_types') \
-				or self.params.get( 'types')
+		result =	self.params.get('mimetypes') \
+				or	self.params.get('mime_types') \
+				or	self.params.get('types')
 		if result:
 			result = result.split(',')
 		return result
 
 	@Lazy
 	def mime_filter(self):
-		return _MimeFilter( self._mime_filter_params )
+		return _MimeFilter(self._mime_filter_params)
 
 	@Lazy
 	def params(self):
-		return CaseInsensitiveDict( self.request.params )
+		return CaseInsensitiveDict(self.request.params)
 
 	def _allow_anonymous_access(self, course):
 		# Or do we short-circuit this by allowing anyone with READ
@@ -783,7 +783,7 @@ class AssetByOutlineNodeView(AbstractAuthenticatedView):
 			   permission=nauth.ACT_READ,
 			   request_method='GET',
 			   name='MediaByOutlineNode')  # See decorators
-class MediaByOutlineNodeView( AssetByOutlineNodeView ):
+class MediaByOutlineNodeView(AssetByOutlineNodeView):
 	"""
 	Legacy view to fetch media by outline node.
 	"""
@@ -831,11 +831,11 @@ class MediaByOutlineNodeView( AssetByOutlineNodeView ):
 		namespaces = set()
 		lesson_to_content_map = {}
 		for node in nodes:
-			namespaces.add( node.src )
+			namespaces.add(node.src)
 			ntiids.add(node.ContentNTIID)
 			# Authored items are namespaced underneath the lesson.
-			lesson = find_object_with_ntiid( node.LessonOverviewNTIID )
-			namespaces.add( to_external_ntiid_oid( lesson ))
+			lesson = find_object_with_ntiid(node.LessonOverviewNTIID)
+			namespaces.add(to_external_ntiid_oid(lesson))
 			if node.ContentNTIID != node.LessonOverviewNTIID:
 				ntiids.add(node.LessonOverviewNTIID)
 				lesson_to_content_map[node.LessonOverviewNTIID] = node.ContentNTIID
@@ -906,7 +906,7 @@ class MediaByOutlineNodeView( AssetByOutlineNodeView ):
 								sites=sites):
 			for item in group or ():
 				# ignore non media items
-				if 	(not IMediaRef.providedBy(item)
+				if 	(	 not IMediaRef.providedBy(item)
 					 and not INTIMedia.providedBy(item)
 					 and not INTIMediaRoll.providedBy(item)
 					 and not INTISlideDeck.providedBy(item)):
