@@ -30,6 +30,6 @@ class PublishVisibilityMixin(object):
 		Define whether this possibly publishable object is visible to the
 		remote user.
 		"""
-		return (not IPublishable.providedBy(item)
+		return (	not IPublishable.providedBy(item)
 				or 	item.is_published()
 				or	has_permission(nauth.ACT_CONTENT_EDIT, item, self.request))
