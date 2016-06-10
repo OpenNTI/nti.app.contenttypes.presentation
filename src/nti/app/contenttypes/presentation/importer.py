@@ -15,7 +15,7 @@ from zope import interface
 
 from zope.component.hooks import site as current_site
 
-from plone.namedfile.interfaces import INamed as IPloneNamed
+from nti.app.contenttypes.presentation.utils.asset import check_related_work_target
 
 from nti.app.contenttypes.presentation.synchronizer import clear_course_assets
 from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
@@ -23,8 +23,6 @@ from nti.app.contenttypes.presentation.synchronizer import remove_and_unindex_co
 from nti.app.contenttypes.presentation.synchronizer import synchronize_course_lesson_overview
 
 from nti.app.products.courseware.resources.utils import get_course_filer
-from nti.app.products.courseware.resources.utils import is_internal_file_link
-from nti.app.products.courseware.resources.utils import get_file_from_external_link
 
 from nti.app.products.courseware.utils.importer import transfer_resources_from_filer
 
@@ -45,12 +43,7 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation import iface_of_asset
 
-from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
-
-from nti.externalization.oids import to_external_ntiid_oid
-
-from nti.ntiids.ntiids import is_valid_ntiid_string
 
 from nti.site.hostpolicy import get_host_site
 
@@ -70,16 +63,7 @@ class LessonOverviewsImporter(BaseSectionImporter):
 			asset_items = asset.Items if asset.Items is not None else ()
 			for item in asset_items:
 				self._post_process_asset(item, source_filer, target_filer)
-		# check related work target
-		if INTIRelatedWorkRef.providedBy(asset) and not asset.target:
-			href = asset.href
-			if IPloneNamed.providedBy(href):
-				asset.target = to_external_ntiid_oid(href)
-			elif is_valid_ntiid_string(href):
-				asset.target = href
-			elif is_internal_file_link(href):
-				ext = get_file_from_external_link(href)
-				asset.target = to_external_ntiid_oid(ext)
+		check_related_work_target(asset)
 
 	def _get_course_site(self, course):
 		site_name = get_course_site(course)

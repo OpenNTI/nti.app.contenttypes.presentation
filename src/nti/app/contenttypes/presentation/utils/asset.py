@@ -25,6 +25,11 @@ from zope.location.location import locate
 
 from ZODB.interfaces import IConnection
 
+from plone.namedfile.interfaces import INamed as IPloneNamed
+
+from nti.app.products.courseware.resources.utils import is_internal_file_link
+from nti.app.products.courseware.resources.utils import get_file_from_external_link
+
 from nti.common.file import safe_filename
 
 from nti.common.random import generate_random_hex_string
@@ -45,6 +50,7 @@ from nti.contenttypes.presentation import iface_of_asset
 
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import WillRemovePresentationAssetEvent
@@ -59,6 +65,8 @@ from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
+
+from nti.ntiids.ntiids import is_valid_ntiid_string
 
 from nti.site.hostpolicy import get_host_site
 
@@ -296,3 +304,17 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None, sites=No
 
 	# lesson is ready
 	return result
+
+def check_related_work_target(asset):
+	if INTIRelatedWorkRef.providedBy(asset) and not asset.target:
+		href = asset.href
+		if IPloneNamed.providedBy(href):
+			asset.target = to_external_ntiid_oid(href)
+		elif is_valid_ntiid_string(href):
+			asset.target = href
+		elif is_internal_file_link(href):
+			ext = get_file_from_external_link(href)
+			asset.target = to_external_ntiid_oid(ext)
+		return True
+	return False
+	
