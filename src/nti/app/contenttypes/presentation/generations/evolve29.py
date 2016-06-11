@@ -64,10 +64,10 @@ def _update_storage(context):
 			new_container.createdTime = old_container.createdTime
 			new_container.lastModified = old_container.lastModified
 			for item in old_container.values():
-				try:
+				if item.ntiid:
 					new_container[item.ntiid] = item
-				except TypeError:
-					logger.error("Cannot migrate %s, %s... continuing", item.ntiid, item)
+				else:
+					logger.error("Cannot migrate %s, %s... continuing", item)
 			# assign and set connection
 			context._presentation_asset_item_container = new_container
 			if connection and IConnection(new_container, None) is None:
