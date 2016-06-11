@@ -19,13 +19,15 @@ from zope.component.hooks import setHooks
 
 from zope.intid.interfaces import IIntIds
 
+from ZODB.interfaces import IConnection
+
 from nti.app.contentlibrary.adapters import _PresentationAssetOOBTree
 from nti.app.contentlibrary.adapters import _PresentationAssetContainer
-	
+
 from nti.app.contentlibrary.utils import yield_sync_content_packages
 
 from nti.app.contenttypes.presentation.utils.common import yield_sync_courses
-	
+
 from nti.contentlibrary.interfaces import IGlobalContentPackage
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 
@@ -53,16 +55,19 @@ class MockDataserver(object):
 
 def _update_storage(context):
 	try:
+		connection = IConnection(context, None)
 		old_container = context._presentation_asset_item_container
 		if isinstance(old_container, _PresentationAssetContainer):
-			new_container= _PresentationAssetOOBTree()
+			new_container = _PresentationAssetOOBTree()
 			new_container.__parent__ = context
 			new_container.__name__ = old_container.__name__
 			new_container.createdTime = old_container.createdTime
 			new_container.lastModified = old_container.lastModified
 			new_container.extend(old_container.values())
 			context._presentation_asset_item_container = new_container
-			old_container.__parent__ = None # ground
+			if connection and IConnection(new_container, None) is None:
+				connection.add(new_container)
+			old_container.__parent__ = None  # ground
 			old_container.clear()
 	except AttributeError:
 		pass
@@ -72,16 +77,16 @@ def _process_site(seen, current_site, intids):
 		entry = ICourseCatalogEntry(course, None)
 		if 		entry is None \
 			or	entry.ntiid in seen \
-			or	ILegacyCourseInstance.providedBy( course ):
+			or	ILegacyCourseInstance.providedBy(course):
 			continue
 		seen.add(entry.ntiid)
 		_update_storage(course)
-	
+
 	def _recur(unit):
 		_update_storage(unit)
 		for child in unit.children or ():
 			_recur(child)
-	
+
 	for package in yield_sync_content_packages():
 		if 		package.ntiid in seen \
 			or	IGlobalContentPackage.providedBy(package):
