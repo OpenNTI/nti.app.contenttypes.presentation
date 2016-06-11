@@ -142,20 +142,20 @@ def _update_node_lineage(seen_courses, current_site):
 	catalog = component.queryUtility(ICourseCatalog)
 	if catalog is None or catalog.isEmpty():
 		return
-	def _recur( node, parent ):
+	def _recur(node, parent):
 		# Set lineage recursively, including lessons.
 		count = 1
 		node.__parent__ = parent
-		lesson_ntiid = getattr( node, 'LessonOverviewNTIID', '' )
-		lesson = find_object_with_ntiid( lesson_ntiid ) if lesson_ntiid else None
+		lesson_ntiid = getattr(node, 'LessonOverviewNTIID', '')
+		lesson = find_object_with_ntiid(lesson_ntiid) if lesson_ntiid else None
 		if lesson_ntiid and lesson is None:
-			logger.info( '[%s] Lesson not found (%s)',
-						 current_site.__name__, lesson_ntiid )
+			logger.info('[%s] Lesson not found (%s)',
+						 current_site.__name__, lesson_ntiid)
 		if lesson is not None:
 			count += 1
 			lesson.__parent__ = node
 		for child in node.values():
-			count += _recur( child, node )
+			count += _recur(child, node)
 		return count
 
 	lineage_count = 0
@@ -164,11 +164,11 @@ def _update_node_lineage(seen_courses, current_site):
 			continue
 		seen_courses.add(entry.ntiid)
 		course = ICourseInstance(entry, None)
-		if course is None or ILegacyCourseInstance.providedBy( course ):
+		if course is None or ILegacyCourseInstance.providedBy(course):
 			continue
-		lineage_count += _recur( course.Outline, course )
-	logger.info( '[%s] Updating lineage for %s objects',
-				 current_site.__name__, lineage_count )
+		lineage_count += _recur(course.Outline, course)
+	logger.info('[%s] Updating lineage for %s objects',
+				 current_site.__name__, lineage_count)
 
 def do_evolve(context, generation=generation):
 	setHooks()
@@ -196,7 +196,7 @@ def do_evolve(context, generation=generation):
 		# Do not need to do this in global site.
 		for current_site in get_all_host_sites():
 			with site(current_site):
-				_update_node_lineage( seen_courses, current_site )
+				_update_node_lineage(seen_courses, current_site)
 				_update_assets(seen, current_site, intids)
 		logger.info('Dataserver evolution %s done.', generation)
 

@@ -56,17 +56,17 @@ class MockDataserver(object):
 			return resolver.get_object_by_oid(oid, ignore_creator=ignore_creator)
 		return None
 
-def _is_obj_locked( obj ):
+def _is_obj_locked(obj):
 	return IRecordable.providedBy(obj) and obj.isLocked()
 
-def _fix_related_work_ref_target( current_site, work_ref ):
+def _fix_related_work_ref_target(current_site, work_ref):
 	# Only need authored objects with ntiid hrefs.
-	if 		_is_obj_locked( work_ref ) \
-		and is_valid_ntiid_string( work_ref.href ):
+	if 		_is_obj_locked(work_ref) \
+		and is_valid_ntiid_string(work_ref.href):
 
-		href_obj = find_object_with_ntiid( work_ref.href )
+		href_obj = find_object_with_ntiid(work_ref.href)
 		# Only pointing to content units
-		if href_obj is not None and IContentUnit.providedBy( href_obj ):
+		if href_obj is not None and IContentUnit.providedBy(href_obj):
 			logger.info('[%s] NTIRelatedWorkRef target fixed (ntiid=%s) (old=%s) (new=%s)',
 						 current_site.__name__,
 						 work_ref.ntiid,
@@ -78,7 +78,7 @@ def _get_site_name(group):
 	return folder.__name__ if folder is not None else None
 
 def _get_host_registry(group):
-	return registry_by_name( _get_site_name( group ))
+	return registry_by_name(_get_site_name(group))
 
 def _update_assets(seen, current_site):
 	library = component.queryUtility(IContentPackageLibrary)
@@ -94,7 +94,7 @@ def _update_assets(seen, current_site):
 			continue
 		for item in group:
 			asset_interface = iface_of_asset(item)
-			registered = component.queryUtility( asset_interface, name=item.ntiid )
+			registered = component.queryUtility(asset_interface, name=item.ntiid)
 			if registered is None:
 				host_registry = _get_host_registry(group)
 				# Some dev machines have weird state.
@@ -106,12 +106,12 @@ def _update_assets(seen, current_site):
 					logger.info('[%s] Asset registered (ntiid=%s) (site=%s)',
 							 	current_site.__name__,
 								item.ntiid,
-								_get_site_name( group ))
+								_get_site_name(group))
 				else:
-					logger.info( 'No ntiid/registry for (%s) (%s)', item, host_registry)
+					logger.info('No ntiid/registry for (%s) (%s)', item, host_registry)
 
-			if INTIRelatedWorkRef.providedBy( item ):
-				_fix_related_work_ref_target( current_site, item )
+			if INTIRelatedWorkRef.providedBy(item):
+				_fix_related_work_ref_target(current_site, item)
 
 def do_evolve(context, generation=generation):
 	setHooks()

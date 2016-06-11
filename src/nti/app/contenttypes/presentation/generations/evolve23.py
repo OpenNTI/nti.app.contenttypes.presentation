@@ -11,7 +11,7 @@ logger = __import__('logging').getLogger(__name__)
 
 generation = 23
 
-from .evolve18 import do_evolve
+from nti.app.contenttypes.presentation.generations.evolve18 import do_evolve
 
 def evolve(context):
 	"""
