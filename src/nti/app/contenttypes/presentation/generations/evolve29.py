@@ -67,7 +67,7 @@ def _update_storage(context):
 				if item.ntiid:
 					new_container[item.ntiid] = item
 				else:
-					logger.error("Cannot migrate %s, %s... continuing", item)
+					logger.error("Cannot migrate %s... continuing", item)
 			# assign and set connection
 			context._presentation_asset_item_container = new_container
 			if connection and IConnection(new_container, None) is None:
