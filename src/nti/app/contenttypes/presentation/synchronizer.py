@@ -9,13 +9,17 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import os
 import six
 import time
 import simplejson
+from urlparse import urlparse
 
 from zope import component
 
 from zope.component.hooks import getSite
+
+from zope.interface.interfaces import IMethod
 
 from zope.intid.interfaces import IIntIds
 
@@ -25,12 +29,18 @@ from nti.app.contenttypes.presentation.utils import db_connection
 from nti.app.contenttypes.presentation.utils import add_2_connection
 from nti.app.contenttypes.presentation.utils import create_lesson_4_node
 
-from nti.coremetadata.interfaces import IRecordable
+from nti.app.contenttypes.presentation.utils.asset import check_related_work_target
+
+from nti.app.products.courseware.resources.utils import get_course_filer
+
+from nti.contentfile.interfaces import IContentBaseFile
 
 from nti.contentlibrary.indexed_data import get_site_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.common import get_course_packages
+
+from nti.contenttypes.courses.interfaces import NTI_COURSE_FILE_SCHEME
 
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
@@ -39,7 +49,7 @@ from nti.contenttypes.courses.interfaces import	ICourseOutlineContentNode
 
 from nti.contenttypes.courses.utils import get_parent_course
 
-from nti.contenttypes.presentation import iface_of_asset
+from nti.contenttypes.presentation import iface_of_asset, interface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
@@ -56,6 +66,8 @@ from nti.contenttypes.presentation.media import NTIVideoRoll
 from nti.contenttypes.presentation.media import media_to_mediaref
 
 from nti.contenttypes.presentation.utils import create_lessonoverview_from_external
+
+from nti.coremetadata.interfaces import IRecordable
 
 from nti.externalization.interfaces import StandardExternalFields
 
@@ -507,12 +519,39 @@ def _recurse_copy(ntiids, *items):
 	ntiids.update(items)
 	return ntiids
 
+def _set_internal_resource_from_filer(provided, obj, filer):
+	result = {}
+	for field_name in provided:
+		if field_name.startswith('_'):
+			continue
+		value = getattr(obj, field_name, None)
+		if 		value is not None \
+			and not IMethod.providedBy(value) \
+			and isinstance(value, six.string_types) \
+			and value.startswith(NTI_COURSE_FILE_SCHEME):
+
+			path = urlparse(value).path
+			bucket, name = os.path.split(path)
+			bucket = None if not bucket else bucket
+			
+			if filer.contains(key=name, bucket=bucket):
+				item = filer.get(key=name, bucket=bucket)
+				href = filer.get_external_link(item)
+				if IContentBaseFile.providedBy(item):
+					item.add_association(obj)
+				setattr(obj, field_name, href)
+				result[field_name] = href
+				
+	check_related_work_target(obj)
+	return result
+
 def _index_overview_items(items, container_ntiids=None, namespace=None,
 						  intids=None, catalog=None, node=None, course=None,
 						  parent=None, connection=None):
 	# make it a set
 	container_ntiids = _make_set(container_ntiids)
 
+	filer = get_course_filer(course)
 	container = _asset_container(course)
 	sites = get_component_hierarchy_names()
 	catalog = get_library_catalog() if catalog is None else catalog
@@ -559,6 +598,11 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 						  intids=intids,
 						  namespace=namespace,
 						  container_ntiids=to_index)
+
+		# set any internal resource after gaining an intid
+		provided = interface_of_asset(item)
+		if filer is not None:
+			_set_internal_resource_from_filer(provided, item, filer)
 
 def _index_pacakge_assets(course, catalog=None, sites=None):
 	entry = ICourseCatalogEntry(course)
