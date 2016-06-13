@@ -49,7 +49,7 @@ from nti.contenttypes.courses.interfaces import	ICourseOutlineContentNode
 
 from nti.contenttypes.courses.utils import get_parent_course
 
-from nti.contenttypes.presentation import iface_of_asset, interface_of_asset
+from nti.contenttypes.presentation import interface_of_asset 
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
@@ -181,7 +181,7 @@ def _remove_registered_course_overview(name=None, registry=None, course=None, fo
 
 	def _do_remove(obj):
 		ntiid = obj.ntiid
-		removed = _removed_registered(iface_of_asset(obj),
+		removed = _removed_registered(interface_of_asset(obj),
 									  name=ntiid,
 								   	  registry=registry,
 								  	  force=force)
@@ -231,7 +231,7 @@ def _register_media_rolls(roll, registry=None, validate=False):
 
 	while idx < len(items):  # mutating
 		item = items[idx]
-		item_iface = iface_of_asset(item)
+		item_iface = interface_of_asset(item)
 		result, registered = _register_utility(item,
 										 	   ntiid=item.ntiid,
 										  	   registry=registry,
@@ -256,7 +256,7 @@ def _validate_ref(item, validate):
 	return (not validate or validator is None or validator.validate())
 
 def _do_register(item, registry):
-	item_iface = iface_of_asset(item)
+	item_iface = interface_of_asset(item)
 	return _register_utility(item,
 							 ntiid=item.ntiid,
 							 registry=registry,
@@ -420,7 +420,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 def _copy_remove_transactions(items, registry=None):
 	registry = get_site_registry(registry)
 	for item in items or ():
-		provided = iface_of_asset(item)
+		provided = interface_of_asset(item)
 		obj = registry.queryUtility(provided, name=item.ntiid)
 		if obj is None:
 			remove_transaction_history(item)
