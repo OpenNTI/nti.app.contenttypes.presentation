@@ -683,8 +683,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 	for node in nodes:
 		namespace = node.src
 		if not namespace:
-			# These are possibly the legacy calendar nodes. Stub
-			# the lesson out.
+			# These are possibly the legacy calendar nodes. Stub the lesson out.
 			_create_lesson_4_node(node, registry, catalog)
 			continue
 		elif is_ntiid_of_type(namespace, TYPE_OID):  # ignore
@@ -751,7 +750,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 								  connection=connection)
 
 			# publish by default
-			overview.publish()
+			overview.publish( event=False )
 
 			_set_source_lastModified(namespace, sibling_lastModified, catalog)
 

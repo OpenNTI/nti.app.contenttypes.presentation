@@ -275,7 +275,7 @@ def _notify_created(item, principal=None, externalValue=None):
 	principal = principal or principalId()  # always get a principal
 	notify(PresentationAssetCreatedEvent(item, principal, externalValue))
 	if IPublishable.providedBy(item) and item.is_published():
-		item.unpublish()
+		item.unpublish( event=False )
 
 def _add_2_packages(context, item):
 	result = []

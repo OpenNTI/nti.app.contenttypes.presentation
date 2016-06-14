@@ -147,7 +147,7 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 
 	:param item: A discussion ref object
 	:param context: An object that can be adpated to a course
-	:param record: Enrollment record if avaiable
+	:param record: Enrollment record if available
 	"""
 
 	context = item if context is None else item
