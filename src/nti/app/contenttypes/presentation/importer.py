@@ -101,7 +101,7 @@ class LessonOverviewsImporter(BaseSectionImporter):
 			root = parent.root
 			if save_sources and IFilesystemBucket.providedBy(root):
 				out_path = os.path.join(root.absolute_path, self.__LESSONS__)
-				self.makedirs(out_path)
+				self.makedirs(out_path) # create
 				for path in source_filer.list(self.__LESSONS__):
 					if not source_filer.is_bucket(path):
 						source = source_filer.get(path)
@@ -112,11 +112,11 @@ class LessonOverviewsImporter(BaseSectionImporter):
 
 		return ()
 
-	def process(self, context, filer, save_sources=True):
+	def process(self, context, filer, writeout=True):
 		result = []
 		course = ICourseInstance(context)
-		result.extend(self._do_import(context, filer, save_sources))
+		result.extend(self._do_import(context, filer, writeout))
 		for sub_instance in get_course_subinstances(course):
 			if sub_instance.Outline is not course.Outline:
-				result.extend(self._do_import(sub_instance, filer, save_sources))
+				result.extend(self._do_import(sub_instance, filer, writeout))
 		return tuple(result)
