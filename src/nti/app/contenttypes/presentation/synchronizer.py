@@ -569,6 +569,9 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 		if INTILessonOverview.providedBy(item) and node is not None:
 			item.__parent__ = node  # lineage
 			node.LessonOverviewNTIID = item.ntiid
+			# XXX If there is no lesson set it to the overview
+			if hasattr(node, 'ContentNTIID') and not node.ContentNTIID:
+				node.ContentNTIID = item.ntiid
 
 		if IItemAssetContainer.providedBy(item):
 
