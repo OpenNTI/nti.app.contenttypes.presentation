@@ -341,8 +341,10 @@ def _handle_multipart(context, user, contentObject, sources, provided=None):
 				filer.remove(location)
 			# save a in a new file
 			key = get_safe_source_filename(source, name)
-			location = filer.save(key, source, overwrite=False,
-								  bucket=ASSETS_FOLDER, context=contentObject)
+			location = filer.save(key, source, 
+								  overwrite=False,
+								  bucket=ASSETS_FOLDER, 
+								  context=contentObject)
 			setattr(contentObject, name, location)
 
 @view_config(route_name='objects.generic.traversal',
@@ -935,55 +937,6 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 		self._handle_asset(provided, contentObject, creator.username)
 		return self.transformOutput(contentObject)
 
-# related work ref POST views
-
-class SetRelatedworkRefFieldView(AbstractAuthenticatedView,
-						 		 ModeledContentUploadRequestUtilsMixin):
-
-	field_name = None
-	content_predicate = IContentBaseFile.providedBy
-		
-	def readCreateUpdateContentObject(self, user, search_owner=False, externalValue=None):
-		_, _, externalValue = self.performReadCreateUpdateContentObject(user, 
-																		deepCopy=True,
-																		add_to_connection=False,
-																		search_owner=search_owner, 
-																		externalValue=externalValue)
-		return externalValue
-
-	def _do_call(self):
-		creator = self.remoteUser
-		externalValue = self.readCreateUpdateContentObject(creator)
-		ntiid = externalValue.get(NTIID) or externalValue.get(NTIID.lower())
-		if not ntiid:
-			raise hexc.HTTPUnprocessableEntity(_("Content file did not have an NTIID."))
-		# find content file
-		content_file = find_object_with_ntiid(ntiid)
-		if content_file is None or not IContentBaseFile.providedBy(content_file):
-			raise hexc.HTTPUnprocessableEntity(_("Invalid content file NTIID."))
-		# set field
-		external = to_external_file_link(content_file)
-		setattr(self.context, self.field_name, external)
-		return self.context
-
-@view_config(context=INTIRelatedWorkRef)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   name='href',
-			   request_method='POST',
-			   permission=nauth.ACT_CONTENT_EDIT)
-class SetRelatedworkRefHrefView(SetRelatedworkRefFieldView):
-	field_name = 'href'
-
-@view_config(context=INTIRelatedWorkRef)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   name='icon',
-			   request_method='POST',
-			   permission=nauth.ACT_CONTENT_EDIT)
-class SetRelatedworkRefIconView(SetRelatedworkRefFieldView):
-	field_name = 'icon'
-
 # put views
 
 @view_config(context=IPresentationAsset)
@@ -1066,6 +1019,28 @@ class PackagePresentationAssetPutView(PresentationAssetPutView):
 			sites = get_component_hierarchy_names() # check sites
 			courses = get_courses_for_packages(sites, package.ntiid)
 			result = courses[0] if courses else None # should always find one
+		return result
+
+
+# related work ref POST views
+	
+@view_config(context=INTIRelatedWorkRef)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='PUT',
+			   permission=nauth.ACT_CONTENT_EDIT)
+class RelatedWorkReftPutView(PackagePresentationAssetPutView):
+	
+	def __call__(self):
+		result = super(RelatedWorkReftPutView, self).__call__()
+		for name in ('href', 'icon'):
+			value = getattr(self.context, name, None)
+			if isinstance(value, six.string_types) and is_valid_ntiid_string(value):
+				content_file = find_object_with_ntiid(value)
+				if IContentBaseFile.providedBy(content_file):
+					external = to_external_file_link(content_file)
+					setattr(self.context, name, external)
+					content_file.add_association(self.context)
 		return result
 
 @view_config(context=ICoursePresentationAsset)
