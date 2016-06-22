@@ -70,10 +70,11 @@ from nti.app.products.courseware import VIEW_RECURSIVE_TX_HISTORY
 
 from nti.app.products.courseware.resources.utils import get_course_filer
 from nti.app.products.courseware.resources.utils import is_internal_file_link
+from nti.app.products.courseware.resources.utils import to_external_file_link
 
 from nti.app.products.courseware.views.view_mixins import IndexedRequestMixin
-from nti.app.products.courseware.views.view_mixins import AbstractChildMoveView
 from nti.app.products.courseware.views.view_mixins import DeleteChildViewMixin
+from nti.app.products.courseware.views.view_mixins import AbstractChildMoveView
 from nti.app.products.courseware.views.view_mixins import AbstractRecursiveTransactionHistoryView
 
 from nti.appserver.dataserver_pyramid_views import GenericGetView
@@ -90,7 +91,7 @@ from nti.assessment.interfaces import IQuestionSet
 
 from nti.common.property import Lazy
 
-from nti.coremetadata.interfaces import IPublishable
+from nti.contentfile.interfaces import IContentBaseFile
 
 from nti.contentlibrary.indexed_data import get_site_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
@@ -98,10 +99,10 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackage
 
+from nti.contenttypes.courses.common import get_course_packages
+
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
-
-from nti.contenttypes.courses.common import get_course_packages
 
 from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.courses.utils import get_courses_for_packages
@@ -161,6 +162,8 @@ from nti.contenttypes.presentation.internalization import internalization_ntivid
 
 from nti.contenttypes.presentation.utils import create_from_external
 from nti.contenttypes.presentation.utils import get_external_pre_hook
+
+from nti.coremetadata.interfaces import IPublishable
 
 from nti.dataserver import authorization as nauth
 
@@ -931,6 +934,55 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 		self.request.response.status_int = 201
 		self._handle_asset(provided, contentObject, creator.username)
 		return self.transformOutput(contentObject)
+
+# related work ref POST views
+
+class SetRelatedworkRefFieldView(AbstractAuthenticatedView,
+						 		 ModeledContentUploadRequestUtilsMixin):
+
+	field_name = None
+	content_predicate = IContentBaseFile.providedBy
+		
+	def readCreateUpdateContentObject(self, user, search_owner=False, externalValue=None):
+		_, _, externalValue = self.performReadCreateUpdateContentObject(user, 
+																		deepCopy=True,
+																		add_to_connection=False,
+																		search_owner=search_owner, 
+																		externalValue=externalValue)
+		return externalValue
+
+	def _do_call(self):
+		creator = self.remoteUser
+		externalValue = self.readCreateUpdateContentObject(creator)
+		ntiid = externalValue.get(NTIID) or externalValue.get(NTIID.lower())
+		if not ntiid:
+			raise hexc.HTTPUnprocessableEntity(_("Content file did not have an NTIID."))
+		# find content file
+		content_file = find_object_with_ntiid(ntiid)
+		if content_file is None or not IContentBaseFile.providedBy(content_file):
+			raise hexc.HTTPUnprocessableEntity(_("Invalid content file NTIID."))
+		# set field
+		external = to_external_file_link(content_file)
+		setattr(self.context, self.field_name, external)
+		return self.context
+
+@view_config(context=INTIRelatedWorkRef)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   name='href',
+			   request_method='POST',
+			   permission=nauth.ACT_CONTENT_EDIT)
+class SetRelatedworkRefHrefView(SetRelatedworkRefFieldView):
+	field_name = 'href'
+
+@view_config(context=INTIRelatedWorkRef)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   name='icon',
+			   request_method='POST',
+			   permission=nauth.ACT_CONTENT_EDIT)
+class SetRelatedworkRefIconView(SetRelatedworkRefFieldView):
+	field_name = 'icon'
 
 # put views
 
