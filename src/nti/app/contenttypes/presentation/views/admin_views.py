@@ -71,6 +71,8 @@ from nti.site.hostpolicy import get_host_site
 from nti.traversal.traversal import find_interface
 
 ITEMS = StandardExternalFields.ITEMS
+TOTAL = StandardExternalFields.TOTAL
+ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
 def _get_course_ntiids(values):
 	ntiids = values.get('ntiid') or	values.get('ntiids')
@@ -290,5 +292,5 @@ class OutlineObjectCourseResolverView(AbstractAuthenticatedView):
 				if course.Outline == our_outline:
 					items.append(course)
 		result['SiteInfo'] = getSite().__name__
-		result['Total'] = result['ItemCount'] = len(items)
+		result[TOTAL] = result[ITEM_COUNT] = len(items)
 		return result
