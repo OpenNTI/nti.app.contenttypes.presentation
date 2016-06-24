@@ -59,7 +59,7 @@ def _update_refs(current_site, catalog, intids, seen):
 			continue
 		seen.add(name)
 
-		for idx, item in enumerate(group or ()):  # mutating
+		for idx, item in enumerate(list(group or ())):  # mutating
 			reference = None
 
 			if INTITimeline.providedBy(item):
@@ -69,10 +69,14 @@ def _update_refs(current_site, catalog, intids, seen):
 
 			if reference is not None:
 				reference.__parent__ = group
+				provided = iface_of_asset(reference)
+				if provided is None:
+					group.remove(item)
+					continue
 				addIntId(reference)
 				registerUtility(registry,
 								reference,
-								iface_of_asset(reference),
+								provided,
 								name=reference.ntiid)
 
 				namespace = catalog.get_namespace(group)
