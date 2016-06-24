@@ -98,7 +98,7 @@ def _update_assets(seen, current_site):
 			if registered is None:
 				host_registry = _get_host_registry(group)
 				# Some dev machines have weird state.
-				if item.ntiid and host_registry is not None:
+				if item.ntiid and host_registry is not None and asset_interface is not None:
 					registerUtility(host_registry,
 									provided=asset_interface,
 									component=item,

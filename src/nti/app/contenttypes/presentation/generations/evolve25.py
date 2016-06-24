@@ -12,7 +12,4 @@ logger = __import__('logging').getLogger(__name__)
 generation = 25
 
 def evolve(context):
-	"""
-	Moved to evolve26.
-	"""
 	pass
