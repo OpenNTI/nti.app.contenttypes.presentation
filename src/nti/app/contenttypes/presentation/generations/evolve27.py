@@ -70,9 +70,6 @@ def _update_refs(current_site, catalog, intids, seen):
 			if reference is not None:
 				reference.__parent__ = group
 				provided = iface_of_asset(reference)
-				if provided is None:
-					group.remove(item)
-					continue
 				addIntId(reference)
 				registerUtility(registry,
 								reference,
