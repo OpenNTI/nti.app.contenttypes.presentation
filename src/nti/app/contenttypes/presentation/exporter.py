@@ -25,12 +25,12 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.presentation import iface_of_asset
 
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
-from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 
 from nti.externalization.externalization import to_external_object
 
 from nti.externalization.interfaces import StandardExternalFields
+from nti.externalization.interfaces import StandardInternalFields
 
 from nti.ntiids.ntiids import TYPE_OID
 from nti.ntiids.ntiids import is_ntiid_of_type
@@ -39,6 +39,9 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 
 OID = StandardExternalFields.OID
 ITEMS = StandardExternalFields.ITEMS
+NTIID = StandardExternalFields.NTIID
+CONTAINER_ID = StandardExternalFields.CONTAINER_ID
+INTERNAL_CONTAINER_ID = StandardInternalFields.CONTAINER_ID
 
 def _outline_nodes(outline, seen):
 	result = []
@@ -61,9 +64,12 @@ class LessonOverviewsExporter(BaseSectionExporter):
 
 	def _post_process_asset(self, asset, ext_obj, filer):
 		ext_obj.pop(OID, None)
+		ext_obj.pop(CONTAINER_ID, None)
+		
 		# save asset resources
 		provided = iface_of_asset(asset)
 		save_resources_to_filer(provided, asset, filer, ext_obj)
+
 		# check 'children'
 		if IItemAssetContainer.providedBy(asset):
 			if INTISlideDeck.providedBy(asset):
@@ -77,11 +83,14 @@ class LessonOverviewsExporter(BaseSectionExporter):
 				asset_items = asset.Items if asset.Items is not None else ()
 				for item, item_ext in zip(asset_items, ext_items):
 					self._post_process_asset(item, item_ext, filer)
-		# check related work
-		if 		INTIRelatedWorkRef.providedBy(asset) \
-			and is_valid_ntiid_string(asset.target or u'') \
-			and is_ntiid_of_type(asset.target, TYPE_OID):
-			ext_obj['target'] = None # don't leak internal OIDs
+		
+		# don't leak internal OIDs
+		for name in (NTIID, NTIID.lower(), INTERNAL_CONTAINER_ID, 'target'):
+			value = ext_obj.get(name)
+			if 		value \
+				and	is_valid_ntiid_string(value) \
+				and is_ntiid_of_type(value, TYPE_OID):
+				ext_obj.pop(name, None)
 
 	def _do_export(self, context, filer, seen):
 		course = ICourseInstance(context)
