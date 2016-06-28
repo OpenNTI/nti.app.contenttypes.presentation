@@ -82,6 +82,9 @@ class LessonOverviewsExporter(BaseSectionExporter):
 				ext_items = ext_obj.get(ITEMS) or ()
 				asset_items = asset.Items if asset.Items is not None else ()
 				for item, item_ext in zip(asset_items, ext_items):
+					if not item_ext.get(NTIID): # check valid NTIID
+						ext_obj.pop(NTIID, None)
+						ext_obj.pop(NTIID.lower(), None)
 					self._post_process_asset(item, item_ext, filer)
 		
 		# don't leak internal OIDs
