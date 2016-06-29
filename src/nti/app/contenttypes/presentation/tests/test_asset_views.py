@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-from nti.app.products.courseware.resources.utils import is_internal_file_link
 __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
@@ -37,6 +36,8 @@ from zope.intid.interfaces import IIntIds
 
 from nti.app.contenttypes.presentation import VIEW_NODE_MOVE
 from nti.app.contenttypes.presentation import VIEW_ORDERED_CONTENTS
+
+from nti.app.products.courseware.resources.utils import is_internal_file_link
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 

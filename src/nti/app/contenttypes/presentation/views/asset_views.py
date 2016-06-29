@@ -341,9 +341,9 @@ def _handle_multipart(context, user, contentObject, sources, provided=None):
 				filer.remove(location)
 			# save a in a new file
 			key = get_safe_source_filename(source, name)
-			location = filer.save(key, source, 
+			location = filer.save(key, source,
 								  overwrite=False,
-								  bucket=ASSETS_FOLDER, 
+								  bucket=ASSETS_FOLDER,
 								  context=contentObject)
 			setattr(contentObject, name, location)
 
@@ -1023,17 +1023,18 @@ class PackagePresentationAssetPutView(PresentationAssetPutView):
 
 
 # related work ref POST views
-	
+
 @view_config(context=INTIRelatedWorkRef)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   request_method='PUT',
 			   permission=nauth.ACT_CONTENT_EDIT)
 class RelatedWorkReftPutView(PackagePresentationAssetPutView):
-	
+
 	def __call__(self):
 		result = super(RelatedWorkReftPutView, self).__call__()
 		for name in ('href', 'icon'):
+			name = str( name )
 			value = getattr(self.context, name, None)
 			if isinstance(value, six.string_types) and is_valid_ntiid_string(value):
 				content_file = find_object_with_ntiid(value)
