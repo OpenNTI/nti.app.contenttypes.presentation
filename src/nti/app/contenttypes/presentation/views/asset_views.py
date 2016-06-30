@@ -64,7 +64,6 @@ from nti.app.externalization.error import raise_json_error
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
-from nti.app.products.courseware import ASSETS_FOLDER
 from nti.app.products.courseware import VIEW_RECURSIVE_AUDIT_LOG
 from nti.app.products.courseware import VIEW_RECURSIVE_TX_HISTORY
 
@@ -343,7 +342,7 @@ def _handle_multipart(context, user, contentObject, sources, provided=None):
 			key = get_safe_source_filename(source, name)
 			location = filer.save(key, source,
 								  overwrite=False,
-								  bucket=ASSETS_FOLDER,
+								  structure=True,
 								  context=contentObject)
 			setattr(contentObject, name, location)
 
