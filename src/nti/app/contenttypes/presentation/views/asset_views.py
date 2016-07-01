@@ -1020,7 +1020,6 @@ class PackagePresentationAssetPutView(PresentationAssetPutView):
 			result = courses[0] if courses else None # should always find one
 		return result
 
-
 # related work ref POST views
 
 @view_config(context=INTIRelatedWorkRef)
@@ -1033,14 +1032,21 @@ class RelatedWorkReftPutView(PackagePresentationAssetPutView):
 	def __call__(self):
 		result = super(RelatedWorkReftPutView, self).__call__()
 		for name in ('href', 'icon'):
-			name = str( name )
+			name = str(name)
 			value = getattr(self.context, name, None)
 			if isinstance(value, six.string_types) and is_valid_ntiid_string(value):
 				content_file = find_object_with_ntiid(value)
-				if IContentBaseFile.providedBy(content_file):
-					external = to_external_file_link(content_file)
-					setattr(self.context, name, external)
-					content_file.add_association(self.context)
+				if not IContentBaseFile.providedBy(content_file):
+					continue
+				external = to_external_file_link(content_file)
+				setattr(self.context, name, external)
+				content_file.add_association(self.context)
+				if name == 'href': # update target and type
+					self.context.target = value # NTIID
+					self.context.type = content_file.contentType
+		if INTIRelatedWorkRef.providedBy(result):
+			result = to_external_object(result)
+			interface.alsoProvides(result, INoHrefInResponse)
 		return result
 
 @view_config(context=ICoursePresentationAsset)
