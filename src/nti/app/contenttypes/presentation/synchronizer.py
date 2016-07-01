@@ -500,7 +500,7 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 			doc_id = intids.queryId(obj)
 			if doc_id is not None:
 				catalog.remove_containers(doc_id, container_ntiids)
-			if _can_be_removed(obj, force):
+			if _can_be_removed(obj, force) and obj.ntiid:
 				container.pop(obj.ntiid, None)
 	return result
 remove_and_unindex_course_assets = _remove_and_unindex_course_assets
@@ -562,6 +562,9 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 		to_index = container_ntiids
 
 	for item in items or ():
+
+		if not item.ntiid:
+			continue
 
 		container[item.ntiid] = item
 
