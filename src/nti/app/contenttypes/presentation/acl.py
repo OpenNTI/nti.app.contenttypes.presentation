@@ -30,6 +30,7 @@ from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+from nti.contenttypes.presentation.interfaces import ILegacyPresentationAsset
 
 from nti.dataserver.authorization import ROLE_ADMIN
 from nti.dataserver.authorization import ROLE_CONTENT_ADMIN
@@ -57,7 +58,10 @@ class BasePresentationAssetACLProvider(object):
 		courses = get_presentation_asset_courses(self.context)
 		for course in courses or ():
 			result.extend(IACLProvider(course).__acl__)
-		result.append(ACE_DENY_ALL)
+
+		# If legacy, let parent objects determine ACL.
+		if not ILegacyPresentationAsset.providedBy( self.context ):
+			result.append( ACE_DENY_ALL )
 		return result
 
 @component.adapter(IPresentationAsset)
