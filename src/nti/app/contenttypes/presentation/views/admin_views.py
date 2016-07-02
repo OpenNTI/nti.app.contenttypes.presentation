@@ -262,10 +262,10 @@ class RemoveInvalidPresentationAssetsView(AbstractAuthenticatedView,
 		return result
 
 @view_config(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   context=IDataserverFolder,
-			   permission=nauth.ACT_NTI_ADMIN,
-			   name='OutlineObjectCourseResolver')
+			 renderer='rest',
+			 context=IDataserverFolder,
+			 permission=nauth.ACT_NTI_ADMIN,
+			 name='OutlineObjectCourseResolver')
 class OutlineObjectCourseResolverView(AbstractAuthenticatedView):
 	"""
 	An admin view to fetch the courses associated with a given
