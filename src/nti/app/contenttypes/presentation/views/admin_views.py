@@ -23,6 +23,8 @@ from pyramid.view import view_defaults
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
+from nti.app.contentlibrary.views.sync_views import _SyncAllLibrariesView
+
 from nti.app.externalization.internalization import read_body_as_external_object
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
@@ -116,7 +118,7 @@ class GetCoursePresentationAssetsView(AbstractAuthenticatedView,
 			total += len(items[entry.ntiid])
 
 		self.request.acl_decoration = False
-		result['ItemCount'] = result['Total'] = total
+		result[ITEM_COUNT] = result[TOTAL] = total
 		return result
 
 @view_config(context=IDataserverFolder)
@@ -175,7 +177,7 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 				# only return ntiids
 				items[entry.ntiid] = [x.ntiid for x in removed]
 
-		result['ItemCount'] = result['Total'] = total
+		result[ITEM_COUNT] = result[TOTAL] = total
 		return result
 
 	def __call__(self):
@@ -193,34 +195,21 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 			   renderer='rest',
 			   permission=nauth.ACT_NTI_ADMIN,
 			   name='SyncCoursePresentationAssets')
-class SyncCoursePresentationAssetsView(AbstractAuthenticatedView,
-									   ModeledContentUploadRequestUtilsMixin):
+class SyncCoursePresentationAssetsView(_SyncAllLibrariesView):
 
-	def readInput(self, value=None):
-		return _read_input(self.request)
-
-	def _do_call(self, result):
+	def _do_call(self):
+		now = time.time()
 		values = self.readInput()
+		result = LocatedExternalDict()
 		ntiids = _get_course_ntiids(values)
 		courses = list(yield_sync_courses(ntiids=ntiids))
-
 		items = result[ITEMS] = []
 		for course in courses:
 			folder = find_interface(course, IHostPolicyFolder, strict=False)
 			with current_site(get_host_site(folder.__name__)):
 				synchronize_course_lesson_overview(course)
 				items.append(ICourseCatalogEntry(course).ntiid)
-		return result
-
-	def __call__(self):
-		now = time.time()
-		result = LocatedExternalDict()
-		endInteraction()
-		try:
-			self._do_call(result)
-		finally:
-			restoreInteraction()
-			result['SyncTime'] = time.time() - now
+		result['SyncTime'] = time.time() - now
 		return result
 
 @view_config(context=IDataserverFolder)
