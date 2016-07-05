@@ -193,7 +193,7 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 @view_config(context=CourseAdminPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
-			   permission=nauth.ACT_NTI_ADMIN,
+			   permission=nauth.ACT_SYNC_LIBRARY,
 			   name='SyncCoursePresentationAssets')
 class SyncCoursePresentationAssetsView(_SyncAllLibrariesView):
 
@@ -216,7 +216,7 @@ class SyncCoursePresentationAssetsView(_SyncAllLibrariesView):
 @view_config(context=CourseAdminPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
-			   permission=nauth.ACT_NTI_ADMIN,
+			   permission=nauth.ACT_SYNC_LIBRARY,
 			   name='RemoveCourseInaccessibleAssets')
 class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 							  	   		 ModeledContentUploadRequestUtilsMixin):
@@ -236,7 +236,7 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
 @view_config(context=CourseAdminPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
-			   permission=nauth.ACT_NTI_ADMIN,
+			   permission=nauth.ACT_SYNC_LIBRARY,
 			   name='RemoveInvalidPresentationAssets')
 class RemoveInvalidPresentationAssetsView(AbstractAuthenticatedView,
 									  	  ModeledContentUploadRequestUtilsMixin):
