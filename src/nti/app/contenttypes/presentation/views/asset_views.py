@@ -1030,7 +1030,7 @@ class PackagePresentationAssetPutView(PresentationAssetPutView):
 class RelatedWorkReftPutView(PackagePresentationAssetPutView):
 
 	def __call__(self):
-		result = super(RelatedWorkReftPutView, self).__call__()
+		super(RelatedWorkReftPutView, self).__call__()
 		for name in ('href', 'icon'):
 			name = str(name)
 			value = getattr(self.context, name, None)
@@ -1044,9 +1044,8 @@ class RelatedWorkReftPutView(PackagePresentationAssetPutView):
 				if name == 'href': # update target and type
 					self.context.target = value # NTIID
 					self.context.type = content_file.contentType
-		if INTIRelatedWorkRef.providedBy(result):
-			result = to_external_object(result)
-			interface.alsoProvides(result, INoHrefInResponse)
+		result = to_external_object(self.context)
+		interface.alsoProvides(result, INoHrefInResponse)
 		return result
 
 @view_config(context=ICoursePresentationAsset)
