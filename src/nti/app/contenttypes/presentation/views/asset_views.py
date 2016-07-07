@@ -553,6 +553,21 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		if item.type != contentType:
 			item.type = contentType
 
+		# check for contentfiles in icon and href
+		for name in ('href', 'icon'):
+			name = str(name)
+			value = getattr(item, name, None)
+			if isinstance(value, six.string_types) and is_valid_ntiid_string(value):
+				content_file = find_object_with_ntiid(value)
+				if not IContentBaseFile.providedBy(content_file):
+					continue
+				external = to_external_file_link(content_file)
+				setattr(item, name, external)
+				content_file.add_association(item)
+				if name == 'href': # update target and type
+					item.target = value # NTIID
+					item.type = content_file.contentType
+
 	def _handle_media_roll(self, provided, item, creator, extended=None):
 		# set creator
 		self._set_creator(item, creator)
@@ -1018,34 +1033,6 @@ class PackagePresentationAssetPutView(PresentationAssetPutView):
 			sites = get_component_hierarchy_names() # check sites
 			courses = get_courses_for_packages(sites, package.ntiid)
 			result = courses[0] if courses else None # should always find one
-		return result
-
-# related work ref POST views
-
-@view_config(context=INTIRelatedWorkRef)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   request_method='PUT',
-			   permission=nauth.ACT_CONTENT_EDIT)
-class RelatedWorkReftPutView(PackagePresentationAssetPutView):
-
-	def __call__(self):
-		super(RelatedWorkReftPutView, self).__call__()
-		for name in ('href', 'icon'):
-			name = str(name)
-			value = getattr(self.context, name, None)
-			if isinstance(value, six.string_types) and is_valid_ntiid_string(value):
-				content_file = find_object_with_ntiid(value)
-				if not IContentBaseFile.providedBy(content_file):
-					continue
-				external = to_external_file_link(content_file)
-				setattr(self.context, name, external)
-				content_file.add_association(self.context)
-				if name == 'href': # update target and type
-					self.context.target = value # NTIID
-					self.context.type = content_file.contentType
-		result = to_external_object(self.context)
-		interface.alsoProvides(result, INoHrefInResponse)
 		return result
 
 @view_config(context=ICoursePresentationAsset)
