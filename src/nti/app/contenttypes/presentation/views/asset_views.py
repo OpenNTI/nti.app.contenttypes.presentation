@@ -565,8 +565,8 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 				setattr(item, name, external)
 				content_file.add_association(item)
 				if name == 'href': # update target and type
-					item.target = value # NTIID
-					item.type = content_file.contentType
+					item.target = unicode(value) # NTIID
+					item.type = unicode(content_file.contentType)
 
 	def _handle_media_roll(self, provided, item, creator, extended=None):
 		# set creator
