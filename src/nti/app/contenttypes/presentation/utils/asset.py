@@ -153,7 +153,7 @@ def remove_asset(item, registry=None, catalog=None, name=None):
 	provided = iface_of_asset(item)
 	registry = get_registry_4_item(item, provided, name, registry=registry)
 	if name and not unregisterUtility(registry, provided=provided, name=name):
-		logger.warn("Could not unregister %s,%s from %s", 
+		logger.warn("Could not unregister %s,%s from %s",
 					provided.__name__, name, registry.__parent__)
 	# unindex
 	catalog = get_library_catalog() if catalog is None else catalog
@@ -207,7 +207,7 @@ def remove_lesson(item, registry=None, catalog=None, package=False, name=None):
 	# remove asset
 	remove_asset(item, registry, catalog, name=name)
 
-def remove_presentation_asset(item, registry=None, catalog=None, 
+def remove_presentation_asset(item, registry=None, catalog=None,
 							  package=False, name=None):
 	if INTILessonOverview.providedBy(item):
 		remove_lesson(item, registry, catalog, package=package, name=name)
@@ -258,7 +258,7 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None, sites=No
 								 extra=extra)
 
 	result = NTILessonOverView()
-	result.__parent__ = node # lineage
+	result.__parent__ = node  # lineage
 	result.ntiid = ntiid
 	result.creator = creator
 	result.title = getattr(node, 'title', None)
@@ -284,7 +284,7 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None, sites=No
 			container[ntiid] = result  # add to container
 		else:
 			ntiids = None
-			
+
 		# register lesson
 		intid_register(result, registry=registry, event=False)
 		registerUtility(registry,
@@ -295,8 +295,8 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None, sites=No
 		# XXX: set the src field to be unique for indexing see MediaByOutlineNode
 		if not getattr(node, 'src', None):
 			oid = to_external_ntiid_oid(result)
-			node.src = safe_filename(oid) + '.json' # make it a json file
-			
+			node.src = safe_filename(oid) + '.json'  # make it a json file
+
 		# index
 		catalog = get_library_catalog() if catalog is None else catalog
 		catalog.index(result, container_ntiids=ntiids,
@@ -319,4 +319,3 @@ def check_related_work_target(asset):
 			asset.type = getattr(ext, 'contentType', None) or asset.type
 		return True
 	return False
-	

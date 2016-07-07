@@ -56,8 +56,11 @@ from nti.site.site import get_component_hierarchy_names
 from nti.site.utils import unregisterUtility
 
 ITEMS = StandardExternalFields.ITEMS
+INTID = StandardExternalFields.INTID
 NTIID = StandardExternalFields.NTIID
+TOTAL = StandardExternalFields.TOTAL
 MIMETYPE = StandardExternalFields.MIMETYPE
+ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
 def yield_sync_courses(ntiids=()):
 	catalog = component.getUtility(ICourseCatalog)
@@ -207,7 +210,7 @@ def remove_course_inaccessible_assets():
 				remove_presentation_asset(asset, registry, catalog,
 										  package=False, name=ntiid)
 				items.append({
-					'IntId':uid,
+					INTID:uid,
 					NTIID:ntiid,
 					MIMETYPE:asset.mimeType,
 				})
@@ -229,7 +232,7 @@ def remove_course_inaccessible_assets():
 				remove_presentation_asset(asset, catalog=catalog, 
 										  package=False, name=ntiid)
 				items.append({
-					'IntId':uid,
+					INTID:uid,
 					NTIID:ntiid,
 					MIMETYPE:asset.mimeType,
 				})
@@ -240,5 +243,5 @@ def remove_course_inaccessible_assets():
 	result['TotalContainedAssets'] = len(master)
 	result['TotalRegisteredAssets'] = len(registered)
 	result['Difference'] = sorted(master.difference(registered))
-	result['Total'] = result['ItemCount'] = len(items)
+	result[ITEM_COUNT] = result[TOTAL] = len(items)
 	return result
