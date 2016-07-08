@@ -30,7 +30,9 @@ from nti.app.contenttypes.presentation.synchronizer import synchronize_course_le
 from nti.app.contenttypes.presentation.utils import remove_presentation_asset
 from nti.app.contenttypes.presentation.utils import get_presentation_asset_containers
 
-from nti.coremetadata.interfaces import IRecordable
+from nti.app.products.courseware.resources.utils import to_external_file_link
+
+from nti.contentfile.interfaces import IContentBaseFile
 
 from nti.contentlibrary.indexed_data import get_site_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
@@ -52,6 +54,7 @@ from nti.contenttypes.presentation.interfaces import IOverviewGroupMovedEvent
 from nti.contenttypes.presentation.interfaces import IPresentationAssetMovedEvent
 
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
@@ -61,7 +64,13 @@ from nti.contenttypes.presentation.interfaces import IWillRemovePresentationAsse
 from nti.contenttypes.presentation.interfaces import ItemRemovedFromItemAssetContainerEvent
 from nti.contenttypes.presentation.interfaces import IItemRemovedFromItemAssetContainerEvent
 
+from nti.coremetadata.interfaces import IRecordable
+
 from nti.externalization.interfaces import StandardExternalFields
+
+from nti.externalization.oids import to_external_ntiid_oid
+
+from nti.intid.interfaces import IIntIdRemovedEvent as INTIIntIdRemovedEvent
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -196,3 +205,16 @@ def _on_will_remove_presentation_asset(asset, event):
 				mapping = IPresentationAssetContainer(container, None)
 				if mapping is not None:
 					mapping.pop(asset.ntiid, None)
+
+@component.adapter(IContentBaseFile, INTIIntIdRemovedEvent)
+def _on_content_file_removed(context, event):
+	if not context.has_associations():
+		return
+	oid = to_external_ntiid_oid(context)
+	href = to_external_file_link(context)
+	for obj in context.associations():
+		if INTIRelatedWorkRef.providedBy(obj):
+			if obj.target == oid or obj.href == href:
+				obj.target = obj.type = obj.href = None
+			else: # refers to icon
+				obj.icon = None
