@@ -11,7 +11,6 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope.authentication.interfaces import IUnauthenticatedPrincipal
 
-from zope.security.interfaces import NoInteraction
 from zope.security.management import getInteraction
 
 # re-export
@@ -93,7 +92,7 @@ def get_user_visibility(user):
 def get_participation_principal():
 	try:
 		return getInteraction().participations[0].principal
-	except (NoInteraction, IndexError, AttributeError):
+	except Exception:
 		return None
 
 def _get_scope(user, context, record):
@@ -104,8 +103,8 @@ def _get_scope(user, context, record):
 
 	scope = record.Scope if record is not None else None
 	if 		scope is None \
-		and IAnonymouslyAccessibleCourseInstance.providedBy( context ) \
-		and IUnauthenticatedPrincipal.providedBy( user ):
+		and IAnonymouslyAccessibleCourseInstance.providedBy(context) \
+		and IUnauthenticatedPrincipal.providedBy(user):
 		# If our context allows anonymous access, we should treat
 		# anonymous users as Open for visibility checks.
 		scope = ES_PUBLIC
@@ -186,7 +185,7 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 	else:
 		topic = None
 		topic_key = get_topic_key(discussion)
-		topic_title = make_specific_safe( discussion.title )
+		topic_title = make_specific_safe(discussion.title)
 		m_scope = ES_ALL if scope == ES_ALL else ENROLLMENT_LINEAGE_MAP.get(scope)[0]
 		m_scope_term = get_scope_term(m_scope) if m_scope != ES_ALL else None
 		m_scope_implies = set(getattr(m_scope_term, 'implies', None) or ())
