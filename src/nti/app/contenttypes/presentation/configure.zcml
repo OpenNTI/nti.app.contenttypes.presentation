@@ -139,6 +139,8 @@
 	<subscriber handler=".subscribers._on_will_remove_presentation_asset" />
 	<subscriber handler=".subscribers._on_will_remove_course_overview_group" />
 
+	<subscriber handler=".subscribers._on_content_file_removed" />
+
 	<subscriber handler=".subscribers._clear_data_when_course_removed"
 				for="nti.contenttypes.courses.interfaces.ICourseInstance
 					 zope.lifecycleevent.IObjectRemovedEvent" />
