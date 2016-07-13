@@ -273,13 +273,12 @@ class OutlineObjectCourseResolverView(AbstractAuthenticatedView):
 		obj = find_object_with_ntiid(ntiid)
 		course = find_interface(obj, ICourseInstance, strict=False)
 		course = ICourseInstance(obj, None) if course is None else course
-
 		if course is not None:
 			possible_courses = self._possible_courses(course)
 			our_outline = course.Outline
 			for course in possible_courses:
 				if course.Outline == our_outline:
 					items.append(course)
-		result['SiteInfo'] = getSite().__name__
 		result[TOTAL] = result[ITEM_COUNT] = len(items)
+		result['Site'] = result['SiteInfo'] = getSite().__name__
 		return result
