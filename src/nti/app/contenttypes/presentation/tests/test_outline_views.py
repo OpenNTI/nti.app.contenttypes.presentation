@@ -22,6 +22,7 @@ from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import has_entries
 from hamcrest import contains_string
+from hamcrest import contains_inanyorder
 does_not = is_not
 
 from datetime import datetime
@@ -54,6 +55,8 @@ from nti.app.contenttypes.presentation import VIEW_OVERVIEW_CONTENT
 from nti.app.contenttypes.presentation import VIEW_OVERVIEW_SUMMARY
 
 from nti.app.contenttypes.presentation.tests import INVALID_TITLE_LENGTH
+
+from nti.recorder.interfaces import ITransactionRecordHistory
 
 INVALID_TITLE = 'x' * INVALID_TITLE_LENGTH
 
@@ -301,7 +304,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 
 		if start or end:
 			data = { 'publishBeginning': start,
-					'publishEnding': end }
+					 'publishEnding': end }
 		url = '/dataserver2/Objects/%s' % ntiid
 		res = self.testapp.get( url, extra_environ=self.editor_environ )
 		res = res.json_body
@@ -377,7 +380,8 @@ class TestOutlineEditViews(ApplicationLayerTest):
 			assert_that(obj, not_none())
 			obj.child_order_locked = child_locked
 
-	def _check_obj_state(self, ntiid, is_published=False, is_locked=True, is_child_locked=False, parent_ntiid=None):
+	def _check_obj_state(self, ntiid, is_published=False, is_locked=True,
+						 is_child_locked=False, parent_ntiid=None):
 		"""
 		Check our server state, specifically, whether an object is locked,
 		published, and registered. If given a lesson, validate lesson props.
@@ -468,6 +472,18 @@ class TestOutlineEditViews(ApplicationLayerTest):
 			assert_that(child_ntiids, has_length( expected_size ))
 			return child_ntiids
 
+		def _test_transaction_history(obj_ntiid, publish_type=True):
+			# Validate the publish transactions are logged.
+			with mock_dataserver.mock_db_trans(self.ds, site_name='janux.ou.edu'):
+				obj = find_object_with_ntiid( obj_ntiid )
+				history = ITransactionRecordHistory(obj)
+				record = tuple(history.records())[-1]
+				if publish_type:
+					assert_that( record.type, is_('publish') )
+				else:
+					assert_that( record.attributes, contains_inanyorder( 'publishBeginning',
+																		 'publishEnding'))
+
 		res = _get_first_unit_node()
 		first_unit_ntiid = res.get('NTIID')
 		_first_node_size()
@@ -503,7 +519,8 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self._check_ext_state( content_node_ntiid, has_lesson=True )
 		# Parent is child order locked.
 		self._check_obj_state( first_unit_ntiid, is_published=True,
-							is_locked=False, is_child_locked=True )
+							   is_locked=False, is_child_locked=True )
+		_test_transaction_history( content_node_ntiid )
 
 		_first_node_size( 4, student_environ )
 		child_ntiids = _first_node_size( 4 )
@@ -549,6 +566,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self._check_ext_state( content_node_ntiid2,
 							published=False, has_lesson=True,
 							start=content_beginning, end=content_ending )
+		_test_transaction_history( content_node_ntiid2, publish_type=False )
 
 		# Unpublish, dates are gone
 		self._publish_obj( content_node_ntiid2, unpublish=True )
@@ -568,6 +586,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self._check_obj_state( lesson_ntiid2 )
 		self._check_ext_state( content_node_ntiid2,
 							published=True, has_lesson=True )
+		_test_transaction_history( content_node_ntiid2 )
 
 		_first_node_size( 5 )
 		child_ntiids = _first_node_size( 5, student_environ )
@@ -581,6 +600,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self._check_ext_state( content_node_ntiid2, is_lesson_visible=False,
 							published=True, has_lesson=True,
 							environ=student_environ )
+		_test_transaction_history( lesson_ntiid2, publish_type=False )
 
 		# Now explicit publish lesson
 		self._publish_obj( lesson_ntiid2 )
@@ -591,6 +611,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self._check_ext_state( content_node_ntiid2,
 							published=True, has_lesson=True,
 							environ=student_environ )
+		_test_transaction_history( lesson_ntiid2 )
 
 		# Publish with end date boundary in past (unpublished).
 		now = datetime.utcnow()
