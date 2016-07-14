@@ -12,6 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 import six
 import time
 
+from zope import component
+
 from zope.component.hooks import getSite
 from zope.component.hooks import site as current_site
 
@@ -99,21 +101,22 @@ def _read_input(request):
 			   request_method='GET',
 			   permission=nauth.ACT_NTI_ADMIN,
 			   name='GetCoursePresentationAssets')
-class GetCoursePresentationAssetsView(AbstractAuthenticatedView,
-							  		  ModeledContentUploadRequestUtilsMixin):
+class GetCoursePresentationAssetsView(AbstractAuthenticatedView):
+
+	def _found(self, x):
+		ntiid = x.ntiid
+		return ntiid and component.queryUtility(ICoursePresentationAsset, name=ntiid) != None
 
 	def __call__(self):
+		total = 0
 		params = CaseInsensitiveDict(self.request.params)
 		ntiids = _get_course_ntiids(params)
-		courses = list(yield_sync_courses(ntiids))
-
-		total = 0
 		result = LocatedExternalDict()
 		result[ITEMS] = items = {}
-		for course in courses:
+		for course in yield_sync_courses(ntiids):
 			entry = ICourseCatalogEntry(course)
 			container = IPresentationAssetContainer(course)
-			items[entry.ntiid] = sorted(container.values(),
+			items[entry.ntiid] = sorted((x for x in container.values() if self._found(x)),
 										key=lambda x: x.__class__.__name__)
 			total += len(items[entry.ntiid])
 
