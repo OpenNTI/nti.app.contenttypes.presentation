@@ -23,7 +23,7 @@ from pyramid.view import view_defaults
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
-from nti.app.contentlibrary.views.sync_views import _SyncAllLibrariesView
+from nti.app.contentlibrary.views.sync_views import _AbstractSyncAllLibrariesView
 
 from nti.app.externalization.internalization import read_body_as_external_object
 
@@ -127,18 +127,15 @@ class GetCoursePresentationAssetsView(AbstractAuthenticatedView,
 			   renderer='rest',
 			   permission=nauth.ACT_NTI_ADMIN,
 			   name='ResetCoursePresentationAssets')
-class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
-							  	  		ModeledContentUploadRequestUtilsMixin):
+class ResetCoursePresentationAssetsView(_AbstractSyncAllLibrariesView):
 
-	def readInput(self, value=None):
-		return _read_input(self.request)
-
-	def _do_call(self, result):
+	def _do_call(self):
 		values = self.readInput()
 		ntiids = _get_course_ntiids(values)
 		force = is_true(values.get('force'))
 
 		total = 0
+		result = LocatedExternalDict()
 		items = result[ITEMS] = {}
 		catalog = get_library_catalog()
 		for course in yield_sync_courses(ntiids):
@@ -180,22 +177,13 @@ class ResetCoursePresentationAssetsView(AbstractAuthenticatedView,
 		result[ITEM_COUNT] = result[TOTAL] = total
 		return result
 
-	def __call__(self):
-		result = LocatedExternalDict()
-		endInteraction()
-		try:
-			self._do_call(result)
-		finally:
-			restoreInteraction()
-		return result
-
 @view_config(context=IDataserverFolder)
 @view_config(context=CourseAdminPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   permission=nauth.ACT_SYNC_LIBRARY,
 			   name='SyncCoursePresentationAssets')
-class SyncCoursePresentationAssetsView(_SyncAllLibrariesView):
+class SyncCoursePresentationAssetsView(_AbstractSyncAllLibrariesView):
 
 	def _do_call(self):
 		now = time.time()
