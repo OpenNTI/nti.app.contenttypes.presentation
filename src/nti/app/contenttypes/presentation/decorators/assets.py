@@ -123,7 +123,7 @@ LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 COLLECTION_ITEMS = u'collectionItems'
 
 @component.adapter(IPresentationAsset)
-@interface.implementer(IExternalMappingDecorator)
+@interface.implementer(IExternalObjectDecorator)
 class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	@Lazy
