@@ -32,6 +32,8 @@ from nti.app.contenttypes.presentation.utils import get_presentation_asset_conta
 
 from nti.app.products.courseware.resources.utils import to_external_file_link
 
+from nti.assessment.interfaces import IQAssignment
+
 from nti.contentfile.interfaces import IContentBaseFile
 
 from nti.contentlibrary.indexed_data import get_site_registry
@@ -53,6 +55,7 @@ from nti.contenttypes.presentation.interfaces import TRX_ASSET_REMOVED_FROM_ITEM
 from nti.contenttypes.presentation.interfaces import IOverviewGroupMovedEvent
 from nti.contenttypes.presentation.interfaces import IPresentationAssetMovedEvent
 
+from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
@@ -79,6 +82,10 @@ from nti.recorder.interfaces import TRX_TYPE_CREATE
 from nti.recorder.record import remove_transaction_history
 
 from nti.recorder.utils import record_transaction
+
+from nti.site.site import get_component_hierarchy_names
+
+from nti.traversal.traversal import find_interface
 
 ITEMS = StandardExternalFields.ITEMS
 
@@ -218,3 +225,34 @@ def _on_content_file_removed(context, event):
 				obj.target = obj.type = obj.href = None
 			else: # refers to icon
 				obj.icon = None
+
+@component.adapter(IQAssignment, INTIIntIdRemovedEvent)
+def on_assignment_removed(assignment, event):
+	"""
+	Remove deleted assignment from all overview groups referencing it.
+	"""
+	ntiid = assignment.ntiid
+	count = 0
+	course = find_interface( assignment, ICourseInstance, strict=False )
+	registry = get_site_registry()
+	if 	   not ntiid \
+		or course is None \
+		or current_principal() is None \
+		or registry == component.getGlobalSiteManager():
+		return
+	# Get all overview groups for course.
+	ntiid = ICourseCatalogEntry( course ).ntiid
+	catalog = get_library_catalog()
+	sites = get_component_hierarchy_names()
+	groups = tuple(catalog.search_objects(provided=INTICourseOverviewGroup,
+										  container_ntiids=ntiid,
+										  sites=sites))
+	for group in groups:
+		for item in tuple( group ):
+			if 		INTIAssignmentRef.providedBy( item ) \
+				and assignment.ntiid == getattr( item, 'target', '' ):
+				# This ends up removing from group here.
+				remove_presentation_asset(item, registry)
+				count += 1
+	if count:
+		logger.info( 'Removed assignment (%s) from %s overview group(s)', ntiid, count )
