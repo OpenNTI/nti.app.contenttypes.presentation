@@ -17,7 +17,8 @@ from zope.interface.interfaces import IUnregistered
 
 from zope.event import notify
 
-from zope.lifecycleevent import IObjectRemovedEvent
+from zope.lifecycleevent.interfaces import IObjectRemovedEvent
+from zope.lifecycleevent.interfaces import IObjectModifiedEvent
 
 from zope.security.interfaces import NoInteraction
 from zope.security.management import getInteraction
@@ -32,7 +33,10 @@ from nti.app.contenttypes.presentation.utils import get_presentation_asset_conta
 
 from nti.app.products.courseware.resources.utils import to_external_file_link
 
+from nti.assessment.interfaces import IQuestionSet
 from nti.assessment.interfaces import IQAssignment
+from nti.assessment.interfaces import IQEvaluation
+from nti.assessment.interfaces import IQEditableEvaluation
 
 from nti.contentfile.interfaces import IContentBaseFile
 
@@ -55,8 +59,11 @@ from nti.contenttypes.presentation.interfaces import TRX_ASSET_REMOVED_FROM_ITEM
 from nti.contenttypes.presentation.interfaces import IOverviewGroupMovedEvent
 from nti.contenttypes.presentation.interfaces import IPresentationAssetMovedEvent
 
+from nti.contenttypes.presentation.interfaces import INTIPollRef
+from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
@@ -227,12 +234,12 @@ def _on_content_file_removed(context, event):
 				obj.icon = None
 
 @component.adapter(IQAssignment, INTIIntIdRemovedEvent)
-def on_assignment_removed(assignment, event):
+def _on_assignment_removed(assignment, event):
 	"""
 	Remove deleted assignment from all overview groups referencing it.
 	"""
-	ntiid = assignment.ntiid
 	count = 0
+	ntiid = getattr(assignment, 'ntiid', None)
 	course = find_interface( assignment, ICourseInstance, strict=False )
 	registry = get_site_registry()
 	if 	   not ntiid \
@@ -256,3 +263,29 @@ def on_assignment_removed(assignment, event):
 				count += 1
 	if count:
 		logger.info( 'Removed assignment (%s) from %s overview group(s)', ntiid, count )
+
+@component.adapter(IQEvaluation, IObjectModifiedEvent)
+def _on_evaluation_modified(evaluation, event):
+	ntiid = getattr(evaluation, 'ntiid', None)
+	course = find_interface(evaluation, event, ICourseInstance, strict=False )	
+	if 	   not ntiid \
+		or course is None \
+		or current_principal() is None \
+		or not IQEditableEvaluation.providedBy(evaluation) \
+		or not (IQAssignment.providedBy(evaluation) or IQuestionSet.providedBy(evaluation)):
+		return
+
+	# Get all item refs for course.
+	catalog = get_library_catalog()
+	sites = get_component_hierarchy_names()
+	ntiid = ICourseCatalogEntry( course ).ntiid
+	provided = (INTIAssignmentRef, INTIQuestionSetRef, INTISurveyRef, INTIPollRef)
+	items = tuple(catalog.search_objects(provided=provided,
+										 container_ntiids=ntiid,
+										 sites=sites))
+	for item in items:
+		target = getattr(item, 'target', '' )
+		if target == ntiid:
+			item.title = evaluation.title or item.title
+			if INTIQuestionSetRef.providedBy(item) or INTISurveyRef.providedBy(item):
+				item.question_count = len(evaluation.questions or ())
