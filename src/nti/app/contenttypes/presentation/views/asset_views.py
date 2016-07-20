@@ -632,9 +632,8 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 				resolved = resolve_discussion_course_bundle(self.remoteUser,
 															item,
 															context=self._course)
-				if resolved is not None:
-					_, topic = resolved
-					item.target = topic.NTIID
+				if resolved is not None: #  (discussion, topic)
+					item.target = resolved[1].NTIID
 
 	def _handle_overview_group(self, group, creator, extended=None):
 		# set creator
