@@ -48,8 +48,8 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.recorder.record import remove_transaction_history
 
-from nti.site.hostpolicy import get_host_site 
-from nti.site.hostpolicy import get_all_host_sites 
+from nti.site.hostpolicy import get_host_site
+from nti.site.hostpolicy import get_all_host_sites
 
 from nti.site.site import get_component_hierarchy_names
 
@@ -122,7 +122,7 @@ def remove_site_invalid_assets(current, intids=None, catalog=None, seen=None):
 
 		# registration for a removed asset
 		if doc_id is None:
-			logger.warn("Removing invalid registration (%s,%s) from site %s", 
+			logger.warn("Removing invalid registration (%s,%s) from site %s",
 						provided.__name__, ntiid, site_name)
 			removed.add(ntiid)
 			remove_presentation_asset(item, registry, catalog, name=ntiid)
@@ -138,7 +138,7 @@ def remove_site_invalid_assets(current, intids=None, catalog=None, seen=None):
 		# registration not in base site
 		if ntiid in seen:
 			removed.add(ntiid)
-			logger.warn("Unregistering (%s,%s) from site %s", 
+			logger.warn("Unregistering (%s,%s) from site %s",
 						provided.__name__, ntiid, site_name)
 			unregisterUtility(registry, provided=provided, name=ntiid)
 
@@ -160,7 +160,7 @@ def course_assets(course):
 	for key, value in list(container.items()):  # snapshot
 		if ICoursePresentationAsset.providedBy(value):
 			yield key, value, container
-				
+
 def remove_course_inaccessible_assets():
 	sites = set()
 	master = set()
@@ -170,7 +170,7 @@ def remove_course_inaccessible_assets():
 	catalog = get_library_catalog()
 	intids = component.getUtility(IIntIds)
 	all_courses = list(yield_sync_courses())
-	
+
 	# clean containers by removing those assets that either
 	# don't have an intid or cannot be found in the registry
 	# or don't have proper lineage
@@ -185,7 +185,7 @@ def remove_course_inaccessible_assets():
 			if registry.queryUtility(provided, name=ntiid) is None:
 				container.pop(ntiid, None)
 				remove_transaction_history(asset)
-				remove_presentation_asset(asset, registry, catalog, 
+				remove_presentation_asset(asset, registry, catalog,
 										  package=False, name=ntiid)
 			# check it has a valid uid and parent
 			elif uid is None or not has_a_valid_parent(asset, intids):
@@ -229,7 +229,7 @@ def remove_course_inaccessible_assets():
 			provided = iface_of_asset(asset)
 			if component.queryUtility(provided, name=ntiid) is None:
 				remove_transaction_history(asset)
-				remove_presentation_asset(asset, catalog=catalog, 
+				remove_presentation_asset(asset, catalog=catalog,
 										  package=False, name=ntiid)
 				items.append({
 					INTID:uid,

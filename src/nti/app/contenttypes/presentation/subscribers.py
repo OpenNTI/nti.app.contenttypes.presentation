@@ -267,7 +267,7 @@ def _on_assignment_removed(assignment, event):
 @component.adapter(IQEvaluation, IObjectModifiedEvent)
 def _on_evaluation_modified(evaluation, event):
 	ntiid = getattr(evaluation, 'ntiid', None)
-	course = find_interface(evaluation, event, ICourseInstance, strict=False )	
+	course = find_interface(evaluation, ICourseInstance, strict=False )
 	if 	   not ntiid \
 		or course is None \
 		or current_principal() is None \
