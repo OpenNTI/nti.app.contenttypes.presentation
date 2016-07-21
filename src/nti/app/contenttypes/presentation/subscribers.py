@@ -33,9 +33,9 @@ from nti.app.contenttypes.presentation.utils import get_presentation_asset_conta
 
 from nti.app.products.courseware.resources.utils import to_external_file_link
 
-from nti.assessment.interfaces import IQuestionSet
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQEvaluation
+from nti.assessment.interfaces import IQuestionSet
 from nti.assessment.interfaces import IQEditableEvaluation
 
 from nti.contentfile.interfaces import IContentBaseFile
@@ -106,7 +106,7 @@ def current_principal():
 
 # courses
 
-def _get_course_sync_results( event ):
+def _get_course_sync_results(event):
 	result = None
 	sync_results = event.results
 	if sync_results is not None and sync_results.Items:
@@ -117,7 +117,7 @@ def _get_course_sync_results( event ):
 def _on_course_instance_available(course, event):
 	catalog = get_library_catalog()
 	if catalog is not None and not ILegacyCourseInstance.providedBy(course):
-		sync_results = _get_course_sync_results( event )
+		sync_results = _get_course_sync_results(event)
 		synchronize_course_lesson_overview(course,
 										   catalog=catalog,
 										   sync_results=sync_results)
@@ -196,8 +196,8 @@ def on_asset_moved(asset, event):
 	# If no old_parent_ntiid, it was an internal move.
 	if event.old_parent_ntiid:
 		catalog = get_library_catalog()
-		catalog.remove_containers( asset, event.old_parent_ntiid )
-		catalog.update_containers( asset, asset.__parent__.ntiid )
+		catalog.remove_containers(asset, event.old_parent_ntiid)
+		catalog.update_containers(asset, asset.__parent__.ntiid)
 	if ntiid:
 		record_transaction(asset, principal=event.principal,
 						   type_=TRX_ASSET_MOVE_TYPE)
@@ -230,7 +230,7 @@ def _on_content_file_removed(context, event):
 		if INTIRelatedWorkRef.providedBy(obj):
 			if obj.target == oid or obj.href == href:
 				obj.target = obj.type = obj.href = None
-			else: # refers to icon
+			else:  # refers to icon
 				obj.icon = None
 
 @component.adapter(IQAssignment, INTIIntIdRemovedEvent)
@@ -240,7 +240,7 @@ def _on_assignment_removed(assignment, event):
 	"""
 	count = 0
 	ntiid = getattr(assignment, 'ntiid', None)
-	course = find_interface( assignment, ICourseInstance, strict=False )
+	course = find_interface(assignment, ICourseInstance, strict=False)
 	registry = get_site_registry()
 	if 	   not ntiid \
 		or course is None \
@@ -248,26 +248,26 @@ def _on_assignment_removed(assignment, event):
 		or registry == component.getGlobalSiteManager():
 		return
 	# Get all overview groups for course.
-	ntiid = ICourseCatalogEntry( course ).ntiid
+	ntiid = ICourseCatalogEntry(course).ntiid
 	catalog = get_library_catalog()
 	sites = get_component_hierarchy_names()
 	groups = tuple(catalog.search_objects(provided=INTICourseOverviewGroup,
 										  container_ntiids=ntiid,
 										  sites=sites))
 	for group in groups:
-		for item in tuple( group ):
-			if 		INTIAssignmentRef.providedBy( item ) \
-				and assignment.ntiid == getattr( item, 'target', '' ):
+		for item in tuple(group):
+			if 		INTIAssignmentRef.providedBy(item) \
+				and assignment.ntiid == getattr(item, 'target', ''):
 				# This ends up removing from group here.
 				remove_presentation_asset(item, registry)
 				count += 1
 	if count:
-		logger.info( 'Removed assignment (%s) from %s overview group(s)', ntiid, count )
+		logger.info('Removed assignment (%s) from %s overview group(s)', ntiid, count)
 
 @component.adapter(IQEvaluation, IObjectModifiedEvent)
 def _on_evaluation_modified(evaluation, event):
 	ntiid = getattr(evaluation, 'ntiid', None)
-	course = find_interface(evaluation, ICourseInstance, strict=False )
+	course = find_interface(evaluation, ICourseInstance, strict=False)
 	if 	   not ntiid \
 		or course is None \
 		or current_principal() is None \
@@ -278,13 +278,13 @@ def _on_evaluation_modified(evaluation, event):
 	# Get all item refs for course.
 	catalog = get_library_catalog()
 	sites = get_component_hierarchy_names()
-	ntiid = ICourseCatalogEntry( course ).ntiid
+	ntiid = ICourseCatalogEntry(course).ntiid
 	provided = (INTIAssignmentRef, INTIQuestionSetRef, INTISurveyRef, INTIPollRef)
-	items = tuple(catalog.search_objects(provided=provided,
-										 container_ntiids=ntiid,
-										 sites=sites))
-	for item in items:
-		target = getattr(item, 'target', '' )
+	items = catalog.search_objects(provided=provided,
+								   container_ntiids=ntiid,
+								   sites=sites)
+	for item in items or ():
+		target = getattr(item, 'target', '')
 		if target == ntiid:
 			item.title = evaluation.title or item.title
 			if INTIQuestionSetRef.providedBy(item) or INTISurveyRef.providedBy(item):
