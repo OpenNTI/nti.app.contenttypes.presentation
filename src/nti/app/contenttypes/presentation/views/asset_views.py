@@ -1334,10 +1334,6 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 
 	def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
 		contentObject, externalValue = self.parseInput(creator, search_owner, externalValue)
-		sources = get_all_sources(self.request)
-		if sources:  # multi-part data
-			validate_sources(self.remoteUser, contentObject, sources)
-			_handle_multipart(self._course, self.remoteUser, contentObject, sources)
 		return contentObject, externalValue
 
 	def _do_call(self):
@@ -1359,6 +1355,13 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 						component=contentObject,
 						name=contentObject.ntiid)
 
+		# XXX: Multi-part data must be done after the object has been registered
+		# with the InitId facility in order to set file associations 
+		sources = get_all_sources(self.request)
+		if sources:  # multi-part data
+			validate_sources(self.remoteUser, contentObject, sources)
+			_handle_multipart(self._course, self.remoteUser, contentObject, sources)
+			
 		parent = self.context.__parent__
 		extended = (self.context.ntiid,) + ((parent.ntiid,) if parent is not None else ())
 		self.context.insert(index, contentObject)
