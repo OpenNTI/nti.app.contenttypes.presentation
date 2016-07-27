@@ -34,8 +34,6 @@ from nti.common.file import safe_filename
 
 from nti.common.random import generate_random_hex_string
 
-from nti.common.time import time_to_64bit_int
-
 from nti.coremetadata.interfaces import SYSTEM_USER_ID
 
 from nti.contentlibrary.indexed_data import get_site_registry
@@ -78,6 +76,8 @@ from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
 
 from nti.traversal.traversal import find_interface
+
+from nti.zodb.containers import time_to_64bit_int
 
 def get_db_connection(registry=None):
 	registry = get_site_registry(registry)

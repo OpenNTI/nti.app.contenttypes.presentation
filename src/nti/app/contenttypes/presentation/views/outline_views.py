@@ -69,8 +69,6 @@ from nti.common.maps import CaseInsensitiveDict
 
 from nti.common.property import Lazy
 
-from nti.common.time import time_to_64bit_int
-
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import NTI_COURSE_OUTLINE_NODE
@@ -147,6 +145,8 @@ from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
 
 from nti.traversal.traversal import find_interface
+
+from nti.zodb.containers import time_to_64bit_int
 
 CLASS = StandardExternalFields.CLASS
 ITEMS = StandardExternalFields.ITEMS
