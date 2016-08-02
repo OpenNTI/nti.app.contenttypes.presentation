@@ -70,6 +70,7 @@ from nti.app.products.courseware import VIEW_RECURSIVE_TX_HISTORY
 from nti.app.products.courseware.resources.utils import get_course_filer
 from nti.app.products.courseware.resources.utils import is_internal_file_link
 from nti.app.products.courseware.resources.utils import to_external_file_link
+from nti.app.products.courseware.resources.utils import get_file_from_external_link
 
 from nti.app.products.courseware.views.view_mixins import IndexedRequestMixin
 from nti.app.products.courseware.views.view_mixins import DeleteChildViewMixin
@@ -557,15 +558,19 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		for name in ('href', 'icon'):
 			name = str(name)
 			value = getattr(item, name, None)
-			if isinstance(value, six.string_types) and is_valid_ntiid_string(value):
-				content_file = find_object_with_ntiid(value)
+			if 		isinstance(value, six.string_types) \
+				and (is_valid_ntiid_string(value) or is_internal_file_link(value)):
+				if is_valid_ntiid_string(value):
+					content_file = find_object_with_ntiid(value)
+				else:
+					content_file = get_file_from_external_link(value)
 				if not IContentBaseFile.providedBy(content_file):
 					continue
 				external = to_external_file_link(content_file)
 				setattr(item, name, external)
 				content_file.add_association(item)
 				if name == 'href': # update target and type
-					item.target = unicode(value) # NTIID
+					item.target = to_external_ntiid_oid(item) # NTIID
 					item.type = unicode(content_file.contentType)
 
 	def _handle_media_roll(self, provided, item, creator, extended=None):
