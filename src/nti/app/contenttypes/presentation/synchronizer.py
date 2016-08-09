@@ -54,7 +54,9 @@ from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIMediaRef
+from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
+from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
@@ -74,7 +76,7 @@ from nti.externalization.interfaces import StandardExternalFields
 from nti.intid.common import addIntId
 from nti.intid.common import removeIntId
 
-from nti.ntiids.ntiids import TYPE_OID
+from nti.ntiids.ntiids import TYPE_OID, find_object_with_ntiid
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import is_ntiid_of_type
@@ -400,6 +402,18 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 					item.ntiid = new_ntiid
 			elif INTIMediaRoll.providedBy(item):
 				_register_media_rolls(item, registry=registry, validate=validate)
+			elif INTITimeline.providedBy(item):
+				ntiid = item.ntiid or u''
+				found = find_object_with_ntiid(ntiid)
+				if INTITimeline.providedBy(found):
+					item = INTITimelineRef(found) # transform to timeline ref
+				else:
+					# register timeline
+					_, registered = _do_register(item, registry)
+					_add_2_package_containers(course, registered, catalog)
+					_intid_register(registered)
+					item = INTITimelineRef(registered) # transform to timeline ref
+				items[idx] = item
 
 			result, registered = _do_register(item, registry)
 			is_valid = _validate_ref(item, validate)
