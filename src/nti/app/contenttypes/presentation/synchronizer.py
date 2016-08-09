@@ -408,6 +408,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 				if INTITimeline.providedBy(found):
 					item = INTITimelineRef(found) # transform to timeline ref
 				else:
+					assert ntiid, 'Timeline must provide an ntiid'
 					# register timeline
 					_, registered = _do_register(item, registry)
 					_add_2_package_containers(course, registered, catalog)
