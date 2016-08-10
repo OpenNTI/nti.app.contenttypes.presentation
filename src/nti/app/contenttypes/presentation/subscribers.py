@@ -52,7 +52,8 @@ from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.courses.common import get_course_packages
 
-from nti.contenttypes.presentation.interfaces import TRX_ASSET_MOVE_TYPE
+from nti.contenttypes.presentation.interfaces import TRX_ASSET_MOVE_TYPE,\
+	INTIDocketMixin
 from nti.contenttypes.presentation.interfaces import TRX_OVERVIEW_GROUP_MOVE_TYPE
 from nti.contenttypes.presentation.interfaces import TRX_ASSET_REMOVED_FROM_ITEM_ASSET_CONTAINER
 
@@ -60,12 +61,10 @@ from nti.contenttypes.presentation.interfaces import IOverviewGroupMovedEvent
 from nti.contenttypes.presentation.interfaces import IPresentationAssetMovedEvent
 
 from nti.contenttypes.presentation.interfaces import INTIPollRef
-from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
-from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
@@ -228,15 +227,10 @@ def _on_content_file_removed(context, event):
 	oid = to_external_ntiid_oid(context)
 	href = to_external_file_link(context)
 	for obj in context.associations():
-		if INTIRelatedWorkRef.providedBy(obj):
+		if INTIDocketMixin.providedBy(obj):
 			if obj.target == oid or obj.href == href:
 				obj.target = obj.type = obj.href = None
-			else:  # refers to icon
-				obj.icon = None
-		elif INTITimeline.providedBy( obj ):
-			if obj.href == href:
-				obj.href = None
-			else:  # refers to icon
+			else: # refers to icon
 				obj.icon = None
 
 @component.adapter(IQAssignment, INTIIntIdRemovedEvent)
