@@ -486,9 +486,10 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 						value = urljoin(self.request.host_url, value)
 					result[name] = value
 
+@component.adapter(INTITimeline, IRequest)
 @component.adapter(INTIRelatedWorkRef, IRequest)
 @interface.implementer(IExternalMappingDecorator)
-class _RelatedWorkContentFileDecorator(AbstractAuthenticatedRequestAwareDecorator):
+class _AssetContentFileDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	def _predicate(self, context, result):
 		result = self._is_authenticated

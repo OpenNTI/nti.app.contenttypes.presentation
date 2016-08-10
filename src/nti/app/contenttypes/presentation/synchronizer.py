@@ -49,7 +49,7 @@ from nti.contenttypes.courses.interfaces import	ICourseOutlineContentNode
 
 from nti.contenttypes.courses.utils import get_parent_course
 
-from nti.contenttypes.presentation import interface_of_asset 
+from nti.contenttypes.presentation import interface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
@@ -548,7 +548,7 @@ def _set_internal_resource_from_filer(provided, obj, filer):
 			path = urlparse(value).path
 			bucket, name = os.path.split(path)
 			bucket = None if not bucket else bucket
-			
+
 			if filer.contains(key=name, bucket=bucket):
 				item = filer.get(key=name, bucket=bucket)
 				href = filer.get_external_link(item)
@@ -556,7 +556,7 @@ def _set_internal_resource_from_filer(provided, obj, filer):
 					item.add_association(obj)
 				setattr(obj, field_name, href)
 				result[field_name] = href
-				
+
 	check_related_work_target(obj)
 	return result
 

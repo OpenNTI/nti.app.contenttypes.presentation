@@ -53,7 +53,7 @@ from nti.site.site import get_component_hierarchy_names
 class LessonOverviewsImporter(BaseSectionImporter):
 
 	__LESSONS__ = 'Lessons'
-	
+
 	def _post_process_asset(self, asset, source_filer, target_filer):
 		# save asset resources
 		provided = iface_of_asset(asset)
@@ -83,7 +83,7 @@ class LessonOverviewsImporter(BaseSectionImporter):
 				registry = site.getSiteManager()
 
 				# clear assets - not merging
-				clear_course_assets(course)  
+				clear_course_assets(course)
 				clear_namespace_last_modified(course)
 				remove_and_unindex_course_assets(namespace=entry.ntiid,
 										  		 registry=registry,

@@ -520,7 +520,6 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 							namespace=namespace, sites=self._site_name)
 
 	def _handle_related_work(self, provided, item, creator, extended=None):
-		self._set_creator(item, creator)
 		self._handle_package_asset(provided, item, creator, extended)
 
 		# capture updated/previous data
@@ -572,6 +571,25 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 				if name == 'href': # update target and type
 					item.target = to_external_ntiid_oid(item) # NTIID
 					item.type = unicode(content_file.contentType)
+
+	def _handle_timeline(self, provided, item, creator, extended=None):
+		self._handle_package_asset(provided, item, creator, extended)
+
+		# check for contentfiles in icon and href
+		for name in ('href', 'icon'):
+			name = str(name)
+			value = getattr(item, name, None)
+			if 		isinstance(value, six.string_types) \
+				and (is_valid_ntiid_string(value) or is_internal_file_link(value)):
+				if is_valid_ntiid_string(value):
+					content_file = find_object_with_ntiid(value)
+				else:
+					content_file = get_file_from_external_link(value)
+				if not IContentBaseFile.providedBy(content_file):
+					continue
+				external = to_external_file_link(content_file)
+				setattr(item, name, external)
+				content_file.add_association(item)
 
 	def _handle_media_roll(self, provided, item, creator, extended=None):
 		# set creator
@@ -748,6 +766,8 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 	def _handle_asset(self, provided, item, creator, extended=()):
 		if INTIRelatedWorkRef.providedBy(item):
 			self._handle_related_work(provided, item, creator, extended)
+		elif INTITimeline.providedBy(item):
+			self._handle_timeline(provided, item, creator, extended)
 		elif provided in (INTIVideo, INTIVideoRef):
 			self._handle_video(provided, item, creator, extended)
 		elif provided in PACKAGE_CONTAINER_INTERFACES:
@@ -1361,12 +1381,12 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 						name=contentObject.ntiid)
 
 		# XXX: Multi-part data must be done after the object has been registered
-		# with the InitId facility in order to set file associations 
+		# with the InitId facility in order to set file associations
 		sources = get_all_sources(self.request)
 		if sources:  # multi-part data
 			validate_sources(self.remoteUser, contentObject, sources)
 			_handle_multipart(self._course, self.remoteUser, contentObject, sources)
-			
+
 		parent = self.context.__parent__
 		extended = (self.context.ntiid,) + ((parent.ntiid,) if parent is not None else ())
 		self.context.insert(index, contentObject)

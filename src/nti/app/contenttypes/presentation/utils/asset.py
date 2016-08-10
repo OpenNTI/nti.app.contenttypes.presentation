@@ -306,7 +306,8 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None, sites=No
 	return result
 
 def check_related_work_target(asset):
-	if INTIRelatedWorkRef.providedBy(asset) and not asset.target:
+	if 		INTIRelatedWorkRef.providedBy(asset) \
+		and not asset.target:
 		href = asset.href
 		if IPloneNamed.providedBy(href):
 			asset.target = to_external_ntiid_oid(href)

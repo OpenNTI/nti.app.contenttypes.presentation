@@ -119,9 +119,14 @@
 				for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef
 					 pyramid.interfaces.IRequest" />
 
-	<subscriber factory=".assets._RelatedWorkContentFileDecorator"
+	<subscriber factory=".assets._AssetContentFileDecorator"
 				provides="nti.externalization.interfaces.IExternalMappingDecorator"
 				for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef
+					 pyramid.interfaces.IRequest" />
+
+	<subscriber factory=".assets._AssetContentFileDecorator"
+				provides="nti.externalization.interfaces.IExternalMappingDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTITimeline
 					 pyramid.interfaces.IRequest" />
 
 	<subscriber factory=".assets._IPADLegacyReferenceDecorator"

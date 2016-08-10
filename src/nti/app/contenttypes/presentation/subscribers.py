@@ -60,6 +60,7 @@ from nti.contenttypes.presentation.interfaces import IOverviewGroupMovedEvent
 from nti.contenttypes.presentation.interfaces import IPresentationAssetMovedEvent
 
 from nti.contenttypes.presentation.interfaces import INTIPollRef
+from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -230,6 +231,11 @@ def _on_content_file_removed(context, event):
 		if INTIRelatedWorkRef.providedBy(obj):
 			if obj.target == oid or obj.href == href:
 				obj.target = obj.type = obj.href = None
+			else:  # refers to icon
+				obj.icon = None
+		elif INTITimeline.providedBy( obj ):
+			if obj.href == href:
+				obj.href = None
 			else:  # refers to icon
 				obj.icon = None
 
