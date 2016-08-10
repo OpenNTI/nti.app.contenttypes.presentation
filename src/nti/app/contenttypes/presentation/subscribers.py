@@ -52,8 +52,7 @@ from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.courses.common import get_course_packages
 
-from nti.contenttypes.presentation.interfaces import TRX_ASSET_MOVE_TYPE,\
-	INTIDocketMixin
+from nti.contenttypes.presentation.interfaces import TRX_ASSET_MOVE_TYPE
 from nti.contenttypes.presentation.interfaces import TRX_OVERVIEW_GROUP_MOVE_TYPE
 from nti.contenttypes.presentation.interfaces import TRX_ASSET_REMOVED_FROM_ITEM_ASSET_CONTAINER
 
@@ -62,7 +61,9 @@ from nti.contenttypes.presentation.interfaces import IPresentationAssetMovedEven
 
 from nti.contenttypes.presentation.interfaces import INTIPollRef
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
+from nti.contenttypes.presentation.interfaces import INTIDocketMixin
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
@@ -229,7 +230,9 @@ def _on_content_file_removed(context, event):
 	for obj in context.associations():
 		if INTIDocketMixin.providedBy(obj):
 			if obj.target == oid or obj.href == href:
-				obj.target = obj.type = obj.href = None
+				if INTIRelatedWorkRef.providedBy( obj ):
+					obj.type = None
+				obj.target = obj.href = None
 			else: # refers to icon
 				obj.icon = None
 
