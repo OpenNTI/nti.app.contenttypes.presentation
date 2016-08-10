@@ -1350,24 +1350,40 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		contentObject, externalValue = self.parseInput(creator, search_owner, externalValue)
 		return contentObject, externalValue
 
+	def _convert_timeline_to_timelineref(self, timeline, creator, extended, externalValue):
+		"""
+		Convert and create a timeline ref that can be stored in our overview group.
+		"""
+		timeline_ref = INTITimelineRef( timeline )
+		intid_register(timeline_ref, registry=self._registry)
+		self._finish_creating_object( timeline_ref, creator, extended, INTITimelineRef, externalValue )
+		return timeline_ref
+
+	def _finish_creating_object(self, obj, creator, extended, provided, externalValue):
+		"""
+		Finish creating our object by firing events, registering, etc.
+		"""
+		_notify_created(obj, self.remoteUser.username, externalValue)
+		registerUtility(self._registry,
+						provided=provided,
+						component=obj,
+						name=obj.ntiid)
+		self._handle_asset(provided,
+						   obj,
+						   creator=creator,
+						   extended=extended)
+
 	def _do_call(self):
 		index = self._get_index()
 		creator = self.remoteUser
 		contentObject, externalValue = self.readCreateUpdateContentObject(creator)
 		provided = iface_of_asset(contentObject)
-
 		__traceback_info__ = contentObject
 
 		# check item does not exists and notify
 		self._check_exists(provided, contentObject, creator)
-		_notify_created(contentObject, self.remoteUser.username, externalValue)
-
-		# add to connection and register
+		# Must have intid before doing multipart (as we setup weak refs).
 		intid_register(contentObject, registry=self._registry)
-		registerUtility(self._registry,
-						provided=provided,
-						component=contentObject,
-						name=contentObject.ntiid)
 
 		# XXX: Multi-part data must be done after the object has been registered
 		# with the InitId facility in order to set file associations
@@ -1378,18 +1394,18 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 
 		parent = self.context.__parent__
 		extended = (self.context.ntiid,) + ((parent.ntiid,) if parent is not None else ())
+
+		self._finish_creating_object( contentObject, creator, extended, provided, externalValue )
+		if INTITimeline.providedBy( contentObject ):
+			contentObject = self._convert_timeline_to_timelineref( contentObject, creator,
+																   extended, externalValue )
 		self.context.insert(index, contentObject)
-		self._handle_asset(provided,
-						   contentObject,
-						   creator=creator,
-						   extended=extended)
 
 		notify_modified(self.context, externalValue, external_keys=(ITEMS,))
 		self.request.response.status_int = 201
 		self.context.child_order_locked = True
 
-		# We don't return media refs in the overview group.
-		# So don't here either.
+		# We don't return media refs in the overview group; so don't here either.
 		if INTIMediaRef.providedBy(contentObject):
 			contentObject = INTIMedia(contentObject)
 		elif INTITimelineRef.providedBy(contentObject):

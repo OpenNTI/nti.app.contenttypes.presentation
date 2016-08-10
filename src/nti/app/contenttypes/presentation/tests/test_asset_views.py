@@ -49,6 +49,7 @@ from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIVideoRef
 from nti.contenttypes.presentation.interfaces import INTIVideoRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
+from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
@@ -976,6 +977,62 @@ class TestAssetViews(ApplicationLayerTest):
 		assert_that( items[0].get( 'NTIID' ), is_( timeline_ntiid ))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
+	def test_timeline_with_file(self):
+		"""
+		Test creating a timeline by passing in the timeline content in multipart.
+		"""
+		group_ntiid = 'tag:nextthought.com,2011-10:OU-NTICourseOverviewGroup-CS1323_F_2015_Intro_to_Computer_Programming.lec:01.01_LESSON.0'
+		res = self.testapp.get( '/dataserver2/Objects/%s' % group_ntiid )
+		# Read in content bytes and the timeline source itself.
+		path = os.path.join(os.path.dirname(__file__), 'ntitimeline_content.json')
+		with open(path, "rb") as fp:
+			timeline_content = fp.read()
+		timeline_source = self._load_resource('ntitimeline.json')
+		timeline_source.pop('NTIID', None)
+		timeline_source.pop('href', None)
+		res = res.json_body
+		group_ntiid = res.get('ntiid')
+		group_href = res.get( 'href' )
+		assert_that(res.get('Items'), has_length(1))
+
+		# Now insert our timeline with a multipart href to the actual content.
+		contents_link = self.require_link_href_with_rel(res, VIEW_ORDERED_CONTENTS)
+		res = self.testapp.post(contents_link, timeline_source,
+								upload_files=[ ('href', 'timeline_content', timeline_content) ])
+		res = res.json_body
+		timeline_ntiid = res.get( 'NTIID' )
+		assert_that( timeline_ntiid, not_none() )
+		assert_that( res.get( 'MimeType' ), is_( 'application/vnd.nextthought.ntitimeline' ) )
+		assert_that( res.get( 'href' ), not_none() )
+		content_file = res.get( 'ContentFile' )
+		assert_that( content_file, not_none() )
+		content_file_ntiid = content_file.get( 'NTIID' )
+		assert_that( content_file_ntiid, not_none() )
+		assert_that( content_file.get( 'size' ), not_none() )
+		assert_that( content_file.get( 'name' ), is_( 'timeline_content' ) )
+
+		# Validate group state.
+		group = self.testapp.get( group_href )
+		group = group.json_body
+		group_items = group.get( 'Items' )
+		assert_that( group_items, has_length( 2 ))
+		assert_that( group_items[1].get( 'NTIID' ), is_( timeline_ntiid ) )
+
+		with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+			group = find_object_with_ntiid(group_ntiid)
+			timeline_ref = group.Items[1]
+			assert_that( timeline_ref.mime_type, is_( 'application/vnd.nextthought.ntitimelineref' ) )
+			assert_that( timeline_ref.target, is_( timeline_ntiid ) )
+
+			timeline = find_object_with_ntiid( timeline_ntiid )
+			assert_that( timeline, not_none() )
+			assert_that( timeline.ntiid, is_( timeline_ntiid ) )
+
+			timeline_ref = component.queryUtility( INTITimelineRef, name=timeline_ref.ntiid )
+			assert_that( timeline_ref, not_none() )
+			assert_that( timeline_ref.ntiid, is_( timeline_ref.ntiid ) )
+
+	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_moves(self):
 		source = self._load_resource('lesson_overview.json')
 		# Remove all NTIIDs so things get registered.
@@ -1176,7 +1233,7 @@ class TestAssetViews(ApplicationLayerTest):
 		lesson_media = containers.get( lesson_ntiid )
 		assert_that( lesson_media, not_none() )
 		assert_that( lesson_media, contains( video_ntiid ))
-		
+
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_get_course_presentation_assets(self):
 		href = '/dataserver2/@@GetCoursePresentationAssets'
