@@ -519,6 +519,27 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		self._catalog.index(item, container_ntiids=item_extended,
 							namespace=namespace, sites=self._site_name)
 
+	def _handle_docket(self, item):
+		# check for contentfiles in icon and href
+		for name in ('href', 'icon'):
+			name = str(name)
+			value = getattr(item, name, None)
+			if 		isinstance(value, six.string_types) \
+				and (is_valid_ntiid_string(value) or is_internal_file_link(value)):
+				if is_valid_ntiid_string(value):
+					content_file = find_object_with_ntiid(value)
+				else:
+					content_file = get_file_from_external_link(value)
+				if not IContentBaseFile.providedBy(content_file):
+					continue
+				external = to_external_file_link(content_file)
+				setattr(item, name, external)
+				content_file.add_association(item)
+				if name == 'href': # update target and type
+					item.target = to_external_ntiid_oid(item) # NTIID
+					if INTIRelatedWorkRef.providedBy(item):
+						item.type = unicode(content_file.contentType)
+
 	def _handle_related_work(self, provided, item, creator, extended=None):
 		self._handle_package_asset(provided, item, creator, extended)
 
@@ -553,43 +574,11 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		if item.type != contentType:
 			item.type = contentType
 
-		# check for contentfiles in icon and href
-		for name in ('href', 'icon'):
-			name = str(name)
-			value = getattr(item, name, None)
-			if 		isinstance(value, six.string_types) \
-				and (is_valid_ntiid_string(value) or is_internal_file_link(value)):
-				if is_valid_ntiid_string(value):
-					content_file = find_object_with_ntiid(value)
-				else:
-					content_file = get_file_from_external_link(value)
-				if not IContentBaseFile.providedBy(content_file):
-					continue
-				external = to_external_file_link(content_file)
-				setattr(item, name, external)
-				content_file.add_association(item)
-				if name == 'href': # update target and type
-					item.target = to_external_ntiid_oid(item) # NTIID
-					item.type = unicode(content_file.contentType)
+		self._handle_docket(item)
 
 	def _handle_timeline(self, provided, item, creator, extended=None):
 		self._handle_package_asset(provided, item, creator, extended)
-
-		# check for contentfiles in icon and href
-		for name in ('href', 'icon'):
-			name = str(name)
-			value = getattr(item, name, None)
-			if 		isinstance(value, six.string_types) \
-				and (is_valid_ntiid_string(value) or is_internal_file_link(value)):
-				if is_valid_ntiid_string(value):
-					content_file = find_object_with_ntiid(value)
-				else:
-					content_file = get_file_from_external_link(value)
-				if not IContentBaseFile.providedBy(content_file):
-					continue
-				external = to_external_file_link(content_file)
-				setattr(item, name, external)
-				content_file.add_association(item)
+		self._handle_docket(item)
 
 	def _handle_media_roll(self, provided, item, creator, extended=None):
 		# set creator
