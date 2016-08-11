@@ -1036,6 +1036,19 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that( timeline_ref.ntiid, is_( timeline_ref.ntiid ) )
 			assert_that( timeline_ref.__parent__, validly_provides( INTICourseOverviewGroup ) )
 
+		# Test delete
+		delete_suffix = self._get_delete_url_suffix( 1, timeline_ntiid )
+		self.testapp.delete(contents_link + delete_suffix)
+
+		# Gone from group, but still exists
+		group = self.testapp.get( group_href )
+		group = group.json_body
+		group_items = group.get( 'Items' )
+		assert_that( group_items, has_length( 1 ))
+		assert_that( group_items[0].get( 'NTIID' ), is_not( timeline_ntiid ) )
+
+		self.testapp.get( '/dataserver2/Objects/%s' % timeline_ntiid )
+
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_moves(self):
 		source = self._load_resource('lesson_overview.json')
