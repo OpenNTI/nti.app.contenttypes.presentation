@@ -1,0 +1,659 @@
+{
+    "timeline": {
+        "type": "default",
+        "headline": "",
+        "description": "",
+        "asset": {
+            "media": "",
+            "credit": "",
+            "caption": ""
+        },
+        "date": [
+            {
+                "type": "google spreadsheet",
+                "startDate": "7/17/1945",
+                "endDate": "",
+                "headline": "Truman Meets with Stalin at the Potsdam Conference",
+                "text": "In July 1945 Truman traveled to Potsdam, outside Berlin, for the final meeting of the Grand Alliance. Truman and Stalin squabbled over the sensitive issues of reparations and implementation of the Yalta Accords. By the end of the meeting, the leaders had reached tentative agreements. \"I can deal with Stalin,\" Truman wrote in his diary. \"He is honest���but smart as hell.\"",
+                "tag": "",
+                "asset": {
+                    "media": "http://cdn.history.com/sites/2/2013/11/potsdam-conference-H.jpeg",
+                    "credit": "The History Channel",
+                    "caption": "Truman meets with Stalin and British envoy Clement Attlee",
+                    "thumbnail": "http://cdn.history.com/sites/2/2013/11/potsdam-conference-H.jpeg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "1/1/1946",
+                "endDate": "12/31/1960",
+                "headline": "The \"Baby Boom\"",
+                "text": "The nation experienced an unprecedented ���baby boom\" in the years following World War II. There is no agreement about the dates that make up the baby boom, although most observers define it as those born between 1946, when births started their dramatic climb, and 1964,when widespread use of the birth control pill contributed to a decline in birthrates. During that period, roughly 76 million babies were born, making the postwar baby boom generation the largest in history. The baby boom generation was unique in many ways and its influence would have a profound impact on American identity for the rest of the century and beyond.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/thumb/6/66/US_Birth_Rates.svg/500px-US_Birth_Rates.svg.png",
+                    "credit": "Wikipedia commons",
+                    "caption": "Graph of the baby boom after World War II",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/thumb/6/66/US_Birth_Rates.svg/500px-US_Birth_Rates.svg.png"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "2/22/1946",
+                "endDate": "",
+                "headline": "George Kennan Lays Out the U.S. Policy of Containment",
+                "text": "In February 1946, George Kennan, a Soviet specialist in the U.S. embassy in Moscow, sent an 8,000-word telegram to Washington that would profoundly shape American policy. Kennan laid out a frightening picture of an aggressive Soviet Union intent upon world domination. According to Kennan's analysis, the Soviets were solely to blame for international tensions; negotiations and compromise had reached an impasse, and only military and economic pressure could tame the Russian bear. From Kennan's telegram, and an essay that followed, a word emerged to characterize American foreign policy: containment.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Kennan.jpeg/220px-Kennan.jpeg",
+                    "credit": "Wikipedia commons",
+                    "caption": "George Kennan",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Kennan.jpeg/220px-Kennan.jpeg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "7/14/1946",
+                "endDate": "",
+                "headline": "Dr. Benjamin Spock Publishes His Bestselling Book <i>Baby and Child Care</i>",
+                "text": "New child-rearing methods developed by Dr. Benjamin Spock meant that boomer babies were raised by more permissive rules than previous generations. Spock rejected his own upbringing, which emphasized strict feeding schedules and unchanging routines, and insisted that parents respond to the needs and schedules of their children. His bestselling book <i>Baby and Child Care</i> (1946) offered practical advice for toilet training and temper tantrums, as well as sugarcoated doses of Freudian psychology.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/BenjaminSpock1968.jpg/609px-BenjaminSpock1968.jpg",
+                    "credit": "Wikipedia commons",
+                    "caption": "Dr. Benjamin Spock",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/BenjaminSpock1968.jpg/609px-BenjaminSpock1968.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "1/1/1947",
+                "endDate": "12/31/1959",
+                "headline": "House Committee on Un-American Activities (HUAC) Reaches the Height of its Investigations into Suspected Communists in the United States",
+                "text": "In 1947, using information provided by informers, the House Committee on Un-American Activities (HUAC) opened a series of investigations into the Hollywood entertainment industry. In September, the committee subpoenaed forty-one witnesses. Most cooperated with the committee by offering names of suspected communists. A small group of screenwriters, the \"Hollywood Ten,\" served prison terms for refusing to answer questions about their ties to the Communist Party. Shaken by the hearings, the studios initiated a policy of \"blacklisting\" writers, directors, technicians, and actors who refused to denounce communism.",
+                "tag": "",
+                "asset": {
+                    "media": "http://cdn.history.com/sites/2/2013/12/nixon_hiss.jpg",
+                    "credit": "The History Channel",
+                    "caption": "Photograph of Richard Nixon, as a HUAC investigator, poring over sources related to charges of espionage",
+                    "thumbnail": "http://cdn.history.com/sites/2/2013/12/nixon_hiss.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "3/12/1947",
+                "endDate": "",
+                "headline": "Truman Issues the Truman Doctrine",
+                "text": "The Truman Doctrine represented a turning point in the evolution of America's global identity. For the first time, the United States intervened in the peacetime affairs of nations outside the Western Hemisphere. The moralistic rhetoric Truman used to justify U.S. involvement reflected America's penchant to view the world as divided between the forces of good and evil. The experiment in \"nation-building\" in Greece and Turkey assumed the superiority of American values and the universal appeal of democracy. By rooting America's response to a local conflict in universal language, Truman hoped to prepare the American people for their responsibility as a world power.",
+                "tag": "",
+                "asset": {
+                    "media": "http://www.trumanlibrary.org/photographs/59-1252-3.jpg",
+                    "credit": "Harry S. Truman Presidential Library & Museum",
+                    "caption": "Truman delivers his Truman Doctrine address",
+                    "thumbnail": "http://www.trumanlibrary.org/photographs/59-1252-3.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "6/5/1947",
+                "endDate": "12/31/1952",
+                "headline": "George C. Marshall Proposes the Marshall Plan to Assist Europe in its Financial and Infrastructural Recovery",
+                "text": "The Marshall Plan provided $13 billion in economic assistance to America's European allies. European industrial production soared. The Plan also provided a needed psychological boast, restoring hope and optimism. The British foreign secretary called the Marshall Plan \"a lifeline to sinking men.\"",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/b/b3/Marshall_Plan_poster.JPG",
+                    "credit": "Wikipedia commons",
+                    "caption": "Poster raising support for the Marshall Plan in Europe",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/b/b3/Marshall_Plan_poster.JPG"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "7/26/1947",
+                "endDate": "",
+                "headline": "Passage of the National Security Act",
+                "text": "In 1947, Congress passed the National Security Act, which has been called the ���Magna Carta of the national security state.��� The Act created the skeleton of what would become an overpowering national security apparatus. The act expanded executive power by centralizing previously dispersed responsibilities in the White House. It established the Department of Defense to oversee all branches of the armed services and formed the Joint Chiefs of Staff, which included the generals of the three services and the Marines. The Act also created the National Security Council (NSC), a cabinet-level body to coordinate military and foreign policy for the president and the Central Intelligence Agency (CIA), which carried out espionage operations, directly under the authority of the National Security Council.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Photograph_of_President_Truman_at_his_desk_in_the_Oval_Office%2C_signing_the_National_Security_Act_Amendments_of_1949..._-_NARA_-_200168.jpg/751px-Photograph_of_President_Truman_at_his_desk_in_the_Oval_Office%2C_signing_the_National_Security_Act_Amendments_of_1949..._-_NARA_-_200168.jpg",
+                    "credit": "Wikipedia commons",
+                    "caption": "Truman signing the National Security Act",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Photograph_of_President_Truman_at_his_desk_in_the_Oval_Office%2C_signing_the_National_Security_Act_Amendments_of_1949..._-_NARA_-_200168.jpg/751px-Photograph_of_President_Truman_at_his_desk_in_the_Oval_Office%2C_signing_the_National_Security_Act_Amendments_of_1949..._-_NARA_-_200168.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "1/4/1948",
+                "endDate": "",
+                "headline": "Alfred Kinsey Publishes His Work on Human Sexuality",
+                "text": "Kinsey's studies on <i>Sexual Behavior in the Human Male</i> (1948) and <i>Sexual Behavior in the Human Female</i> (1953) rocketed to the top of the bestseller list, where they stayed for 27 weeks. The statistics shocked the nation: 86 percent of men said they had engaged in premarital sex; 50 percent said they had committed adultery before turning 40; 37 percent of men reported at least one episode of homosexual sex; and 17 percent of men who had grown up on farms claimed to have had sex with animals.",
+                "tag": "",
+                "asset": {
+                    "media": "http://cp91279.biography.com/1000509261001/1000509261001_1083232910001_Bio-Biography-Alfred-Kinsey-LF.jpg",
+                    "credit": "Biography, A&E",
+                    "caption": "Alfred Kinsey",
+                    "thumbnail": "http://cp91279.biography.com/1000509261001/1000509261001_1083232910001_Bio-Biography-Alfred-Kinsey-LF.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "6/24/1948",
+                "endDate": "5/12/1949",
+                "headline": "Soviet Union Establishes a Blockade Around Berlin, Leads to the Berlin Airlift",
+                "text": "On June 24, 1948, the Soviets clamped a tight blockade around West Berlin, which lay 110 miles within the Soviet occupation zone. Using his geographical advantage, Stalin blocked all surface transportation into West Berlin, depriving some 2.5 million people of food and fuel. The situation was full of danger and Truman searched for a response that would demonstrate American resolve without forcing a direct confrontation. Treading a careful middle path, Truman decided to counter the Russian move by ordering a massive airlift operation. For the next 324 days, American and British planes delivered 2.5 million tons of provisions to sustain the 10,000 troops and the 2 million civilians in Berlin. On May 12, 1949, the Russians accepted defeat and ended the blockade.",
+                "tag": "",
+                "asset": {
+                    "media": "http://www.trumanlibrary.org/photos/berlin2.jpg",
+                    "credit": "Wikipedia commons",
+                    "caption": "Airplanes loaded with supplies to be airlifted to Berlin",
+                    "thumbnail": "http://www.trumanlibrary.org/photos/berlin2.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "8/3/1948",
+                "endDate": "",
+                "headline": "Whittaker Chambers Accuses Alger Hiss of Espionage",
+                "text": "In August 1948, Whittaker Chambers, a <i>Time</i> magazine editor, accused Alger Hiss, who had served as a high-ranking aide to Franklin Roosevelt at Yalta, of having given him microfilm of sixty-five classified State Department documents. Testifying before a grand jury in New York, Hiss denied Chambers charges. After two trials, Hiss was found guilty of perjury and sentenced to five years in jail.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/8/81/Alger_Hiss_(1950).jpg",
+                    "credit": "Wikipedia commons",
+                    "caption": "Alger Hiss testifies before HUAC",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/8/81/Alger_Hiss_(1950).jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "4/4/1949",
+                "endDate": "",
+                "headline": "Truman Proposes the Creation of the North Atlantic Treaty Organization (NATO)",
+                "text": "In April, Truman pledged American involvement in the North Atlantic Treaty Organization (NATO), a mutual defense pact that bound twelve signatories (Britain, France, Canada, Italy, the Benelux countries, Ireland, Denmark, Norway, and Portugal) to fight against aggression.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Truman_signing_North_Atlantic_Treaty.jpg/620px-Truman_signing_North_Atlantic_Treaty.jpg",
+                    "credit": "Wikipedia commons",
+                    "caption": "Signing the charter establishing NATO",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Truman_signing_North_Atlantic_Treaty.jpg/620px-Truman_signing_North_Atlantic_Treaty.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "8/29/1949",
+                "endDate": "",
+                "headline": "Soviet Union Tests its Own Atomic Bomb",
+                "text": "The Soviet Union tests its first atmoic bomb, which created a wave of anxiety within the United States and Western Europe since the U.S. no longer held a monopoly over nuclear weapons.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/en/e/e8/Joe_one.jpg",
+                    "credit": "Wikipedia commons",
+                    "caption": "Soviet Union tests its first nuclear bomb",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/en/e/e8/Joe_one.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "10/1/1949",
+                "endDate": "",
+                "headline": "Communist Revolution in China",
+                "text": "When World War II ended, China was torn between Jiang Jieshi's (Chiang Kai-shek's) Nationalists in the south and Mao Zedong's (Mao Tse-tung's) Communists in the north. Initially the Nationalists had the upper hand, but Jiang's corrupt and incompetent government failed to inspire public support or stem the tide of Chinese communism. In 1949, deciding there was little the United States could do to salvage the noncommunist government, Truman stopped all aid to Jiang. Shortly afterwards, Jiang's forces collapsed, sending the nationalist leader scurrying to the offshore island of Formosa (Taiwan). The Soviet Union consolidated its power in Asia by extending diplomatic recognition to Mao's government and signing a \"mutual assistance\" agreement.",
+                "tag": "",
+                "asset": {
+                    "media": "https://s3.amazonaws.com/static.history.state.gov/milestones/communists-beijing.jpg",
+                    "credit": "U.S. Department of State, Office of the Historian",
+                    "caption": "Communist forces enter Beijing",
+                    "thumbnail": "https://s3.amazonaws.com/static.history.state.gov/milestones/communists-beijing.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "10/7/1949",
+                "endDate": "",
+                "headline": "Soviet Union Creates the German Democratic Republic",
+                "text": "The Soviets matched the Western initiatives by intensifying their domination of Eastern Europe. In October 1949, Stalin created a separate government in East Germany, the German Democratic Republic. Moscow sponsored an economic association and a military alliance for Eastern Europe, the Warsaw Pact (1955). The Soviets poured massive amounts of aid into Poland, Czechoslovakia, and Bulgaria to accelerate industrialization and increase Russian control. The only exception to Soviet control was Yugoslavia, which managed to develop as an independent socialist state.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Military_power_of_NATO_and_the_Warsaw_Pact_states_in_1973.svg/620px-Military_power_of_NATO_and_the_Warsaw_Pact_states_in_1973.svg.png",
+                    "credit": "Wikipedia commons",
+                    "caption": "Map of the American/Western and Soviet spheres of influence in Europe",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Military_power_of_NATO_and_the_Warsaw_Pact_states_in_1973.svg/220px-Military_power_of_NATO_and_the_Warsaw_Pact_states_in_1973.svg.png"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "2/9/1950",
+                "endDate": "",
+                "headline": "Joseph McCarthy Gives His Infamous Speech in Wheeling, West Virginia",
+                "text": "In February 1950, McCarthy gave a speech in Wheeling, West Virginia where he claimed to have proof of communist spies in Washington. \"I have here in my hand,\" he blustered, \"a list of 205...a list of names that were known to the Secretary of State as being members of the Communist Party and who nevertheless are still working and shaping the policy of the State Department.\" McCarthy, observed a journalist, \"was a political speculator who found his oil gusher in communism.\" By the fall of 1950, McCarthy was the most feared man in American politics.",
+                "tag": "",
+                "asset": {
+                    "media": "http://www.history.com/s3static/video-thumbnails/AETN-History_VMS/21/176/History_McCarthy_on_War_Against_Communism_Speech_SF_still_624x352.jpg",
+                    "credit": "The History Channel",
+                    "caption": "McCarthy stirs American fears amid the Second Red Scare",
+                    "thumbnail": "http://www.history.com/s3static/video-thumbnails/AETN-History_VMS/21/176/History_McCarthy_on_War_Against_Communism_Speech_SF_still_624x352.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "4/14/1950",
+                "endDate": "",
+                "headline": "National Security Council Issues Memorandum 68 (NSC-68)",
+                "text": "In April, the National Security Council recommended that the president initiate a massive rebuilding of the American military to confront the new Soviet nuclear threat. The report, National Security Council Memorandum 68 (NSC-68), presented a frightening portrait of a Soviet system driven by \"a new fanatic faith\" that \"seeks to impose its absolute authority over the rest of the world.\" Since the United States could no longer depend solely on nuclear weapons to deter the Russians, it needed to expand its conventional capability.",
+                "tag": "",
+                "asset": {
+                    "media": "http://www.trumanlibrary.org/whistlestop/study_collections/coldwar/documents/arms35_01.gif",
+                    "credit": "Harry S. Truman Presidential Library & Museum",
+                    "caption": "Cover page of NSC-68",
+                    "thumbnail": "http://www.trumanlibrary.org/whistlestop/study_collections/coldwar/documents/arms35_01.gif"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "6/25/1950",
+                "endDate": "",
+                "headline": "Communist North Korea Invades South Korea",
+                "text": "On June 25, 1950, 110,000 North Korean soldiers crossed the thirty-eighth parallel and overpowered the South Korean forces. Truman interpreted the invasion as a Soviet-engineered assault, the opening salvo in a broader Soviet attack on the American sphere of influence. Committed to avoiding the same mistake Roosevelt had made in dealing with Hitler, Truman immediately ordered American air and naval forces to support the South Koreans.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/thumb/7/70/South_Korean_refugees_mid-1950.jpg/580px-South_Korean_refugees_mid-1950.jpg",
+                    "credit": "Wikipedia commons",
+                    "caption": "South Korean refugees fleeing in the wake of the North Korean invasion",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/thumb/7/70/South_Korean_refugees_mid-1950.jpg/580px-South_Korean_refugees_mid-1950.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "9/15/1950",
+                "endDate": "",
+                "headline": "Douglas MacArthur Leads U.S. and U.N. Forces to Victory at the Battle of Inchon",
+                "text": "In the first few weeks it appeared that the North Korean forces might win a decisive victory. Their troops pushed the South Koreans and the entire U.S. Eighth Army down the peninsula to its tip around the port city of Pusan. Then on September 15, General Douglas MacArthur turned the war around with a daring amphibious invasion behind enemy lines at Inchon, near the South Korean capital of Seoul.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/9/92/Battle_of_Inchon.png",
+                    "credit": "Wikipedia commons",
+                    "caption": "Photograph of the Battle of Inchon",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/9/92/Battle_of_Inchon.png"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "1/1/1951",
+                "endDate": "",
+                "headline": "Korean War Bogs Down into a Stalemate at the 38th Parallel",
+                "text": "After China entered into the Korean War on the side of North Korea, U.S. and U.N. forces waged a war of attrition against Chinese and North Korean forces. By January 1951, the U.S. Eighth Army halted the communist advance and by March pushed it back to the thirty-eighth parallel. The war bogged down, with neither side able to gain the advantage.",
+                "tag": "",
+                "asset": {
+                    "media": "http://cdn.history.com/sites/2/2014/01/military-trucks-crossing-38th-parallel-P.jpeg",
+                    "credit": "The History Channel",
+                    "caption": "Photograph of the 38th parallel divide between North Korea and South Korea during the war",
+                    "thumbnail": "http://cdn.history.com/sites/2/2014/01/military-trucks-crossing-38th-parallel-P.jpeg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "11/1/1952",
+                "endDate": "",
+                "headline": "U.S. Tests the First Hydrogen Bomb",
+                "text": "Following the Soviet nuclear explosion, Truman decided to develop a hydrogen bomb, potentially a thousand times more powerful than the atomic weapon that destroyed Hiroshima and Nagasaki, which was tested three years later in 1952.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Ivy_Mike_test.ogg/320px--Ivy_Mike_test.ogg.jpg",
+                    "credit": "Wikipedia commons",
+                    "caption": "Photograph of the \"Ivy Mike\" hydrogen bomb test",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Ivy_Mike_test.ogg/320px--Ivy_Mike_test.ogg.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "11/4/1952",
+                "endDate": "",
+                "headline": "Election of Dwight D. Eisenhower as President",
+                "text": "In style and manner, President Dwight D. Eisenhower served as a political symbol of the age. Eisenhower���s status as a war hero made him a popular choice to run for president in 1952. Bumper stickers across the country cheerily proclaimed ���I Like Ike.��� Once in office, Eisenhower set out to limit the power of the federal government, which he believed had grown too fast under Roosevelt and Truman. However, despite the hopes of many conservatives and the fears of liberals, Eisenhower did not undermine the foundation of the Vital Center consensus.",
+                "tag": "",
+                "asset": {
+                    "media": "http://cdn.history.com/sites/2/2013/11/eisenhower-swornin-P.jpeg",
+                    "credit": "The History Channel",
+                    "caption": "Eisenhower sworn in as president",
+                    "thumbnail": "http://cdn.history.com/sites/2/2013/11/eisenhower-swornin-P.jpeg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "3/5/1953",
+                "endDate": "",
+                "headline": "Death of Joseph Stalin",
+                "text": "In March 1953, shortly after Eisenhower���s election, Soviet leader Joseph Stalin died, raising hopes of a thaw in relations between the two countries. These hopes were rather short-lived.",
+                "tag": "",
+                "asset": {
+                    "media": "http://www.loc.gov/loc/lcib/0304/images/post-stalin_6.jpg",
+                    "credit": "Library of Congress, Prints and Photographs Division",
+                    "caption": "Photograph taken during Stalin's funeral",
+                    "thumbnail": "http://www.loc.gov/loc/lcib/0304/images/post-stalin_6.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "6/19/1953",
+                "endDate": "",
+                "headline": "Execution of Julius and Ethel Rosenberg for Espionage",
+                "text": "American anxieties revolved around fears that spies may have stolen information that allowed the Soviets to develop the atom bomb. The FBI arrested Julius and Ethel Rosenberg for conspiring with a German scientist, Klaus Fuchs, to pass secrets to the Russians. The Rosenbergs denied the allegations, insisting they were the victims of anticommunist hysteria and anti-Semitism. After a two-week trial, a jury pronounced them guilty of espionage. A judge sentenced them to death. In June 1953, despite personal pleas from the pope and worldwide protests, they were executed for their crimes.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/6/68/Julius_and_Ethel_Rosenberg_NYWTS.jpg",
+                    "credit": "Wikipedia commons",
+                    "caption": "Photograph of the Rosenbergs",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/6/68/Julius_and_Ethel_Rosenberg_NYWTS.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "7/27/1953",
+                "endDate": "",
+                "headline": "Korean Armistice Signed, Bringing an End to the Korean War",
+                "text": "Eisenhower was determined to end American involvement in Korea and flew to Korea after the 1952 election to nudge the cease-fire talks. He also dropped hints to China that he was ready to use nuclear weapons in Korea. In July 1953, he agreed to terms that called for a division of Korea at approximately the same line that had marked the border in June 1950���the thirty-eighth parallel���with a demilitarized zone separating the two Koreas.",
+                "tag": "",
+                "asset": {
+                    "media": "http://cdn.history.com/sites/2/2014/01/president-eisenhower-eats-with-soldiers-P.jpeg",
+                    "credit": "The History Channel",
+                    "caption": "Photograph of Eisenhower eating with American soldiers in Korea",
+                    "thumbnail": "http://cdn.history.com/sites/2/2014/01/president-eisenhower-eats-with-soldiers-P.jpeg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "8/15/1953",
+                "endDate": "",
+                "headline": "C.I.A. Finances and Orchestrates a Coup in Iran",
+                "text": "In 1953 in Iran, when the government of Mohammad Mossaddegh nationalized the Anglo-Iranian Oil Company, the CIA planned, financed, and orchestrated a coup to overthrow him. To replace him, the CIA worked with Iranian army officers to consolidate power behind the pro-Western Shah Reza Pahlavi.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Mossadeghmohammadrezashah.jpg/550px-Mossadeghmohammadrezashah.jpg",
+                    "credit": "Wikipedia commons",
+                    "caption": "Mohammad Mossaddegh greets Shah Reza Pahlavi",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Mossadeghmohammadrezashah.jpg/550px-Mossadeghmohammadrezashah.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "3/16/1954",
+                "endDate": "6/17/1954",
+                "headline": "Army - McCarthy Hearings",
+                "text": "In March 1954, Eisenhower leaked to the press an army report that documented attempts by Joseph McCarthy and his staff to win preferential treatment for a former staff member drafted into the army. The Senate, embarrassed by the army���s accusations, decided to hold investigative public hearings carried live on national television. Beginning on April 27, as many as 20 million Americans watched the proceedings for thirty-five days. Toward the end, McCarthy savagely attacked a lawyer for having once belonged to a left-wing organization. Outraged, attorney Joseph Welch berated McCarthy, concluding, ���Have you no sense of decency, sir, at long last? Have you left no sense of decency?���",
+                "tag": "",
+                "asset": {
+                    "media": "https://www.mtholyoke.edu/~lillsie/McCarthyism/Welch-McCarthy1.jpg",
+                    "credit": "Mt. Holyoke University, \"Senator Joe McCarthy and the Red Scare\"",
+                    "caption": "McCarthy verbally spars with Joseph Welch during the hearings",
+                    "thumbnail": "https://www.mtholyoke.edu/~lillsie/McCarthyism/Welch-McCarthy1.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "5/7/1954",
+                "endDate": "",
+                "headline": "French Army Defeated at the Battle of Dien Bien Phu by Vietnamese and Communist Chinese Forces",
+                "text": "Vietnamese and Communist Chinese forces surrounded twelve thousand French troops at Dien Bien Phu, a remote jungle fortress. The French pleaded for direct American intervention to rescue their troops. Eisenhower refused to support the French troops, who surrendered in May 1954.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Victory_in_Battle_of_Dien_Bien_Phu.jpg/400px-Victory_in_Battle_of_Dien_Bien_Phu.jpg",
+                    "credit": "Wikipedia commons",
+                    "caption": "Vietnamese soldiers planting their flag atop the captured French position",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Victory_in_Battle_of_Dien_Bien_Phu.jpg/400px-Victory_in_Battle_of_Dien_Bien_Phu.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "5/17/1954",
+                "endDate": "",
+                "headline": "Supreme Court Rules on <i>Brown v. Board of Education of Topeka, Kansas</i>, Overturns \"Separate but Equal\"",
+                "text": "In a unanimous decision popularly known as <i>Brown v. Board of Education of Topeka, Kansas</i>, the Supreme Court overturned the legal justification for one of the principal pillars of white supremacy. The Brown decision declared segregation in public schools to be illegal, claiming that ���in the field of public education the doctrine of ���separate but equal��� has no place.��� A year later the Supreme Court instructed federal district courts to require local authorities to show \"good faith\" and to move with \"all deliberate speed\" toward desegregation of all public schools.",
+                "tag": "",
+                "asset": {
+                    "media": "http://www.history.com/s3static/video-thumbnails/AETN-History_Prod/84/552/History_Speeches_2031_Brown_V_BOE_Ruling_SF_still_624x352.jpg",
+                    "credit": "The History Channel",
+                    "caption": "Thurgood Marshall and his team celebrate the victory over segregation",
+                    "thumbnail": "http://www.history.com/s3static/video-thumbnails/AETN-History_Prod/84/552/History_Speeches_2031_Brown_V_BOE_Ruling_SF_still_624x352.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "9/1/1954",
+                "endDate": "",
+                "headline": "U.S. Establishes the Southeast Asia Treaty Organization (SEATO)",
+                "text": "In 1954, in an effort to stem Soviet and Chinese influence in the area, the United States set up yet another anticommunist military alliance, the Southeast Asia Treaty Organization (SEATO). The treaty pledged the United States to defend Australia, New Zealand, Thailand, Pakistan, and the Philippines against communist aggression.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/3/33/Seatostamp.jpg",
+                    "credit": "Wikipedia commons",
+                    "caption": "U.S. stamp in support of SEATO",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/3/33/Seatostamp.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "4/15/1955",
+                "endDate": "",
+                "headline": "Ray Kroc Establishes the First Fast Food Chain Franchise, McDonald's",
+                "text": "In 1955 an ambitious salesman, Ray Kroc, established a chain of burger joints called McDonald's, which would become the symbol of the fast-food industry. Whether eating in California or Connecticut, customers would be served the same-sized hamburger with a quarter ounce of onion, a teaspoon of mustard, a tablespoon of ketchup, and a pickle one inch in diameter. ���I put the hamburger on the assembly line,��� Kroc boasted.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/thumb/1/17/DowneyMcdonalds.jpg/700px-DowneyMcdonalds.jpg",
+                    "credit": "Wikipedia commons",
+                    "caption": "Modern photograph of one of the earliest McDonald's restaurants",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/thumb/1/17/DowneyMcdonalds.jpg/700px-DowneyMcdonalds.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "7/18/1955",
+                "endDate": "",
+                "headline": "President Eisenhower and Nikita Khrushchev Meet for a Diplomatic Summit in Geneva",
+                "text": "In July 1955, Eisenhower and Soviet Premier Nikita Khrushchev, with their British and French counterparts, met in Geneva for the first top-level conference of the wartime Allies since the 1945 meeting at Potsdam. The cordial atmosphere produced a brief thaw in superpower tensions, which the press labeled ���the spirit of Geneva.���",
+                "tag": "",
+                "asset": {
+                    "media": "http://cdn.history.com/sites/2/2013/11/eisenhower-khrushchev-P.jpeg",
+                    "credit": "The History Channel",
+                    "caption": "Photograph of Eisenhower and Khrushchev",
+                    "thumbnail": "http://cdn.history.com/sites/2/2013/11/eisenhower-khrushchev-P.jpeg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "8/28/1955",
+                "endDate": "",
+                "headline": "Murder of Emmett Till",
+                "text": "In August 1955, Emmett Till, a fourteen-year-old African American youth from Chicago, visited relatives near Money, Mississippi. After buying some candy at a rural store, Till allegedly said \"Bye, baby\" to the white female clerk. A few days later, after midnight, her husband and brother dragged Till from the home of his uncle, Moses Wright. They shot Till in the head, cut off his testicles, and dumped him in the Tallahatchie River. His disfigured body was found three days later.",
+                "tag": "",
+                "asset": {
+                    "media": "http://cp91279.biography.com/Emmett-Till_The-Untold-Story-Of-Emmett-Till-Trailer_HD_768x432-16x9.jpg",
+                    "credit": "Biography, A&E",
+                    "caption": "Emmett Till",
+                    "thumbnail": "http://cp91279.biography.com/Emmett-Till_The-Untold-Story-Of-Emmett-Till-Trailer_HD_768x432-16x9.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "12/1/1955",
+                "endDate": "",
+                "headline": "Rosa Parks Arrested for Refusing to Give Up Her Seat on a Segregated Bus in Montgomery",
+                "text": "On December 1, 1955, a 42-year old black seamstress named Rosa Parks boarded a city bus in Montgomery, Alabama. When asked to give up her seat to a white person as required by Alabama law, Parks refused. After police arrested Parks for her defiance, black leaders decided to boycott the city bus system and sought the support of black ministers, the traditional leaders of African American communities.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/c/c5/Rosaparks_fingerprints.jpg",
+                    "credit": "Wikipedia commons",
+                    "caption": "Police fingerprint card related to the arrest of Rosa Parks",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/c/c5/Rosaparks_fingerprints.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "12/1/1955",
+                "endDate": "12/20/1956",
+                "headline": "The Montgomery Bus Boycott in Alabama",
+                "text": "Twenty-six-year old Martin Luther King, Jr., pastor of the Dexter Baptist Church, agreed to head the Montgomery Improvement Association (MIA), which was created to promote and support the boycott. To deal with their loss of public transportation, the bus boycotters organized a massive and complicated system of car pools that involved 20,000 people every day. In June 1956, a panel of federal judges struck down Montgomery's segregation ordinances. The state appealed to the Supreme Court, which upheld the lower court decision a few months later.",
+                "tag": "",
+                "asset": {
+                    "media": "http://www.history.com/images/media/slideshow/martin-luther-king-jr/mlk-montgomery-bus-boycott.jpg",
+                    "credit": "The History Channel",
+                    "caption": "Martin Luther King Jr. standing victorious at the end of the bus boycott",
+                    "thumbnail": "http://www.history.com/images/media/slideshow/martin-luther-king-jr/mlk-montgomery-bus-boycott.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "1/27/1956",
+                "endDate": "",
+                "headline": "Elvis Presley Emerges with His Hit Single \"Heartbreak Hotel\"",
+                "text": "Elvis Aaron Presley, a nineteen-year-old truck driver from Tupelo, Mississippi, emerged in 1956 with his hit single \"Heartbreak Hotel.\" The young entertainer adapted the powerful rhythms and raw sexual energy of \"race music\" to create his own unique style and sound. The new white star enthralled screaming audiences of white teens. Between 1956 and 1958, Presley had ten number one hit records, including \"Heartbreak Hotel,\" \"Hound Dog,\" \"All Shook Up,\" and \"Jailhouse Rock.\" He was the living symbol of the \"Baby Boom\" youth culture.",
+                "tag": "",
+                "asset": {
+                    "media": "http://cdn.history.com/sites/2/2015/04/hith-elvis-presley-ed-sullivan-show-51816059-V.jpeg",
+                    "credit": "The History Channel",
+                    "caption": "Elvis Presley",
+                    "thumbnail": "http://cdn.history.com/sites/2/2015/04/hith-elvis-presley-ed-sullivan-show-51816059-V.jpeg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "2/1/1956",
+                "endDate": "",
+                "headline": "Southern Politicians Issue Their \"Manifesto\"",
+                "text": "In response to the <i>Brown v. Board of Education</i> court decision, nineteen southern senators and seventy-seven representatives signed a manifesto in 1956 that bound them to \"use all lawful means to bring about a reversal of this decision which is contrary to the Constitution and to prevent the use of force in its implementation.\"",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/2/2d/Strom_Thurmond,_c_1961.jpg",
+                    "credit": "Wikipedia commons",
+                    "caption": "Strom Thurmond, one of the leaders behind the Southern Manifesto",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/2/2d/Strom_Thurmond,_c_1961.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "6/29/1956",
+                "endDate": "",
+                "headline": "Passage of the Interstate Highway Act",
+                "text": "With millions of new cars on the road, Americans demanded better roads and highways. The Eisenhower administration backed the building of a nationwide network of four-lane highways to allow for the massive evacuation of urban areas in case of a nuclear war. Congress responded in 1956 by passing the Interstate Highway Act. The new highway system made travel easier, faster, and more convenient.",
+                "tag": "",
+                "asset": {
+                    "media": "http://www.fhwa.dot.gov/publications/publicroads/96summer/imgs/p96su18.jpg",
+                    "credit": "U.S. Department of Transportation, Federal Highway Administration",
+                    "caption": "Photograph of the first construction project as part of the Interstate Highway Act",
+                    "thumbnail": "http://www.fhwa.dot.gov/publications/publicroads/96summer/imgs/p96su18.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "7/26/1956",
+                "endDate": "",
+                "headline": "Colonel Gamal Abdel Nasser Nationalizes the Suez Canal",
+                "text": "In 1956 Egyptian leader Colonel Gamal Abdel Nasser seized control of the Suez Canal, the vital waterway between the Mediterranean and the Gulf of Suez. The British, who had controlled the canal, and the French conspired with Israel to regain control of the canal and teach Nasser a lesson. On October 29, 1956 ��� provoked by eight years of border attacks and fear of the Egyptian arms buildup ��� Israel invaded Egypt���s Sinai Peninsula. Israeli forces advanced within ten miles of the Suez Canal. In an attack carefully coordinated with the Israelis, the British and French bombed Egyptian military targets and seized the northern third of the canal.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/e/e1/Nasser_in_Mansoura,_1960.jpg",
+                    "credit": "Wikipedia commons",
+                    "caption": "Photograph of Nasser waving to his supporters in Egypt",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/e/e1/Nasser_in_Mansoura,_1960.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "9/23/1957",
+                "endDate": "",
+                "headline": "The \"Little Rock Nine\" Desegregate Central High School",
+                "text": "Desegregation of Central High School was scheduled to begin in September 1957. Responding to the demands of angry white parents, the state's governor, Orval Faubus, called out the National Guard to prevent black students from entering Central High. The guardsmen, with bayonets drawn, turned back the nine young African American students, delaying segregation for nearly three weeks until a federal judge ordered them removed. The students managed to enter the school, but only after a mob of unruly whites outside pelted and pushed the police who tried to protect the students. National television cameras recorded the ugly events.",
+                "tag": "",
+                "asset": {
+                    "media": "http://cdn.history.com/sites/2/2013/11/eisenhower-littlerock-P.jpeg",
+                    "credit": "The History Channel",
+                    "caption": "The \"Little Rock Nine\" being escorted into Central High by the U.S. Army",
+                    "thumbnail": "http://cdn.history.com/sites/2/2013/11/eisenhower-littlerock-P.jpeg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "10/4/1957",
+                "endDate": "",
+                "headline": "Soviet Union Launches \"Sputnik\"",
+                "text": "On October 4, 1957, the Soviet Union launched a 184-pound space satellite called Sputnik, or ���Little Traveler.��� On October 13, Sputnik and its rocket were visible over New York. It was the first time that the air space over the continental United States had been violated. The Soviet success in space, and its earlier launch of an intercontinental ballistic missile (ICBM), dealt a serious blow to American national pride and created a widespread and unfounded fear of a ���missile gap��� between the United States and the Soviet Union.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/1967_CPA_3496.jpg/700px-1967_CPA_3496.jpg",
+                    "credit": "Wikipedia commons",
+                    "caption": "Stamp from the Soviet Union depicting Sputnik",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/1967_CPA_3496.jpg/700px-1967_CPA_3496.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "1/1/1959",
+                "endDate": "",
+                "headline": "Completion of the Cuban Revolution",
+                "text": "On January 1, 1959, a young lawyer-turned-revolutionary, Fidel Castro, led a successful insurrection against the American-supported dictatorship of Fulgencio Batista. American economic interests expressed concern when Castro began breaking up large cattle ranches and sugar plantations. When the United States threatened to cut off economic aid, Castro responded by declaring his support for communism, signing a trade agreement with the Soviets, and confiscating about $1 billion in U.S. property.",
+                "tag": "",
+                "asset": {
+                    "media": "http://www.history.com/s3static/video-thumbnails/AETN-History_Prod/84/614/History_Speeches_4010_Castro_Assumes_Power_Cuba_SF_still_624x352.jpg",
+                    "credit": "The History Channel",
+                    "caption": "Fidel Castro during the Cuban Revolution",
+                    "thumbnail": "http://www.history.com/s3static/video-thumbnails/AETN-History_Prod/84/614/History_Speeches_4010_Castro_Assumes_Power_Cuba_SF_still_624x352.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "5/1/1960",
+                "endDate": "",
+                "headline": "Soviet Union Shoots Down an American U-2 Spy Plane, Capture Pilot Gary Powers",
+                "text": "In May 1960, the Soviets shot down an American U-2 spy plane and its pilot, Gary Powers. The incident took place two weeks before a scheduled summit meeting in Paris between Eisenhower and Khrushchev. An angry Khrushchev, who paraded the captured American pilot before the world media, canceled the summit and withdrew an invitation for Eisenhower to visit Moscow.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/7/77/KellyJohnsonandGaryPowers.jpg",
+                    "credit": "Wikipedia commons",
+                    "caption": "Photograph of Gary Powers next to a U-2 spy plane",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/7/77/KellyJohnsonandGaryPowers.jpg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "9/26/1960",
+                "endDate": "10/24/1960",
+                "headline": "Nixon-Kennedy Televised Debates",
+                "text": "Democratic candidate, John F. Kennedy, and Republican candidate, Richard Nixon, faced off against one another on nationally televised debates between September 26 and October 24. Kennedy used the debates���the first ever televised face-off between presidential contenders���to demolish the Republican charge that he was inexperienced and badly informed. And he succeeded far better than his opponent in communicating the qualities of boldness, imagination, and poise. The performance energized Kennedy���s campaign, and the debates institutionalized television���s role as a major force in American politics.",
+                "tag": "",
+                "asset": {
+                    "media": "http://cdn.history.com/sites/2/2014/01/kennedy-nixon-debate-H.jpeg",
+                    "credit": "The History Channel",
+                    "caption": "Photograph of the televised Nixon-Kennedy debates",
+                    "thumbnail": "http://cdn.history.com/sites/2/2014/01/kennedy-nixon-debate-H.jpeg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "11/8/1960",
+                "endDate": "",
+                "headline": "Election of John F. Kennedy as President",
+                "text": "Kennedy���s victory signaled a desire for change, but the narrowness of his triumph reflected the caution with which Americans approached the challenges of the new decade. During the campaign, Kennedy managed to convey a message of change and continuity. The tension between American ideals and social realities, which sharpened during the decade, foreshadowed the difficult balancing act that would confront the new president in the next decade.",
+                "tag": "",
+                "asset": {
+                    "media": "http://cdn.history.com/sites/2/2013/12/kennedy_sotu1-P.jpeg",
+                    "credit": "The History Channel",
+                    "caption": "John F. Kennedy",
+                    "thumbnail": "http://cdn.history.com/sites/2/2013/12/kennedy_sotu1-P.jpeg"
+                }
+            },
+            {
+                "type": "google spreadsheet",
+                "startDate": "2/19/1963",
+                "endDate": "",
+                "headline": "Publication of Betty Friedan's Groundbreaking Book <i>The Feminine Mystique</i>",
+                "text": "In the last few years of the decade, a housewife and former journalist, Betty Friedan, began interviewing other women who had graduated from Smith College. Most of these women seemed to possess all the material needs that society deemed important���nice suburban homes, the latest home appliances, and healthy children. But they were all unhappy. Unaware that other women shared their feelings, they suffered in silence and blamed themselves for their misery. Friedan later wrote about this unhappiness, which she called ���the problem that has no name,��� in her groundbreaking book <i>The Feminine Mystique</i> (1963). Friedan challenged women to confront the problem and change their lives.",
+                "tag": "",
+                "asset": {
+                    "media": "http://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Betty_Friedan_1960.jpg/500px-Betty_Friedan_1960.jpg",
+                    "credit": "Wikipedia commons",
+                    "caption": "Betty Friedan",
+                    "thumbnail": "http://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Betty_Friedan_1960.jpg/500px-Betty_Friedan_1960.jpg"
+                }
+            }
+        ],
+        "era": []
+    }
+}
