@@ -49,7 +49,6 @@ from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTIDocketMixin
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
-from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import WillRemovePresentationAssetEvent
