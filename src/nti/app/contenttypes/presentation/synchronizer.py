@@ -789,7 +789,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 								  connection=connection)
 
 			# publish by default if not locked
-			if not _is_lesson_sync_locked(overview):
+			if not _is_lesson_sync_locked(overview)[0]: # returns an array
 				overview.publish(event=False)
 
 			_set_source_lastModified(namespace, sibling_lastModified, catalog)
