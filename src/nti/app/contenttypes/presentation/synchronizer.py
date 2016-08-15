@@ -788,8 +788,9 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 								  course=course,
 								  connection=connection)
 
-			# publish by default
-			overview.publish(event=False)
+			# publish by default if not locked
+			if not _is_lesson_sync_locked(overview):
+				overview.publish(event=False)
 
 			_set_source_lastModified(namespace, sibling_lastModified, catalog)
 
