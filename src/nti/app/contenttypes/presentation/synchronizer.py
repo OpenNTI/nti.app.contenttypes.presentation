@@ -70,18 +70,20 @@ from nti.contenttypes.presentation.media import media_to_mediaref
 from nti.contenttypes.presentation.utils import create_lessonoverview_from_external
 
 from nti.coremetadata.interfaces import IRecordable
+from nti.coremetadata.interfaces import IRecordableContainer
 
 from nti.externalization.interfaces import StandardExternalFields
 
 from nti.intid.common import addIntId
 from nti.intid.common import removeIntId
 
-from nti.ntiids.ntiids import TYPE_OID, find_object_with_ntiid
+from nti.ntiids.ntiids import TYPE_OID
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import is_ntiid_of_type
 from nti.ntiids.ntiids import make_provider_safe
 from nti.ntiids.ntiids import is_valid_ntiid_string
+from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.recorder.record import copy_transaction_history
 from nti.recorder.record import remove_transaction_history
@@ -91,6 +93,8 @@ from nti.site.site import get_component_hierarchy_names
 from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
 
+from nti.traversal.traversal import find_interface
+
 ITEMS = StandardExternalFields.ITEMS
 
 def _prepare_json_text(s):
@@ -98,8 +102,11 @@ def _prepare_json_text(s):
 	return result
 prepare_json_text = _prepare_json_text
 
-def _is_obj_locked(node):
-	return IRecordable.providedBy(node) and node.isLocked()
+def _is_obj_locked(item):
+	return IRecordable.providedBy(item) and item.isLocked()
+
+def _is_child_order_locked(item):
+	return IRecordableContainer.providedBy(item) and item.isChildOrderLocked()
 
 def _can_be_removed(registered, force=False):
 	result = registered is not None and (force or not _is_obj_locked(registered))
@@ -276,8 +283,7 @@ def _is_lesson_sync_locked(existing_overview):
 	# Currently only return first locked item for efficiency.
 	locked_items = []
 	def _recur(item):
-		if 		_is_obj_locked(item) \
-			or  getattr(item, 'child_order_locked', False):
+		if 	_is_obj_locked(item) or _is_child_order_locked(item):
 			locked_items.append(item.ntiid)
 			return True
 		children = getattr(item, 'Items', None) or ()
@@ -463,8 +469,7 @@ def _outline_nodes(outline):
 	def _recur(node):
 		# We only want leaf nodes here; rather any content nodes or
 		# nodes with sources.
-		if 		getattr(node, 'src', None) \
-			or 	ICourseOutlineContentNode.providedBy(node):
+		if getattr(node, 'src', None) or ICourseOutlineContentNode.providedBy(node):
 			result.append(node)
 
 		# parse children
@@ -493,7 +498,9 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 	intids = component.getUtility(IIntIds) if intids is None else intids
 
 	result = []
+	locked = set()
 	sites = get_component_hierarchy_names() if not sites else sites
+
 	# unregister and unindex lesson overview obects
 	for item in catalog.search_objects(intids=intids,
 									   provided=INTILessonOverview,
@@ -501,18 +508,29 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 									   container_all_of=False,
 									   namespace=namespace,
 									   sites=sites):
-		result.extend(_remove_registered_lesson_overview(name=item.ntiid,
-										   			 	 registry=registry,
-										   			 	 force=force,
-										   			  	 course=course))
+		# don't remove any locked lessons
+		is_locked, _ = _is_lesson_sync_locked(item)
+		if not is_locked:
+			result.extend(_remove_registered_lesson_overview(name=item.ntiid,
+										   			 	 	 registry=registry,
+										   			 	 	 force=force,
+										   			  	 	 course=course))
+		else:
+			locked.add(item.ntiid)
 
 	if container_ntiids:  # unindex all other objects
 		container = _asset_container(course)
 		objs = catalog.search_objects(container_ntiids=container_ntiids,
 									  container_all_of=False,
-									  namespace=namespace, sites=sites, intids=intids)
-		for obj in tuple(objs):  # we are mutating
+									  namespace=namespace, 
+									  sites=sites, 
+									  intids=intids)
+		for obj in objs or ():  # we are mutating
 			doc_id = intids.queryId(obj)
+			# ignore objects that belong to locked lesson
+			lesson = find_interface(obj, INTILessonOverview, strict=False)
+			if lesson is not None and lesson.ntiid in locked:
+				continue
 			if doc_id is not None:
 				catalog.remove_containers(doc_id, container_ntiids)
 			if _can_be_removed(obj, force) and obj.ntiid: # check for a valid ntiid
@@ -701,7 +719,6 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 	# parse and register
 	removed = []
 	nodes = _outline_nodes(course.Outline)
-
 	for node in nodes:
 		namespace = node.src
 		if not namespace:
@@ -772,7 +789,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 								  connection=connection)
 
 			# publish by default
-			overview.publish( event=False )
+			overview.publish(event=False)
 
 			_set_source_lastModified(namespace, sibling_lastModified, catalog)
 

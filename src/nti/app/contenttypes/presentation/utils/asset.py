@@ -47,6 +47,7 @@ from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import iface_of_asset
 
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
+from nti.contenttypes.presentation.interfaces import INTIDocketMixin
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
@@ -306,8 +307,7 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None, sites=No
 	return result
 
 def check_related_work_target(asset):
-	if 		INTIRelatedWorkRef.providedBy(asset) \
-		and not asset.target:
+	if INTIDocketMixin.providedBy(asset) and not asset.target:
 		href = asset.href
 		if IPloneNamed.providedBy(href):
 			asset.target = to_external_ntiid_oid(href)
