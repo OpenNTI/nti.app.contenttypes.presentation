@@ -473,8 +473,14 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 	def _predicate(self, context, result):
 		result = self._is_authenticated
 		return result
-
+	
+	def _should_process(self, obj):
+		return   INTITimeline.providedBy(obj) \
+			  or INTIRelatedWorkRef.providedBy(obj) and obj.type == u'application/vnd.nextthought.content'
+	
 	def _do_decorate_external(self, context, result):
+		if not self._should_process(context):
+			return
 		package = _get_item_content_package(context)
 		if package is not None:
 			location = IContentUnitHrefMapper(package.key.bucket).href  # parent
