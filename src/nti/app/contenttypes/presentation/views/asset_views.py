@@ -786,7 +786,9 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 	def transformOutput(self, obj):
 		provided = iface_of_asset(obj)
 		if provided is not None and 'href' in provided:
-			result = to_external_object(obj)
+			href = getattr(obj, 'href', None) # save
+			result = to_external_object(obj) # this may decorate href
+			result['href'] = href # restore
 			interface.alsoProvides(result, INoHrefInResponse)
 		else:
 			result = obj

@@ -21,7 +21,7 @@ from hamcrest import has_property
 from hamcrest import contains_inanyorder
 does_not = is_not
 
-from nti.schema.testing import validly_provides
+from nti.testing.matchers import validly_provides
 
 import fudge
 
@@ -153,7 +153,7 @@ class TestAssetViews(ApplicationLayerTest):
 		# Validate intid (must have an intid to be indexed anyway).
 		assert_that( self.intids.queryId( obj ), not_none() )
 
-	def _test_transaction_history(self, obj, *args):
+	def _xtest_transaction_history(self, obj, *args):
 		# Call within a ds transaction
 		history = ITransactionRecordHistory(obj)
 		record_types = [x.type for x in history.records()]
@@ -170,13 +170,13 @@ class TestAssetViews(ApplicationLayerTest):
 		return self._make_extra_environ(username)
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def test_all_assets(self):
+	def xtest_all_assets(self):
 		res = self.testapp.get(self.assets_url, status=200)
 		assert_that(res.json_body, has_entry('Total', is_(1167)))
 		assert_that(res.json_body, has_entry('Items', has_length(1167)))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def test_ntivideo(self):
+	def xtest_ntivideo(self):
 		source = self._load_resource('ntivideo.json')
 		source.pop('NTIID', None)
 
@@ -223,7 +223,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(container, does_not(has_key(ntiid)))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def test_video_roll_container(self):
+	def xtest_video_roll_container(self):
 		roll_source = self._load_resource('video_roll.json')
 
 		res = self.testapp.post_json(self.assets_url, roll_source, status=201)
@@ -246,7 +246,7 @@ class TestAssetViews(ApplicationLayerTest):
 			self._check_containers(course, packages=False, items=roll_obj.Items)
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def test_video_roll(self):
+	def xtest_video_roll(self):
 		# Use existing overview group to check containers.
 		group_ntiid = 'tag:nextthought.com,2011-10:OU-NTICourseOverviewGroup-CS1323_F_2015_Intro_to_Computer_Programming.lec:01.01_LESSON.0'
 		res = self.testapp.get( '/dataserver2/Objects/%s' % group_ntiid )
@@ -483,7 +483,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(container, does_not(has_key(video_roll_ntiid)))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def test_slidedeck_container(self):
+	def xtest_slidedeck_container(self):
 		source = self._load_resource('ntislidedeck.json')
 
 		# post
@@ -526,7 +526,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(tuple(history.records())[-1].attributes, contains('title'))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def test_slidedeck(self):
+	def xtest_slidedeck(self):
 		"""
 		Posting a slidedeck video to an overview group will expose
 		our slidedeck in MediaByOutlineNode.
@@ -572,7 +572,7 @@ class TestAssetViews(ApplicationLayerTest):
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	@fudge.patch('nti.app.contenttypes.presentation.views.asset_views.CourseOverviewGroupOrderedContentsView.readInput',
 				 'nti.app.contenttypes.presentation.views.asset_views.get_course_filer')
-	def test_overview_group(self, mc_ri, mc_cf):
+	def xtest_overview_group(self, mc_ri, mc_cf):
 		source = self._load_resource('nticourseoverviewgroup.json')
 		video_source = source.get('Items')[1]
 		video_res = self.testapp.post_json(self.assets_url, video_source, status=201)
@@ -684,7 +684,7 @@ class TestAssetViews(ApplicationLayerTest):
 						  status=422)
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def test_overview_group_post(self):
+	def xtest_overview_group_post(self):
 		source = self._load_resource('nticourseoverviewgroup.json')
 
 		# post
@@ -720,7 +720,7 @@ class TestAssetViews(ApplicationLayerTest):
 			self._check_container_index( rel_obj, container_ids=( ntiid, ), course=False )
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def test_lesson(self):
+	def xtest_lesson(self):
 		source = self._load_resource('ntilessonoverview.json')
 		source.pop('NTIID', None)
 
@@ -848,7 +848,7 @@ class TestAssetViews(ApplicationLayerTest):
 		return result
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def test_group_videos(self):
+	def xtest_group_videos(self):
 		source = self._load_resource('lesson_overview.json')
 		# Remove all NTIIDs so things get registered.
 		def _remove_ntiids(obj):
@@ -893,7 +893,7 @@ class TestAssetViews(ApplicationLayerTest):
 		non_target_source.pop('target', None)
 		unit_ntiid = source.get( 'href' )
 
-		def _test_reading( reading_source ):
+		def _xtest_reading( reading_source ):
 			res = self.testapp.post_json(contents_link, reading_source, status=201)
 			res = res.json_body
 			ref_ntiid = res.get( 'NTIID' )
@@ -901,10 +901,11 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that( res.get( 'href' ), unit_ntiid )
 			assert_that( res.get( 'target' ), unit_ntiid )
 
-		_test_reading( non_target_source )
-		_test_reading( source )
+		_xtest_reading( non_target_source )
+		_xtest_reading( source )
 
 		# Now an external link
+		from IPython.core.debugger import Tracer; Tracer()()
 		external_link = dict( non_target_source )
 		external_link['href'] = 'www.google.com'
 		external_link['targetMimeType'] = "application/vnd.nextthought.externallink"
@@ -929,7 +930,7 @@ class TestAssetViews(ApplicationLayerTest):
 		assert_that( is_internal_file_link(href), is_(True))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def test_timeline(self):
+	def xtest_timeline(self):
 		group_ntiid = 'tag:nextthought.com,2011-10:OU-NTICourseOverviewGroup-CS1323_F_2015_Intro_to_Computer_Programming.lec:01.01_LESSON.0'
 		res = self.testapp.get( '/dataserver2/Objects/%s' % group_ntiid )
 		res = res.json_body
@@ -979,7 +980,7 @@ class TestAssetViews(ApplicationLayerTest):
 		assert_that( items[0].get( 'NTIID' ), is_( timeline_ntiid ))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def test_timeline_with_file(self):
+	def xtest_timeline_with_file(self):
 		"""
 		Test creating a timeline by passing in the timeline content in multipart.
 		"""
@@ -1050,7 +1051,7 @@ class TestAssetViews(ApplicationLayerTest):
 		self.testapp.get( '/dataserver2/Objects/%s' % timeline_ntiid )
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def test_moves(self):
+	def xtest_moves(self):
 		source = self._load_resource('lesson_overview.json')
 		# Remove all NTIIDs so things get registered.
 		def _remove_ntiids(obj):
@@ -1093,7 +1094,7 @@ class TestAssetViews(ApplicationLayerTest):
 			self._check_container_index( obj )
 			moved_group = find_object_with_ntiid(last_group_ntiid)
 			assert_that( moved_group.__parent__.ntiid, is_( lesson_ntiid ) )
-			self._test_transaction_history(moved_group, TRX_OVERVIEW_GROUP_MOVE_TYPE)
+			self._xtest_transaction_history(moved_group, TRX_OVERVIEW_GROUP_MOVE_TYPE)
 			self._check_container_index( moved_group,
 										 container_ids=(lesson_ntiid,))
 
@@ -1187,7 +1188,7 @@ class TestAssetViews(ApplicationLayerTest):
 			obj.child_order_locked = tar.child_order_locked = False  # Reset
 			moved_asset = find_object_with_ntiid(first_asset_ntiid)
 			assert_that( moved_asset.__parent__.ntiid, is_( target_group_ntiid ) )
-			self._test_transaction_history(moved_asset, TRX_ASSET_MOVE_TYPE)
+			self._xtest_transaction_history(moved_asset, TRX_ASSET_MOVE_TYPE)
 			self._check_container_index( moved_asset,
 										 container_ids=(lesson_ntiid, target_group_ntiid))
 
@@ -1219,7 +1220,7 @@ class TestAssetViews(ApplicationLayerTest):
 										 container_ids=(lesson_ntiid, source_group_ntiid))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def test_lesson_media_outline(self):
+	def xtest_lesson_media_outline(self):
 		outline_node_ntiid = "tag:nextthought.com,2011-10:NTI-NTICourseOutlineNode-Fall2015_CS_1323.0"
 		node_data = { 'MimeType': "application/vnd.nextthought.courses.courseoutlinecontentnode",
 					  'title': "Chapter 1 - The First Chapter"}
@@ -1252,7 +1253,7 @@ class TestAssetViews(ApplicationLayerTest):
 		assert_that( lesson_media, contains( video_ntiid ))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def test_get_course_presentation_assets(self):
+	def xtest_get_course_presentation_assets(self):
 		href = '/dataserver2/@@GetCoursePresentationAssets'
 		params = {'ntiid':self.course_ntiid}
 		res = self.testapp.get(href, params)
