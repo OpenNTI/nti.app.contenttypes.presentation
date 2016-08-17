@@ -56,6 +56,7 @@ from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIMediaRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
+from nti.contenttypes.presentation.interfaces import INTIDocketMixin
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -147,7 +148,7 @@ def _removed_registered(provided, name, intids=None, registry=None,
 	if _can_be_removed(registered, force=force):
 		catalog = get_library_catalog() if catalog is None else catalog
 		catalog.unindex(registered, intids=intids)
-		registered.__parent__ = None # ground
+		registered.__parent__ = None  # ground
 		_intid_unregister(registered, intids)
 		_unregister(registry, provided=provided, name=name)
 	elif registered is not None:
@@ -302,9 +303,9 @@ def _add_2_package_containers(course, item, catalog):
 		item.__parent__ = packages[0]  # pick first
 		container = _asset_container(packages[0])
 		container[item.ntiid] = item
-		catalog.index(item, 
+		catalog.index(item,
 					  sites=getSite().__name__,
-				  	  namespace=packages[0].ntiid, 
+				  	  namespace=packages[0].ntiid,
 				  	  container_ntiids=(packages[0].ntiid,))
 
 def _update_sync_results(lesson_ntiid, sync_results, lesson_locked):
@@ -408,30 +409,23 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 					item.ntiid = new_ntiid
 			elif INTIMediaRoll.providedBy(item):
 				_register_media_rolls(item, registry=registry, validate=validate)
-			elif INTIRelatedWorkRef.providedBy(item):
-				ntiid = item.ntiid or u''
-				found = find_object_with_ntiid(ntiid)
-				if INTIRelatedWorkRef.providedBy(found):
-					item = found # replace
-				else:
-					assert ntiid, 'RelatedworkRef must provide an ntiid'
-					_, registered = _do_register(item, registry)
-					_add_2_package_containers(course, registered, catalog)
-					_intid_register(registered)
-				items[idx] = item
-			elif INTITimeline.providedBy(item):
+			elif INTIDocketMixin.providedBy(item):
 				ntiid = item.ntiid or u''
 				found = find_object_with_ntiid(ntiid)
 				if INTITimeline.providedBy(found):
-					item = INTITimelineRef(found) # transform to timeline ref
+					item = INTITimelineRef(found)  # transform to timeline ref
+				elif INTIRelatedWorkRef.providedBy(found):
+					item = found  # replace
 				else:
-					assert ntiid, 'Timeline must provide an ntiid'
+					assert ntiid, 'Must provide an ntiid'
 					_, registered = _do_register(item, registry)
 					_add_2_package_containers(course, registered, catalog)
 					_intid_register(registered)
-					item = INTITimelineRef(registered) # transform to timeline ref
+					if INTITimeline.providedBy(item):
+						item = INTITimelineRef(registered)  # transform to timeline ref
 				items[idx] = item
 
+			# register item
 			result, registered = _do_register(item, registry)
 			is_valid = _validate_ref(item, validate)
 			if not is_valid:  # don't include in the group
@@ -532,8 +526,8 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 		container = _asset_container(course)
 		objs = catalog.search_objects(container_ntiids=container_ntiids,
 									  container_all_of=False,
-									  namespace=namespace, 
-									  sites=sites, 
+									  namespace=namespace,
+									  sites=sites,
 									  intids=intids)
 		for obj in objs or ():  # we are mutating
 			doc_id = intids.queryId(obj)
@@ -543,7 +537,7 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 				continue
 			if doc_id is not None:
 				catalog.remove_containers(doc_id, container_ntiids)
-			if _can_be_removed(obj, force) and obj.ntiid: # check for a valid ntiid
+			if _can_be_removed(obj, force) and obj.ntiid:  # check for a valid ntiid
 				container.pop(obj.ntiid, None)
 	return result
 remove_and_unindex_course_assets = _remove_and_unindex_course_assets
@@ -686,7 +680,7 @@ def get_sibling_entry(source, unit=None, buckets=None):
 		if result is not None:
 			return result
 	if unit is not None:
-		return unit.does_sibling_entry_exist(source) # returns a key
+		return unit.does_sibling_entry_exist(source)  # returns a key
 	return None
 
 def _add_buckets(course, buckets):
@@ -703,7 +697,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 	result = []
 	namespaces = set()
 	parent = get_parent_course(course)
-	if not buckets: # XXX seek in Lesson directories
+	if not buckets:  # XXX seek in Lesson directories
 		buckets = list()
 		if ICourseSubInstance.providedBy(course):
 			_add_buckets(parent, buckets)
@@ -799,7 +793,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 								  connection=connection)
 
 			# publish by default if not locked
-			if not _is_lesson_sync_locked(overview)[0]: # returns an array
+			if not _is_lesson_sync_locked(overview)[0]:  # returns an array
 				overview.publish(event=False)
 
 			_set_source_lastModified(namespace, sibling_lastModified, catalog)
