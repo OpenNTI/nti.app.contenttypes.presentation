@@ -465,6 +465,8 @@ def _get_item_content_package(item):
 @interface.implementer(IExternalMappingDecorator)
 class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
+	CONTENT_MIME_TYPE = u'application/vnd.nextthought.content'
+	
 	@Lazy
 	def is_legacy_ipad(self):
 		result = is_legacy_uas(self.request, LEGACY_UAS_40)
@@ -475,14 +477,16 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		return result
 	
 	def _should_process(self, obj):
-		return   INTITimeline.providedBy(obj) \
-			  or INTIRelatedWorkRef.providedBy(obj) and obj.type == u'application/vnd.nextthought.content'
-	
+		result = False
+		if INTITimeline.providedBy(obj) and not is_internal_file_link(obj.href or u''):
+			result = True
+		elif INTIRelatedWorkRef.providedBy(obj) and obj.type == self.CONTENT_MIME_TYPE:
+			result = True
+		return result
+
 	def _do_decorate_external(self, context, result):
-		if not self._should_process(context):
-			return
 		package = _get_item_content_package(context)
-		if package is not None:
+		if package is not None and self._should_process(context):
 			location = IContentUnitHrefMapper(package.key.bucket).href  # parent
 			for name in ('href', 'icon'):
 				value = getattr(context, name, None)
