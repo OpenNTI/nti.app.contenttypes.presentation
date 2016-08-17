@@ -59,6 +59,7 @@ from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
@@ -296,16 +297,15 @@ def _is_lesson_sync_locked(existing_overview):
 	return result, locked_items
 
 def _add_2_package_containers(course, item, catalog):
-	ntiids = []
 	packages = get_course_packages(course)
-	for package in packages:
-		ntiids.append(package.ntiid)
-		container = _asset_container(package)
-		container[item.ntiid] = item
-	if ntiids:
+	if packages:
 		item.__parent__ = packages[0]  # pick first
-		catalog.index(item, container_ntiids=ntiids,
-				  	  namespace=ntiids[0], sites=getSite().__name__)
+		container = _asset_container(packages[0])
+		container[item.ntiid] = item
+		catalog.index(item, 
+					  sites=getSite().__name__,
+				  	  namespace=packages[0].ntiid, 
+				  	  container_ntiids=(packages[0].ntiid,))
 
 def _update_sync_results(lesson_ntiid, sync_results, lesson_locked):
 	field = 'LessonsSyncLocked' if lesson_locked else 'LessonsUpdated'
@@ -408,6 +408,17 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 					item.ntiid = new_ntiid
 			elif INTIMediaRoll.providedBy(item):
 				_register_media_rolls(item, registry=registry, validate=validate)
+			elif INTIRelatedWorkRef.providedBy(item):
+				ntiid = item.ntiid or u''
+				found = find_object_with_ntiid(ntiid)
+				if INTIRelatedWorkRef.providedBy(found):
+					item = found # replace
+				else:
+					assert ntiid, 'RelatedworkRef must provide an ntiid'
+					_, registered = _do_register(item, registry)
+					_add_2_package_containers(course, registered, catalog)
+					_intid_register(registered)
+				items[idx] = item
 			elif INTITimeline.providedBy(item):
 				ntiid = item.ntiid or u''
 				found = find_object_with_ntiid(ntiid)
@@ -415,7 +426,6 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 					item = INTITimelineRef(found) # transform to timeline ref
 				else:
 					assert ntiid, 'Timeline must provide an ntiid'
-					# register timeline
 					_, registered = _do_register(item, registry)
 					_add_2_package_containers(course, registered, catalog)
 					_intid_register(registered)
