@@ -197,9 +197,12 @@ MIMETYPE = StandardExternalFields.MIMETYPE
 # utils
 
 def href_safe_to_external_object(obj):
-	href = getattr(obj, 'href', None) # save
-	result = to_external_object(obj) # this may decorate href
-	result['href'] = href # restore
+	# Since the dataserver adds an href field
+	# to provide the location of the object
+	# we want to save the object's href field and restore it
+	href = getattr(obj, 'href', None)
+	result = to_external_object(obj)
+	result['href'] = href
 	interface.alsoProvides(result, INoHrefInResponse)
 	return result
 
