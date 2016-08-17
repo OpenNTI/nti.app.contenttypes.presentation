@@ -194,6 +194,15 @@ ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID
 MIMETYPE = StandardExternalFields.MIMETYPE
 
+# utils
+
+def href_safe_to_external_object(obj):
+	href = getattr(obj, 'href', None) # save
+	result = to_external_object(obj) # this may decorate href
+	result['href'] = href # restore
+	interface.alsoProvides(result, INoHrefInResponse)
+	return result
+
 # GET views
 
 @view_config(context=IPresentationAsset)
@@ -211,7 +220,7 @@ class PresentationAssetGetView(GenericGetView, PublishVisibilityMixin):
 			raise hexc.HTTPForbidden(_("Item not visible."))
 		result = GenericGetView.__call__(self)
 		return result
-
+			
 @view_config(context=INTITimeline)
 @view_config(context=INTIRelatedWorkRef)
 @view_defaults(route_name='objects.generic.traversal',
@@ -222,8 +231,7 @@ class NoHrefAssetGetView(PresentationAssetGetView):
 
 	def __call__(self):
 		result = PresentationAssetGetView.__call__(self)
-		result = to_external_object(result)
-		interface.alsoProvides(result, INoHrefInResponse)
+		result = href_safe_to_external_object(result)
 		return result
 
 @view_config(context=INTIDiscussionRef)
@@ -786,10 +794,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 	def transformOutput(self, obj):
 		provided = iface_of_asset(obj)
 		if provided is not None and 'href' in provided:
-			href = getattr(obj, 'href', None) # save
-			result = to_external_object(obj) # this may decorate href
-			result['href'] = href # restore
-			interface.alsoProvides(result, INoHrefInResponse)
+			result = href_safe_to_external_object(obj)
 		else:
 			result = obj
 		return result
