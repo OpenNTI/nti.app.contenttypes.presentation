@@ -905,7 +905,6 @@ class TestAssetViews(ApplicationLayerTest):
 		_xtest_reading( source )
 
 		# Now an external link
-		from IPython.core.debugger import Tracer; Tracer()()
 		external_link = dict( non_target_source )
 		external_link['href'] = 'www.google.com'
 		external_link['targetMimeType'] = "application/vnd.nextthought.externallink"
