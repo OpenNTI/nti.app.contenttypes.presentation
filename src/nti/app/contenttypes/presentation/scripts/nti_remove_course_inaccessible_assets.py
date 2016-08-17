@@ -22,12 +22,16 @@ from nti.dataserver.utils import run_with_dataserver
 from nti.dataserver.utils.base_script import create_context
 
 from nti.site.hostpolicy import get_host_site
+from nti.site.hostpolicy import get_all_host_sites
 
 def _process_args(args):
 	if args.verbose:
 		print()
-	for site in args.sites or ():
-		site = get_host_site(site)
+	if args.all:
+		sites = get_all_host_sites()
+	else:
+		sites = map(get_host_site, args.sites or ())
+	for site in sites:
 		with current_site(site):
 			result = remove_course_inaccessible_assets()
 			if args.verbose:
@@ -38,10 +42,17 @@ def main():
 	arg_parser = argparse.ArgumentParser(description="Remove course inaccessible assets")
 	arg_parser.add_argument('-v', '--verbose', help="Be Verbose", action='store_true',
 							dest='verbose')
-	arg_parser.add_argument('-s', '--sites', nargs="+",
+	
+	site_group = arg_parser.add_mutually_exclusive_group()
+	site_group.add_argument('-s', '--sites', nargs="+",
 							dest='sites',
-							required=True,
-							help="Application SITE(s).")
+							help="Application site(s).")
+
+	site_group.add_argument('--all',
+							 dest='all',
+							 action='store_true',
+							 help="All sites")
+	
 	args = arg_parser.parse_args()
 
 	env_dir = os.getenv('DATASERVER_DIR')
