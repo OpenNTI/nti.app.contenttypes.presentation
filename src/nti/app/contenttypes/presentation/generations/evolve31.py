@@ -79,6 +79,7 @@ def _fix_refs(current_site, catalog, intids, seen):
 		course = find_interface(group, ICourseInstance, strict=False)
 		for item in group or ():
 			if not item.ntiid:
+				# reset the ntiid
 				delattr(item, 'ntiid')
 
 			fixed = False
