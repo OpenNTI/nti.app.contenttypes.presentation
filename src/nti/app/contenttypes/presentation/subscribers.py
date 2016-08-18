@@ -31,7 +31,9 @@ from nti.app.contenttypes.presentation.synchronizer import synchronize_course_le
 from nti.app.contenttypes.presentation.utils import remove_presentation_asset
 from nti.app.contenttypes.presentation.utils import get_presentation_asset_containers
 
+from nti.app.products.courseware.resources.utils import is_internal_file_link
 from nti.app.products.courseware.resources.utils import to_external_file_link
+from nti.app.products.courseware.resources.utils import get_file_from_external_link
 
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQEvaluation
@@ -222,10 +224,17 @@ def _on_will_remove_presentation_asset(asset, event):
 				if mapping is not None:
 					mapping.pop(asset.ntiid, None)
 
-@component.adapter(IPresentationAsset, IWillUpdatePresentationAssetEvent)
+@component.adapter(INTIDocketMixin, IWillUpdatePresentationAssetEvent)
 def _on_will_update_presentation_asset(asset, event):
-	pass
-					
+	externalValue = event.externalValue or {}
+	for name in ('href', 'icon'):
+		if name in externalValue:
+			value = getattr(asset, name, None)
+			if value and is_internal_file_link(value):
+				source = get_file_from_external_link(value)
+				if IContentBaseFile.providedBy(source):
+					source.remove_association(asset)
+
 @component.adapter(IContentBaseFile, INTIIntIdRemovedEvent)
 def _on_content_file_removed(context, event):
 	if not context.has_associations():
