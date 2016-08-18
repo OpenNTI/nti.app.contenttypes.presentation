@@ -137,6 +137,7 @@
 	<subscriber handler=".subscribers._on_presentation_asset_created" />
 	<subscriber handler=".subscribers._on_item_asset_containter_modified" />
 	<subscriber handler=".subscribers._on_will_remove_presentation_asset" />
+	<subscriber handler=".subscribers._on_will_update_presentation_asset" />
 	<subscriber handler=".subscribers._on_will_remove_course_overview_group" />
 
 	<subscriber handler=".subscribers._on_assignment_removed" />

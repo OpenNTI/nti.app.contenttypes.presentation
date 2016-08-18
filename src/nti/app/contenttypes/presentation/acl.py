@@ -60,8 +60,8 @@ class BasePresentationAssetACLProvider(object):
 			result.extend(IACLProvider(course).__acl__)
 
 		# If legacy, let parent objects determine ACL.
-		if not ILegacyPresentationAsset.providedBy( self.context ):
-			result.append( ACE_DENY_ALL )
+		if not ILegacyPresentationAsset.providedBy(self.context):
+			result.append(ACE_DENY_ALL)
 		return result
 
 @component.adapter(IPresentationAsset)

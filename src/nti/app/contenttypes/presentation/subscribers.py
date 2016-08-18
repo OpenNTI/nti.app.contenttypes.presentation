@@ -58,6 +58,7 @@ from nti.contenttypes.presentation.interfaces import TRX_ASSET_REMOVED_FROM_ITEM
 
 from nti.contenttypes.presentation.interfaces import IOverviewGroupMovedEvent
 from nti.contenttypes.presentation.interfaces import IPresentationAssetMovedEvent
+from nti.contenttypes.presentation.interfaces import IWillUpdatePresentationAssetEvent
 
 from nti.contenttypes.presentation.interfaces import INTIPollRef
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
@@ -221,6 +222,10 @@ def _on_will_remove_presentation_asset(asset, event):
 				if mapping is not None:
 					mapping.pop(asset.ntiid, None)
 
+@component.adapter(IPresentationAsset, IWillUpdatePresentationAssetEvent)
+def _on_will_update_presentation_asset(asset, event):
+	pass
+					
 @component.adapter(IContentBaseFile, INTIIntIdRemovedEvent)
 def _on_content_file_removed(context, event):
 	if not context.has_associations():
