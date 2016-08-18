@@ -957,7 +957,6 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 
 		# check item does not exists and notify
 		self._check_exists(provided, contentObject, creator)
-		_notify_created(contentObject, self.remoteUser.username, externalValue)
 
 		# add to connection and register
 		intid_register(contentObject, registry=self._registry)
@@ -973,6 +972,9 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 
 		self.request.response.status_int = 201
 		self._handle_asset(provided, contentObject, creator.username)
+
+		# notify when object is ready
+		_notify_created(contentObject, self.remoteUser.username, externalValue)
 		return self.transformOutput(contentObject)
 
 # put views
@@ -1250,7 +1252,6 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 
 		# check item does not exists and notify
 		self._check_exists(provided, contentObject, creator)
-		_notify_created(contentObject, self.remoteUser.username, externalValue)
 
 		# add to connection and register
 		intid_register(contentObject, registry=self._registry)
@@ -1259,13 +1260,16 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 						component=contentObject,
 						name=contentObject.ntiid)
 
-		self.context.insert(index, contentObject)
 		self._handle_overview_group(contentObject,
 									creator=creator,
 									extended=(self.context.ntiid,))
+		_notify_created(contentObject, self.remoteUser.username, externalValue)
 
+		# insert in context, lock and notify
+		self.context.insert(index, contentObject)
+		self.context.childOrderLock()
 		notify_modified(self.context, externalValue, external_keys=(ITEMS,))
-		self.context.child_order_locked = True
+
 		self.request.response.status_int = 201
 		return contentObject
 
@@ -1379,7 +1383,6 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		"""
 		Finish creating our object by firing events, registering, etc.
 		"""
-		_notify_created(obj, self.remoteUser.username, externalValue)
 		registerUtility(self._registry,
 						provided=provided,
 						component=obj,
@@ -1388,6 +1391,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 						   obj,
 						   creator=creator,
 						   extended=extended)
+		_notify_created(obj, self.remoteUser.username, externalValue)
 
 	def _do_call(self):
 		index = self._get_index()
