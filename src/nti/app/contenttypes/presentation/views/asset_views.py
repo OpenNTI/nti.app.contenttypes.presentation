@@ -156,6 +156,7 @@ from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import OverviewGroupMovedEvent
 from nti.contenttypes.presentation.interfaces import PresentationAssetMovedEvent
 from nti.contenttypes.presentation.interfaces import PresentationAssetCreatedEvent
+from nti.contenttypes.presentation.interfaces import WillUpdatePresentationAssetEvent
 
 from nti.contenttypes.presentation.internalization import internalization_ntiaudioref_pre_hook
 from nti.contenttypes.presentation.internalization import internalization_ntivideoref_pre_hook
@@ -995,6 +996,11 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 
 		originalSource = copy.deepcopy(externalValue)
 		pre_hook = get_external_pre_hook(externalValue)
+		
+		notify(WillUpdatePresentationAssetEvent(contentObject,
+												self.remoteUser, 
+												externalValue))
+
 		result = UGDPutView.updateContentObject(self,
 												contentObject,
 												externalValue,
