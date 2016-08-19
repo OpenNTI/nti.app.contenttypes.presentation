@@ -135,7 +135,7 @@ from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
 from nti.ntiids.ntiids import find_object_with_ntiid
 
-from nti.common.property import Lazy
+from nti.property.property import Lazy
 
 from nti.site.interfaces import IHostPolicyFolder
 
