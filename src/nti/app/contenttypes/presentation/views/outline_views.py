@@ -135,7 +135,7 @@ from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
 from nti.ntiids.ntiids import find_object_with_ntiid
 
-from nti.property.property import Lazy
+from nti.common.property import Lazy
 
 from nti.site.interfaces import IHostPolicyFolder
 
@@ -150,7 +150,9 @@ from nti.zodb.containers import time_to_64bit_int
 
 CLASS = StandardExternalFields.CLASS
 ITEMS = StandardExternalFields.ITEMS
+TOTAL = StandardExternalFields.TOTAL
 MIMETYPE = StandardExternalFields.MIMETYPE
+ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 
 class OutlineLessonOverviewMixin(object):
@@ -732,7 +734,7 @@ class AssetByOutlineNodeView(AbstractAuthenticatedView):
 				# QQuestionSet with no 'lastModified'
 				pass
 		result.lastModified = result[LAST_MODIFIED] = last_mod
-		result['Total'] = result['ItemCount'] = len(items)
+		result[TOTAL] = result[ITEM_COUNT] = len(items)
 		return result
 
 	@Lazy
@@ -878,7 +880,7 @@ class MediaByOutlineNodeView(AssetByOutlineNodeView):
 			ref_obj = item
 			if IVisible.providedBy(item):
 				if not is_item_visible(item, self.remoteUser,
-									context=course, record=record):
+									   context=course, record=record):
 					return
 				else:
 					item = INTIMedia(item, None)
@@ -900,17 +902,28 @@ class MediaByOutlineNodeView(AssetByOutlineNodeView):
 			return max(item.lastModified, ref_obj.lastModified)
 
 		sites = get_component_hierarchy_names()
-		for group in catalog.search_objects(
-								namespace=namespaces,
-								provided=INTICourseOverviewGroup,
-								sites=sites):
+		for group in catalog.search_objects(namespace=namespaces,
+											provided=INTICourseOverviewGroup,
+											sites=sites):
 			for item in group or ():
 				# ignore non media items
 				if 	(	 not IMediaRef.providedBy(item)
 					 and not INTIMedia.providedBy(item)
 					 and not INTIMediaRoll.providedBy(item)
-					 and not INTISlideDeck.providedBy(item)):
+					 and not INTISlideDeck.providedBy(item)
+					 and not INTISlideDeckRef.providedBy(item)):
 					continue
+
+				# check containing node is published
+				node = find_interface(item, ICourseOutlineNode, strict=False)
+				if node is None or not node.isPublished():
+					continue
+
+				# check for valid slide decks
+				if INTISlideDeckRef.providedBy(item):
+					item = INTISlideDeck(item, None)
+					if item is None:
+						continue
 
 				if INTIMediaRoll.providedBy(item):
 					item_last_mod = 0
@@ -921,14 +934,14 @@ class MediaByOutlineNodeView(AssetByOutlineNodeView):
 							item_last_mod = max(roll_last_mod, item_last_mod)
 				else:
 					item_last_mod = add_item(item)
+
 				if item_last_mod:
 					lastModified = max(lastModified, item_last_mod)
 
-		for item in catalog.search_objects(
-								container_ntiids=ntiids,
-								provided=INTISlideDeck,
-								container_all_of=False,
-								sites=sites):
+		for item in catalog.search_objects(container_ntiids=ntiids,
+										   provided=INTISlideDeck,
+										   container_all_of=False,
+										   sites=sites):
 			uid = intids.getId(item)
 			for ntiid in catalog.get_containers(uid):
 				if ntiid in ntiids:
@@ -937,7 +950,7 @@ class MediaByOutlineNodeView(AssetByOutlineNodeView):
 			lastModified = max(lastModified, item.lastModified)
 
 		result.lastModified = result[LAST_MODIFIED] = lastModified
-		result['Total'] = result['ItemCount'] = len(items)
+		result[TOTAL] = result[ITEM_COUNT] = len(items)
 		return result
 
 	def __call__(self):
