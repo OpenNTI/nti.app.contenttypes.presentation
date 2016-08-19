@@ -240,7 +240,7 @@ class OutlineLessonOverviewSummaryView(RecursiveUGDView, OutlineLessonOverviewMi
 					result[item.ntiid] = item_results = {}
 					item_results[CLASS] = 'OverviewItemSummary'
 					item_results[MIMETYPE] = mime_type
-					item_results['ItemCount'] = ugd_count
+					item_results[ITEM_COUNT] = ugd_count
 		return result
 
 @view_config(route_name='objects.generic.traversal',
