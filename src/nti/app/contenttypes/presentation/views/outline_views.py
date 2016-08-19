@@ -135,7 +135,7 @@ from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
 from nti.ntiids.ntiids import find_object_with_ntiid
 
-from nti.property.property import Lazy
+from nti.common.property import Lazy
 
 from nti.site.interfaces import IHostPolicyFolder
 
@@ -914,10 +914,11 @@ class MediaByOutlineNodeView(AssetByOutlineNodeView):
 					 and not INTISlideDeckRef.providedBy(item)):
 					continue
 
-				# check containing node is published
-				node = find_interface(item, ICourseOutlineNode, strict=False)
-				if node is None or not node.isPublished():
-					continue
+				# check containing node/lesson is published
+				for provided in (ICourseOutlineNode, INTILessonOverview):
+					obj = find_interface(item, provided, strict=False)
+					if obj is None or not obj.isPublished():
+						continue
 
 				# check for valid slide decks
 				if INTISlideDeckRef.providedBy(item):
