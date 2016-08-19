@@ -310,12 +310,14 @@ def check_related_work_target(asset):
 		href = asset.href
 		if IPloneNamed.providedBy(href):
 			asset.target = to_external_ntiid_oid(href)
-			asset.type = getattr(href, 'contentType', None) or asset.type
+			asset_type = getattr(href, 'contentType', None) or asset.type
+			asset.type = unicode(asset_type) if asset_type else None
 		elif is_valid_ntiid_string(href):
 			asset.target = href
 		elif is_internal_file_link(href):
 			ext = get_file_from_external_link(href)
 			asset.target = to_external_ntiid_oid(ext)
-			asset.type = getattr(ext, 'contentType', None) or asset.type
+			asset_type = getattr(ext, 'contentType', None) or asset.type
+			asset.type = unicode(asset_type) if asset_type else None
 		return True
 	return False
