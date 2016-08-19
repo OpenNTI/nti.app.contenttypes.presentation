@@ -22,7 +22,7 @@ from zope import interface
 
 from zope.component.hooks import getSite
 
-from zope.event import notify
+from zope.event import notify as event_notify
 
 from zope.security.interfaces import NoInteraction
 from zope.security.management import getInteraction
@@ -88,8 +88,6 @@ from nti.assessment.interfaces import IQInquiry
 from nti.assessment.interfaces import IQAssessment
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQuestionSet
-
-from nti.common.property import Lazy
 
 from nti.contentfile.interfaces import IContentBaseFile
 
@@ -183,6 +181,8 @@ from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
 
+from nti.property.property import Lazy
+
 from nti.site.interfaces import IHostPolicyFolder
 
 from nti.site.site import get_component_hierarchy_names
@@ -198,12 +198,7 @@ MIMETYPE = StandardExternalFields.MIMETYPE
 # utils
 
 def href_safe_to_external_object(obj):
-	# Since the dataserver adds an href field
-	# to provide the location of the object
-	# we want to save the object's href field and restore it
-	href = getattr(obj, 'href', None)
 	result = to_external_object(obj)
-	result['href'] = href
 	interface.alsoProvides(result, INoHrefInResponse)
 	return result
 
@@ -288,7 +283,7 @@ def principalId():
 def _notify_created(item, principal=None, externalValue=None):
 	add_2_connection(item)  # required
 	principal = principal or principalId()  # always get a principal
-	notify(PresentationAssetCreatedEvent(item, principal, externalValue))
+	event_notify(PresentationAssetCreatedEvent(item, principal, externalValue))
 	if IPublishable.providedBy(item) and item.is_published():
 		item.unpublish( event=False )
 
@@ -999,9 +994,9 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 		originalSource = copy.deepcopy(externalValue)
 		pre_hook = get_external_pre_hook(externalValue)
 		
-		notify(WillUpdatePresentationAssetEvent(contentObject,
-												self.remoteUser, 
-												externalValue))
+		event_notify(WillUpdatePresentationAssetEvent(contentObject,
+													  self.remoteUser, 
+													  externalValue))
 
 		result = UGDPutView.updateContentObject(self,
 												contentObject,

@@ -67,8 +67,6 @@ from nti.assessment.interfaces import IQAssignment
 
 from nti.common.maps import CaseInsensitiveDict
 
-from nti.common.property import Lazy
-
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import NTI_COURSE_OUTLINE_NODE
@@ -136,6 +134,8 @@ from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
 from nti.ntiids.ntiids import find_object_with_ntiid
+
+from nti.property.property import Lazy
 
 from nti.site.interfaces import IHostPolicyFolder
 
