@@ -307,7 +307,7 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None, sites=No
 	# lesson is ready
 	return result
 
-def check_related_work_target(asset):
+def check_docket_targets(asset):
 	if INTIDocketMixin.providedBy(asset) and not asset.target:
 		href = asset.href
 		if IPloneNamed.providedBy(href):
@@ -323,3 +323,4 @@ def check_related_work_target(asset):
 			asset.type = to_unicode(asset_type) if asset_type else None
 		return True
 	return False
+check_related_work_target = check_docket_targets # BWC

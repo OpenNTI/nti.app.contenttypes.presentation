@@ -15,7 +15,7 @@ from zope import interface
 
 from zope.component.hooks import site as current_site
 
-from nti.app.contenttypes.presentation.utils.asset import check_related_work_target
+from nti.app.contenttypes.presentation.utils.asset import check_docket_targets
 
 from nti.app.contenttypes.presentation.synchronizer import clear_course_assets
 from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
@@ -63,7 +63,7 @@ class LessonOverviewsImporter(BaseSectionImporter):
 			asset_items = asset.Items if asset.Items is not None else ()
 			for item in asset_items:
 				self._post_process_asset(item, source_filer, target_filer)
-		check_related_work_target(asset)
+		check_docket_targets(asset)
 
 	def _get_course_site(self, course):
 		site_name = get_course_site(course)
