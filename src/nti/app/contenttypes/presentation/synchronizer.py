@@ -57,7 +57,6 @@ from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIMediaRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
-from nti.contenttypes.presentation.interfaces import INTIDocketMixin
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -410,7 +409,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 					item.ntiid = new_ntiid
 			elif INTIMediaRoll.providedBy(item):
 				_register_media_rolls(item, registry=registry, validate=validate)
-			elif INTIDocketMixin.providedBy(item):
+			elif INTITimeline.providedBy(item) or INTIRelatedWorkRef.providedBy(item):
 				ntiid = item.ntiid or u''
 				found = find_object_with_ntiid(ntiid)
 				if INTITimeline.providedBy(found):
