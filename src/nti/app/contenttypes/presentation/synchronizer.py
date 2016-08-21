@@ -48,6 +48,7 @@ from nti.contenttypes.courses.interfaces import	CourseLessonSyncResults
 from nti.contenttypes.courses.interfaces import	ICourseOutlineContentNode
 
 from nti.contenttypes.courses.utils import get_parent_course
+from nti.contenttypes.courses.utils import get_course_hierarchy
 
 from nti.contenttypes.presentation import interface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
@@ -703,6 +704,9 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 			_add_buckets(parent, buckets)
 		_add_buckets(course, buckets)
 
+	# capture all hierarchy entry ntiids
+	hierarchy = [ICourseCatalogEntry(x).ntiid for x in get_course_hierarchy(course)]
+				
 	course_packages = get_course_packages(course)
 	catalog = get_library_catalog() if catalog is None else catalog
 	intids = component.getUtility(IIntIds) if intids is None else intids
@@ -745,6 +749,8 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 				# assets and set the lesson overview ntiid to the outline node
 				objects = catalog.search_objects(namespace=namespace,
 												 provided=INTILessonOverview,
+												 container_ntiids=hierarchy,
+												 container_all_of=False,
 												 intids=intids)
 				_index_overview_items(objects,
 									  namespace=namespace,
