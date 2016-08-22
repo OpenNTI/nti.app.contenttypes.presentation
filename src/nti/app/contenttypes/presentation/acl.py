@@ -14,8 +14,6 @@ from zope import interface
 
 from nti.app.contenttypes.presentation.utils import get_presentation_asset_courses
 
-from nti.common.property import Lazy
-
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.presentation.interfaces import INTIAudio
@@ -42,6 +40,8 @@ from nti.dataserver.interfaces import ACE_DENY_ALL
 from nti.dataserver.interfaces import ALL_PERMISSIONS
 
 from nti.dataserver.interfaces import IACLProvider
+
+from nti.property.property import Lazy
 
 from nti.traversal.traversal import find_interface
 

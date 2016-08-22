@@ -13,8 +13,6 @@ from zope import interface
 
 from nti.app.products.courseware.utils.exporter import save_resources_to_filer
 
-from nti.common.file import safe_filename
-
 from nti.contenttypes.courses.exporter import BaseSectionExporter
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -31,6 +29,8 @@ from nti.externalization.externalization import to_external_object
 
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import StandardInternalFields
+
+from nti.namedfile.file import safe_filename
 
 from nti.ntiids.ntiids import TYPE_OID
 from nti.ntiids.ntiids import is_ntiid_of_type

@@ -28,13 +28,13 @@ from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecora
 
 from nti.appserver.pyramid_authorization import has_permission
 
-from nti.common.property import Lazy
-
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.externalization.interfaces import StandardExternalFields
 
 from nti.links.links import Link
+
+from nti.property.property import Lazy
 
 LINKS = StandardExternalFields.LINKS
 

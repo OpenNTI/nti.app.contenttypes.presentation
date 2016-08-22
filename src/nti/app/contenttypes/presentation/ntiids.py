@@ -19,8 +19,6 @@ from nti.app.authentication import get_remote_user
 from nti.app.contenttypes.presentation.utils import resolve_discussion_course_bundle
 from nti.app.contenttypes.presentation.utils import get_course_by_relative_path_parts
 
-from nti.common.property import Lazy
-
 from nti.contenttypes.courses.discussions.utils import get_discussion_for_path
 
 from nti.contenttypes.presentation.interfaces import INTIAudio
@@ -49,6 +47,8 @@ from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.ntiids.interfaces import INTIIDResolver
 
 from nti.ntiids.ntiids import get_parts
+
+from nti.property.property import Lazy
 
 @interface.implementer(INTIIDResolver)
 class _PresentationResolver(object):

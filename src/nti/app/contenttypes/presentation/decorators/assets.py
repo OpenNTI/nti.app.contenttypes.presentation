@@ -45,8 +45,6 @@ from nti.appserver.pyramid_authorization import has_permission
 from nti.assessment.interfaces import IQSurvey
 from nti.assessment.interfaces import IQAssignment
 
-from nti.common.property import Lazy
-
 from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackage
 from nti.contentlibrary.interfaces import IContentUnitHrefMapper
@@ -107,6 +105,8 @@ from nti.ntiids.ntiids import get_type
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_provider_safe
 from nti.ntiids.ntiids import find_object_with_ntiid
+
+from nti.property.property import Lazy
 
 from nti.traversal.traversal import find_interface
 
