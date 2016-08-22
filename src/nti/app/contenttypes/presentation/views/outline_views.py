@@ -13,6 +13,7 @@ import time
 import simplejson
 
 from zope import component
+from zope import lifecycleevent
 
 from zope.authentication.interfaces import IUnauthenticatedPrincipal
 
@@ -986,3 +987,62 @@ class RecursiveCourseTransactionHistoryView(AbstractRecursiveTransactionHistoryV
 
 	def _get_items(self):
 		return self._get_node_items(self.context)
+
+@view_config(route_name='objects.generic.traversal',
+			 context=ICourseOutline,
+			 request_method='POST',
+			 permission=nauth.ACT_CONTENT_EDIT,
+			 renderer='rest',
+			 name='SyncLock')
+class SyncLockOutlineView(AbstractAuthenticatedView):
+	"""
+	Locks all nodes and lesson overviews pointed by the outline.
+	"""
+
+	def _get_nodes(self):
+		result = []
+		def _recur(node):
+			if not ICourseOutline.providedBy(node):
+				result.append(node)
+			for child in node.values():
+				_recur(child)
+		_recur(self.context)
+		return result
+
+	def _do_op(self, node, do_lesson=True):
+		node.lock()
+		lifecycleevent.modified(node)
+		if do_lesson:
+			lesson = getattr(node, 'LessonOverviewNTIID', None) or u''
+			lesson = find_object_with_ntiid(lesson)
+			if lesson is not None:
+				lesson.lock()
+				lifecycleevent.modified(lesson)
+	
+	def __call__(self):
+		for node in self._get_nodes():
+			self._do_op(node)
+		return hexc.HTTPNoContent()
+
+
+@view_config(route_name='objects.generic.traversal',
+			 context=ICourseOutline,
+			 request_method='POST',
+			 permission=nauth.ACT_CONTENT_EDIT,
+			 renderer='rest',
+			 name='SyncUnlock')
+class SyncUnlockOutlineView(SyncLockOutlineView):
+	"""
+	Unlocks all nodes and lesson overviews pointed by the outline.
+	"""
+
+	def _do_op(self, node, do_lesson=True):
+		node.lock()
+		lifecycleevent.modified(node)
+		if do_lesson:
+			lesson = getattr(node, 'LessonOverviewNTIID', None) or u''
+			lesson = find_object_with_ntiid(lesson)
+			if lesson is not None:
+				lesson.unlock()
+				lesson.childOrderUnlock()
+				lifecycleevent.modified(lesson)
