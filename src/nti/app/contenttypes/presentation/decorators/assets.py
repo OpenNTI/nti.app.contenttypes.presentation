@@ -485,7 +485,9 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		return result
 
 	def _do_decorate_external(self, context, result):
-		package = _get_item_content_package(context)
+		package = find_interface(context, IContentPackage, strict=False)
+		if package is None:
+			package = _get_item_content_package(context)
 		if package is not None and self._should_process(context):
 			location = IContentUnitHrefMapper(package.key.bucket).href  # parent
 			for name in ('href', 'icon'):
