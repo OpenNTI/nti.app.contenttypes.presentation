@@ -68,6 +68,8 @@ from nti.assessment.interfaces import IQAssignment
 
 from nti.common.maps import CaseInsensitiveDict
 
+from nti.common.string import is_true
+
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import NTI_COURSE_OUTLINE_NODE
@@ -988,42 +990,53 @@ class RecursiveCourseTransactionHistoryView(AbstractRecursiveTransactionHistoryV
 	def _get_items(self):
 		return self._get_node_items(self.context)
 
+# Sync Lock/Unlock outline and lessons
+
 @view_config(route_name='objects.generic.traversal',
 			 context=ICourseOutline,
 			 request_method='POST',
 			 permission=nauth.ACT_CONTENT_EDIT,
 			 renderer='rest',
 			 name='SyncLock')
-class SyncLockOutlineView(AbstractAuthenticatedView):
+class SyncLockOutlineView(AbstractAuthenticatedView,
+						  ModeledContentUploadRequestUtilsMixin):
 	"""
 	Locks all nodes and lesson overviews pointed by the outline.
 	"""
 
-	def _get_nodes(self):
+	def readInput(self, value=None):
+		result = ModeledContentUploadRequestUtilsMixin.readInput(self, value=value)
+		return CaseInsensitiveDict(result)
+
+	def _get_nodes(self, outline):
 		result = []
 		def _recur(node):
 			if not ICourseOutline.providedBy(node):
 				result.append(node)
 			for child in node.values():
 				_recur(child)
-		_recur(self.context)
+		_recur(outline)
 		return result
 
-	def _do_op(self, node, do_lesson=True):
+	def _do_op(self, node, do_lessons=True):
 		node.lock()
 		lifecycleevent.modified(node)
-		if do_lesson:
+		if do_lessons:
 			lesson = getattr(node, 'LessonOverviewNTIID', None) or u''
 			lesson = find_object_with_ntiid(lesson)
 			if lesson is not None:
 				lesson.lock()
 				lifecycleevent.modified(lesson)
 	
-	def __call__(self):
-		for node in self._get_nodes():
-			self._do_op(node)
-		return hexc.HTTPNoContent()
+	def _do_call(self, outline, do_lessons=True):
+		for node in self._get_nodes(outline):
+			self._do_op(node, do_lessons)
 
+	def __call__(self):
+		values = self.readInput()
+		do_lessons = is_true(values.get('lesson') or values.get('lessons'))
+		self._do_call(self.context, do_lessons)
+		return hexc.HTTPNoContent()
 
 @view_config(route_name='objects.generic.traversal',
 			 context=ICourseOutline,
@@ -1036,10 +1049,10 @@ class SyncUnlockOutlineView(SyncLockOutlineView):
 	Unlocks all nodes and lesson overviews pointed by the outline.
 	"""
 
-	def _do_op(self, node, do_lesson=True):
+	def _do_op(self, node, do_lessons=True):
 		node.lock()
 		lifecycleevent.modified(node)
-		if do_lesson:
+		if do_lessons:
 			lesson = getattr(node, 'LessonOverviewNTIID', None) or u''
 			lesson = find_object_with_ntiid(lesson)
 			if lesson is not None:
