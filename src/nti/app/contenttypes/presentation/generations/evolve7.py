@@ -16,6 +16,7 @@ from zope.component.hooks import setHooks
 from zope.intid import IIntIds
 
 from nti.app.contenttypes.presentation.generations import PA_INDEX_NAME
+
 from nti.app.contenttypes.presentation.interfaces import IPresentationAssetsIndex
 
 from nti.contentlibrary.indexed_data import CATALOG_INDEX_NAME as LIB_INDEX_NAME

@@ -18,17 +18,19 @@ from zope import interface
 
 from zope.intid.interfaces import IIntIds
 
-from zope.component.hooks import site, setHooks
+from zope.component.hooks import site
+from zope.component.hooks import setHooks
 
 from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_courses
 
 from nti.contentlibrary.indexed_data import get_registry
 from nti.contentlibrary.indexed_data import CATALOG_INDEX_NAME
+
 from nti.contentlibrary.indexed_data.interfaces import IContainedObjectCatalog
 
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 
-from nti.contenttypes.courses.utils import get_course_packages
+from nti.contenttypes.courses.common import get_course_packages
 
 from nti.contenttypes.presentation.interfaces import INTIAudio
 from nti.contenttypes.presentation.interfaces import INTIVideo

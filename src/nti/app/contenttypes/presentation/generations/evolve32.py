@@ -23,6 +23,13 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contentlibrary.interfaces import IContentUnit 
 from nti.contentlibrary.interfaces import IContentPackage 
+from nti.contentlibrary.interfaces import IContentPackageLibrary
+
+from nti.contenttypes.courses.common import get_course_packages
+
+from nti.contenttypes.courses.interfaces import ICourseInstance
+
+from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.presentation import iface_of_asset
 
@@ -65,7 +72,16 @@ def _fix_refs(current_site, catalog, intids, seen):
 		if name in seen:
 			continue
 		seen.add(name)
+
+		# don't process legacy courses
 		lesson = group.__parent__
+		course = find_interface(lesson, ICourseInstance, strict=False)
+		if ILegacyCourseInstance.providedBy(course):
+			continue
+		
+		course_packages = tuple(get_course_packages(course) or ())
+
+		#  loop through items
 		for item in group or ():
 			name = item.ntiid
 			if not name:
@@ -76,35 +92,31 @@ def _fix_refs(current_site, catalog, intids, seen):
 				provided = iface_of_asset(item)
 				containers = {group.ntiid, lesson.ntiid}
 				registered = registry.queryUtility(provided, name=name)
-				if registered is not item:
-					logger.warn("Replacing %s", name)
+				if registered.__parent__ is None or registered is not item:
+					logger.warn("Fixing %s", name)
 					parent = registered.__parent__
-
-					# remove registered / lesson wins
+					package = find_interface(registered, IContentPackage, strict=False)
+					
 					doc_id = intids.queryId(registered)
 					if doc_id is not None:
-						namespace = catalog.get_namespace(doc_id)
+						namespace = catalog.get_namespace(doc_id) 
 						containers.update(catalog.get_containers(doc_id) or ())
-						catalog.unindex(doc_id)
-						removeIntId(registered)
-					unregisterUtility(registry, provided=provided, name=name)
-
-					# register new item and set proper lineage
-					registerUtility(registry, item, provided=provided, name=name)
-					if parent is not None:
-						item.__parent__ = parent
-
-					# find proper namespace
-					package = find_interface(registered, IContentPackage, strict=True)
-					if package is not None:
-						namespace = package.ntiid
-						if item.__parent__ is None:
-							item.__parent__ = package
+					else:
+						namespace = None
+							
+					if registered is not item:
+						# remove registered / lesson wins
+						if doc_id is not None:
+							catalog.unindex(doc_id)
+							removeIntId(registered)
+						unregisterUtility(registry, provided=provided, name=name)
+						# register new item and set proper lineage
+						registerUtility(registry, item, provided=provided, name=name)
 
 					# remove from and replace in asset containers
 					found_in_units = False
-					for ntiid in containers:
-						unit = find_object_with_ntiid(ntiid)
+					for container_ntiid in containers:
+						unit = find_object_with_ntiid(container_ntiid)
 						if IContentUnit.providedBy(unit):
 							found_in_units = True
 							container = IPresentationAssetContainer(unit, None)
@@ -112,6 +124,13 @@ def _fix_refs(current_site, catalog, intids, seen):
 								container.pop(name, None)
 								container[name] = item
 								containers.add(unit.ntiid)
+								if parent is None and package is None:
+									package = find_interface(unit, 
+															 IContentPackage, 
+															 strict=False)
+
+					if package is None and course_packages:
+						package = course_packages[0]
 
 					# give a default asset container
 					if not found_in_units and package is not None:
@@ -119,6 +138,16 @@ def _fix_refs(current_site, catalog, intids, seen):
 						container.pop(name, None)
 						container[name] = item
 						containers.add(package.ntiid)
+
+					if parent is not None:
+						item.__parent__ = parent
+
+					# find proper namespace
+					if package is not None:
+						namespace = package.ntiid
+						if 		item.__parent__ is None or \
+							not IContentPackage.providedBy(item.__parent__):
+							item.__parent__ = package
 
 					# index
 					containers.discard(None)
@@ -128,7 +157,8 @@ def _fix_refs(current_site, catalog, intids, seen):
 							  	  container_ntiids=containers)
 
 					# ground
-					registered.__parent__ = None
+					if registered is not item:
+						registered.__parent__ = None
 					result += 1
 
 	return result
@@ -150,6 +180,10 @@ def do_evolve(context, generation=generation):
 		lsm = dataserver_folder.getSiteManager()
 		intids = lsm.getUtility(IIntIds)
 
+		library = component.queryUtility(IContentPackageLibrary)
+		if library is not None:
+			library.syncContentPackages()
+			
 		result = 0
 		seen = set()
 		catalog = get_library_catalog()
@@ -157,6 +191,7 @@ def do_evolve(context, generation=generation):
 		for current_site in get_all_host_sites():
 			with site(current_site):
 				result += _fix_refs(current_site, catalog, intids, seen)
+
 		logger.info('Dataserver evolution %s done. %s item(s) fixed',
 					generation, result)
 
