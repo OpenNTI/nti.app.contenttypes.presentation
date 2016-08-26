@@ -305,4 +305,5 @@ def _on_evaluation_modified(evaluation, event):
 		if target == ntiid:
 			item.title = evaluation.title or item.title
 			if INTIQuestionSetRef.providedBy(item) or INTISurveyRef.providedBy(item):
-				item.question_count = len(evaluation.questions or ())
+				item.question_count =  getattr( evaluation, 'draw', None ) \
+									or len(evaluation.questions or ())
