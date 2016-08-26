@@ -93,10 +93,14 @@ def _fix_refs(current_site, catalog, intids, seen):
 				containers = {group.ntiid, lesson.ntiid}
 				registered = registry.queryUtility(provided, name=name)
 				if registered.__parent__ is None or registered is not item:
-					logger.warn("Fixing %s", name)
 					parent = registered.__parent__
 					package = find_interface(registered, IContentPackage, strict=False)
 					
+					if parent is None:
+						logger.warn("Fixing lineage for %s", name)
+					else:
+						logger.warn("Fixing registration for %s", name)
+
 					doc_id = intids.queryId(registered)
 					if doc_id is not None:
 						namespace = catalog.get_namespace(doc_id) 
