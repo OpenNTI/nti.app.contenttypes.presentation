@@ -92,7 +92,7 @@ def _fix_refs(current_site, catalog, intids, seen):
 				provided = iface_of_asset(item)
 				containers = {group.ntiid, lesson.ntiid}
 				registered = registry.queryUtility(provided, name=name)
-				if registered.__parent__ is None or registered is not item:
+				if registered is not item or registered.__parent__ is None:
 					parent = registered.__parent__
 					package = find_interface(registered, IContentPackage, strict=False)
 					
