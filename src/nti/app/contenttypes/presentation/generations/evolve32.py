@@ -41,7 +41,8 @@ from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
 
-from nti.intid.common import removeIntId
+from nti.intid.common import addIntId
+from nti.intid.common import removeIntId 
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -93,7 +94,7 @@ def _fix_refs(current_site, catalog, intids, seen):
 				containers = {group.ntiid, lesson.ntiid}
 				registered = registry.queryUtility(provided, name=name)
 				if registered is not item or registered.__parent__ is None:
-					parent = registered.__parent__
+					parent = registered.__parent__ if registered is not None else None
 					package = find_interface(registered, IContentPackage, strict=False)
 					
 					if parent is None:
@@ -155,6 +156,8 @@ def _fix_refs(current_site, catalog, intids, seen):
 
 					# index
 					containers.discard(None)
+					if intids.queryId(item) is None:
+						addIntId(item)
 					catalog.index(item,
 							  	  namespace=namespace,
 							  	  sites=current_site.__name__,
