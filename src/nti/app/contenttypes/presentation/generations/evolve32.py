@@ -164,7 +164,7 @@ def _fix_refs(current_site, catalog, intids, seen):
 							  	  container_ntiids=containers)
 
 					# ground
-					if registered is not item:
+					if registered is not item and registered is not None:
 						registered.__parent__ = None
 					result += 1
 
