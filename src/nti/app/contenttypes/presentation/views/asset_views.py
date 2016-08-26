@@ -219,7 +219,7 @@ class PresentationAssetGetView(GenericGetView, PublishVisibilityMixin):
 			raise hexc.HTTPForbidden(_("Item not visible."))
 		result = GenericGetView.__call__(self)
 		return result
-			
+
 @view_config(context=INTITimeline)
 @view_config(context=INTIRelatedWorkRef)
 @view_defaults(route_name='objects.generic.traversal',
@@ -633,7 +633,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 				item.label = reference.title if not item.label else item.label
 				item.title = reference.title if not item.title else item.title
 			elif INTIQuestionSetRef.providedBy(item) or INTISurveyRef.providedBy(item):
-				item.question_count = len(reference)
+				item.question_count = getattr( reference, 'draw', None ) or len(reference)
 				item.label = reference.title if not item.label else item.label
 
 			item.containerId = reference.containerId
@@ -993,9 +993,9 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 
 		originalSource = copy.deepcopy(externalValue)
 		pre_hook = get_external_pre_hook(externalValue)
-		
+
 		event_notify(WillUpdatePresentationAssetEvent(contentObject,
-													  self.remoteUser, 
+													  self.remoteUser,
 													  externalValue))
 
 		result = UGDPutView.updateContentObject(self,

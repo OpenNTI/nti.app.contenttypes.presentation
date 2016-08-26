@@ -466,7 +466,7 @@ def _get_item_content_package(item):
 class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	CONTENT_MIME_TYPE = u'application/vnd.nextthought.content'
-	
+
 	@Lazy
 	def is_legacy_ipad(self):
 		result = is_legacy_uas(self.request, LEGACY_UAS_40)
@@ -475,7 +475,7 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 	def _predicate(self, context, result):
 		result = self._is_authenticated
 		return result
-	
+
 	def _should_process(self, obj):
 		result = False
 		if INTITimeline.providedBy(obj) and not is_internal_file_link(obj.href or u''):
@@ -575,8 +575,11 @@ class _BaseAssessmentRefDecorator(_BaseAssetDecorator):
 
 	def decorateExternalObject(self, original, external):
 		super(_BaseAssessmentRefDecorator, self).decorateExternalObject(original, external)
-		if 'question_count' in external:
-			external[u'question-count'] = str(external.pop('question_count'))
+		# Always pass through to our target.
+		external.pop('question_count', None)
+		target = find_object_with_ntiid( original.target )
+		question_count = getattr( target, 'draw', None ) or len( target.questions )
+		external[u'question-count'] = question_count
 
 @component.adapter(INTIQuestionSetRef)
 @interface.implementer(IExternalObjectDecorator)
