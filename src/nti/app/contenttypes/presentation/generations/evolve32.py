@@ -33,9 +33,8 @@ from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.presentation import iface_of_asset
 
-from nti.contenttypes.presentation.interfaces import INTITimeline
-from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.dataserver.interfaces import IDataserver
@@ -88,7 +87,7 @@ def _fix_refs(current_site, catalog, intids, seen):
 			if not name:
 				continue
 
-			if INTIRelatedWorkRef.providedBy(item) or INTITimeline.providedBy(item):
+			if IPackagePresentationAsset.providedBy(item):
 				namespace = None
 				provided = iface_of_asset(item)
 				containers = {group.ntiid, lesson.ntiid}
