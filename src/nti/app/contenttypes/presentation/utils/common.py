@@ -135,13 +135,6 @@ def remove_site_invalid_assets(current, intids=None, catalog=None, seen=None):
 			remove_presentation_asset(item, registry, catalog, name=ntiid)
 			continue
 
-		# registration not in base site
-		if ntiid in seen:
-			removed.add(ntiid)
-			logger.warn("Unregistering (%s,%s) from site %s",
-						provided.__name__, ntiid, site_name)
-			unregisterUtility(registry, provided=provided, name=ntiid)
-
 		seen.add(ntiid)
 	return removed
 
