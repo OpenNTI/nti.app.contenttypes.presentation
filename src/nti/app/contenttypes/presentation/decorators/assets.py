@@ -587,11 +587,11 @@ class _BaseAssessmentRefDecorator(_BaseAssetDecorator):
 	def decorateExternalObject(self, original, external):
 		super(_BaseAssessmentRefDecorator, self).decorateExternalObject(original, external)
 		# Always pass through to our target.
-		external.pop('question_count', None)
-		target = find_object_with_ntiid(original.target)
+		question_count = external.pop('question_count', None)
+		target = find_object_with_ntiid( original.target )
 		if target is not None:
-			question_count = getattr(target, 'draw', None) or len(target.questions)
-			external[u'question-count'] = question_count
+			question_count = getattr( target, 'draw', None ) or len( target.questions )
+		external[u'question-count'] = str( question_count )
 
 @component.adapter(INTIQuestionSetRef)
 @interface.implementer(IExternalObjectDecorator)
