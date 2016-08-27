@@ -51,6 +51,7 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 
 from nti.namedfile.constraints import FileConstraints
 
@@ -140,6 +141,12 @@ def _slideckref_to_slidedeck(context):
 @component.adapter(INTITimelineRef)
 def _timelineref_to_timeline(context):
 	result = component.queryUtility(INTITimeline, name=context.target)
+	return result
+
+@interface.implementer(INTIRelatedWorkRef)
+@component.adapter(INTIRelatedWorkRefPointer)
+def _relatedworkrefpointer_to_relatedworkref(context):
+	result = component.queryUtility(INTIRelatedWorkRef, name=context.target)
 	return result
 
 @component.adapter(IPresentationAsset)

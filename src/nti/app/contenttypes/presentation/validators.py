@@ -29,6 +29,8 @@ from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 
 @interface.implementer(IItemRefValidator)
 class _ItemRefValidator(object):
@@ -88,3 +90,9 @@ class _TimelineRefValidator(_ItemRefValidator):
 	field_name = 'ntiid'
 	item_type = 'Timeline'
 	provided = INTITimeline
+
+@component.adapter(INTIRelatedWorkRefPointer)
+class _RelatedWorkRefPointerValidator(_ItemRefValidator):
+	field_name = 'ntiid'
+	item_type = 'RelatedWork'
+	provided = INTIRelatedWorkRef

@@ -88,6 +88,7 @@ from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
@@ -371,6 +372,13 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 			return True
 		return False
 
+	def _handle_relatedworkref_pointer(self, items, item, idx):
+		source = INTIRelatedWorkRef(item, None)
+		if source is not None:
+			items[idx] = to_external_object(source)
+			return True
+		return False
+
 	def _decorate_external_impl(self, context, result):
 		idx = 0
 		removal = set()
@@ -395,6 +403,9 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 				removal.add(idx)
 			elif	INTITimelineRef.providedBy(item) \
 				and not self._handle_timeline_ref(items, item, idx):
+				removal.add(idx)
+			elif	INTIRelatedWorkRefPointer.providedBy(item) \
+				and not self._handle_relatedworkref_pointer(items, item, idx):
 				removal.add(idx)
 			elif	INTIAssignmentRef.providedBy(item) \
 				and not self.allow_assignmentref(context, item):
@@ -577,9 +588,10 @@ class _BaseAssessmentRefDecorator(_BaseAssetDecorator):
 		super(_BaseAssessmentRefDecorator, self).decorateExternalObject(original, external)
 		# Always pass through to our target.
 		external.pop('question_count', None)
-		target = find_object_with_ntiid( original.target )
-		question_count = getattr( target, 'draw', None ) or len( target.questions )
-		external[u'question-count'] = question_count
+		target = find_object_with_ntiid(original.target)
+		if target is not None:
+			question_count = getattr(target, 'draw', None) or len(target.questions)
+			external[u'question-count'] = question_count
 
 @component.adapter(INTIQuestionSetRef)
 @interface.implementer(IExternalObjectDecorator)
