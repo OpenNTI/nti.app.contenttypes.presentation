@@ -26,7 +26,7 @@ import simplejson
 from nti.contenttypes.presentation.interfaces import INTIVideoRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
-from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 
 from nti.contenttypes.presentation.group import NTICourseOverViewGroup
 
@@ -72,7 +72,7 @@ class TestGroup(unittest.TestCase):
 
 		assert_that(group, has_length(5))
 		assert_that(list(group), has_length(5))
-		assert_that(group[0], validly_provides(INTIRelatedWorkRef))
+		assert_that(group[0], validly_provides(INTIRelatedWorkRefPointer))
 		assert_that(group[1], verifiably_provides(INTIDiscussionRef))
 		assert_that(group[2], verifiably_provides(INTIDiscussionRef))
 		assert_that(group[3], verifiably_provides(INTIAssignmentRef))

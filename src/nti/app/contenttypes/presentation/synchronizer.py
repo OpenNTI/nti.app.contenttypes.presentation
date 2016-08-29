@@ -63,6 +63,7 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
@@ -413,16 +414,22 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 				ntiid = item.ntiid or u''
 				found = find_object_with_ntiid(ntiid)
 				if INTITimeline.providedBy(found):
-					item = INTITimelineRef(found)  # transform to timeline ref
+					item = INTITimelineRef(found)  # transform to ref
 				elif INTIRelatedWorkRef.providedBy(found):
-					item = found  # replace
+					item = INTIRelatedWorkRefPointer(found) # transform to ref
 				else:
+					# register underlying
 					assert ntiid, 'Must provide an ntiid'
 					_, registered = _do_register(item, registry)
 					_add_2_package_containers(course, registered, catalog)
 					_intid_register(registered)
+					
+					# transform to timeline ref
 					if INTITimeline.providedBy(item):
-						item = INTITimelineRef(registered)  # transform to timeline ref
+						item = INTITimelineRef(registered)
+					elif INTIRelatedWorkRef.providedBy(item):
+						item = INTIRelatedWorkRefPointer(registered)
+				# add to items
 				items[idx] = item
 
 			# register item

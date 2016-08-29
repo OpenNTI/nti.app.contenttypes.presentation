@@ -120,6 +120,7 @@ from nti.contenttypes.presentation import QUESTIONSET_REF_MIMETYES
 from nti.contenttypes.presentation import ALL_MEDIA_ROLL_MIME_TYPES
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import COURSE_OVERVIEW_GROUP_MIMETYES
+from nti.contenttypes.presentation import RELATED_WORK_REF_POINTER_MIMETYES
 
 from nti.contenttypes.presentation.discussion import is_nti_course_bundle
 
@@ -148,6 +149,7 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import ICoursePresentationAsset
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
@@ -285,7 +287,7 @@ def _notify_created(item, principal=None, externalValue=None):
 	principal = principal or principalId()  # always get a principal
 	event_notify(PresentationAssetCreatedEvent(item, principal, externalValue))
 	if IPublishable.providedBy(item) and item.is_published():
-		item.unpublish( event=False )
+		item.unpublish(event=False)
 
 def _add_2_packages(context, item):
 	result = []
@@ -408,7 +410,7 @@ class LessonOverviewMoveView(AbstractChildMoveView):
 		return None
 
 	def _set_notify_type(self, obj):
-		if INTICourseOverviewGroup.providedBy( obj ):
+		if INTICourseOverviewGroup.providedBy(obj):
 			self.notify_type = OverviewGroupMovedEvent
 		else:
 			self.notify_type = PresentationAssetMovedEvent
@@ -419,7 +421,7 @@ class LessonOverviewMoveView(AbstractChildMoveView):
 			obj = self._get_ref_in_parent(ntiid, old_parent)
 			if obj is None:
 				raise hexc.HTTPUnprocessableEntity(_('No ref found for given media ntiid.'))
-		self._set_notify_type( obj )
+		self._set_notify_type(obj)
 		return obj
 
 class PresentationAssetMixin(object):
@@ -476,7 +478,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 	def _check_exists(self, provided, item, creator):
 		ntiid = self._get_ntiid(item)
-		if ntiid and INTITimeline.providedBy( item ):
+		if ntiid and INTITimeline.providedBy(item):
 			# Timelines are the only item we allow to be placed as-is (non-ref).
 			pass
 		elif ntiid:
@@ -494,8 +496,8 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 	def _handle_package_asset(self, provided, item, creator, extended=None):
 		self._set_creator(item, creator)
-
 		packages = list(get_course_packages(self._course))
+
 		# If we don't have parent, use package.
 		# TODO: Do we want to force all assets (non IAssetRef) to have package
 		# parents (updated on sync?) and all refs have group parent?
@@ -542,8 +544,8 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 				external = to_external_file_link(content_file)
 				setattr(item, name, external)
 				content_file.add_association(item)
-				if name == 'href': # update target and type
-					item.target = to_external_ntiid_oid(item) # NTIID
+				if name == 'href':  # update target and type
+					item.target = to_external_ntiid_oid(item)  # NTIID
 					if INTIRelatedWorkRef.providedBy(item):
 						item.type = unicode(content_file.contentType)
 
@@ -563,9 +565,9 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 				contentType = unicode(named.contentType or u'') or contentType
 
 		# If we do not have a target, and we have a ContentUnit href, use it.
-		if ntiid is None and is_valid_ntiid_string( item.href ):
-			href_obj = find_object_with_ntiid( item.href )
-			if href_obj is not None and IContentUnit.providedBy( href_obj ):
+		if ntiid is None and is_valid_ntiid_string(item.href):
+			href_obj = find_object_with_ntiid(item.href)
+			if href_obj is not None and IContentUnit.providedBy(href_obj):
 				ntiid = item.href
 
 		# parse href
@@ -633,7 +635,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 				item.label = reference.title if not item.label else item.label
 				item.title = reference.title if not item.title else item.title
 			elif INTIQuestionSetRef.providedBy(item) or INTISurveyRef.providedBy(item):
-				item.question_count = getattr( reference, 'draw', None ) or len(reference)
+				item.question_count = getattr(reference, 'draw', None) or len(reference)
 				item.label = reference.title if not item.label else item.label
 
 			item.containerId = reference.containerId
@@ -651,7 +653,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 				resolved = resolve_discussion_course_bundle(self.remoteUser,
 															item,
 															context=self._course)
-				if resolved is not None: #  (discussion, topic)
+				if resolved is not None:  #  (discussion, topic)
 					item.target = resolved[1].NTIID
 
 	def _handle_overview_group(self, group, creator, extended=None):
@@ -732,10 +734,10 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		if packages:
 			namespace = [x.ntiid for x in packages]
 			target = (item.ntiid,)
-			if INTIVideoRef.providedBy( item ):
-				target = (item.ntiid, getattr( item, 'target', '' ))
+			if INTIVideoRef.providedBy(item):
+				target = (item.ntiid, getattr(item, 'target', ''))
 			catalog = get_library_catalog()
-			slide_decks = tuple( catalog.search_objects( provided=INTISlideDeck,
+			slide_decks = tuple(catalog.search_objects(provided=INTISlideDeck,
 														namespace=namespace,
 														sites=self._site_name))
 			for slide_deck in slide_decks or ():
@@ -749,7 +751,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		Check if the given video is actually a slidedeck video and handle
 		the slidedeck accordingly.
 		"""
-		slide_deck = self._get_slide_deck_for_video( item )
+		slide_deck = self._get_slide_deck_for_video(item)
 		if slide_deck is not None:
 			return self._handle_package_asset(INTISlideDeck, slide_deck, creator, extended)
 		# Just a video
@@ -1023,7 +1025,7 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 		for iface in (INTICourseOverviewGroup, INTILessonOverview):
 			parent = find_interface(self.context, iface, strict=False)
 			if parent is not None:
-				result.append( parent )
+				result.append(parent)
 		return result
 
 	def __call__(self):
@@ -1052,13 +1054,13 @@ class PackagePresentationAssetPutView(PresentationAssetPutView):
 	@Lazy
 	def _course(self):
 		result = find_interface(self.context, ICourseInstance, strict=False)
-		if result is not None: # direct check in case course w/ no pkg
+		if result is not None:  # direct check in case course w/ no pkg
 			return result
 		package = find_interface(self.context, IContentPackage, strict=False)
 		if package is not None:
-			sites = get_component_hierarchy_names() # check sites
+			sites = get_component_hierarchy_names()  # check sites
 			courses = get_courses_for_packages(sites, package.ntiid)
-			result = courses[0] if courses else None # should always find one
+			result = courses[0] if courses else None  # should always find one
 		return result
 
 @view_config(context=ICoursePresentationAsset)
@@ -1195,9 +1197,9 @@ class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
 		# up. We want to make sure we clean up the underlying asset.
 		# Safe if already gone.
 		if item is not None:
-			self.context.remove( item )
+			self.context.remove(item)
 		else:
-			self.context.pop( index )
+			self.context.pop(index)
 		remove_presentation_asset(item)
 
 # ordered contents
@@ -1310,22 +1312,32 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 
 			if 		INTISlideDeck.providedBy(resolved) \
 				or	INTISlideDeckRef.providedBy(resolved):
-				externalValue[MIMETYPE] = SLIDE_DECK_REF_MIMETYES[0] # make a ref always
+				externalValue[MIMETYPE] = SLIDE_DECK_REF_MIMETYES[0]  # make a ref always
+			# timelines
 			elif 	INTITimeline.providedBy(resolved) \
 				or	INTITimelineRef.providedBy(resolved):
-				externalValue[MIMETYPE] = TIMELINE_REF_MIMETYES[0] # make a ref always
+				externalValue[MIMETYPE] = TIMELINE_REF_MIMETYES[0]  # make a ref always
+			# relatedwork refs
+			elif 	INTIRelatedWorkRef.providedBy(resolved) \
+				or	INTIRelatedWorkRefPointer.providedBy(resolved):
+				externalValue[MIMETYPE] = RELATED_WORK_REF_POINTER_MIMETYES[0]  # make a ref always
+			# media objects
 			elif	INTIMedia.providedBy(resolved) \
 				or	INTIMediaRef.providedBy(resolved):
 				externalValue[MIMETYPE] = resolved.mimeType
+			# assignment objects
 			elif	IQAssignment.providedBy(resolved) \
 				or	INTIAssignmentRef.providedBy(resolved):
 				externalValue[MIMETYPE] = ASSIGNMENT_REF_MIMETYES[0]
+			# poll objects
 			elif	IQPoll.providedBy(resolved) \
 				or	INTIPollRef.providedBy(resolved):
 				externalValue[MIMETYPE] = POLL_REF_MIMETYES[0]
+			# survey objects
 			elif	IQSurvey.providedBy(resolved) \
 				or	INTISurveyRef.providedBy(resolved):
 				externalValue[MIMETYPE] = SURVEY_REF_MIMETYES[0]
+			# question sets
 			elif	IQuestionSet.providedBy(resolved) \
 				or	INTIQuestionSetRef.providedBy(resolved):
 				externalValue[MIMETYPE] = QUESTIONSET_REF_MIMETYES[0]
@@ -1353,7 +1365,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		external_input = self.readInput() if not externalValue else externalValue
 		externalValue = self._do_preflight_input(external_input)
 		external_input = copy.deepcopy(external_input)  # return original input
-		if isinstance( externalValue, Mapping ):
+		if isinstance(externalValue, Mapping):
 			contentObject = create_from_external(externalValue, notify=False)
 			contentObject = self.checkContentObject(contentObject, externalValue)
 			self._set_creator(contentObject, creator)
@@ -1369,10 +1381,19 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		"""
 		Convert and create a timeline ref that can be stored in our overview group.
 		"""
-		timeline_ref = INTITimelineRef( timeline )
+		timeline_ref = INTITimelineRef(timeline)
 		intid_register(timeline_ref, registry=self._registry)
-		self._finish_creating_object( timeline_ref, creator, extended, INTITimelineRef, externalValue )
+		self._finish_creating_object(timeline_ref, creator, extended, INTITimelineRef, externalValue)
 		return timeline_ref
+
+	def _convert_relatedwork_to_pointer(self, relatedwork, creator, extended, externalValue):
+		"""
+		Convert and create a relatedwork ref that can be stored in our overview group.
+		"""
+		asset_ref = INTIRelatedWorkRefPointer(relatedwork)
+		intid_register(asset_ref, registry=self._registry)
+		self._finish_creating_object(asset_ref, creator, extended, INTIRelatedWorkRefPointer, externalValue)
+		return asset_ref
 
 	def _finish_creating_object(self, obj, creator, extended, provided, externalValue):
 		"""
@@ -1403,28 +1424,33 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		# XXX: Multi-part data must be done after the object has been registered
 		# with the InitId facility in order to set file associations
 		sources = get_all_sources(self.request)
-		if sources:  # multi-part data
+		if sources: # multi-part data
 			validate_sources(self.remoteUser, contentObject, sources)
 			_handle_multipart(self._course, self.remoteUser, contentObject, sources)
 
 		parent = self.context.__parent__
 		extended = (self.context.ntiid,) + ((parent.ntiid,) if parent is not None else ())
 
-		self._finish_creating_object( contentObject, creator, extended, provided, externalValue )
-		if INTITimeline.providedBy( contentObject ):
-			contentObject = self._convert_timeline_to_timelineref( contentObject, creator,
-																   extended, externalValue )
+		self._finish_creating_object(contentObject, creator, extended, provided, externalValue)
+		if INTITimeline.providedBy(contentObject):
+			contentObject = self._convert_timeline_to_timelineref(contentObject, creator,
+																  extended, externalValue)
+		elif INTIRelatedWorkRef.providedBy(contentObject):
+			contentObject = self._convert_relatedwork_to_pointer(contentObject, creator,
+																 extended, externalValue)
 		self.context.insert(index, contentObject)
 
 		notify_modified(self.context, externalValue, external_keys=(ITEMS,))
 		self.request.response.status_int = 201
-		self.context.child_order_locked = True
+		self.context.childOrderLock() 
 
-		# We don't return media refs in the overview group; so don't here either.
+		# We don't return refs in the overview group; so don't here either.
 		if INTIMediaRef.providedBy(contentObject):
 			contentObject = INTIMedia(contentObject)
 		elif INTITimelineRef.providedBy(contentObject):
 			contentObject = INTITimeline(contentObject)
+		elif INTIRelatedWorkRefPointer.providedBy(contentObject):
+			contentObject = INTIRelatedWorkRef(contentObject)
 		elif INTISlideDeckRef.providedBy(contentObject):
 			contentObject = INTISlideDeck(contentObject)
 		return self.transformOutput(contentObject)
@@ -1436,12 +1462,12 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 			   request_method='GET',
 			   permission=nauth.ACT_CONTENT_EDIT,
 			   context=INTILessonOverview)
-class RecursiveCourseTransactionHistoryView( AbstractRecursiveTransactionHistoryView ):
+class RecursiveCourseTransactionHistoryView(AbstractRecursiveTransactionHistoryView):
 	"""
 	A batched view to get all edits that have occurred in the lesson, recursively.
 	"""
 
 	def _get_items(self):
 		result = []
-		self._accum_lesson_transactions( self.context, result )
+		self._accum_lesson_transactions(self.context, result)
 		return result

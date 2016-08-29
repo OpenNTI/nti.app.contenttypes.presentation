@@ -14,6 +14,8 @@ from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import same_instance
 
+from nti.testing.matchers import validly_provides
+
 import os
 
 from zope import component
@@ -41,8 +43,6 @@ from nti.app.testing.application_webtest import ApplicationLayerTest
 
 from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 import nti.dataserver.tests.mock_dataserver as mock_dataserver
-
-from nti.schema.testing import validly_provides
 
 def _remove_from_registry(container_ntiids=None, provided=None, registry=None):
 	result = []
@@ -102,7 +102,7 @@ class TestSynchronizer(ApplicationLayerTest):
 		_, removed = _load_and_register_lesson_overview_json(source, registry=registry)
 		assert_that(removed, has_length(0))
 		_, removed = _load_and_register_lesson_overview_json(source, registry=registry)
-		assert_that(removed, has_length(12))
+		assert_that(removed, has_length(15))
 
 	@WithMockDSTrans
 	def test_lesson_sync_with_locks(self):
@@ -134,7 +134,7 @@ class TestSynchronizer(ApplicationLayerTest):
 
 		# 1. Insert new locked roll
 		new_roll = NTIVideoRoll()
-		new_roll.locked = True
+		new_roll.lock(False)
 		video_group.append( new_roll )
 
 		overview, removed = _load_and_register_lesson_overview_json(source, registry=registry)
@@ -151,9 +151,9 @@ class TestSynchronizer(ApplicationLayerTest):
 		assert_that( roll_two, has_length( 0 ))
 
 		# 2. New video in original roll, index zero.
-		new_roll.locked = False
+		new_roll.unlock(False)
 		new_video = NTIVideo()
-		new_video.locked = True
+		new_video.lock(False)
 		new_video.title = new_video_title = 'my new video'
 		roll_one.insert( 0, new_video )
 
@@ -171,9 +171,9 @@ class TestSynchronizer(ApplicationLayerTest):
 
 		# 3. New roll at index zero. The original sync video roll
 		# retains it's videos.
-		new_video.locked = False
+		new_video.unlock(False)
 		new_roll2 = NTIVideoRoll()
-		new_roll2.locked = True
+		new_roll2.lock(False)
 		video_group.insert( 0, new_roll2 )
 
 		overview, removed = _load_and_register_lesson_overview_json(source, registry=registry)
@@ -191,9 +191,9 @@ class TestSynchronizer(ApplicationLayerTest):
 		assert_that( roll_two, has_length( 0 ))
 
 		# 4. User moves a video from one roll to another.
-		new_roll2.locked = False
+		new_roll2.unlock(False)
 		moved_video = roll_one[-1]
-		moved_video.locked = True
+		moved_video.lock(False)
 		roll_zero.append( moved_video )
 		roll_one.remove( moved_video )
 
@@ -212,9 +212,9 @@ class TestSynchronizer(ApplicationLayerTest):
 		assert_that( roll_two, has_length( 0 ))
 
 		# 5. Overview group added
-		moved_video.locked = False
+		moved_video.unlock(False)
 		new_group = NTICourseOverViewGroup()
-		new_group.locked = True
+		new_group.lock(False)
 		overview.append( new_group )
 
 		overview, removed = _load_and_register_lesson_overview_json(source, registry=registry)
@@ -223,24 +223,24 @@ class TestSynchronizer(ApplicationLayerTest):
 		assert_that( overview, is_( original_overview ))
 
 		# 6. Child order lock group.
-		new_group.locked = False
-		new_group.child_order_locked = True
+		new_group.unlock(False)
+		new_group.child_order_lock(False)
 		overview, removed = _load_and_register_lesson_overview_json(source, registry=registry)
 		assert_that( overview.items, has_length( 5 ))
 		assert_that( removed, has_length( 0 ))
 		assert_that( overview, is_( original_overview ))
 
 		# 7. Child order lock lesson.
-		new_group.child_order_locked = False
-		original_overview.child_order_locked = True
+		new_group.child_order_unlock(False)
+		original_overview.child_order_lock(False)
 		overview, removed = _load_and_register_lesson_overview_json(source, registry=registry)
 		assert_that( overview.items, has_length( 5 ))
 		assert_that( removed, has_length( 0 ))
 		assert_that( overview, is_( original_overview ))
 
 		# 8. Unlock and wipe
-		original_overview.child_order_locked = False
+		original_overview.child_order_unlock(False)
 		overview, removed = _load_and_register_lesson_overview_json(source, registry=registry)
 		assert_that( overview.items, has_length( 4 ))
-		assert_that( removed, has_length( 12 ))
+		assert_that( removed, has_length( 15 ))
 		assert_that( overview, is_not( same_instance( original_overview )))
