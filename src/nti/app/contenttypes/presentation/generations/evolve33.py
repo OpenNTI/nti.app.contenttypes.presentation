@@ -140,6 +140,8 @@ def do_evolve(context, generation=generation):
 		seen = set()
 		catalog = get_library_catalog()
 
+		logger.info('Evolution %s started.', generation)
+		
 		for current_site in get_all_host_sites():
 			with site(current_site):
 				result += _replace_with_refs(current_site, catalog, intids, seen)
