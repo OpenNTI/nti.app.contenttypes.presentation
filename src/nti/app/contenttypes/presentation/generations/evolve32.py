@@ -198,7 +198,7 @@ def do_evolve(context, generation=generation):
 			with site(current_site):
 				result += _fix_refs(current_site, catalog, intids, seen)
 
-		logger.info('Dataserver evolution %s done. %s item(s) fixed',
+		logger.info('Evolution %s done. %s item(s) fixed',
 					generation, result)
 
 def evolve(context):
