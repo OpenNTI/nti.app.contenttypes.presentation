@@ -1432,6 +1432,9 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		extended = (self.context.ntiid,) + ((parent.ntiid,) if parent is not None else ())
 
 		self._finish_creating_object(contentObject, creator, extended, provided, externalValue)
+		if contentObject.__parent__ is None: # in case there is no parent
+			contentObject.__parent__ = self.context
+
 		if INTITimeline.providedBy(contentObject):
 			contentObject = self._convert_timeline_to_timelineref(contentObject, creator,
 																  extended, externalValue)
