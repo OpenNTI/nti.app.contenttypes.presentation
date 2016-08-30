@@ -43,6 +43,7 @@ from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 
 from nti.ntiids.interfaces import INTIIDResolver
 
@@ -110,6 +111,9 @@ class _NTISlideDeckRefResolver(_PresentationResolver):
 class _NTIRelatedWorkRefResolver(_PresentationResolver):
 	_ext_iface = INTIRelatedWorkRef
 
+class _NTIRelatedWorkRefPointerResolver(_PresentationResolver):
+	_ext_iface = INTIRelatedWorkRefPointer
+	
 class _NTIDiscussionRefResolver(_PresentationResolver):
 	_ext_iface = INTIDiscussionRef
 
