@@ -106,6 +106,7 @@ from nti.contenttypes.presentation import RELATED_WORK_REF_MIMETYES
 from nti.contenttypes.presentation import NTI_LESSON_OVERVIEW
 
 from nti.contenttypes.presentation.interfaces import IVisible
+from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTITimeline
@@ -115,8 +116,9 @@ from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
-from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.coremetadata.interfaces import IPublishable
@@ -214,12 +216,27 @@ class OutlineLessonOverviewSummaryView(RecursiveUGDView, OutlineLessonOverviewMi
 			self.user = the_user or self.remoteUser
 			self.ntiid = the_ntiid or request.context.ntiid
 
+	def _key_ntiid(self, item):
+		if IAssetRef.providedBy(item):
+			return item.target
+		return item.ntiid
+
+	def _count_ntiids(self, item):
+		result = (item.ntiid,)
+		if IAssetRef.providedBy(item):
+			ref = find_object_with_ntiid(item.target)
+			if INTIRelatedWorkRef.providedBy(ref):
+				result = (ref.target, ref.ntiid)
+			else:
+				result = (item.target,)
+		return result
+	
 	def _do_count(self, item):
 		# With older content, we're not sure where the UGD
 		# may hang; so summarize per item.
 		count = 0
-		for ntiid_field in ('ntiid', 'target'):
-			self.ntiid = getattr(item, ntiid_field, None)
+		for ntiid in self._count_ntiids(item):
+			self.ntiid = ntiid
 			if self.ntiid:
 				try:
 					results = super(OutlineLessonOverviewSummaryView, self).__call__()
@@ -237,10 +254,11 @@ class OutlineLessonOverviewSummaryView(RecursiveUGDView, OutlineLessonOverviewMi
 		if not IPublishable.providedBy(lesson) or lesson.is_published():
 			self.user = self.remoteUser
 			mime_type = MIME_BASE + ".courses.overviewitemsummary"
-			for lesson_group in lesson.items or ():
-				for item in lesson_group.items or ():
+			for lesson_group in lesson or ():
+				for item in lesson_group or ():
 					ugd_count = self._do_count(item)
-					result[item.ntiid] = item_results = {}
+					ntiid = self._key_ntiid(item)
+					result[ntiid] = item_results = {}
 					item_results[CLASS] = 'OverviewItemSummary'
 					item_results[MIMETYPE] = mime_type
 					item_results[ITEM_COUNT] = ugd_count
