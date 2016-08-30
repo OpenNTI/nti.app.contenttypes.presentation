@@ -218,7 +218,7 @@ class OutlineLessonOverviewSummaryView(RecursiveUGDView, OutlineLessonOverviewMi
 		# With older content, we're not sure where the UGD
 		# may hang; so summarize per item.
 		count = 0
-		for ntiid_field in ('ntiid', 'target_ntiid'):
+		for ntiid_field in ('ntiid', 'target'):
 			self.ntiid = getattr(item, ntiid_field, None)
 			if self.ntiid:
 				try:
