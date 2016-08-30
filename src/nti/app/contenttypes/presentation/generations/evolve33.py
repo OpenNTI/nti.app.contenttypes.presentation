@@ -71,7 +71,7 @@ def _replace_with_refs(current_site, catalog, intids, seen):
 		# don't process legacy courses
 		lesson = group.__parent__
 		course = find_interface(lesson, ICourseInstance, strict=False)
-		if ILegacyCourseInstance.providedBy(course):
+		if ILegacyCourseInstance.providedBy(course) or course is None:
 			continue
 		entry = ICourseCatalogEntry(course)
 
