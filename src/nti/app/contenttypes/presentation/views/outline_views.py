@@ -113,12 +113,12 @@ from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
+from nti.contenttypes.presentation.interfaces import INTIDocketMixin
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
-from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.coremetadata.interfaces import IPublishable
@@ -225,7 +225,7 @@ class OutlineLessonOverviewSummaryView(RecursiveUGDView, OutlineLessonOverviewMi
 		result = (item.ntiid,)
 		if IAssetRef.providedBy(item):
 			ref = find_object_with_ntiid(item.target)
-			if INTIRelatedWorkRef.providedBy(ref):
+			if INTIDocketMixin.providedBy(ref):
 				result = (ref.target, ref.ntiid)
 			else:
 				result = (item.target,)
