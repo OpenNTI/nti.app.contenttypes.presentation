@@ -372,9 +372,9 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 			return True
 		return False
 
-	def _handle_relatedworkref_pointer(self, items, item, idx):
+	def _handle_relatedworkref_pointer(self, context, items, item, idx):
 		source = INTIRelatedWorkRef(item, None)
-		if source is not None:
+		if source is not None and self._allow_visible(context, source):
 			items[idx] = to_external_object(source)
 			return True
 		return False
@@ -405,7 +405,7 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 				and not self._handle_timeline_ref(items, item, idx):
 				removal.add(idx)
 			elif	INTIRelatedWorkRefPointer.providedBy(item) \
-				and not self._handle_relatedworkref_pointer(items, item, idx):
+				and not self._handle_relatedworkref_pointer(context, items, item, idx):
 				removal.add(idx)
 			elif	INTIAssignmentRef.providedBy(item) \
 				and not self.allow_assignmentref(context, item):
