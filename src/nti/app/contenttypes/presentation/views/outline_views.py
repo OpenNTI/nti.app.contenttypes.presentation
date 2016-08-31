@@ -163,12 +163,7 @@ class OutlineLessonOverviewMixin(object):
 
 	def _get_lesson(self):
 		context = self.request.context
-		ntiid = context.LessonOverviewNTIID
-		if not ntiid:
-			raise hexc.HTTPServerError(
-					_("Outline does not have a valid lesson overview."))
-
-		lesson = component.getUtility(INTILessonOverview, name=ntiid)
+		lesson = INTILessonOverview(context, None)
 		if lesson is None:
 			raise hexc.HTTPUnprocessableEntity(_("Cannot find lesson overview."))
 		return lesson
@@ -680,16 +675,6 @@ class AssetByOutlineNodeView(AbstractAuthenticatedView):
 	def _is_published(self, obj):
 		return not IPublishable.providedBy(obj) or obj.is_published()
 
-	def _get_lesson(self, ntiid):
-		"""
-		Return the lesson for the given ntiid, if published.
-		"""
-		result = None
-		lesson = find_object_with_ntiid(ntiid)
-		if 	lesson is not None and self._is_published(lesson):
-			result = lesson
-		return result
-
 	def _is_visible(self, item, course, record):
 		return 		not IVisible.providedBy(item) \
 				or  is_item_visible(item, self.remoteUser,
@@ -722,8 +707,8 @@ class AssetByOutlineNodeView(AbstractAuthenticatedView):
 			if ICourseOutlineContentNode.providedBy(node):
 				if node.src and node.ContentNTIID:
 					container_order.append(node.ContentNTIID)
-				lesson = self._get_lesson(node.LessonOverviewNTIID)
-				if lesson is not None:
+				lesson = INTILessonOverview(node, None)
+				if lesson is not None and self._is_published(lesson):
 					container_id = node.ContentNTIID or node.LessonOverviewNTIID
 					for group in lesson or ():
 						for item in group or ():
@@ -1063,8 +1048,7 @@ class SyncUnlockOutlineView(SyncLockOutlineView):
 		node.lock()
 		lifecycleevent.modified(node)
 		if do_lessons:
-			lesson = getattr(node, 'LessonOverviewNTIID', None) or u''
-			lesson = find_object_with_ntiid(lesson)
+			lesson = INTILessonOverview(node, None)
 			if lesson is not None:
 				lesson.unlock()
 				lesson.childOrderUnlock()
