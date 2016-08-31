@@ -477,6 +477,7 @@ def _get_item_content_package(item):
 class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	CONTENT_MIME_TYPE = u'application/vnd.nextthought.content'
+	EXTERNAL_LINK_IME_TYPE = u'application/vnd.nextthought.externallink'
 
 	@Lazy
 	def is_legacy_ipad(self):
@@ -491,7 +492,8 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		result = False
 		if INTITimeline.providedBy(obj) and not is_internal_file_link(obj.href or u''):
 			result = True
-		elif INTIRelatedWorkRef.providedBy(obj) and obj.type == self.CONTENT_MIME_TYPE:
+		elif 	INTIRelatedWorkRef.providedBy(obj) \
+			and obj.type in (self.EXTERNAL_LINK_IME_TYPE, self.CONTENT_MIME_TYPE):
 			result = True
 		return result
 
