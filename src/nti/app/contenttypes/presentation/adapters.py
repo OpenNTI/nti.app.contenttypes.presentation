@@ -29,6 +29,7 @@ from nti.contenttypes.presentation import iface_of_asset
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
+from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTIAudio 
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIVideo
@@ -39,6 +40,7 @@ from nti.contenttypes.presentation.interfaces import INTIVideoRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
+from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import INTIInquiryRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionRef
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
@@ -147,6 +149,12 @@ def _timelineref_to_timeline(context):
 @component.adapter(INTIRelatedWorkRefPointer)
 def _relatedworkrefpointer_to_relatedworkref(context):
 	result = component.queryUtility(INTIRelatedWorkRef, name=context.target)
+	return result
+
+@component.adapter(IAssetRef)
+@interface.implementer(IConcreteAsset)
+def _reference_to_concrete(context):
+	result = component.queryUtility(IPresentationAsset, name=context.target)
 	return result
 
 @component.adapter(IPresentationAsset)

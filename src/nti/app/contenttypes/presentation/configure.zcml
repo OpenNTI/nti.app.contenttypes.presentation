@@ -33,6 +33,7 @@
 	<adapter factory=".adapters._videoref_to_video" />
 	<adapter factory=".adapters._mediaref_to_media" />
 	<adapter factory=".adapters._surveyref_to_survey" />
+	<adapter factory=".adapters._reference_to_concrete" />
 	<adapter factory=".adapters._inquiryref_to_inquiry" />
 	<adapter factory=".adapters._questionref_to_question" />
 	<adapter factory=".adapters._slideckref_to_slidedeck" />
