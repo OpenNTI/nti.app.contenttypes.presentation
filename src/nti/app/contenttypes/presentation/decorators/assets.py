@@ -476,8 +476,8 @@ def _get_item_content_package(item):
 @interface.implementer(IExternalMappingDecorator)
 class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
-	CONTENT_MIME_TYPE = u'application/vnd.nextthought.content'
-	EXTERNAL_LINK_IME_TYPE = u'application/vnd.nextthought.externallink'
+	CONTENT_MIME_TYPE = b'application/vnd.nextthought.content'
+	EXTERNAL_LINK_IME_TYPE = b'application/vnd.nextthought.externallink'
 
 	@Lazy
 	def is_legacy_ipad(self):
