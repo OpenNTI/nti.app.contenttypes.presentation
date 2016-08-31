@@ -906,14 +906,14 @@ class TestAssetViews(ApplicationLayerTest):
 
 		# Now an external link
 		external_link = dict( non_target_source )
-		external_link['href'] = 'www.google.com'
+		external_link['href'] = 'http://www.google.com'
 		external_link['targetMimeType'] = "application/vnd.nextthought.externallink"
 		res = self.testapp.post_json(contents_link, external_link, status=201)
 		res = res.json_body
 		ref_ntiid = res.get( 'NTIID' )
 		assert_that( ref_ntiid, not_none() )
-		assert_that( res.get('href'), is_( 'www.google.com' ) )
-		assert_that( res.get('target'), is_not( 'www.google.com' ) )
+		assert_that( res.get('href'), is_( 'http://www.google.com' ) )
+		assert_that( res.get('target'), is_not( 'http://www.google.com' ) )
 		assert_that( res.get('type'), is_( "application/vnd.nextthought.externallink" ) )
 
 		internal_link = dict( non_target_source )
