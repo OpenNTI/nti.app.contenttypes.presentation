@@ -109,16 +109,15 @@ from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
-from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
+from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import INTIDocketMixin
-from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
+from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
-from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.coremetadata.interfaces import IPublishable
@@ -224,7 +223,7 @@ class OutlineLessonOverviewSummaryView(RecursiveUGDView, OutlineLessonOverviewMi
 	def _count_ntiids(self, item):
 		result = (item.ntiid,)
 		if IAssetRef.providedBy(item):
-			ref = find_object_with_ntiid(item.target)
+			ref = IConcreteAsset(item, None)
 			if INTIDocketMixin.providedBy(ref):
 				result = (ref.target, ref.ntiid)
 			else:
@@ -670,17 +669,12 @@ class AssetByOutlineNodeView(AbstractAuthenticatedView):
 		"""
 		Convert refs to objects the clients expect.
 		"""
-		result = item
-		if IMediaRef.providedBy(item):
+		if INTIAssessmentRef.providedBy(item):
+			result = find_object_with_ntiid(item.target)
+		elif IMediaRef.providedBy(item):
 			result = INTIMedia(item)
-		elif INTISlideDeckRef.providedBy(item):
-			result = INTISlideDeck(item)
-		elif INTITimelineRef.providedBy(item):
-			result = INTITimeline(item)
-		elif INTIAssignmentRef.providedBy(item):
-			result = find_object_with_ntiid(item.target)
-		elif INTIQuestionSetRef.providedBy(item):
-			result = find_object_with_ntiid(item.target)
+		else:
+			result = IConcreteAsset(item, item)
 		return result
 
 	def _is_published(self, obj):
@@ -690,22 +684,21 @@ class AssetByOutlineNodeView(AbstractAuthenticatedView):
 		"""
 		Return the lesson for the given ntiid, if published.
 		"""
-		lesson = find_object_with_ntiid(ntiid)
 		result = None
-		if 		lesson is not None \
-			and self._is_published(lesson):
+		lesson = find_object_with_ntiid(ntiid)
+		if 	lesson is not None and self._is_published(lesson):
 			result = lesson
 		return result
 
 	def _is_visible(self, item, course, record):
-		return 	not IVisible.providedBy(item) \
-			or  is_item_visible(item, self.remoteUser,
-								context=course, record=record)
+		return 		not IVisible.providedBy(item) \
+				or  is_item_visible(item, self.remoteUser,
+									context=course, record=record)
 
 	def _include(self, item, course, record):
-		return	self.mime_filter.include(item) \
-			and self._is_visible(item, course, record) \
-			and self._include_assessment(item)
+		return		self.mime_filter.include(item) \
+				and self._is_visible(item, course, record) \
+				and self._include_assessment(item)
 
 	def _do_call(self, course, record):
 		result = LocatedExternalDict()
@@ -1040,8 +1033,7 @@ class SyncLockOutlineView(AbstractAuthenticatedView,
 		node.lock()
 		lifecycleevent.modified(node)
 		if do_lessons:
-			lesson = getattr(node, 'LessonOverviewNTIID', None) or u''
-			lesson = find_object_with_ntiid(lesson)
+			lesson = INTILessonOverview(node, None)
 			if lesson is not None:
 				lesson.lock()
 				lifecycleevent.modified(lesson)

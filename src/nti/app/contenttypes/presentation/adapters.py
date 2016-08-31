@@ -28,6 +28,7 @@ from nti.assessment.interfaces import IQAssignment
 from nti.contenttypes.presentation import iface_of_asset
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 
 from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTIAudio 
@@ -155,6 +156,13 @@ def _relatedworkrefpointer_to_relatedworkref(context):
 @interface.implementer(IConcreteAsset)
 def _reference_to_concrete(context):
 	result = component.queryUtility(IPresentationAsset, name=context.target)
+	return result
+
+@component.adapter(ICourseOutlineNode)
+@interface.implementer(INTILessonOverview)
+def _outlinenode_to_lesson(context):
+	ntiid = getattr(context, 'LessonOverviewNTIID', None)
+	result = component.queryUtility(INTILessonOverview, name=ntiid or u'')
 	return result
 
 @component.adapter(IPresentationAsset)
