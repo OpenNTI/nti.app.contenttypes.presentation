@@ -158,6 +158,7 @@ from nti.contenttypes.presentation.interfaces import OverviewGroupMovedEvent
 from nti.contenttypes.presentation.interfaces import PresentationAssetMovedEvent
 from nti.contenttypes.presentation.interfaces import PresentationAssetCreatedEvent
 from nti.contenttypes.presentation.interfaces import WillUpdatePresentationAssetEvent
+from nti.contenttypes.presentation.interfaces import ItemRemovedFromItemAssetContainerEvent
 
 from nti.contenttypes.presentation.internalization import internalization_ntiaudioref_pre_hook
 from nti.contenttypes.presentation.internalization import internalization_ntivideoref_pre_hook
@@ -1202,6 +1203,7 @@ class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
 		else:
 			self.context.pop(index)
 		remove_presentation_asset(item)
+		event_notify(ItemRemovedFromItemAssetContainerEvent(self.context, item))
 
 # ordered contents
 

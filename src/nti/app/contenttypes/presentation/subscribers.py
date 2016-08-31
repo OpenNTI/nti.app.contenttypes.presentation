@@ -215,9 +215,7 @@ def _on_will_remove_presentation_asset(asset, event):
 		else:
 			containers = (context,)
 		for container in containers:
-			if IItemAssetContainer.providedBy(container):
-				# XXX: Remove underlying asset just in case
-				container.remove(asset)
+			if IItemAssetContainer.providedBy(container) and container.remove(asset):
 				# XXX: notify the item asset container has been modified
 				notify(ItemRemovedFromItemAssetContainerEvent(container, asset))
 			else:
