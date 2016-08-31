@@ -136,6 +136,7 @@ from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import INTIVideoRoll
+from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import INTIInquiryRef
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
@@ -1448,14 +1449,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		self.context.childOrderLock() 
 
 		# We don't return refs in the overview group; so don't here either.
-		if INTIMediaRef.providedBy(contentObject):
-			contentObject = INTIMedia(contentObject)
-		elif INTITimelineRef.providedBy(contentObject):
-			contentObject = INTITimeline(contentObject)
-		elif INTIRelatedWorkRefPointer.providedBy(contentObject):
-			contentObject = INTIRelatedWorkRef(contentObject)
-		elif INTISlideDeckRef.providedBy(contentObject):
-			contentObject = INTISlideDeck(contentObject)
+		contentObject = IConcreteAsset(contentObject, contentObject)
 		return self.transformOutput(contentObject)
 
 @view_config(name=VIEW_RECURSIVE_AUDIT_LOG)
