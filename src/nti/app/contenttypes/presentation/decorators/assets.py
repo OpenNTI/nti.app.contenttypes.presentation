@@ -78,6 +78,7 @@ from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import INTISlideVideo
+from nti.contenttypes.presentation.interfaces import INTITranscript
 from nti.contenttypes.presentation.interfaces import INTIQuestionRef
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
@@ -481,12 +482,10 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	@Lazy
 	def is_legacy_ipad(self):
-		result = is_legacy_uas(self.request, LEGACY_UAS_40)
-		return result
+		return is_legacy_uas(self.request, LEGACY_UAS_40)
 
 	def _predicate(self, context, result):
-		result = self._is_authenticated
-		return result
+		return self._is_authenticated
 
 	def _should_process(self, obj):
 		result = False
@@ -509,6 +508,23 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 					value = urljoin(location, value)
 					if self.is_legacy_ipad:  # for legacy ipad
 						value = urljoin(self.request.host_url, value)
+					result[name] = value
+
+@component.adapter(INTITranscript, IRequest)
+@interface.implementer(IExternalMappingDecorator)
+class _NTITranscriptURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
+
+	def _predicate(self, context, result):
+		return self._is_authenticated
+
+	def _do_decorate_external(self, context, result):
+		package = find_interface(context, IContentPackage, strict=False)
+		if package is not None:
+			location = IContentUnitHrefMapper(package.key.bucket).href  # parent
+			for name in ('src', 'srcjsonp'):
+				value = getattr(context, name, None)
+				if value and not value.startswith('/') and '://' not in value:
+					value = urljoin(location, value)
 					result[name] = value
 
 @component.adapter(INTITimeline, IRequest)
