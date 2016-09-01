@@ -57,6 +57,7 @@ from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIMediaRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
+from nti.contenttypes.presentation.interfaces import IConcreteAsset 
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -287,11 +288,12 @@ def _is_lesson_sync_locked(existing_overview):
 	# Currently only return first locked item for efficiency.
 	locked_items = []
 	def _recur(item):
-		if 	_is_obj_locked(item) or _is_child_order_locked(item):
+		item = IConcreteAsset(item, item)
+		if _is_obj_locked(item) or _is_child_order_locked(item):
 			locked_items.append(item.ntiid)
 			return True
-		children = getattr(item, 'Items', None) or ()
-		for child in children:
+		children = getattr(item, 'Items', None)
+		for child in children or ():
 			if _recur(child):
 				return True
 		return False
