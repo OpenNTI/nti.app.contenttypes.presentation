@@ -109,6 +109,7 @@ class TestMedia(unittest.TestCase):
 		assert_that(ntiaudio, has_property('sources', has_length(1)))
 		source = ntiaudio.sources[0]
 
+		assert_that(source, has_property('__parent__', is_(ntiaudio)))
 		assert_that(source, has_property('service', is_(u"html5")))
 		assert_that(source, has_property('source', has_length(2)))
 		assert_that(source, has_property('type', has_length(2)))
