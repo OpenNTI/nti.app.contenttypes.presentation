@@ -13,7 +13,7 @@ from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import has_property
 
-from nti.schema.testing import validly_provides
+from nti.testing.matchers import validly_provides
 
 import os
 import copy
@@ -68,6 +68,7 @@ class TestMedia(unittest.TestCase):
 		assert_that(ntivideo, has_property('sources', has_length(1)))
 		source = ntivideo.sources[0]
 
+		assert_that(source, has_property('__parent__', is_(ntivideo)))
 		assert_that(source, has_property('service', is_(u"kaltura")))
 		assert_that(source, has_property('source', is_(["1500101:0_hwfe5zjr"])))
 		assert_that(source, has_property('poster', is_(u"//www.kaltura.com/p/1500101/thumbnail/entry_id/0_hwfe5zjr/width/1280/")))
@@ -78,6 +79,7 @@ class TestMedia(unittest.TestCase):
 
 		assert_that(ntivideo, has_property('transcripts', has_length(1)))
 		transcript = ntivideo.transcripts[0]
+		assert_that(transcript, has_property('__parent__', is_(ntivideo)))
 		assert_that(transcript, has_property('srcjsonp', is_(u"resources/LSTD1153_S_2015_History_United_States_1865_to_Present/cd0332efcd704487fab382b76fdc0523fb2dad7e/9b3fe7737c9828ea6a552664d89b26bc8de8a15e.jsonp")))
 		assert_that(transcript, has_property('src', is_(u"resources/LSTD1153_S_2015_History_United_States_1865_to_Present/cd0332efcd704487fab382b76fdc0523fb2dad7e/90784fa2c5c148922446e05d45ff35f0aee3e69b.vtt")))
 		assert_that(transcript, has_property('type', is_(u"text/vtt")))
