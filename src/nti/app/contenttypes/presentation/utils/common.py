@@ -53,8 +53,6 @@ from nti.site.hostpolicy import get_all_host_sites
 
 from nti.site.site import get_component_hierarchy_names
 
-from nti.site.utils import unregisterUtility
-
 ITEMS = StandardExternalFields.ITEMS
 INTID = StandardExternalFields.INTID
 NTIID = StandardExternalFields.NTIID
