@@ -49,7 +49,7 @@ from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import iface_of_asset
 
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
-from nti.contenttypes.presentation.interfaces import INTIDocketMixin
+from nti.contenttypes.presentation.interfaces import INTIDocketAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
@@ -311,7 +311,7 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None, sites=No
 	return result
 
 def check_docket_targets(asset):
-	if INTIDocketMixin.providedBy(asset) and not asset.target:
+	if INTIDocketAsset.providedBy(asset) and not asset.target:
 		href = asset.href
 		if IPloneNamed.providedBy(href):
 			asset.target = to_external_ntiid_oid(href)

@@ -64,7 +64,7 @@ from nti.contenttypes.presentation.interfaces import IWillUpdatePresentationAsse
 
 from nti.contenttypes.presentation.interfaces import INTIPollRef
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
-from nti.contenttypes.presentation.interfaces import INTIDocketMixin
+from nti.contenttypes.presentation.interfaces import INTIDocketAsset
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -233,7 +233,7 @@ def _on_will_remove_presentation_asset(asset, event):
 				if mapping is not None:
 					mapping.pop(asset.ntiid, None)
 
-@component.adapter(INTIDocketMixin, IWillUpdatePresentationAssetEvent)
+@component.adapter(INTIDocketAsset, IWillUpdatePresentationAssetEvent)
 def _on_will_update_presentation_asset(asset, event):
 	externalValue = event.externalValue or {}
 	for name in ('href', 'icon'):
@@ -251,7 +251,7 @@ def _on_content_file_removed(context, event):
 	oid = to_external_ntiid_oid(context)
 	href = to_external_file_link(context)
 	for obj in context.associations():
-		if INTIDocketMixin.providedBy(obj):
+		if INTIDocketAsset.providedBy(obj):
 			if obj.target == oid or obj.href == href:
 				if INTIRelatedWorkRef.providedBy( obj ):
 					obj.type = None

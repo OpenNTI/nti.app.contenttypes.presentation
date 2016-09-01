@@ -105,15 +105,15 @@ from nti.contenttypes.presentation import RELATED_WORK_REF_MIMETYES
 
 from nti.contenttypes.presentation import NTI_LESSON_OVERVIEW
 
+from nti.contenttypes.presentation.interfaces import IPointer
 from nti.contenttypes.presentation.interfaces import IVisible
-from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
-from nti.contenttypes.presentation.interfaces import INTIDocketMixin
+from nti.contenttypes.presentation.interfaces import INTIDocketAsset
 from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
 from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
@@ -211,15 +211,15 @@ class OutlineLessonOverviewSummaryView(RecursiveUGDView, OutlineLessonOverviewMi
 			self.ntiid = the_ntiid or request.context.ntiid
 
 	def _key_ntiid(self, item):
-		if IAssetRef.providedBy(item):
+		if IPointer.providedBy(item):
 			return item.target
 		return item.ntiid
 
 	def _count_ntiids(self, item):
 		result = (item.ntiid,)
-		if IAssetRef.providedBy(item):
-			ref = IConcreteAsset(item, None)
-			if INTIDocketMixin.providedBy(ref):
+		if IPointer.providedBy(item):
+			ref = IConcreteAsset(item, item)
+			if INTIDocketAsset.providedBy(ref):
 				result = (ref.target, ref.ntiid)
 			else:
 				result = (item.target,)
