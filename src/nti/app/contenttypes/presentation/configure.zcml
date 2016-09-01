@@ -138,8 +138,9 @@
 
 	<subscriber handler=".subscribers._on_course_instance_available" />
 
-	<subscriber handler=".subscribers.on_asset_moved" />
-	<subscriber handler=".subscribers.on_group_moved" />
+	<subscriber handler=".subscribers._on_asset_moved" />
+	<subscriber handler=".subscribers._on_group_moved" />
+	<subscriber handler=".subscribers._on_asset_modified" />
 	<subscriber handler=".subscribers._on_presentation_asset_created" />
 	<subscriber handler=".subscribers._on_item_asset_containter_modified" />
 	<subscriber handler=".subscribers._on_will_remove_presentation_asset" />

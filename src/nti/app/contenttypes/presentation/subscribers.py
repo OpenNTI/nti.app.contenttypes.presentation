@@ -186,14 +186,14 @@ def _on_presentation_asset_created(asset, event):
 		record_transaction(asset, principal=event.principal, type_=TRX_TYPE_CREATE)
 
 @component.adapter(INTICourseOverviewGroup, IOverviewGroupMovedEvent)
-def on_group_moved(group, event):
+def _on_group_moved(group, event):
 	ntiid = getattr(group, 'ntiid', None)
 	if ntiid:
 		record_transaction(group, principal=event.principal,
 						   type_=TRX_OVERVIEW_GROUP_MOVE_TYPE)
 
 @component.adapter(IPresentationAsset, IPresentationAssetMovedEvent)
-def on_asset_moved(asset, event):
+def _on_asset_moved(asset, event):
 	ntiid = getattr(asset, 'ntiid', None)
 	# Update our index. IPresentationAssets are the only movable
 	# entity that needs to update its index containers.
@@ -205,6 +205,16 @@ def on_asset_moved(asset, event):
 	if ntiid:
 		record_transaction(asset, principal=event.principal,
 						   type_=TRX_ASSET_MOVE_TYPE)
+
+@component.adapter(IPresentationAsset, IObjectModifiedEvent)
+def _on_asset_modified(asset, event):
+	if current_principal() is not None:
+		catalog = get_library_catalog()
+		containers = catalog.get_containers(asset)
+		for ntiid in containers or ():
+			obj = find_object_with_ntiid(ntiid)
+			if INTILessonOverview.providedBy(obj):
+				obj.lock() # lesson
 
 @component.adapter(IPresentationAsset, IWillRemovePresentationAssetEvent)
 def _on_will_remove_presentation_asset(asset, event):
