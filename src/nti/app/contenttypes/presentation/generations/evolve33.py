@@ -31,8 +31,11 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
-from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef,\
-	INTITimelineRef, IConcreteAsset, INTIMedia, INTIVideoRef
+from nti.contenttypes.presentation.interfaces import INTIMedia
+from nti.contenttypes.presentation.interfaces import INTIVideoRef
+from nti.contenttypes.presentation.interfaces import IConcreteAsset
+from nti.contenttypes.presentation.interfaces import INTITimelineRef
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
@@ -61,6 +64,18 @@ class MockDataserver(object):
 			return resolver.get_object_by_oid(oid, ignore_creator=ignore_creator)
 		return None
 
+def _fix_media(current_site, seen):
+	registry = current_site.getSiteManager()
+	for ntiid, media in list(registry.getUtilitiesFor(INTIMedia)):
+		if ntiid in seen:
+			continue
+		seen.add(ntiid)
+		for name in ('transcripts', 'sources'):
+			things = getattr(media, name, None)
+			for thing in things or ():
+				thing.__parent__ = media
+		continue
+		
 def _replace_with_refs(current_site, catalog, intids, seen):
 	result = 0
 	registry = current_site.getSiteManager()
@@ -85,13 +100,6 @@ def _replace_with_refs(current_site, catalog, intids, seen):
 		for idx, item in enumerate(group or ()): # mutating
 			containers = {group.ntiid, lesson.ntiid}
 			containers.update(group_containers)
-			
-			if INTIMedia.providedBy(item):
-				for name in ('transcripts', 'sources'):
-					things = getattr(item, name, None)
-					for thing in things or ():
-						thing.__parent__ = item
-				continue
 
 			if 		INTIRelatedWorkRefPointer.providedBy(item) \
 				or	INTITimelineRef.providedBy(item) \
@@ -168,6 +176,7 @@ def do_evolve(context, generation=generation):
 		
 		for current_site in get_all_host_sites():
 			with site(current_site):
+				_fix_media(current_site, seen)
 				result += _replace_with_refs(current_site, catalog, intids, seen)
 
 		logger.info('Evolution %s done. %s item(s) fixed',
