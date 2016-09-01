@@ -32,7 +32,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef,\
-	INTITimelineRef, IConcreteAsset
+	INTITimelineRef, IConcreteAsset, INTIMedia, INTIVideoRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
@@ -86,8 +86,16 @@ def _replace_with_refs(current_site, catalog, intids, seen):
 			containers = {group.ntiid, lesson.ntiid}
 			containers.update(group_containers)
 			
+			if INTIMedia.providedBy(item):
+				for name in ('transcripts', 'sources'):
+					things = getattr(item, name, None)
+					for thing in things or ():
+						thing.__parent__ = item
+				continue
+
 			if 		INTIRelatedWorkRefPointer.providedBy(item) \
-				or	INTITimelineRef.providedBy(item):
+				or	INTITimelineRef.providedBy(item) \
+				or	INTIVideoRef.providedBy(item):
 				concrete = IConcreteAsset(item, None)
 				if concrete is not None:
 					package = find_interface(concrete, IContentPackage, strict=False)
