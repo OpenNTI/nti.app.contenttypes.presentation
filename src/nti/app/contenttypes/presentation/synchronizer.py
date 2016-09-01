@@ -299,16 +299,22 @@ def _is_lesson_sync_locked(existing_overview):
 	result = _recur(existing_overview)
 	return result, locked_items
 
-def _add_2_package_containers(course, item, catalog):
+def _add_2_package_containers(course, item, catalog, container_ntiids=()):
 	packages = get_course_packages(course)
+	container_ntiids = set(container_ntiids or ())
 	if packages:
-		item.__parent__ = packages[0]  # pick first
-		container = _asset_container(packages[0])
+		# pick first / set lineage
+		main_pkg = packages[0]
+		item.__parent__ = main_pkg
+		# add in asset container
+		container = _asset_container(main_pkg)
 		container[item.ntiid] = item
+		# index
+		container_ntiids.add(main_pkg.ntiid)
 		catalog.index(item,
 					  sites=getSite().__name__,
-				  	  namespace=packages[0].ntiid,
-				  	  container_ntiids=(packages[0].ntiid,))
+				  	  namespace=main_pkg.ntiid,
+				  	  container_ntiids=container_ntiids)
 
 def _update_sync_results(lesson_ntiid, sync_results, lesson_locked):
 	field = 'LessonsSyncLocked' if lesson_locked else 'LessonsUpdated'
@@ -359,7 +365,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 
 		idx = 0
 		items = group.Items or ()
-
+		containers = {group.ntiid, overview.ntiid}
 		# canonicalize item refs
 		while idx < len(items):
 			item = items[idx]
@@ -422,7 +428,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 					# register underlying
 					assert ntiid, 'Must provide an ntiid'
 					_, registered = _do_register(item, registry)
-					_add_2_package_containers(course, registered, catalog)
+					_add_2_package_containers(course, registered, catalog, containers)
 					_intid_register(registered)
 					
 					# transform to timeline ref
