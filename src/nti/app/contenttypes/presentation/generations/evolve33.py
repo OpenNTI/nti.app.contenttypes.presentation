@@ -23,6 +23,7 @@ from ZODB.interfaces import IConnection
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
+from nti.contentlibrary.interfaces import IContentPackage
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -30,7 +31,8 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
-from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef,\
+	INTITimelineRef, IConcreteAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
@@ -81,6 +83,20 @@ def _replace_with_refs(current_site, catalog, intids, seen):
 
 		# loop through items
 		for idx, item in enumerate(group or ()): # mutating
+			containers = {group.ntiid, lesson.ntiid}
+			containers.update(group_containers)
+			
+			if 		INTIRelatedWorkRefPointer.providedBy(item) \
+				or	INTITimelineRef.providedBy(item):
+				concrete = IConcreteAsset(item, None)
+				if concrete is not None:
+					package = find_interface(concrete, IContentPackage, strict=False)
+					if package is not None:
+						containers.add(package.ntiid)
+					catalog.index(concrete,
+							  	  container_ntiids=containers)
+				continue
+
 			if not INTIRelatedWorkRef.providedBy(item):
 				continue
 			containers = {group.ntiid, lesson.ntiid}
