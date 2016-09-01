@@ -148,8 +148,9 @@ def get_registry_4_item(item, provided, name, registry=None):
 	return registry
 registry4 = get_registry_4_item
 
-def remove_asset(item, registry=None, catalog=None, name=None):
-	notify(WillRemovePresentationAssetEvent(item))
+def remove_asset(item, registry=None, catalog=None, name=None, event=True):
+	if event:
+		notify(WillRemovePresentationAssetEvent(item))
 	# remove utility
 	name = item.ntiid or name
 	provided = iface_of_asset(item)
@@ -163,7 +164,7 @@ def remove_asset(item, registry=None, catalog=None, name=None):
 	# broadcast removed
 	notify_removed(item)  # remove intid
 
-def remove_mediaroll(item, registry=None, catalog=None, name=None):
+def remove_mediaroll(item, registry=None, catalog=None, name=None, event=True):
 	if isinstance(item, six.string_types):
 		item = component.queryUtility(INTIMediaRoll, name=item)
 	if item is None:
@@ -173,11 +174,12 @@ def remove_mediaroll(item, registry=None, catalog=None, name=None):
 	catalog = get_library_catalog() if catalog is None else catalog
 	# remove mediarefs first
 	for media in tuple(item):  # mutating
-		remove_asset(media, registry, catalog)
+		remove_asset(media, registry, catalog, event=event)
 	# remove roll
-	remove_asset(item, registry, catalog, name=name)
+	remove_asset(item, registry, catalog, name=name, event=event)
 
-def remove_group(group, registry=None, catalog=None, package=False, name=None):
+def remove_group(group, registry=None, catalog=None, package=False, 
+				 name=None, event=True):
 	if isinstance(group, six.string_types):
 		group = component.queryUtility(INTICourseOverviewGroup, name=group)
 	if group is None:
@@ -189,13 +191,14 @@ def remove_group(group, registry=None, catalog=None, package=False, name=None):
 	for item in tuple(group):  # mutating
 		provided = iface_of_asset(item)
 		if INTIMediaRoll.providedBy(item):
-			remove_mediaroll(item, registry, catalog)
+			remove_mediaroll(item, registry, catalog, event=event)
 		elif package or provided not in PACKAGE_CONTAINER_INTERFACES:
-			remove_asset(item, registry, catalog)
+			remove_asset(item, registry, catalog, event=event)
 	# remove groups
-	remove_asset(group, registry, catalog, name=name)
+	remove_asset(group, registry, catalog, name=name, event=event)
 
-def remove_lesson(item, registry=None, catalog=None, package=False, name=None):
+def remove_lesson(item, registry=None, catalog=None, package=False, 
+				  name=None, event=True):
 	if isinstance(item, six.string_types):
 		item = component.queryUtility(INTILessonOverview, name=item)
 	if item is None:
@@ -205,20 +208,20 @@ def remove_lesson(item, registry=None, catalog=None, package=False, name=None):
 	catalog = get_library_catalog() if catalog is None else catalog
 	# remove groups first
 	for group in tuple(item):  # mutating
-		remove_group(group, registry, catalog, package=package)
+		remove_group(group, registry, catalog, package=package, event=event)
 	# remove asset
-	remove_asset(item, registry, catalog, name=name)
+	remove_asset(item, registry, catalog, name=name, event=event)
 
 def remove_presentation_asset(item, registry=None, catalog=None,
-							  package=False, name=None):
+							  package=False, name=None, event=True):
 	if INTILessonOverview.providedBy(item):
-		remove_lesson(item, registry, catalog, package=package, name=name)
+		remove_lesson(item, registry, catalog, package=package, name=name, event=event)
 	elif INTICourseOverviewGroup.providedBy(item):
-		remove_group(item, registry, catalog, package=package, name=name)
+		remove_group(item, registry, catalog, package=package, name=name, event=event)
 	elif INTIMediaRoll.providedBy(item):
-		remove_mediaroll(item, registry, catalog, name=name)
+		remove_mediaroll(item, registry, catalog, name=name, event=event)
 	else:
-		remove_asset(item, registry, catalog, name=name)
+		remove_asset(item, registry, catalog, name=name, event=event)
 
 def make_asset_ntiid(nttype, creator=SYSTEM_USER_ID, base=None, extra=None):
 	if type(nttype) == InterfaceClass:
