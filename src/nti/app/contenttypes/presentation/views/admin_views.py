@@ -33,12 +33,12 @@ from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtils
 
 from nti.app.contenttypes.presentation.synchronizer import can_be_removed
 from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
-from nti.app.contenttypes.presentation.synchronizer import remove_and_unindex_course_assets
 from nti.app.contenttypes.presentation.synchronizer import synchronize_course_lesson_overview
 
 from nti.app.contenttypes.presentation.utils import yield_sync_courses
 from nti.app.contenttypes.presentation.utils import remove_presentation_asset
 
+from nti.app.contenttypes.presentation.utils.common import course_assets
 from nti.app.contenttypes.presentation.utils.common import remove_all_invalid_assets
 from nti.app.contenttypes.presentation.utils.common import remove_course_inaccessible_assets
 
@@ -55,10 +55,13 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.courses.utils import get_course_hierarchy
 
+from nti.contenttypes.presentation import iface_of_asset
+
 from nti.contenttypes.presentation.interfaces import ICoursePresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.dataserver import authorization as nauth
+
 from nti.dataserver.interfaces import IDataserverFolder
 
 from nti.externalization.interfaces import LocatedExternalDict
@@ -148,29 +151,24 @@ class ResetCoursePresentationAssetsView(_AbstractSyncAllLibrariesView):
 
 				registry = folder.getSiteManager()
 				entry = ICourseCatalogEntry(course)
-
+	
 				# remove registered assets
-				removed.extend(remove_and_unindex_course_assets(
-													container_ntiids=entry.ntiid,
-												 	course=course,
-												 	catalog=catalog,
-												 	registry=registry,
-												 	force=force))
+				for name, item, container in course_assets(course):
+					provided = iface_of_asset(item)
+					registered = component.queryUtility(provided, name)
+					if registered is None or can_be_removed(registered, force=force):
+						container.pop(name, None)
+						removed.append(item)
+						remove_presentation_asset(item, registry, catalog, 
+												  name=name, event=False)
+
 				# remove last mod keys
 				clear_namespace_last_modified(course, catalog)
-
-				# remove anything left in containers
-				container = IPresentationAssetContainer(course)
-				for ntiid, item in tuple(container.items()):  # mutating
-					if 		ICoursePresentationAsset.providedBy(item) \
-						and can_be_removed(item, force=force):
-						container.pop(ntiid, None)
-						remove_presentation_asset(item, registry, catalog)
-						removed.append(item)
 
 				# remove all transactions
 				for obj in removed:
 					remove_transaction_history(obj)
+
 				# keep total
 				total += len(removed)
 
