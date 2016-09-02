@@ -11,6 +11,7 @@ logger = __import__('logging').getLogger(__name__)
 
 import os
 import six
+import copy
 import time
 import simplejson
 from urlparse import urlparse
@@ -75,6 +76,8 @@ from nti.contenttypes.presentation.utils import create_lessonoverview_from_exter
 
 from nti.coremetadata.interfaces import IRecordable
 from nti.coremetadata.interfaces import IRecordableContainer
+
+from nti.externalization.externalization import to_external_object
 
 from nti.externalization.interfaces import StandardExternalFields
 
@@ -333,8 +336,10 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 
 	# read and parse json text
 	catalog = get_library_catalog()
-	data = simplejson.loads(_prepare_json_text(jtext))
-	overview = create_lessonoverview_from_external(data, notify=False)
+	jtext = _prepare_json_text(jtext)
+	json_data = simplejson.loads(jtext)
+	source_data = copy.deepcopy(json_data) # copy for tracking
+	overview = create_lessonoverview_from_external(json_data, notify=False)
 
 	existing_overview = registry.queryUtility(INTILessonOverview, name=overview.ntiid)
 	is_locked, locked_ntiids = _is_lesson_sync_locked(existing_overview)
@@ -353,7 +358,9 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 
 	# canonicalize group
 	groups = overview.Items or ()
+	json_groups = source_data.get(ITEMS)
 	for gdx, group in enumerate(groups):
+
 		# register course overview group
 		did_register_new_item, registered = _register_utility(group,
 											   				  INTICourseOverviewGroup,
@@ -367,7 +374,11 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 
 		idx = 0
 		items = group.Items or ()
+		json_items = json_groups[gdx].get(ITEMS)
+		
+		# base containers for group assets
 		containers = {group.ntiid, overview.ntiid}
+
 		# canonicalize item refs
 		while idx < len(items):
 			item = items[idx]
@@ -378,7 +389,8 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 				roll_item = item
 				# TODO: generalize media type
 				media_roll = NTIVideoRoll()
-
+				
+				# coalesce into a media roll
 				while _is_auto_roll_coalesce(roll_item):
 
 					# It should be ok if this is called multiple times on object.
@@ -388,8 +400,8 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 					# only contain refs
 					if INTIMedia.providedBy(registered):
 						# register media w/ course packges
-						_add_2_package_containers(course, registered, catalog)
 						_intid_register(registered)
+						_add_2_package_containers(course, registered, catalog)
 						# create mediaref and register it
 						media_ref = media_to_mediaref(registered)
 						_, registered = _do_register(media_ref, registry)
@@ -407,9 +419,11 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 					# Should always be new.
 					_do_register(media_roll, registry)
 					items[idx] = media_roll
+					json_items[idx] = to_external_object(media_roll, decorate=False)
 					idx += 1
 					# Make sure to update our index/delete contained indexes.
 					del items[idx:roll_idx]
+					del json_items[idx:roll_idx]
 					continue
 			elif INTIDiscussionRef.providedBy(item) and item.isCourseBundle() and ntiid:
 				specific = get_specific(ntiid)
@@ -440,12 +454,12 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 						item = INTIRelatedWorkRefPointer(registered)
 				# add to items
 				items[idx] = item
-
 			# register item
 			result, registered = _do_register(item, registry)
 			is_valid = _validate_ref(item, validate)
 			if not is_valid:  # don't include in the group
 				del items[idx]
+				del json_items[idx]
 				continue
 			elif not result:  # replace if registered before
 				items[idx] = registered
@@ -743,6 +757,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 	removed = []
 	nodes = _outline_nodes(course.Outline)
 	for node in nodes:
+		# process node
 		namespace = node.src
 		if not namespace:
 			# These are possibly the legacy calendar nodes. Stub the lesson out.
