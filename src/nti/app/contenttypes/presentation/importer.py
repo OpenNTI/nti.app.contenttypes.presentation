@@ -70,6 +70,9 @@ class LessonOverviewsImporter(BaseSectionImporter):
 		site = get_host_site(site_name)
 		return site
 
+	def _lesson_callback(self, lesson, source):
+		pass
+
 	def _do_import(self, context, source_filer, save_sources=True):
 		course = ICourseInstance(context)
 		entry = ICourseCatalogEntry(course)
@@ -92,7 +95,9 @@ class LessonOverviewsImporter(BaseSectionImporter):
 										 		 force=True)  # not merging
 
 				# load assets
-				lessons = synchronize_course_lesson_overview(course, buckets=(bucket,))
+				lessons = synchronize_course_lesson_overview(course, 
+															 buckets=(bucket,),
+															 lesson_callback=self._lesson_callback)
 				for lesson in lessons or ():
 					self._post_process_asset(lesson, source_filer, target_filer)
 
