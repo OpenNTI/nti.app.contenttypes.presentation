@@ -330,9 +330,9 @@ def _update_sync_results(lesson_ntiid, sync_results, lesson_locked):
 		getattr(lessons, field).append(lesson_ntiid)
 
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
-											validate=False, course=None, node=None,
-											sync_results=None, 
-											lesson_registered_callback=None):
+											validate=False, course=None,
+                                            node=None, sync_results=None, 
+											lesson_callback=None):
 	registry = get_site_registry(registry)
 
 	# read and parse json text
@@ -471,8 +471,8 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 			if not IPackagePresentationAsset.providedBy(item):
 				item.__parent__ = group
 
-	if lesson_registered_callback is not None: # lesson loaded callback
-		lesson_registered_callback(overview, source_data)
+	if lesson_callback is not None: # lesson loaded callback
+		lesson_callback(overview, source_data)
 	return overview, removed
 
 def _copy_remove_transactions(items, registry=None):
@@ -828,7 +828,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 											course=course,
 											ntiid=ref_ntiid,
 											registry=registry,
-											lesson_registered_callback=lesson_callback,
+											lesson_callback=lesson_callback,
 											**kwargs)
 			removed.extend(rmv)
 			result.append(overview)
