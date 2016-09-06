@@ -89,7 +89,7 @@ class LessonOverviewsImporter(BaseSectionImporter):
 		isPublished = parsed.get('isPublished') 
 		if isPublished:
 			if ICalendarPublishable.providedBy(asset):
-				if asset.publishBeginning:
+				if not asset.publishBeginning:
 					asset.publish(event=False)
 					modified = True
 			elif IPublishable.providedBy(asset):
