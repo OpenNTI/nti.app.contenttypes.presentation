@@ -12,6 +12,7 @@ logger = __import__('logging').getLogger(__name__)
 import os
 
 from zope import interface
+from zope import lifecycleevent
 
 from zope.component.hooks import site as current_site
 
@@ -45,6 +46,11 @@ from nti.contenttypes.presentation import iface_of_asset
 
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 
+from nti.coremetadata.interfaces import IRecordable 
+from nti.coremetadata.interfaces import IPublishable 
+from nti.coremetadata.interfaces import ICalendarPublishable
+from nti.coremetadata.interfaces import IRecordableContainer
+
 from nti.site.hostpolicy import get_host_site
 
 from nti.site.site import get_component_hierarchy_names
@@ -70,8 +76,27 @@ class LessonOverviewsImporter(BaseSectionImporter):
 		site = get_host_site(site_name)
 		return site
 
-	def _lesson_callback(self, lesson, source):
-		pass
+	def _asset_callback(self, asset, parsed):
+		modified = False
+		locked = parsed.get('isLocked')
+		if locked and IRecordable.providedBy(asset):
+			asset.lock(event=False)
+			modified = True
+		locked = parsed.get('isChildOrderLocked')
+		if locked and IRecordableContainer.providedBy(asset):
+			asset.childOrderLock(event=False)
+			modified = True
+		isPublished = parsed.get('isPublished') 
+		if isPublished:
+			if ICalendarPublishable.providedBy(asset):
+				if asset.publishBeginning:
+					asset.publish(event=False)
+					modified = True
+			elif IPublishable.providedBy(asset):
+				asset.publish(event=False)
+				modified = True
+		if modified:
+			lifecycleevent.notify(asset)
 
 	def _do_import(self, context, source_filer, save_sources=True):
 		course = ICourseInstance(context)
@@ -97,7 +122,7 @@ class LessonOverviewsImporter(BaseSectionImporter):
 				# load assets
 				lessons = synchronize_course_lesson_overview(course, 
 															 buckets=(bucket,),
-															 lesson_callback=self._lesson_callback)
+															 lesson_callback=self._asset_callback)
 				for lesson in lessons or ():
 					self._post_process_asset(lesson, source_filer, target_filer)
 
