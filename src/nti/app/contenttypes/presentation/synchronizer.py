@@ -331,7 +331,8 @@ def _update_sync_results(lesson_ntiid, sync_results, lesson_locked):
 
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 											validate=False, course=None, node=None,
-											sync_results=None):
+											sync_results=None, 
+											lesson_registered_callback=None):
 	registry = get_site_registry(registry)
 
 	# read and parse json text
@@ -470,6 +471,8 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 			if not IPackagePresentationAsset.providedBy(item):
 				item.__parent__ = group
 
+	if lesson_registered_callback is not None: # lesson loaded callback
+		lesson_registered_callback(overview, source_data)
 	return overview, removed
 
 def _copy_remove_transactions(items, registry=None):
@@ -723,7 +726,17 @@ def _add_buckets(course, buckets):
 	return buckets
 
 def synchronize_course_lesson_overview(course, intids=None, catalog=None,
-									   buckets=None, **kwargs):
+									   buckets=None, lesson_callback=None,
+									   **kwargs):
+	"""
+	Synchronize course lesson overviews
+	
+	:param course: Course to sync
+	:param intids: IntID facility
+	:param catalog: Presentation assets catalog index
+	:param buckets: Array of source buckets where lesson files are located
+	:param lesson_callback: Optional callback (lesson, json_data) 
+	"""
 	result = []
 	namespaces = set()
 	parent = get_parent_course(course)
@@ -808,13 +821,15 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 			logger.debug("Synchronizing %s", namespace)
 
 			index_text = sibling_key.readContents()
-			overview, rmv = _load_and_register_lesson_overview_json(index_text,
-																	node=node,
-																	validate=True,
-																	course=course,
-																	ntiid=ref_ntiid,
-																	registry=registry,
-																	**kwargs)
+			overview, rmv = _load_and_register_lesson_overview_json(
+											index_text,
+											node=node,
+											validate=True,
+											course=course,
+											ntiid=ref_ntiid,
+											registry=registry,
+											lesson_registered_callback=lesson_callback,
+											**kwargs)
 			removed.extend(rmv)
 			result.append(overview)
 
