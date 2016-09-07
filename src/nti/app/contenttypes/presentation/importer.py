@@ -16,6 +16,14 @@ from zope import lifecycleevent
 
 from zope.component.hooks import site as current_site
 
+from zope.security.interfaces import IPrincipal
+from zope.security.interfaces import NoInteraction 
+from zope.security.management import getInteraction
+
+from zope.security.management import system_user
+
+from nti.app.authentication import get_remote_user
+
 from nti.app.contenttypes.presentation.utils.asset import check_docket_targets
 
 from nti.app.contenttypes.presentation.synchronizer import clear_course_assets
@@ -51,6 +59,8 @@ from nti.coremetadata.interfaces import IPublishable
 from nti.coremetadata.interfaces import ICalendarPublishable
 from nti.coremetadata.interfaces import IRecordableContainer
 
+from nti.property.property import Lazy
+
 from nti.site.hostpolicy import get_host_site
 
 from nti.site.site import get_component_hierarchy_names
@@ -60,10 +70,22 @@ class LessonOverviewsImporter(BaseSectionImporter):
 
 	__LESSONS__ = 'Lessons'
 
+	@Lazy
+	def current_principal(self):
+		remoteUser = IPrincipal(get_remote_user(), None)
+		if remoteUser is None:
+			try:
+				remoteUser = getInteraction().participations[0].principal
+			except (NoInteraction, IndexError, AttributeError):
+				remoteUser = system_user
+		return remoteUser
+
 	def _post_process_asset(self, asset, source_filer, target_filer):
 		# save asset resources
 		provided = iface_of_asset(asset)
 		transfer_resources_from_filer(provided, asset, source_filer, target_filer)
+		# set creator
+		asset.creator = self.current_principal.id
 		# check 'children'
 		if IItemAssetContainer.providedBy(asset):
 			asset_items = asset.Items if asset.Items is not None else ()
