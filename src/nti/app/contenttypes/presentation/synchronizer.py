@@ -60,6 +60,7 @@ from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import IConcreteAsset 
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
+from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
@@ -103,6 +104,7 @@ from nti.site.utils import unregisterUtility
 from nti.traversal.traversal import find_interface
 
 ITEMS = StandardExternalFields.ITEMS
+ALLOWED_REGISTERED_REFERENCES = (INTIDiscussionRef, INTIAssessmentRef)
 
 def _prepare_json_text(s):
 	result = unicode(s, 'utf-8') if isinstance(s, bytes) else s
