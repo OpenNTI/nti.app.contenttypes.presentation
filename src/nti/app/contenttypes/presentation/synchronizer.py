@@ -124,7 +124,7 @@ can_be_removed = _can_be_removed
 
 def _unregister(registry, component=None, provided=None, name=None):
 	result = unregisterUtility(registry, provided=provided, name=name)
-	if not result:
+	if not result and provided not in ALLOWED_REGISTERED_REFERENCES:
 		logger.warn("Could not unregister (%s,%s) during sync, continuing...",
 					provided.__name__, name)
 	else:
