@@ -22,6 +22,7 @@ from zope.intid.interfaces import IIntIds
 from nti.contenttypes.presentation import iface_of_asset
 
 from nti.contenttypes.presentation.interfaces import IAssetRef
+from nti.contenttypes.presentation.interfaces import INTICourseOverviewSpacer
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
@@ -46,14 +47,15 @@ class MockDataserver(object):
 def _unregister_refs(current_site, intids, seen):
 	result = 0
 	registry = current_site.getSiteManager()
-	for name, item in list(registry.getUtilitiesFor(IAssetRef)):
-		if name in seen:
-			continue
-		seen.add(name)
-
-		provided = iface_of_asset(item)
-		if unregisterUtility(registry, provided=provided, name=name):
-			result += 1
+	for interface in (IAssetRef, INTICourseOverviewSpacer):
+		for name, item in list(registry.getUtilitiesFor(interface)):
+			if name in seen:
+				continue
+			seen.add(name)
+	
+			provided = iface_of_asset(item)
+			if unregisterUtility(registry, provided=provided, name=name):
+				result += 1
 
 	return result
 
@@ -87,6 +89,6 @@ def do_evolve(context, generation=generation):
 
 def evolve(context):
 	"""
-	Evolve to 33 by removing asset ref objects from registry
+	Evolve to 34 by removing asset ref objects from registry
 	"""
 	do_evolve(context, generation)
