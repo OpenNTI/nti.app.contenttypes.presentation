@@ -49,8 +49,6 @@ from nti.ntiids.interfaces import INTIIDResolver
 
 from nti.ntiids.ntiids import get_parts
 
-from nti.property.property import Lazy
-
 @interface.implementer(INTIIDResolver)
 class _PresentationResolver(object):
 
@@ -107,13 +105,13 @@ class _NTISlideDeckResolver(_PresentationResolver):
 
 class _NTISlideDeckRefResolver(_PresentationResolver):
 	_ext_iface = INTISlideDeckRef
-	
+
 class _NTIRelatedWorkRefResolver(_PresentationResolver):
 	_ext_iface = INTIRelatedWorkRef
 
 class _NTIRelatedWorkRefPointerResolver(_PresentationResolver):
 	_ext_iface = INTIRelatedWorkRefPointer
-	
+
 class _NTIDiscussionRefResolver(_PresentationResolver):
 	_ext_iface = INTIDiscussionRef
 
@@ -131,10 +129,6 @@ class _NTICourseBundleResolver(object):
 
 	separator = ':'
 
-	@Lazy
-	def remoteUser(self):
-		return get_remote_user()
-
 	def get_course(self, splits=()):
 		if splits and len(splits) >= 2: # by parts e.g Fall2015:BIOL_2124
 			result = get_course_by_relative_path_parts(*splits[:2])
@@ -150,7 +144,7 @@ class _NTICourseBundleResolver(object):
 		return None
 
 	def resolve(self, key):
-		user = self.remoteUser
+		user = get_remote_user()
 		if user is not None:
 			parts = get_parts(key) if key else None
 			specific = parts.specific if parts else None
