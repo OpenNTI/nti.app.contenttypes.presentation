@@ -320,6 +320,9 @@ def _add_2_container(context, item, packages=False):
 		result.append(entry.ntiid)
 	return result
 
+def _register_utility(registry, item, provided, name):
+	registerUtility(registry, item, provided, name=item.ntiid)
+
 def _canonicalize(items, creator, base=None, registry=None):
 	result = []
 	registry = get_site_registry(registry)
@@ -338,7 +341,7 @@ def _canonicalize(items, creator, base=None, registry=None):
 			item.creator = creator  # set creator before notify
 			_notify_created(item)
 			intid_register(item, registry)
-			registerUtility(registry, item, provided, name=item.ntiid)
+			_register_utility(registry, item, provided, name=item.ntiid)
 	return result
 
 def _handle_multipart(context, user, contentObject, sources, provided=None):
@@ -959,10 +962,10 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 
 		# add to connection and register
 		intid_register(contentObject, registry=self._registry)
-		registerUtility(self._registry,
-						component=contentObject,
-						provided=provided,
-						name=contentObject.ntiid)
+		_register_utility(self._registry,
+						  component=contentObject,
+						  provided=provided,
+						  name=contentObject.ntiid)
 
 		# handle multi-part data
 		if sources:
@@ -1254,10 +1257,10 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 
 		# add to connection and register
 		intid_register(contentObject, registry=self._registry)
-		registerUtility(self._registry,
-						provided=provided,
-						component=contentObject,
-						name=contentObject.ntiid)
+		_register_utility(self._registry,
+						  provided=provided,
+						  component=contentObject,
+						  name=contentObject.ntiid)
 
 		self._handle_overview_group(contentObject,
 									creator=creator,
@@ -1401,10 +1404,10 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		"""
 		Finish creating our object by firing events, registering, etc.
 		"""
-		registerUtility(self._registry,
-						provided=provided,
-						component=obj,
-						name=obj.ntiid)
+		_register_utility(self._registry,
+						  provided=provided,
+						  component=obj,
+						  name=obj.ntiid)
 		self._handle_asset(provided,
 						   obj,
 						   creator=creator,
