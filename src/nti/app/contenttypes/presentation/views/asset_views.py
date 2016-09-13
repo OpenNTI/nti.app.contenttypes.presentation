@@ -320,8 +320,9 @@ def _add_2_container(context, item, packages=False):
 		result.append(entry.ntiid)
 	return result
 
-def _register_utility(registry, item, provided, name):
-	registerUtility(registry, item, provided, name=item.ntiid)
+def _register_utility(registry, component=None, provided=None, name=None):
+	name = name or component.ntiid
+	registerUtility(registry, component, provided, name=name)
 
 def _canonicalize(items, creator, base=None, registry=None):
 	result = []
@@ -1450,7 +1451,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 
 		notify_modified(self.context, externalValue, external_keys=(ITEMS,))
 		self.request.response.status_int = 201
-		self.context.childOrderLock() 
+		self.context.childOrderLock()
 
 		# We don't return refs in the overview group; so don't here either.
 		contentObject = IConcreteAsset(contentObject, contentObject)
