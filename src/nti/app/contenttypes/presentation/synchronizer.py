@@ -54,18 +54,19 @@ from nti.contenttypes.courses.utils import get_course_hierarchy
 from nti.contenttypes.presentation import interface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
+from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIMediaRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import IConcreteAsset 
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
-from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+from nti.contenttypes.presentation.interfaces import INTICourseOverviewSpacer
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
@@ -104,7 +105,7 @@ from nti.site.utils import unregisterUtility
 from nti.traversal.traversal import find_interface
 
 ITEMS = StandardExternalFields.ITEMS
-ALLOWED_REGISTERED_REFERENCES = (INTIDiscussionRef, INTIAssessmentRef)
+NOT_ALLOWED_IN_REGISTRY_REFERENCES = (IAssetRef, INTICourseOverviewSpacer)
 
 def _prepare_json_text(s):
 	result = unicode(s, 'utf-8') if isinstance(s, bytes) else s
@@ -122,9 +123,15 @@ def _can_be_removed(registered, force=False):
 	return result
 can_be_removed = _can_be_removed
 
+def _allowed_in_registry(provided):
+	for interface in NOT_ALLOWED_IN_REGISTRY_REFERENCES:
+		if provided is not None and provided.isOrExtends(interface):
+			return True
+	return False
+
 def _unregister(registry, component=None, provided=None, name=None):
 	result = unregisterUtility(registry, provided=provided, name=name)
-	if not result and provided not in ALLOWED_REGISTERED_REFERENCES:
+	if not result and _allowed_in_registry(provided):
 		logger.warn("Could not unregister (%s,%s) during sync, continuing...",
 					provided.__name__, name)
 	else:
