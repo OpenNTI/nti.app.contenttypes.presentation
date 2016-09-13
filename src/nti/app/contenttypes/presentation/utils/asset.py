@@ -88,8 +88,8 @@ NOT_ALLOWED_IN_REGISTRY_REFERENCES = (IAssetRef, INTICourseOverviewSpacer)
 def allowed_in_registry(provided):
 	for interface in NOT_ALLOWED_IN_REGISTRY_REFERENCES:
 		if provided is not None and provided.isOrExtends(interface):
-			return True
-	return False
+			return False
+	return True
 
 def get_db_connection(registry=None):
 	registry = get_site_registry(registry)
