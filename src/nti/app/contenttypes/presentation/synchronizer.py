@@ -30,7 +30,8 @@ from nti.app.contenttypes.presentation.utils import db_connection
 from nti.app.contenttypes.presentation.utils import add_2_connection
 from nti.app.contenttypes.presentation.utils import create_lesson_4_node
 
-from nti.app.contenttypes.presentation.utils.asset import check_related_work_target
+from nti.app.contenttypes.presentation.utils.asset import allowed_in_registry
+from nti.app.contenttypes.presentation.utils.asset import check_docket_targets
 
 from nti.app.products.courseware.resources.utils import get_course_filer
 
@@ -54,7 +55,6 @@ from nti.contenttypes.courses.utils import get_course_hierarchy
 from nti.contenttypes.presentation import interface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
-from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIMediaRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
@@ -66,7 +66,6 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
-from nti.contenttypes.presentation.interfaces import INTICourseOverviewSpacer
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
@@ -105,7 +104,6 @@ from nti.site.utils import unregisterUtility
 from nti.traversal.traversal import find_interface
 
 ITEMS = StandardExternalFields.ITEMS
-NOT_ALLOWED_IN_REGISTRY_REFERENCES = (IAssetRef, INTICourseOverviewSpacer)
 
 def _prepare_json_text(s):
 	result = unicode(s, 'utf-8') if isinstance(s, bytes) else s
@@ -123,15 +121,9 @@ def _can_be_removed(registered, force=False):
 	return result
 can_be_removed = _can_be_removed
 
-def _allowed_in_registry(provided):
-	for interface in NOT_ALLOWED_IN_REGISTRY_REFERENCES:
-		if provided is not None and provided.isOrExtends(interface):
-			return True
-	return False
-
 def _unregister(registry, component=None, provided=None, name=None):
 	result = unregisterUtility(registry, provided=provided, name=name)
-	if not result and _allowed_in_registry(provided):
+	if not result and allowed_in_registry(provided):
 		logger.warn("Could not unregister (%s,%s) during sync, continuing...",
 					provided.__name__, name)
 	else:
@@ -621,7 +613,7 @@ def _set_internal_resource_from_filer(provided, obj, filer):
 				setattr(obj, field_name, href)
 				result[field_name] = href
 
-	check_related_work_target(obj)
+	check_docket_targets(obj)
 	return result
 
 def _index_overview_items(items, container_ntiids=None, namespace=None,

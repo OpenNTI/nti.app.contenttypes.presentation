@@ -48,10 +48,12 @@ from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
 from nti.contenttypes.presentation import iface_of_asset
 
+from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTIDocketAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+from nti.contenttypes.presentation.interfaces import INTICourseOverviewSpacer
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import WillRemovePresentationAssetEvent
 
@@ -80,6 +82,14 @@ from nti.site.utils import unregisterUtility
 from nti.traversal.traversal import find_interface
 
 from nti.zodb.containers import time_to_64bit_int
+
+NOT_ALLOWED_IN_REGISTRY_REFERENCES = (IAssetRef, INTICourseOverviewSpacer)
+
+def allowed_in_registry(provided):
+	for interface in NOT_ALLOWED_IN_REGISTRY_REFERENCES:
+		if provided is not None and provided.isOrExtends(interface):
+			return True
+	return False
 
 def get_db_connection(registry=None):
 	registry = get_site_registry(registry)
