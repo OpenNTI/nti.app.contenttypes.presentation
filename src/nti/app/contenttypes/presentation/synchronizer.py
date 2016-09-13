@@ -165,6 +165,8 @@ def _removed_registered(provided, name, intids=None, registry=None,
 removed_registered = _removed_registered
 
 def _register_utility(item, provided, ntiid, registry=None):
+	#if not allowed_in_registry(provided):
+	#	return (False, item)
 	if provided.providedBy(item):
 		registry = get_site_registry(registry)
 		registered = registry.queryUtility(provided, name=ntiid)
