@@ -13,6 +13,8 @@ from zope import component
 
 from zope.intid.interfaces import IIntIds
 
+from zope.mimetype.interfaces import IContentTypeAware
+
 from pyramid.view import view_config
 from pyramid.view import view_defaults
 
@@ -88,6 +90,7 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView, BatchingUtilsMixin
 		if not mimeTypes:
 			return True
 		else:
+			item = IContentTypeAware(item, item)
 			mt = getattr(item, 'mimeType', None) or getattr(item, 'mime_type', None)
 			if mt in mimeTypes:
 				return True
