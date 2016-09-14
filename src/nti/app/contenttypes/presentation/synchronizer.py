@@ -71,7 +71,6 @@ from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.contenttypes.presentation.media import NTIVideoRoll
-from nti.contenttypes.presentation.media import media_to_mediaref
 
 from nti.contenttypes.presentation.utils import create_lessonoverview_from_external
 
@@ -407,7 +406,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 						_intid_register(registered)
 						_add_2_package_containers(course, registered, catalog)
 						# create mediaref and register it
-						media_ref = media_to_mediaref(registered)
+						media_ref = INTIMediaRef(registered)
 						_, registered = _do_register(media_ref, registry)
 
 					if _validate_ref(registered, validate):
