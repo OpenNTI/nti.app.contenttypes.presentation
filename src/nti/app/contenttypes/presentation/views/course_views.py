@@ -20,6 +20,8 @@ from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.contenttypes.presentation.views import VIEW_ASSETS
 
+from nti.app.externalization.view_mixins import BatchingUtilsMixin
+
 from nti.common.maps import CaseInsensitiveDict
 
 from nti.contentlibrary.indexed_data import get_library_catalog
@@ -52,14 +54,18 @@ LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 			   name=VIEW_ASSETS,
 			   request_method='GET',
 			   permission=nauth.ACT_CONTENT_EDIT)
-class CoursePresentationAssetsView(AbstractAuthenticatedView):
+class CoursePresentationAssetsView(AbstractAuthenticatedView, BatchingUtilsMixin):
 
 	def _get_mimeTypes(self):
 		params = CaseInsensitiveDict(self.request.params)
-		result = params.get('accept') or params.get('mimeType')
-		if result:
-			result = set(result.split(','))
-		return result or ()
+		accept = params.get('accept') or params.get('mimeTypes') or u''
+		accept = accept.split(',') if accept else ()
+		if accept and '*/*' not in accept:
+			accept = {e.strip().lower() for e in accept if e}
+			accept.discard(u'')
+		else:
+			accept = ()
+		return accept
 
 	def _pkg_containers(self, pacakge):
 		result = []
@@ -87,6 +93,10 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView):
 				return True
 		return False
 
+	def _isBatching(self):
+		size, start = self._get_batch_size_start()
+		return bool(size is not None and start is not None)
+
 	def _yield_course_items(self, course, mimeTypes=()):
 		catalog = get_library_catalog()
 		intids = component.getUtility(IIntIds)
@@ -103,10 +113,11 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView):
 				yield item
 
 	def _do_call(self):
+		batching = self._isBatching()
 		result = LocatedExternalDict()
 		result.__name__ = self.request.view_name
 		result.__parent__ = self.request.context
-		self.request.acl_decoration = False  # decoration
+		self.request.acl_decoration = not batching  # decoration
 
 		mimeTypes = self._get_mimeTypes()
 		course = ICourseInstance(self.context)
@@ -115,8 +126,14 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView):
 		items.extend(x for x in self._yield_course_items(course, mimeTypes))
 		items.sort()  # natural order
 		lastModified = reduce(lambda x, y: max(x, getattr(y, 'lastModified', 0)), items, 0)
-		result[ITEM_COUNT] = result[TOTAL] = len(items)
-		result[LAST_MODIFIED] = result.lastModified =lastModified
+
+		if batching:
+			self._batch_items_iterable(result, items)
+		else:
+			result[ITEM_COUNT] = len(items)
+
+		result[TOTAL] = len(items)
+		result[LAST_MODIFIED] = result.lastModified = lastModified
 		return result
 
 	def __call__(self):
