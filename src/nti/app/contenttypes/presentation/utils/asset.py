@@ -188,7 +188,7 @@ def remove_mediaroll(item, registry=None, catalog=None, name=None, event=True):
 	# remove roll
 	remove_asset(item, registry, catalog, name=name, event=event)
 
-def remove_group(group, registry=None, catalog=None, package=False, 
+def remove_group(group, registry=None, catalog=None, package=False,
 				 name=None, event=True):
 	if isinstance(group, six.string_types):
 		group = component.queryUtility(INTICourseOverviewGroup, name=group)
@@ -207,7 +207,7 @@ def remove_group(group, registry=None, catalog=None, package=False,
 	# remove groups
 	remove_asset(group, registry, catalog, name=name, event=event)
 
-def remove_lesson(item, registry=None, catalog=None, package=False, 
+def remove_lesson(item, registry=None, catalog=None, package=False,
 				  name=None, event=True):
 	if isinstance(item, six.string_types):
 		item = component.queryUtility(INTILessonOverview, name=item)

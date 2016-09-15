@@ -24,6 +24,7 @@ from nti.appserver.pyramid_authorization import has_permission
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contentlibrary.interfaces import IContentUnit
+from nti.contentlibrary.interfaces import IContentPackage
 
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -33,6 +34,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.contenttypes.courses.utils import get_any_enrollment
 from nti.contenttypes.courses.utils import get_course_hierarchy
+from nti.contenttypes.courses.utils import get_content_unit_courses
 from nti.contenttypes.courses.utils import get_courses_for_packages
 from nti.contenttypes.courses.utils import is_course_instructor_or_editor
 
@@ -93,6 +95,11 @@ def get_courses(ntiids=()):
 	for ntiid in ntiids or ():
 		course = None
 		context = find_object_with_ntiid(ntiid)
+		if IContentPackage.providedBy( context ):
+			courses = get_content_unit_courses( context )
+			result.update( courses )
+			continue
+
 		if ICourseCatalogEntry.providedBy(context):
 			course = ICourseInstance(context, None)
 		elif ICourseInstance.providedBy(context):
