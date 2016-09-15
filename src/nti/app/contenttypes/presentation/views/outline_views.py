@@ -224,7 +224,7 @@ class OutlineLessonOverviewSummaryView(RecursiveUGDView, OutlineLessonOverviewMi
 			else:
 				result = (item.target,)
 		return result
-	
+
 	def _do_count(self, item):
 		# With older content, we're not sure where the UGD
 		# may hang; so summarize per item.
@@ -611,7 +611,7 @@ class AssetByOutlineNodeView(AbstractAuthenticatedView):
 
 	@Lazy
 	def _is_editor(self):
-		return has_permission(ACT_CONTENT_EDIT, self.request.context)
+		return has_permission(ACT_CONTENT_EDIT, self.course)
 
 	@Lazy
 	def record(self):
@@ -708,7 +708,9 @@ class AssetByOutlineNodeView(AbstractAuthenticatedView):
 				if node.src and node.ContentNTIID:
 					container_order.append(node.ContentNTIID)
 				lesson = INTILessonOverview(node, None)
-				if lesson is not None and self._is_published(lesson):
+				# Only want to return items if the lesson is
+				# published or we're an editor.
+				if lesson is not None and (self._is_editor or self._is_published(lesson)):
 					container_id = node.ContentNTIID or node.LessonOverviewNTIID
 					for group in lesson or ():
 						for item in group or ():
@@ -788,6 +790,14 @@ class MediaByOutlineNodeView(AssetByOutlineNodeView):
 	"""
 	Legacy view to fetch media by outline node.
 	"""
+
+	@Lazy
+	def course(self):
+		return ICourseInstance(self.request.context)
+
+	@Lazy
+	def _is_editor(self):
+		return has_permission(ACT_CONTENT_EDIT, self.course)
 
 	def _outline_nodes(self, course):
 		result = []
@@ -920,9 +930,10 @@ class MediaByOutlineNodeView(AssetByOutlineNodeView):
 					if obj is None or not obj.isPublished():
 						unpublished = True
 						break
-				if unpublished: # no need to keep checking the group
+				# No need to keep checking the group if unpublished and not editor.
+				if not self._is_editor and unpublished:
 					break
-	
+
 				# check for valid slide decks
 				if INTISlideDeckRef.providedBy(item):
 					item = INTISlideDeck(item, None)
@@ -1022,7 +1033,7 @@ class SyncLockOutlineView(AbstractAuthenticatedView,
 			if lesson is not None:
 				lesson.lock()
 				lifecycleevent.modified(lesson)
-	
+
 	def _do_call(self, outline, do_lessons=True):
 		for node in self._get_nodes(outline):
 			self._do_op(node, do_lessons)
