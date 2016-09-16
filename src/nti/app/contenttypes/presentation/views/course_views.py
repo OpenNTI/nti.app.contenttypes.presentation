@@ -35,8 +35,6 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
-from nti.contenttypes.presentation.interfaces import IConcreteAsset
-
 from nti.dataserver import authorization as nauth
 
 from nti.externalization.externalization import LocatedExternalDict
@@ -109,10 +107,7 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView, BatchingUtilsMixin
 										   container_ntiids=container_ntiids,
 										   sites=get_component_hierarchy_names(),
 										   provided=ALL_PRESENTATION_ASSETS_INTERFACES):
-			concrete = IConcreteAsset(item, item)
-			if self._check_mimeType(concrete, mimeTypes):
-				yield concrete
-			elif self._check_mimeType(item, mimeTypes):
+			if self._check_mimeType(item, mimeTypes):
 				yield item
 
 	def _do_call(self):
@@ -126,7 +121,7 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView, BatchingUtilsMixin
 		course = ICourseInstance(self.context)
 
 		result[ITEMS] = items = []
-		items.extend({x for x in self._yield_course_items(course, mimeTypes)})
+		items.extend(x for x in self._yield_course_items(course, mimeTypes))
 		items.sort()  # natural order
 		lastModified = reduce(lambda x, y: max(x, getattr(y, 'lastModified', 0)), items, 0)
 
