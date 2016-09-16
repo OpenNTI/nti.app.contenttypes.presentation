@@ -126,7 +126,7 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView, BatchingUtilsMixin
 		course = ICourseInstance(self.context)
 
 		result[ITEMS] = items = []
-		items.extend(x for x in self._yield_course_items(course, mimeTypes))
+		items.extend({x for x in self._yield_course_items(course, mimeTypes)})
 		items.sort()  # natural order
 		lastModified = reduce(lambda x, y: max(x, getattr(y, 'lastModified', 0)), items, 0)
 
