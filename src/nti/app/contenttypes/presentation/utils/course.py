@@ -139,7 +139,7 @@ def get_course_by_relative_path_parts(*parts):
 					logger.exception("context %s is not a valid map", context)
 					break
 				except KeyError:
-					logger.error("Invalid key %s in context %s", key, context)
+					logger.error("Invalid key %s in context %s", name, context)
 
 	logger.debug("Could not find a course for paths '%s' under site '%s'",
 			 	 parts, getSite().__name__)
