@@ -127,7 +127,7 @@
 
 	<utility factory=".ntiids._NTICourseBundleResolver" name="NTICourseBundle" />
 	
-	<utility factory=".ntiids._NTITranscriptResolver" name="NTITranscrip" />
+	<utility factory=".ntiids._NTITranscriptResolver" name="NTITranscript" />
 
 	<!-- Asset update -->
 	<adapter factory=".adapters._PresentationAssetExternalFieldTraverser"

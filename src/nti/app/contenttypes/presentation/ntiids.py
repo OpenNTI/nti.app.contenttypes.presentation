@@ -168,12 +168,13 @@ class _NTITranscriptResolver(object):
 
 	def resolve(self, key):
 		parts = get_parts(key)
+		specific = '.'.join(parts.specific.split('.')[0:-1]) or parts.specific
 		for nttype in (NTI_VIDEO, NTI_AUDIO):
-			nttid = make_ntiid(date=parts.date, 
+			ntiid = make_ntiid(date=parts.date, 
 							   provider=parts.provider, 
 							   nttype=nttype, 
-							   specific=parts.specific)
-			media = find_object_with_ntiid(nttid)
+							   specific=specific)
+			media = find_object_with_ntiid(ntiid)
 			if INTIMedia.providedBy(media):
 				for transcript in media.transcripts or ():
 					if transcript.ntiid == key:
