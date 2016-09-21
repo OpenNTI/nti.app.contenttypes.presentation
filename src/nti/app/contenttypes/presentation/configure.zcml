@@ -71,6 +71,7 @@
 	<adapter factory=".acl.NTIMediaRollACLProvider" />
 	<adapter factory=".acl.NTISlideDeckACLProvider" />
 	<adapter factory=".acl.NTISlideVideoACLProvider" />
+	<adapter factory=".acl.NTITranscriptACLProvider" />
 	<adapter factory=".acl.NTITimelineRefACLProvider" />
 	<adapter factory=".acl.NTISlideDeckRefACLProvider" />
 	<adapter factory=".acl.NTIRelatedWorkRefACLProvider" />

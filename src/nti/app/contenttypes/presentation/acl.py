@@ -22,6 +22,7 @@ from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTISlideVideo
+from nti.contenttypes.presentation.interfaces import INTITranscript 
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
@@ -134,3 +135,18 @@ class NTICourseOverviewGroupACLProvider(AbstractCourseLineageACLProvider):
 @component.adapter(INTILessonOverview)
 class NTILessonOverviewACLProvider(AbstractCourseLineageACLProvider):
 	pass
+
+@component.adapter(INTITranscript)
+class NTITranscriptACLProvider(object):
+
+	def __init__(self, context):
+		self.context = context
+
+	@property
+	def __parent__(self):
+		return self.context.__parent__
+
+	@Lazy
+	def __acl__(self):
+		result = acl_from_aces(ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
+		return result
