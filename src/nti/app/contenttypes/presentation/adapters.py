@@ -161,7 +161,7 @@ def _reference_to_concrete(context):
 @component.adapter(ICourseOutlineNode)
 @interface.implementer(INTILessonOverview)
 def _outlinenode_to_lesson(context):
-	ntiid = getattr(context, 'LessonOverviewNTIID', None)
+	ntiid = context.LessonOverviewNTIID
 	result = component.queryUtility(INTILessonOverview, name=ntiid or u'')
 	return result
 
