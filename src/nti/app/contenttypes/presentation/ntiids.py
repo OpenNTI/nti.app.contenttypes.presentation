@@ -21,7 +21,11 @@ from nti.app.contenttypes.presentation.utils import get_course_by_relative_path_
 
 from nti.contenttypes.courses.discussions.utils import get_discussion_for_path
 
+from nti.contenttypes.presentation import NTI_AUDIO
+from nti.contenttypes.presentation import NTI_VIDEO
+
 from nti.contenttypes.presentation.interfaces import INTIAudio
+from nti.contenttypes.presentation.interfaces import INTIMedia 
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTISlide
 from nti.contenttypes.presentation.interfaces import INTIAudioRef
@@ -47,7 +51,8 @@ from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 
 from nti.ntiids.interfaces import INTIIDResolver
 
-from nti.ntiids.ntiids import get_parts
+from nti.ntiids.ntiids import get_parts, find_object_with_ntiid
+from nti.ntiids.ntiids import make_ntiid
 
 @interface.implementer(INTIIDResolver)
 class _PresentationResolver(object):
@@ -156,4 +161,21 @@ class _NTICourseBundleResolver(object):
 				if result:
 					_, topic = result
 					return topic
+		return None
+
+@interface.implementer(INTIIDResolver)
+class _NTITranscriptResolver(object):
+
+	def resolve(self, key):
+		parts = get_parts(key)
+		for nttype in (NTI_VIDEO, NTI_AUDIO):
+			nttid = make_ntiid(date=parts.date, 
+							   provider=parts.provider, 
+							   nttype=nttype, 
+							   specific=parts.specific)
+			media = find_object_with_ntiid(nttid)
+			if INTIMedia.providedBy(media):
+				for transcript in media.transcripts or ():
+					if transcript.ntiid == key:
+						return transcript
 		return None

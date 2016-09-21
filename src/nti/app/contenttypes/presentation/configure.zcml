@@ -126,6 +126,8 @@
 	<utility factory=".ntiids._NTICourseOverviewGroupResolver" name="NTICourseOverviewGroup" />
 
 	<utility factory=".ntiids._NTICourseBundleResolver" name="NTICourseBundle" />
+	
+	<utility factory=".ntiids._NTITranscriptResolver" name="NTITranscrip" />
 
 	<!-- Asset update -->
 	<adapter factory=".adapters._PresentationAssetExternalFieldTraverser"
