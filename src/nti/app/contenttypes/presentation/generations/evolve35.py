@@ -17,13 +17,19 @@ from zope import interface
 from zope.component.hooks import site
 from zope.component.hooks import setHooks
 
-from nti.contenttypes.presentation.interfaces import INTIAudio
-from nti.contenttypes.presentation.interfaces import INTIVideo
+from zope.intid.interfaces import IIntIds
+
+from nti.contenttypes.presentation import iface_of_asset
+
+from nti.contenttypes.presentation.interfaces import IAssetRef
+from nti.contenttypes.presentation.interfaces import INTICourseOverviewSpacer
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
 
 from nti.site.hostpolicy import get_all_host_sites
+
+from nti.site.utils import unregisterUtility
 
 @interface.implementer(IDataserver)
 class MockDataserver(object):
@@ -38,19 +44,19 @@ class MockDataserver(object):
 			return resolver.get_object_by_oid(oid, ignore_creator=ignore_creator)
 		return None
 
-def _fix_refs(current_site, seen):
+def _unregister_refs(current_site, intids, seen):
 	result = 0
 	registry = current_site.getSiteManager()
-	for interface in (INTIVideo, INTIAudio):
+	for interface in (IAssetRef, INTICourseOverviewSpacer):
 		for name, item in list(registry.getUtilitiesFor(interface)):
 			if name in seen:
 				continue
 			seen.add(name)
-			for field in ('sources', 'transcripts'):
-				for part in getattr(item, field, None) or ():
-					part.__parent__ = item
-					part.ntiid # compute ntiid
-					result += 1
+	
+			provided = iface_of_asset(item)
+			if unregisterUtility(registry, provided=provided, name=name):
+				result += 1
+
 	return result
 
 def do_evolve(context, generation=generation):
@@ -67,19 +73,22 @@ def do_evolve(context, generation=generation):
 		assert	component.getSiteManager() == dataserver_folder.getSiteManager(), \
 				"Hooks not installed?"
 
+		lsm = dataserver_folder.getSiteManager()
+		intids = lsm.getUtility(IIntIds)
+			
 		result = 0
 		seen = set()
 		logger.info('Evolution %s started.', generation)
 		
 		for current_site in get_all_host_sites():
 			with site(current_site):
-				result += _fix_refs(current_site, seen)
+				result += _unregister_refs(current_site, intids, seen)
 
-		logger.info('Evolution %s done. %s item(s) fixed',
+		logger.info('Evolution %s done. %s item(s) unregistered',
 					generation, result)
 
 def evolve(context):
 	"""
-	Evolve to 34 by setting lineage to transcripts and sources
+	Evolve to 34 by removing asset ref objects from registry
 	"""
 	do_evolve(context, generation)
