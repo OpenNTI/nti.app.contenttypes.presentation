@@ -137,6 +137,7 @@ class NTILessonOverviewACLProvider(AbstractCourseLineageACLProvider):
 	pass
 
 @component.adapter(INTITranscript)
+@interface.implementer(IACLProvider)
 class NTITranscriptACLProvider(object):
 
 	def __init__(self, context):
