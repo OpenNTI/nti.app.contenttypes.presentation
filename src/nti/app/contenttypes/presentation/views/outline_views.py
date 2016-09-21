@@ -1056,7 +1056,7 @@ class SyncUnlockOutlineView(SyncLockOutlineView):
 	"""
 
 	def _do_op(self, node, do_lessons=True):
-		node.lock()
+		node.unlock()
 		lifecycleevent.modified(node)
 		if do_lessons:
 			lesson = INTILessonOverview(node, None)
