@@ -24,9 +24,6 @@ from zope.component.hooks import getSite
 
 from zope.event import notify as event_notify
 
-from zope.security.interfaces import NoInteraction
-from zope.security.management import getInteraction
-
 from pyramid import httpexceptions as hexc
 
 from pyramid.view import view_config
@@ -168,6 +165,8 @@ from nti.contenttypes.presentation.utils import get_external_pre_hook
 
 from nti.coremetadata.interfaces import IPublishable
 
+from nti.coremetadata.utils import current_principal
+
 from nti.dataserver import authorization as nauth
 
 from nti.dataserver.contenttypes.forums.interfaces import ITopic
@@ -280,8 +279,8 @@ class PresentationAssetSchemaView(AbstractAuthenticatedView):
 
 def principalId():
 	try:
-		return getInteraction().participations[0].principal.id
-	except (NoInteraction, IndexError, AttributeError):
+		return current_principal(False).id
+	except AttributeError:
 		return None
 
 def _notify_created(item, principal=None, externalValue=None):

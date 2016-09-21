@@ -17,10 +17,6 @@ from zope import lifecycleevent
 from zope.component.hooks import site as current_site
 
 from zope.security.interfaces import IPrincipal
-from zope.security.interfaces import NoInteraction 
-from zope.security.management import getInteraction
-
-from zope.security.management import system_user
 
 from nti.app.authentication import get_remote_user
 
@@ -59,6 +55,8 @@ from nti.coremetadata.interfaces import IPublishable
 from nti.coremetadata.interfaces import ICalendarPublishable
 from nti.coremetadata.interfaces import IRecordableContainer
 
+from nti.coremetadata.utils import current_principal
+
 from nti.property.property import Lazy
 
 from nti.site.hostpolicy import get_host_site
@@ -74,10 +72,7 @@ class LessonOverviewsImporter(BaseSectionImporter):
 	def current_principal(self):
 		remoteUser = IPrincipal(get_remote_user(), None)
 		if remoteUser is None:
-			try:
-				remoteUser = getInteraction().participations[0].principal
-			except (NoInteraction, IndexError, AttributeError):
-				remoteUser = system_user
+			remoteUser = current_principal(True)
 		return remoteUser
 
 	def _post_process_asset(self, asset, source_filer, target_filer):

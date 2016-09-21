@@ -11,8 +11,6 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope.authentication.interfaces import IUnauthenticatedPrincipal
 
-from zope.security.management import getInteraction
-
 # re-export
 from nti.app.contenttypes.presentation.utils.asset import db_connection
 from nti.app.contenttypes.presentation.utils.asset import component_site
@@ -67,6 +65,8 @@ from nti.contenttypes.presentation.interfaces import PURCHASED
 
 from nti.contenttypes.presentation.interfaces import IPresentationVisibility
 
+from nti.coremetadata.utils import current_principal
+
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.ntiids.ntiids import make_specific_safe
@@ -90,10 +90,7 @@ def get_user_visibility(user):
 	return result
 
 def get_participation_principal():
-	try:
-		return getInteraction().participations[0].principal
-	except Exception:
-		return None
+	return current_principal(False)
 
 def _get_scope(user, context, record):
 	if user is not None:

@@ -20,9 +20,6 @@ from zope.event import notify
 from zope.lifecycleevent.interfaces import IObjectRemovedEvent
 from zope.lifecycleevent.interfaces import IObjectModifiedEvent
 
-from zope.security.interfaces import NoInteraction
-from zope.security.management import getInteraction
-
 from nti.app.contenttypes.presentation.synchronizer import clear_course_assets
 from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
 from nti.app.contenttypes.presentation.synchronizer import remove_and_unindex_course_assets
@@ -80,6 +77,8 @@ from nti.contenttypes.presentation.interfaces import IItemRemovedFromItemAssetCo
 
 from nti.coremetadata.interfaces import IRecordable
 
+from nti.coremetadata.utils import current_principal as core_current_principal
+
 from nti.externalization.interfaces import StandardExternalFields
 
 from nti.externalization.oids import to_external_ntiid_oid
@@ -103,10 +102,7 @@ ITEMS = StandardExternalFields.ITEMS
 # interaction
 
 def current_principal():
-	try:
-		return getInteraction().participations[0].principal
-	except (NoInteraction, IndexError, AttributeError):
-		return None
+	return core_current_principal(False)
 
 # courses
 
