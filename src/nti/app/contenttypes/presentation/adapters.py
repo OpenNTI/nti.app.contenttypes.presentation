@@ -30,7 +30,8 @@ from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 
-from nti.contenttypes.presentation.interfaces import IAssetRef
+from nti.contenttypes.presentation.interfaces import IAssetRef,\
+	ILessonPublicationConstraint
 from nti.contenttypes.presentation.interfaces import INTIAudio 
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIVideo
@@ -76,6 +77,16 @@ def _lesson_overview_to_course(item):
 @interface.implementer(ICourseInstance)
 def _group_overviewable_to_course(item):
 	return find_interface(item, ICourseInstance, strict=False)
+
+@interface.implementer(ICourseInstance)
+@component.adapter(ILessonPublicationConstraint)
+def _publication_constraint_to_course(item):
+	return find_interface(item, ICourseInstance, strict=False)
+
+@interface.implementer(INTILessonOverview)
+@component.adapter(ILessonPublicationConstraint)
+def _publication_constraint_to_lesson(item):
+	return find_interface(item, INTILessonOverview, strict=False)
 
 @component.adapter(INTIAudioRef)
 @interface.implementer(INTIAudio)

@@ -48,6 +48,9 @@
 	<adapter factory=".adapters._group_overviewable_to_course" />
 	<adapter factory=".adapters._course_overview_group_to_course" />
 
+	<adapter factory=".adapters._publication_constraint_to_course" />
+	<adapter factory=".adapters._publication_constraint_to_lesson" />
+
 	<adapter factory="nti.app.contentlibrary.adapters.presentation_asset_items_factory"
 			 for="nti.contenttypes.courses.interfaces.ICourseInstance"
 			 provides="nti.contenttypes.presentation.interfaces.IPresentationAssetContainer" />
