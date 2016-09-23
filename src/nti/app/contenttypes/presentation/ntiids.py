@@ -51,8 +51,9 @@ from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 
 from nti.ntiids.interfaces import INTIIDResolver
 
-from nti.ntiids.ntiids import get_parts, find_object_with_ntiid
+from nti.ntiids.ntiids import get_parts
 from nti.ntiids.ntiids import make_ntiid
+from nti.ntiids.ntiids import find_object_with_ntiid
 
 @interface.implementer(INTIIDResolver)
 class _PresentationResolver(object):
@@ -170,6 +171,7 @@ class _NTITranscriptResolver(object):
 		parts = get_parts(key)
 		specific = '.'.join(parts.specific.split('.')[0:-1]) or parts.specific
 		for nttype in (NTI_VIDEO, NTI_AUDIO):
+			# transform to a video NTIID
 			ntiid = make_ntiid(date=parts.date, 
 							   provider=parts.provider, 
 							   nttype=nttype, 
