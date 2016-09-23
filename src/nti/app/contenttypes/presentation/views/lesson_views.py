@@ -16,6 +16,9 @@ from pyramid.view import view_defaults
 
 from nti.appserver.dataserver_pyramid_views import GenericGetView
 
+from nti.appserver.ugd_edit_views import UGDDeleteView
+
+from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraint
 from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraints
 
 from nti.dataserver import authorization as nauth
@@ -67,3 +70,14 @@ class LessonPublicationConstraintsGetView(GenericGetView):
 
     def __call__(self):
         return self._do_call(self.context)
+
+@view_config(route_name="objects.generic.traversal",
+             context=ILessonPublicationConstraint,
+             renderer='rest',
+             permission=nauth.ACT_DELETE,
+             request_method='DELETE')
+class LessonPublicationConstraintDeleteView(UGDDeleteView):
+
+    def _do_delete_object(self, theObject):
+        del theObject.__parent__[theObject.__name__]
+        return theObject
