@@ -178,4 +178,12 @@
 			 provides="nti.wref.interfaces.IWeakRef"
 			 for="nti.contenttypes.presentation.interfaces.IPresentationAsset" />
 	
+	<!-- Traversal -->
+	<adapter factory=".traversal._publication_constraints_for_lesson_path_adapter"
+			 for="nti.contenttypes.presentation.interfaces.INTILessonOverview pyramid.interfaces.IRequest"
+			 provides="zope.traversing.interfaces.IPathAdapter"
+			 name="PublicationConstraints" />
+
+	<adapter factory=".traversal._LessonPublicationConstraintsTraversable" />
+
 </configure>
