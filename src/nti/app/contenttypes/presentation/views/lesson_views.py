@@ -10,12 +10,14 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 from zope import interface
+from zope import lifecycleevent
 
 from pyramid.view import view_config
 from pyramid.view import view_defaults
 
 from nti.appserver.dataserver_pyramid_views import GenericGetView
 
+from nti.appserver.ugd_edit_views import UGDPostView
 from nti.appserver.ugd_edit_views import UGDDeleteView
 
 from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraint
@@ -70,6 +72,26 @@ class LessonPublicationConstraintsGetView(GenericGetView):
 
     def __call__(self):
         return self._do_call(self.context)
+
+@view_config(context=ILessonPublicationConstraints)
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               request_method='POST',
+               permission=nauth.ACT_CONTENT_EDIT)
+class LessonPublicationConstraintsPostView(UGDPostView):
+
+    content_predicate = ILessonPublicationConstraint.providedBy
+
+    def _do_call(self):
+        creator = self.remoteUser
+        constraint = self.readCreateUpdateContentObject(creator, search_owner=False)
+        constraint.creator = creator.username
+        constraint.updateLastMod()
+
+        lifecycleevent.created(constraint)
+        self.context.append(constraint) 
+        self.request.response.status_int = 201
+        return constraint
 
 @view_config(route_name="objects.generic.traversal",
              context=ILessonPublicationConstraint,
