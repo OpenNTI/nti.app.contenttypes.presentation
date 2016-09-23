@@ -30,8 +30,7 @@ from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 
-from nti.contenttypes.presentation.interfaces import IAssetRef,\
-	ILessonPublicationConstraint
+from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTIAudio 
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIVideo
@@ -56,6 +55,7 @@ from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
+from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraint
 
 from nti.namedfile.constraints import FileConstraints
 
