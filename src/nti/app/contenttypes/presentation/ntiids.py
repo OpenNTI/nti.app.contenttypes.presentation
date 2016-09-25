@@ -23,9 +23,10 @@ from nti.contenttypes.courses.discussions.utils import get_discussion_for_path
 
 from nti.contenttypes.presentation import NTI_AUDIO
 from nti.contenttypes.presentation import NTI_VIDEO
+from nti.contenttypes.presentation import NTI_LESSON_OVERVIEW
 
 from nti.contenttypes.presentation.interfaces import INTIAudio
-from nti.contenttypes.presentation.interfaces import INTIMedia 
+from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTISlide
 from nti.contenttypes.presentation.interfaces import INTIAudioRef
@@ -48,6 +49,7 @@ from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
+from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraints
 
 from nti.ntiids.interfaces import INTIIDResolver
 
@@ -136,7 +138,7 @@ class _NTICourseBundleResolver(object):
 	separator = ':'
 
 	def get_course(self, splits=()):
-		if splits and len(splits) >= 2: # by parts e.g Fall2015:BIOL_2124
+		if splits and len(splits) >= 2:  # by parts e.g Fall2015:BIOL_2124
 			result = get_course_by_relative_path_parts(*splits[:2])
 			return result
 		return None
@@ -172,13 +174,31 @@ class _NTITranscriptResolver(object):
 		specific = parts.specific[:parts.specific.rfind('.')]
 		for nttype in (NTI_VIDEO, NTI_AUDIO):
 			# transform to a video NTIID
-			ntiid = make_ntiid(date=parts.date, 
-							   provider=parts.provider, 
-							   nttype=nttype, 
+			ntiid = make_ntiid(date=parts.date,
+							   provider=parts.provider,
+							   nttype=nttype,
 							   specific=specific)
 			media = find_object_with_ntiid(ntiid)
 			if INTIMedia.providedBy(media):
 				for transcript in media.transcripts or ():
 					if transcript.ntiid == key:
 						return transcript
+		return None
+
+@interface.implementer(INTIIDResolver)
+class _NTILessonCompletionConstraintResolver(object):
+
+	def resolve(self, key):
+		parts = get_parts(key)
+		specific = parts.specific[:parts.specific.rfind('.')]
+		ntiid = make_ntiid(date=parts.date,
+						   specific=specific,
+						   provider=parts.provider,
+						   nttype=NTI_LESSON_OVERVIEW)
+		lesson = find_object_with_ntiid(ntiid)
+		if INTILessonOverview.providedBy(lesson):
+			constraints = ILessonPublicationConstraints(lesson)
+			for constraint in constraints.Items:
+				if constraint.ntiid == key:
+					return constraint
 		return None

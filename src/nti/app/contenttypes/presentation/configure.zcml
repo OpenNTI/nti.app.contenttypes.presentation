@@ -133,6 +133,8 @@
 	
 	<utility factory=".ntiids._NTITranscriptResolver" name="NTITranscript" />
 
+	<utility factory=".ntiids._NTILessonCompletionConstraintResolver" name="NTILessonCompletionConstraint" />
+
 	<!-- Asset update -->
 	<adapter factory=".adapters._PresentationAssetExternalFieldTraverser"
 			 for="nti.contenttypes.presentation.interfaces.IPresentationAsset pyramid.interfaces.IRequest"
