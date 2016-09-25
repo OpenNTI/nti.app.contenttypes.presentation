@@ -169,7 +169,7 @@ class _NTITranscriptResolver(object):
 
 	def resolve(self, key):
 		parts = get_parts(key)
-		specific = '.'.join(parts.specific.split('.')[0:-1]) or parts.specific
+		specific = parts.specific[:parts.specific.rfind('.')]
 		for nttype in (NTI_VIDEO, NTI_AUDIO):
 			# transform to a video NTIID
 			ntiid = make_ntiid(date=parts.date, 
