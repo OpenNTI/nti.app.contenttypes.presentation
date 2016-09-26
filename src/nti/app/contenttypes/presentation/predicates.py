@@ -70,8 +70,6 @@ class _PresentationAssetObjects(BasePrincipalObjects):
 @interface.implementer(ICalendarPublishablePredicate)
 class LessonPublishablePredicate(object):
 
-	__slots__ = ()
-
 	def is_published(self, lesson, principal=None, *args, **kwargs):
 		user = User.get_user(principal.id) if principal is not None else None
 		if user is None:
