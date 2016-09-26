@@ -5,23 +5,29 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
 from zope import component
 
+from zope.location.interfaces import LocationError
+
 from pyramid.interfaces import IRequest
 
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraints
 
+from nti.traversal.traversal import DefaultAdapterTraversable
 from nti.traversal.traversal import ContainerAdapterTraversable
 
 @component.adapter(INTILessonOverview, IRequest)
-def _publication_constraints_for_lesson_path_adapter(lesson, request):
-	return ILessonPublicationConstraints(lesson)
+class _LessonOverviewTraversable(DefaultAdapterTraversable):
+
+	def traverse(self, key, remaining_path):
+		if key == 'PublicationConstraints':
+			return  ILessonPublicationConstraints(self.context)
+		raise LocationError(key)
 
 @component.adapter(ILessonPublicationConstraints, IRequest)
 class _LessonPublicationConstraintsTraversable(ContainerAdapterTraversable):

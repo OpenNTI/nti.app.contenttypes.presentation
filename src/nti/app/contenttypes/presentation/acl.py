@@ -30,6 +30,8 @@ from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import ILegacyPresentationAsset
+from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraint
+from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraints
 
 from nti.dataserver.authorization import ROLE_ADMIN
 from nti.dataserver.authorization import ROLE_CONTENT_ADMIN
@@ -136,18 +138,30 @@ class NTICourseOverviewGroupACLProvider(AbstractCourseLineageACLProvider):
 class NTILessonOverviewACLProvider(AbstractCourseLineageACLProvider):
 	pass
 
-@component.adapter(INTITranscript)
 @interface.implementer(IACLProvider)
-class NTITranscriptACLProvider(object):
-
+class AdminEditorParentObjectACLProvider(object):
+	
 	def __init__(self, context):
 		self.context = context
 
 	@property
 	def __parent__(self):
 		return self.context.__parent__
-
+	
 	@Lazy
 	def __acl__(self):
 		result = acl_from_aces(ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
+		result.append(ace_allowing(ROLE_CONTENT_ADMIN, ALL_PERMISSIONS, type(self)))
 		return result
+
+@component.adapter(INTITranscript)
+class NTITranscriptACLProvider(AdminEditorParentObjectACLProvider):
+	pass
+
+@component.adapter(ILessonPublicationConstraint)
+class LessonPublicationConstraintACLProvider(AdminEditorParentObjectACLProvider):
+	pass
+
+@component.adapter(ILessonPublicationConstraints)
+class LessonPublicationConstraintsACLProvider(AdminEditorParentObjectACLProvider):
+	pass

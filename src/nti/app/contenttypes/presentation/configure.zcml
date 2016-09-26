@@ -90,6 +90,8 @@
 	<adapter factory=".acl.NTILessonOverviewACLProvider" />
 	<adapter factory=".acl.PresentationAssetACLProvider" />
 	<adapter factory=".acl.NTICourseOverviewGroupACLProvider" />
+	<adapter factory=".acl.LessonPublicationConstraintACLProvider" />
+	<adapter factory=".acl.LessonPublicationConstraintsACLProvider" />
 
 	<!-- Traversal-ish stuff -->
 	<utility factory=".ntiids._NTIAudioRefResolver" name="NTIAudioRef" />
@@ -144,10 +146,9 @@
 
 	<utility factory=".ntiids._NTILessonCompletionConstraintResolver" name="NTILessonCompletionConstraint" />
 
-	<adapter factory=".traversal._publication_constraints_for_lesson_path_adapter"
+	<adapter factory=".traversal._LessonOverviewTraversable"
 			 for="nti.contenttypes.presentation.interfaces.INTILessonOverview pyramid.interfaces.IRequest"
-			 provides="zope.traversing.interfaces.IPathAdapter"
-			 name="PublicationConstraints" />
+			 provides="zope.traversing.interfaces.ITraversable" />
 
 	<adapter factory=".traversal._LessonPublicationConstraintsTraversable" />
 
