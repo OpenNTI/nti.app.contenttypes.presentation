@@ -1220,7 +1220,7 @@ class TestAssetViews(ApplicationLayerTest):
 										container_ids=(lesson_ntiid, source_group_ntiid))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def xtest_lesson_media_outline(self):
+	def test_lesson_media_outline(self):
 		outline_node_ntiid = "tag:nextthought.com,2011-10:NTI-NTICourseOutlineNode-Fall2015_CS_1323.0"
 		node_data = { 'MimeType': "application/vnd.nextthought.courses.courseoutlinecontentnode",
 					  'title': "Chapter 1 - The First Chapter"}
@@ -1253,8 +1253,8 @@ class TestAssetViews(ApplicationLayerTest):
 		assert_that(lesson_media, contains(video_ntiid))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def xtest_get_course_presentation_assets(self):
+	def test_get_course_presentation_assets(self):
 		href = '/dataserver2/@@GetCoursePresentationAssets'
 		params = {'ntiid':self.course_ntiid}
 		res = self.testapp.get(href, params)
-		assert_that(res.json_body, has_entry('Total', is_(54)))
+		assert_that(res.json_body, has_entry('Total', is_(71)))
