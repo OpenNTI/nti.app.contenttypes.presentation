@@ -170,10 +170,10 @@ class TestAssetViews(ApplicationLayerTest):
 		return self._make_extra_environ(username)
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def xtest_all_assets(self):
+	def test_all_assets(self):
 		res = self.testapp.get(self.assets_url, status=200)
-		assert_that(res.json_body, has_entry('Total', is_(1167)))
-		assert_that(res.json_body, has_entry('Items', has_length(1167)))
+		assert_that(res.json_body, has_entry('Total', is_(1184)))
+		assert_that(res.json_body, has_entry('Items', has_length(1184)))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def xtest_ntivideo(self):
