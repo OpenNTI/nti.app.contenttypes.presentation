@@ -91,7 +91,6 @@ class AssignmentCompletionConstraintChecker(object):
 		user = get_user(principal)
 		if user is None:
 			return False
-		now = datetime.utcnow()
 		course = ICourseInstance(constraint, None)
 		if course is None:
 			return False
@@ -99,8 +98,7 @@ class AssignmentCompletionConstraintChecker(object):
 			assignment = component.queryUtility(IQAssignment, name=assignment_ntiid)
 			if assignment is None:
 				continue
-			due_date = get_available_for_submission_ending(assignment, course)
-			if due_date > now and not has_submitted_assigment(course, user, assignment):
+			if not has_submitted_assigment(course, user, assignment):
 				return False
 		return True
 
