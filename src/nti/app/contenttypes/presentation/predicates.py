@@ -9,8 +9,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from datetime import datetime
-
 from zope import component
 from zope import interface
 
@@ -21,7 +19,6 @@ from zope.interface.adapter import _lookupAll as zopeLookupAll  # Private func
 from zope.security.interfaces import IPrincipal
 
 from nti.app.assessment.common import has_submitted_assigment
-from nti.app.assessment.common import get_available_for_submission_ending
 
 from nti.app.contenttypes.presentation.interfaces import ILessonPublicationConstraintChecker
 
