@@ -66,6 +66,10 @@
 	<adapter factory=".adapters._RelatedWorkRefFileConstraints"
 			 for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef"
 			 provides="nti.namedfile.interfaces.IFileConstraints" />
+			 
+	<adapter factory=".predicates.LessonPublishablePredicate"
+			 for="nti.contenttypes.presentation.interfaces.INTILessonOverview"
+			 provides="nti.coremetadata.interfaces.IPublishablePredicate" />
 
 	<!-- ACLs -->
 	<adapter factory=".acl.NTIAudioACLProvider" />
@@ -140,7 +144,7 @@
 			 for="nti.contenttypes.presentation.interfaces.IPresentationAsset pyramid.interfaces.IRequest"
 			 provides="zope.traversing.interfaces.ITraversable"
 			 name="fields" />
-
+			 
 	<!-- Events -->
 	<subscriber handler=".subscribers._on_outlinenode_unregistered" />
 
