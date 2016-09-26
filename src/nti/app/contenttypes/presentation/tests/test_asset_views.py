@@ -129,6 +129,7 @@ class TestAssetViews(ApplicationLayerTest):
 		"""
 		catalog = get_library_catalog()
 		containers = catalog.get_containers(obj)
+
 		# For convenience, we pop any subinstances in our containers. Stuff
 		# sync'd from disk will have all subinstances (when the outline is
 		# shared); API created items will not. TODO: Is this correct?
@@ -141,6 +142,7 @@ class TestAssetViews(ApplicationLayerTest):
 		expected_containers = []
 		if course:
 			expected_containers.append(self.course_ntiid)
+
 		package_ids = ()
 		if packages:
 			entry = find_object_with_ntiid(self.course_ntiid)
@@ -150,10 +152,11 @@ class TestAssetViews(ApplicationLayerTest):
 			expected_containers.extend(container_ids)
 		expected_containers.extend(package_ids)
 		assert_that(containers, contains_inanyorder(*expected_containers))
+
 		# Validate intid (must have an intid to be indexed anyway).
 		assert_that(self.intids.queryId(obj), not_none())
 
-	def _xtest_transaction_history(self, obj, *args):
+	def _test_transaction_history(self, obj, *args):
 		# Call within a ds transaction
 		history = ITransactionRecordHistory(obj)
 		record_types = [x.type for x in history.records()]
@@ -223,7 +226,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(container, does_not(has_key(ntiid)))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def xtest_video_roll_container(self):
+	def test_video_roll_container(self):
 		roll_source = self._load_resource('video_roll.json')
 
 		res = self.testapp.post_json(self.assets_url, roll_source, status=201)
@@ -246,7 +249,7 @@ class TestAssetViews(ApplicationLayerTest):
 			self._check_containers(course, packages=False, items=roll_obj.Items)
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def xtest_video_roll(self):
+	def test_video_roll(self):
 		# Use existing overview group to check containers.
 		group_ntiid = 'tag:nextthought.com,2011-10:OU-NTICourseOverviewGroup-CS1323_F_2015_Intro_to_Computer_Programming.lec:01.01_LESSON.0'
 		res = self.testapp.get('/dataserver2/Objects/%s' % group_ntiid)
@@ -363,8 +366,8 @@ class TestAssetViews(ApplicationLayerTest):
 # 			course = ICourseInstance(entry)
 # 			self._check_containers(course, items=(roll_obj,))
 # 			self._check_containers(course, packages=False, items=roll_obj.Items)
-			self._check_container_index(roll_obj, container_ids=(group_ntiid,
-																   lesson_ntiid))
+
+			self._check_container_index(roll_obj, container_ids=(group_ntiid, lesson_ntiid))
 
 			assert_that(roll_obj.locked, is_(True))
 			new_item = roll_obj.Items[0]
@@ -483,7 +486,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(container, does_not(has_key(video_roll_ntiid)))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def xtest_slidedeck_container(self):
+	def test_slidedeck_container(self):
 		source = self._load_resource('ntislidedeck.json')
 
 		# post
@@ -526,7 +529,7 @@ class TestAssetViews(ApplicationLayerTest):
 			assert_that(tuple(history.records())[-1].attributes, contains('title'))
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	def xtest_slidedeck(self):
+	def test_slidedeck(self):
 		"""
 		Posting a slidedeck video to an overview group will expose
 		our slidedeck in MediaByOutlineNode.
@@ -1093,7 +1096,7 @@ class TestAssetViews(ApplicationLayerTest):
 			self._check_container_index(obj)
 			moved_group = find_object_with_ntiid(last_group_ntiid)
 			assert_that(moved_group.__parent__.ntiid, is_(lesson_ntiid))
-			self._xtest_transaction_history(moved_group, TRX_OVERVIEW_GROUP_MOVE_TYPE)
+			self._test_transaction_history(moved_group, TRX_OVERVIEW_GROUP_MOVE_TYPE)
 			self._check_container_index(moved_group,
 										 container_ids=(lesson_ntiid,))
 
