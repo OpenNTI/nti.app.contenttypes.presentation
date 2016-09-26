@@ -69,7 +69,7 @@
 			 
 	<adapter factory=".predicates.LessonPublishablePredicate"
 			 for="nti.contenttypes.presentation.interfaces.INTILessonOverview"
-			 provides="nti.coremetadata.interfaces.IPublishablePredicate" />
+			 provides="nti.coremetadata.interfaces.ICalendarPublishablePredicate" />
 
 	<!-- ACLs -->
 	<adapter factory=".acl.NTIAudioACLProvider" />
