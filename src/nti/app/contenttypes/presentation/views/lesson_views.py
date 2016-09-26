@@ -9,7 +9,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from zope import component
 from zope import interface
 from zope import lifecycleevent
 
@@ -18,7 +17,7 @@ from pyramid import httpexceptions as hexc
 from pyramid.view import view_config
 from pyramid.view import view_defaults
 
-from nti.app.contenttypes.presentation import MessageFactory as _m
+from nti.app.contenttypes.presentation.interfaces import ILessonPublicationConstraintValidator
 
 from nti.app.externalization.error import raise_json_error
 
@@ -28,11 +27,8 @@ from nti.appserver.ugd_edit_views import UGDPutView
 from nti.appserver.ugd_edit_views import UGDPostView
 from nti.appserver.ugd_edit_views import UGDDeleteView
 
-from nti.assessment.interfaces import IQAssignment
-
 from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraint
 from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraints
-from nti.contenttypes.presentation.interfaces import IAssignmentCompletionConstraint
 
 from nti.dataserver import authorization as nauth
 
@@ -99,39 +95,48 @@ class LessonPublicationConstraintsPostView(UGDPostView):
 		constraint.creator = creator.username
 		constraint.updateLastMod()
 
+		try:
+			validator = ILessonPublicationConstraintValidator(constraint)
+			validator.validate()
+		except Exception as e:
+			raise_json_error(self.request,
+							 hexc.HTTPUnprocessableEntity,
+							 {
+								u'message': str(e),
+								u'code': 'ConstraintValidationError',
+							 },
+							 None)
+
 		lifecycleevent.created(constraint)
 		self.context.append(constraint)
 		self.request.response.status_int = 201
 		return constraint
 
-@view_config(context=IAssignmentCompletionConstraint)
+@view_config(context=ILessonPublicationConstraint)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   request_method='PUT',
 			   permission=nauth.ACT_CONTENT_EDIT)
-class AssignmentCompletionConstraintPutView(UGDPutView):
+class LessonCompletionConstraintPutView(UGDPutView):
 
-	def _check_object_constraints(self, theObject, externalValue):
-		assignments = externalValue.get('assignments')
-		if assignments is not None:
-			if not assignments:
-				raise_json_error(self.request,
-								 hexc.HTTPUnprocessableEntity,
-								 {
-									u'message': _m("Assignment lists cannot be empty."),
-									u'code': 'ConstraintValidationError',
-								 },
-								 None)
-			for ntiid in assignments:
-				if component.queryUtility(IQAssignment, name=ntiid) is None:
-					raise_json_error(self.request,
-									 hexc.HTTPUnprocessableEntity,
-									 {
-										u'message': _m("Invalid assigment."),
-										u'code': 'ConstraintValidationError',
-										u'value': ntiid,
-									 },
-									 None)
+	def updateContentObject(self, contentObject, externalValue, set_id=False, 
+							notify=True, pre_hook=None, object_hook=None):
+		result = UGDPutView.updateContentObject(self, contentObject, externalValue, 
+											  	set_id=set_id, notify=notify, 
+											  	pre_hook=pre_hook, 
+											  	object_hook=object_hook)
+		try:
+			validator = ILessonPublicationConstraintValidator(contentObject)
+			validator.validate()
+		except Exception as e:
+			raise_json_error(self.request,
+							 hexc.HTTPUnprocessableEntity,
+							 {
+								u'message': str(e),
+								u'code': 'ConstraintValidationError',
+							 },
+							 None)
+		return result
 
 @view_config(route_name="objects.generic.traversal",
 			 context=ILessonPublicationConstraint,

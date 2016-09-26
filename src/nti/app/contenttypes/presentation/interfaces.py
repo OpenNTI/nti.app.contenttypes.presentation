@@ -28,3 +28,10 @@ class ILessonPublicationConstraintChecker(interface.Interface):
 		"""
 		Return whether or not a constraint is satisfied.
 		"""
+
+class ILessonPublicationConstraintValidator(interface.Interface):
+
+	def validate():
+		"""
+		Raise an exception if the contraint is not valid
+		"""
