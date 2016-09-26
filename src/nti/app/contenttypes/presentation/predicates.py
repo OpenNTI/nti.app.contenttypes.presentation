@@ -90,8 +90,6 @@ class LessonPublishablePredicate(object):
 			if assignment is None:
 				continue
 			due_date = get_available_for_submission_ending(assignment, course)
-			if now > due_date:
-				return False
-			if has_submitted_assigment(course, user, assignment):
+			if due_date > now and not has_submitted_assigment(course, user, assignment):
 				return False
 		return True
