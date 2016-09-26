@@ -51,7 +51,6 @@ class TestLessonViews(ApplicationLayerTest):
 	def test_application_completion_constraints(self):
 		res = self._do_enroll()
 		
-		from IPython.core.debugger import Tracer; Tracer()()
 		source = self._load_resource('ntilessonoverview.json')
 		ntiid = source.pop('NTIID', None)
 
