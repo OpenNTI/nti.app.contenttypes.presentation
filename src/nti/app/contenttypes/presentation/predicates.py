@@ -85,10 +85,16 @@ def get_user(user):
 @interface.implementer(ILessonPublicationConstraintChecker)
 class AssignmentCompletionConstraintChecker(object):
 	
-	def is_satisfied(self, constraint, principal):
+	constraint = None
+	
+	def __init__(self, constraint=None):
+		self.constraint = constraint
+	
+	def is_satisfied(self, constraint=None, principal=None):
 		user = get_user(principal)
 		if user is None:
 			return False
+		constraint = self.constraint if constraint is None else constraint
 		course = ICourseInstance(constraint, None)
 		if course is None:
 			return False
