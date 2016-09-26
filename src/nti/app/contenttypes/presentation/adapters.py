@@ -181,7 +181,7 @@ def _outlinenode_to_lesson(context):
 class _PresentationAssetExternalFieldTraverser(_AbstractExternalFieldTraverser):
 
 	def __init__(self, context, request=None):
-		super(_PresentationAssetExternalFieldTraverser, self).__init__(context, request=request)
+		_AbstractExternalFieldTraverser.__init__(self, context, request=request)
 		allowed_fields = set()
 		asset_iface = iface_of_asset(context)
 		for k, v in asset_iface.namesAndDescriptions(all=True):
