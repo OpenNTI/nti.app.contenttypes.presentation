@@ -143,6 +143,13 @@
 
 	<utility factory=".ntiids._NTILessonCompletionConstraintResolver" name="NTILessonCompletionConstraint" />
 
+	<adapter factory=".traversal._publication_constraints_for_lesson_path_adapter"
+			 for="nti.contenttypes.presentation.interfaces.INTILessonOverview pyramid.interfaces.IRequest"
+			 provides="zope.traversing.interfaces.IPathAdapter"
+			 name="PublicationConstraints" />
+
+	<adapter factory=".traversal._LessonPublicationConstraintsTraversable" />
+
 	<!-- Asset update -->
 	<adapter factory=".adapters._PresentationAssetExternalFieldTraverser"
 			 for="nti.contenttypes.presentation.interfaces.IPresentationAsset pyramid.interfaces.IRequest"
@@ -190,13 +197,5 @@
 	<adapter factory="nti.intid.wref.NoCachingArbitraryOrderableWeakRef"
 			 provides="nti.wref.interfaces.IWeakRef"
 			 for="nti.contenttypes.presentation.interfaces.IPresentationAsset" />
-	
-	<!-- Traversal -->
-	<adapter factory=".traversal._publication_constraints_for_lesson_path_adapter"
-			 for="nti.contenttypes.presentation.interfaces.INTILessonOverview pyramid.interfaces.IRequest"
-			 provides="zope.traversing.interfaces.IPathAdapter"
-			 name="PublicationConstraints" />
-
-	<adapter factory=".traversal._LessonPublicationConstraintsTraversable" />
 
 </configure>
