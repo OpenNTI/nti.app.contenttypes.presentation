@@ -103,6 +103,11 @@ class AssignmentCompletionConstraintChecker(object):
 @interface.implementer(ICalendarPublishablePredicate)
 class LessonPublishablePredicate(object):
 
+	__slots__ = ()
+
+	def __init__(self, *args):
+		pass
+
 	def is_published(self, lesson, principal=None, *args, **kwargs):
 		constraints = ILessonPublicationConstraints(lesson).Items
 		for constraint in constraints:

@@ -67,14 +67,14 @@
 	<adapter factory=".adapters._RelatedWorkRefFileConstraints"
 			 for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef"
 			 provides="nti.namedfile.interfaces.IFileConstraints" />
-			 
-	<adapter factory=".predicates.LessonPublishablePredicate"
-			 for="nti.contenttypes.presentation.interfaces.INTILessonOverview"
-			 provides="nti.coremetadata.interfaces.ICalendarPublishablePredicate" />
 
 	<adapter factory=".predicates.AssignmentCompletionConstraintChecker"
 			 for="nti.contenttypes.presentation.interfaces.IAssignmentCompletionConstraint"
 			 provides=".interfaces.ILessonPublicationConstraintChecker" />
+
+	<!-- Subscribers -->				 
+	<subscriber factory=".predicates.LessonPublishablePredicate"
+				provides="nti.coremetadata.interfaces.ICalendarPublishablePredicate" />
 
 	<!-- ACLs -->
 	<adapter factory=".acl.NTIAudioACLProvider" />
