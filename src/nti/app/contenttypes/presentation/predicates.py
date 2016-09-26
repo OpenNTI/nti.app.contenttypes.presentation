@@ -24,6 +24,8 @@ from nti.app.contenttypes.presentation.interfaces import ILessonPublicationConst
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
+from nti.contenttypes.courses.utils import is_course_instructor_or_editor
+
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -31,9 +33,13 @@ from nti.contenttypes.presentation.interfaces import IAssignmentCompletionConstr
 
 from nti.contenttypes.presentation.lesson import constraints_for_lesson
 
+from nti.appserver.pyramid_authorization import has_permission
+
 from nti.assessment.interfaces import IQAssignment
 
 from nti.coremetadata.interfaces import ICalendarPublishablePredicate
+
+from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.dataserver.interfaces import IUser
 from nti.dataserver.interfaces import ISystemUserPrincipal
@@ -98,6 +104,11 @@ class AssignmentCompletionConstraintChecker(object):
 		course = ICourseInstance(constraint, None)
 		if course is None:
 			return False
+		# allow editors and instructors 
+		if 		is_course_instructor_or_editor(course, user) \
+			or  has_permission(ACT_CONTENT_EDIT, course):
+			return True
+		# check assignment constraints
 		for assignment_ntiid in constraint.assignments or ():
 			assignment = component.queryUtility(IQAssignment, name=assignment_ntiid)
 			if assignment is None:
