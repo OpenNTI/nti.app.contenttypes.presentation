@@ -71,6 +71,10 @@
 			 for="nti.contenttypes.presentation.interfaces.INTILessonOverview"
 			 provides="nti.coremetadata.interfaces.ICalendarPublishablePredicate" />
 
+	<adapter factory=".predicates.AssignmentCompletionConstraintChecker"
+			 for="nti.contenttypes.presentation.interfaces.IAssignmentCompletionConstraint"
+			 provides=".interfaces.ILessonPublicationConstraintChecker" />
+
 	<!-- ACLs -->
 	<adapter factory=".acl.NTIAudioACLProvider" />
 	<adapter factory=".acl.NTIVideoACLProvider" />

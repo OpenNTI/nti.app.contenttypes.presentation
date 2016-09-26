@@ -22,17 +22,9 @@ class IItemRefValidator(interface.Interface):
 		Return whether or not the item reference is valid
 		"""
 
-class ILessonPublicationPredicate(interface.Interface):
+class ILessonPublicationConstraintChecker(interface.Interface):
 
-	def is_satisfied(self, constraint):
+	def is_satisfied(constraint, principal=None):
 		"""
 		Return whether or not a constraint is satisfied.
-		"""
-
-class IAssignmentCompletionPredicate(ILessonPublicationPredicate):
-
-	def is_satisfied(self, constraint):
-		"""
-		Evaluates an assignment completion constraint. Returns true
-		if all assignments are either completed or closed; false otherwise.
 		"""
