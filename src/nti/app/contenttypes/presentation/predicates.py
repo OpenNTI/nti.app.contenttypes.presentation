@@ -73,10 +73,10 @@ class LessonPublishablePredicate(object):
 	__slots__ = ()
 
 	def is_published(self, lesson, principal=None, *args, **kwargs):
-		constraints = ILessonPublicationConstraints(lesson).Items
 		user = User.get_user(principal.id) if principal is not None else None
-		if not user:
+		if user is None:
 			return False
+		constraints = ILessonPublicationConstraints(lesson).Items
 		for constraint in constraints:
 			if not self.is_satisfied(constraint, lesson, user):
 				return False
