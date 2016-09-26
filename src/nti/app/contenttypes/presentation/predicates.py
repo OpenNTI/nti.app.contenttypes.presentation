@@ -27,8 +27,9 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
-from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraints
 from nti.contenttypes.presentation.interfaces import IAssignmentCompletionConstraint
+
+from nti.contenttypes.presentation.lesson import constraints_for_lesson
 
 from nti.assessment.interfaces import IQAssignment
 
@@ -109,9 +110,10 @@ class LessonPublishablePredicate(object):
 		pass
 
 	def is_published(self, lesson, principal=None, *args, **kwargs):
-		constraints = ILessonPublicationConstraints(lesson).Items
-		for constraint in constraints:
-			checker = ILessonPublicationConstraintChecker(constraint, None)
-			if checker is not None and not checker.is_satisfied(constraint, principal):
-				return False
+		constraints = constraints_for_lesson(lesson, False)
+		if constraints:
+			for constraint in constraints.Items:
+				checker = ILessonPublicationConstraintChecker(constraint, None)
+				if checker is not None and not checker.is_satisfied(constraint, principal):
+					return False
 		return True
