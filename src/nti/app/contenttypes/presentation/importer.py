@@ -49,6 +49,7 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.presentation import iface_of_asset
 
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
+from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraints
 
 from nti.coremetadata.interfaces import IRecordable 
 from nti.coremetadata.interfaces import IPublishable 
@@ -57,6 +58,9 @@ from nti.coremetadata.interfaces import IRecordableContainer
 
 from nti.coremetadata.utils import current_principal
 
+from nti.externalization.internalization import find_factory_for
+from nti.externalization.internalization import update_from_external_object
+	
 from nti.property.property import Lazy
 
 from nti.site.hostpolicy import get_host_site
@@ -99,10 +103,12 @@ class LessonOverviewsImporter(BaseSectionImporter):
 		if locked and IRecordable.providedBy(asset):
 			asset.lock(event=False)
 			modified = True
+
 		locked = parsed.get('isChildOrderLocked')
 		if locked and IRecordableContainer.providedBy(asset):
 			asset.childOrderLock(event=False)
 			modified = True
+
 		isPublished = parsed.get('isPublished') 
 		if isPublished:
 			if ICalendarPublishable.providedBy(asset):
@@ -112,6 +118,15 @@ class LessonOverviewsImporter(BaseSectionImporter):
 			elif IPublishable.providedBy(asset):
 				asset.publish(event=False)
 				modified = True
+
+		ext_obj = parsed.get('PublicationConstraints')
+		if ext_obj:
+			imported_constraints = find_factory_for(ext_obj)()
+			update_from_external_object(imported_constraints, ext_obj)
+			constraints = ILessonPublicationConstraints(asset)
+			constraints.extend(imported_constraints.Items)
+			modified = True
+
 		if modified:
 			lifecycleevent.notify(asset)
 
