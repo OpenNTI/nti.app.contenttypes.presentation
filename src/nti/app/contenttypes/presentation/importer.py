@@ -128,7 +128,7 @@ class LessonOverviewsImporter(BaseSectionImporter):
 			modified = True
 
 		if modified:
-			lifecycleevent.notify(asset)
+			lifecycleevent.modified(asset)
 
 	def _do_import(self, context, source_filer, save_sources=True):
 		course = ICourseInstance(context)
