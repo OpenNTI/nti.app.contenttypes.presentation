@@ -23,6 +23,7 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.presentation import iface_of_asset
 
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
+from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 
 from nti.externalization.externalization import to_external_object
@@ -67,6 +68,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
 		ext_obj.pop(CONTAINER_ID, None)
 		
 		# save asset resources
+		asset = IConcreteAsset(asset, asset)
 		provided = iface_of_asset(asset)
 		save_resources_to_filer(provided, asset, filer, ext_obj)
 
