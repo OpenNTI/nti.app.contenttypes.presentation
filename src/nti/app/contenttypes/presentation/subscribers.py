@@ -240,6 +240,15 @@ def _on_will_update_presentation_asset(asset, event):
 				if IContentBaseFile.providedBy(source):
 					source.remove_association(asset)
 
+@component.adapter(INTIDocketAsset, INTIIntIdRemovedEvent)
+def _on_docket_asset_removed(asset, event):
+	for name in ('href', 'icon'):
+		value = getattr(asset, name, None)
+		if value and is_internal_file_link(value):
+			source = get_file_from_external_link(value)
+			if IContentBaseFile.providedBy(source):
+				source.remove_association(asset)
+
 @component.adapter(IContentBaseFile, INTIIntIdRemovedEvent)
 def _on_content_file_removed(context, event):
 	if not context.has_associations():

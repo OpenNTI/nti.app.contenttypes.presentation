@@ -1202,6 +1202,10 @@ class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
 		# Safe if already gone.
 		if item is not None:
 			self.context.remove(item)
+			# remove concrete o avoid leaks
+			concrete = IConcreteAsset(item, item)
+			if concrete is not item:
+				remove_presentation_asset(concrete)
 		else:
 			self.context.pop(index)
 		remove_presentation_asset(item)
