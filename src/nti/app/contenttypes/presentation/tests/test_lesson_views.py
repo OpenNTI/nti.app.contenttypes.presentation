@@ -64,7 +64,9 @@ class TestLessonViews(ApplicationLayerTest):
 		lesson = res.json_body['Items'][0]['ntiid']
 		lesson_link = '/dataserver2/Objects/' + lesson
 		self.testapp.post(lesson_link + '/@@publish')
-	
+		res = self.testapp.get(lesson_link, status=200)
+		self.require_link_href_with_rel( res.json_body, "constraints")
+		
 		# POST constraint
 		publication_constraints_link = '%s/PublicationConstraints' % lesson_link
 		assignment = "tag:nextthought.com,2011-10:OU-NAQ-CS1323_F_2015_Intro_to_Computer_Programming.naq.asg.assignment:iClicker_8_26"
