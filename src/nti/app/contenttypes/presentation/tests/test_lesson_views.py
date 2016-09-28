@@ -64,9 +64,9 @@ class TestLessonViews(ApplicationLayerTest):
 		lesson = res.json_body['Items'][0]['ntiid']
 		lesson_link = '/dataserver2/Objects/' + lesson
 		self.testapp.post(lesson_link + '/@@publish')
-
+	
 		# POST constraint
-		publication_constraints_link = '/dataserver2/Objects/' + lesson + '/PublicationConstraints'
+		publication_constraints_link = '%s/PublicationConstraints' % lesson_link
 		assignment = "tag:nextthought.com,2011-10:OU-NAQ-CS1323_F_2015_Intro_to_Computer_Programming.naq.asg.assignment:iClicker_8_26"
 		constraint = {
 			"MimeType": "application/vnd.nextthought.lesson.assignmentcompletionconstraint",
@@ -94,8 +94,8 @@ class TestLessonViews(ApplicationLayerTest):
 			result = lesson_object.is_published(principal=student)
 			assert_that(result, is_(False))
 
-		constraints_link = '/dataserver2/Objects/' + ntiid
-		self.testapp.delete(constraints_link, status=204)
+		constraint_link = '/dataserver2/Objects/' + ntiid
+		self.testapp.delete(constraint_link, status=204)
 		
 		res = self.testapp.get(publication_constraints_link, status=200)
 		assert_that(res.json_body, has_entry('Items', has_length(0)))
