@@ -48,8 +48,9 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation import iface_of_asset
 
-from nti.contenttypes.presentation.interfaces import IItemAssetContainer,\
-	IConcreteAsset
+from nti.contenttypes.presentation.interfaces import IConcreteAsset
+from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
+from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraints
 
 from nti.coremetadata.interfaces import IRecordable 
@@ -87,6 +88,9 @@ class LessonOverviewsImporter(BaseSectionImporter):
 		transfer_resources_from_filer(provided, concrete, source_filer, target_filer)
 		# set creator
 		concrete.creator = asset.creator = self.current_principal.id
+		# mark as created
+		interface.alsoProvides(asset, IUserCreatedAsset)
+		interface.alsoProvides(concrete, IUserCreatedAsset)
 		# check 'children'
 		if IItemAssetContainer.providedBy(asset):
 			asset_items = asset.Items if asset.Items is not None else ()
