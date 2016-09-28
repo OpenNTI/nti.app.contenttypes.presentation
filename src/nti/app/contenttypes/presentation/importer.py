@@ -86,9 +86,7 @@ class LessonOverviewsImporter(BaseSectionImporter):
 		concrete = IConcreteAsset(asset, asset) # make sure we transfer from concrete
 		transfer_resources_from_filer(provided, concrete, source_filer, target_filer)
 		# set creator
-		for x in (asset, concrete):
-			if not getattr(x, 'creator', None):
-				x.creator = self.current_principal.id
+		concrete.creator = asset.creator = self.current_principal.id
 		# check 'children'
 		if IItemAssetContainer.providedBy(asset):
 			asset_items = asset.Items if asset.Items is not None else ()
