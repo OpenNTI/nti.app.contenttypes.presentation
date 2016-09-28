@@ -99,3 +99,6 @@ class TestLessonViews(ApplicationLayerTest):
 		
 		res = self.testapp.get(publication_constraints_link, status=200)
 		assert_that(res.json_body, has_entry('Items', has_length(0)))
+
+		clear_constraints_link = '%s/@@clear' % publication_constraints_link
+		self.testapp.post_json(clear_constraints_link, status=200)

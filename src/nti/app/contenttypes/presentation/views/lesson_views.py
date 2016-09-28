@@ -17,6 +17,8 @@ from pyramid import httpexceptions as hexc
 from pyramid.view import view_config
 from pyramid.view import view_defaults
 
+from nti.app.base.abstract_views import AbstractAuthenticatedView
+
 from nti.app.contenttypes.presentation.interfaces import ILessonPublicationConstraintValidator
 
 from nti.app.externalization.error import raise_json_error
@@ -70,6 +72,18 @@ class LessonPublicationConstraintsGetView(GenericGetView):
 
 	def __call__(self):
 		return self._do_call(self.context)
+
+@view_config(context=ILessonPublicationConstraints)
+@view_defaults(route_name='objects.generic.traversal',
+			   name='clear',
+			   renderer='rest',
+			   request_method='POST',
+			   permission=nauth.ACT_CONTENT_EDIT)
+class LessonPublicationConstraintsClearView(AbstractAuthenticatedView):
+
+	def __call__(self):
+		self.context.clear()
+		return self.context
 
 @view_config(context=ILessonPublicationConstraints)
 @view_defaults(route_name='objects.generic.traversal',
