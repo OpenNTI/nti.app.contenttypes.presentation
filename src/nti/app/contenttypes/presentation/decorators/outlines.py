@@ -62,26 +62,23 @@ from nti.property.property import Lazy
 LINKS = StandardExternalFields.LINKS
 
 def _is_visible(item, request, show_unpublished=True):
-	return 	not IPublishable.providedBy(item) \
+	return 		not IPublishable.providedBy(item) \
 			or 	item.is_published() \
 			or	(show_unpublished and has_permission(ACT_CONTENT_EDIT, item, request))
 
 def _lesson_overview_links(context, request):
 	omit_unpublished = False
-
 	try:
 		omit_unpublished = is_true(request.params.get('omit_unpublished', False))
 	except ValueError:
 		pass
 
-	name = context.LessonOverviewNTIID
-	lesson = component.queryUtility(INTILessonOverview, name=name) if name else None
+	lesson = INTILessonOverview(context, None)
 	if lesson is not None and _is_visible(lesson, request, not omit_unpublished):
-		overview_link = Link(context, rel=VIEW_OVERVIEW_CONTENT,
-							 elements=(VIEW_OVERVIEW_CONTENT,))
-		summary_link = Link(context, rel=VIEW_OVERVIEW_SUMMARY,
-							elements=(VIEW_OVERVIEW_SUMMARY,))
-		return (overview_link, summary_link)
+		result = []
+		for name in (VIEW_OVERVIEW_CONTENT, VIEW_OVERVIEW_SUMMARY):
+			result.append(Link(context, rel=name, elements=('@@' + name,)))
+		return tuple(result)
 	return None
 
 @component.adapter(ICourseOutline)
