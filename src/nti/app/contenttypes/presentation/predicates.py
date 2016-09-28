@@ -128,7 +128,7 @@ class LessonPublishablePredicate(object):
 
 	def is_published(self, lesson, principal=None, *args, **kwargs):
 		constraints = constraints_for_lesson(lesson, False)
-		if constraints:
+		if constraints is not None:
 			for constraint in constraints.Items:
 				checker = ILessonPublicationConstraintChecker(constraint, None)
 				if checker is not None and not checker.is_satisfied(constraint, principal):
