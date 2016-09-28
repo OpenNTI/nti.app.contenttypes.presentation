@@ -122,7 +122,7 @@ class LessonOverviewsImporter(BaseSectionImporter):
 		ext_obj = parsed.get('PublicationConstraints')
 		if ext_obj:
 			imported_constraints = find_factory_for(ext_obj)()
-			update_from_external_object(imported_constraints, ext_obj)
+			update_from_external_object(imported_constraints, ext_obj, notify=False)
 			constraints = ILessonPublicationConstraints(asset)
 			constraints.extend(imported_constraints.Items)
 			modified = True
