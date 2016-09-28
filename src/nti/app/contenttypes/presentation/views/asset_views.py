@@ -140,6 +140,7 @@ from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
 from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
+from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import IGroupOverViewable
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
@@ -1204,7 +1205,7 @@ class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
 			self.context.remove(item)
 			# remove concrete o avoid leaks
 			concrete = IConcreteAsset(item, item)
-			if concrete is not item:
+			if concrete is not item and IUserCreatedAsset.providedBy(concrete):
 				remove_presentation_asset(concrete)
 		else:
 			self.context.pop(index)

@@ -12,13 +12,18 @@ logger = __import__('logging').getLogger(__name__)
 from itertools import chain
 
 from zope import component
+from zope import interface
 
 from zope.interface.interfaces import IUnregistered
+
+from zope.intid.interfaces import IIntIdAddedEvent
 
 from zope.event import notify
 
 from zope.lifecycleevent.interfaces import IObjectRemovedEvent
 from zope.lifecycleevent.interfaces import IObjectModifiedEvent
+
+from zope.security.management import queryInteraction
 
 from nti.app.contenttypes.presentation.synchronizer import clear_course_assets
 from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
@@ -63,6 +68,7 @@ from nti.contenttypes.presentation.interfaces import INTIPollRef
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import INTIDocketAsset
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
+from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
@@ -202,6 +208,11 @@ def _on_asset_moved(asset, event):
 		record_transaction(asset, principal=event.principal,
 						   type_=TRX_ASSET_MOVE_TYPE)
 
+@component.adapter(IUserCreatedAsset, IIntIdAddedEvent)
+def _on_asset_registered(asset, event):
+	if queryInteraction() is not None:
+		interface.alsoProvides(asset, IUserCreatedAsset)
+
 @component.adapter(IPresentationAsset, IObjectModifiedEvent)
 def _on_asset_modified(asset, event):
 	if current_principal() is not None:
@@ -239,7 +250,7 @@ def _on_will_update_presentation_asset(asset, event):
 				source = get_file_from_external_link(value)
 				if IContentBaseFile.providedBy(source):
 					source.remove_association(asset)
-
+				
 @component.adapter(INTIDocketAsset, INTIIntIdRemovedEvent)
 def _on_docket_asset_removed(asset, event):
 	for name in ('href', 'icon'):

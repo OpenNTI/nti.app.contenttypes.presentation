@@ -166,6 +166,7 @@
 	<subscriber handler=".subscribers._on_asset_moved" />
 	<subscriber handler=".subscribers._on_group_moved" />
 	<subscriber handler=".subscribers._on_asset_modified" />
+	<subscriber handler=".subscribers._on_asset_registered" />
 	<subscriber handler=".subscribers._on_docket_asset_removed" />
 	<subscriber handler=".subscribers._on_presentation_asset_created" />
 	<subscriber handler=".subscribers._on_item_asset_containter_modified" />
