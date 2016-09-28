@@ -10,6 +10,9 @@ __docformat__ = "restructuredtext en"
 import fudge
 
 from hamcrest import is_
+from hamcrest import none
+from hamcrest import is_not
+from hamcrest import has_entry
 from hamcrest import assert_that
 
 from nti.dataserver.users import User
@@ -69,8 +72,11 @@ class TestLessonViews(ApplicationLayerTest):
 			'assignments':[assignment]
 		}
 
-		self.testapp.post_json(publication_constraints_link, constraint, status=201)
-
+		res = self.testapp.post_json(publication_constraints_link, constraint, status=201)
+		assert_that(res.json_body, has_entry('OID', is_not(none())))
+		assert_that(res.json_body, has_entry('NTIID', is_not(none())))
+		ntiid = res.json_body['NTIID']
+		
 		with mock_dataserver.mock_db_trans(self.ds, 'platform.ou.edu'):
 			lesson_object = find_object_with_ntiid(lesson)
 
@@ -83,3 +89,6 @@ class TestLessonViews(ApplicationLayerTest):
 			has_submitted_assignment.is_callable().returns(False)
 			result = lesson_object.is_published(principal=student)
 			assert_that(result, is_(False))
+
+		constraints_link = '/dataserver2/Objects/' + ntiid
+		self.testapp.delete(constraints_link, status=204)

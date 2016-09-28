@@ -36,7 +36,6 @@ from nti.dataserver_core.interfaces import ILinkExternalHrefOnly
 
 from nti.externalization.externalization import to_external_object
 
-from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 
 from nti.links.externalization import render_link
@@ -62,16 +61,8 @@ def render_to_external_ref(resource):
 class LessonPublicationConstraintsGetView(GenericGetView):
 
 	def _do_call(self, constraints):
-		result = LocatedExternalDict()
-		result[MIMETYPE] = constraints.mimeType
-		result[CLASS] = getattr(constraints, '__external_class_name__',
-								constraints.__class__.__name__)
-		items = result[ITEMS] = []
-		for constraint in constraints.Items:
-			ext_obj = to_external_object(constraint)
-			ext_obj['href'] = render_to_external_ref(constraint)
-			items.append(ext_obj)
-		result[TOTAL] = result[ITEM_COUNT] = len(items)
+		result = to_external_object(constraints)
+		result[TOTAL] = result[ITEM_COUNT] = len(constraints)
 		result.__parent__ = self.context
 		result.__name__ = self.request.view_name
 		result.lastModified = constraints.lastModified
@@ -109,6 +100,7 @@ class LessonPublicationConstraintsPostView(UGDPostView):
 
 		lifecycleevent.created(constraint)
 		self.context.append(constraint)
+		lifecycleevent.added(constraint)
 		self.request.response.status_int = 201
 		return constraint
 
@@ -147,4 +139,5 @@ class LessonPublicationConstraintDeleteView(UGDDeleteView):
 
 	def _do_delete_object(self, theObject):
 		del theObject.__parent__[theObject.__name__]
+		lifecycleevent.removed(theObject)
 		return theObject
