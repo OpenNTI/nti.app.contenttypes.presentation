@@ -40,7 +40,7 @@ class MockDataserver(object):
 			return resolver.get_object_by_oid(oid, ignore_creator=ignore_creator)
 		return None
 
-def _fix_refs(current_site, intids, seen):
+def _fix_refs(current_site, seen):
 	result = 0
 	registry = current_site.getSiteManager()
 	for name, item in list(registry.getUtilitiesFor(INTIDocketAsset)):
