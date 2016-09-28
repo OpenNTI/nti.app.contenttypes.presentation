@@ -13,6 +13,7 @@ from hamcrest import is_
 from hamcrest import none
 from hamcrest import is_not
 from hamcrest import has_entry
+from hamcrest import has_length
 from hamcrest import assert_that
 
 from nti.dataserver.users import User
@@ -77,6 +78,9 @@ class TestLessonViews(ApplicationLayerTest):
 		assert_that(res.json_body, has_entry('NTIID', is_not(none())))
 		ntiid = res.json_body['NTIID']
 		
+		res = self.testapp.get(publication_constraints_link, status=200)
+		assert_that(res.json_body, has_entry('Items', has_length(1)))
+	
 		with mock_dataserver.mock_db_trans(self.ds, 'platform.ou.edu'):
 			lesson_object = find_object_with_ntiid(lesson)
 
@@ -92,3 +96,6 @@ class TestLessonViews(ApplicationLayerTest):
 
 		constraints_link = '/dataserver2/Objects/' + ntiid
 		self.testapp.delete(constraints_link, status=204)
+		
+		res = self.testapp.get(publication_constraints_link, status=200)
+		assert_that(res.json_body, has_entry('Items', has_length(0)))
