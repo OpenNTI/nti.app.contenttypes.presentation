@@ -83,9 +83,11 @@ class LessonOverviewsImporter(BaseSectionImporter):
 
 	def _post_process_asset(self, asset, source_filer, target_filer):
 		# save asset resources
-		provided = iface_of_asset(asset)
 		concrete = IConcreteAsset(asset, asset) # make sure we transfer from concrete
-		transfer_resources_from_filer(provided, concrete, source_filer, target_filer)
+		transfer_resources_from_filer(iface_of_asset(concrete),
+									  concrete, 
+									  source_filer, 
+									  target_filer)
 		# set creator
 		concrete.creator = asset.creator = self.current_principal.id
 		# mark as created
