@@ -66,7 +66,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
 	def _post_process_asset(self, asset, ext_obj, filer):
 		ext_obj.pop(OID, None)
 		ext_obj.pop(CONTAINER_ID, None)
-		
+
 		# save asset resources
 		asset = IConcreteAsset(asset, asset)
 		provided = iface_of_asset(asset)
@@ -88,7 +88,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
 						ext_obj.pop(NTIID, None)
 						ext_obj.pop(NTIID.lower(), None)
 					self._post_process_asset(item, item_ext, filer)
-		
+
 		# don't leak internal OIDs
 		for name in (NTIID, NTIID.lower(), INTERNAL_CONTAINER_ID, 'target'):
 			value = ext_obj.get(name)

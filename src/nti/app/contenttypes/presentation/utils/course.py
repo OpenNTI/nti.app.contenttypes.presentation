@@ -42,7 +42,6 @@ from nti.coremetadata.mixins import CreatedAndModifiedTimeMixin
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
-from nti.ntiids.ntiids import make_specific_safe
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.site.hostpolicy import get_host_site
@@ -128,7 +127,10 @@ def get_course_by_relative_path_parts(*parts):
 		with current_site(get_host_site(site)):
 			context = component.getUtility(IPersistentCourseCatalog)
 			for name in parts:
-				transformed = make_specific_safe(name)
+				# Underscore parts are given, so we'll want to replace with
+				# the possible space-inclusive keys we have in our folder
+				# structure.
+				transformed = name.replace('_', ' ')
 				try:
 					if name in context:
 						context = context[name]
