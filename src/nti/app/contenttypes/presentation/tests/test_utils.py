@@ -8,12 +8,15 @@ __docformat__ = "restructuredtext en"
 # pylint: disable=W0212,R0904
 
 from hamcrest import is_
+from hamcrest import is_in
+from hamcrest import ends_with
 from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
 
 import unittest
 
+from nti.app.contenttypes.presentation.utils import make_asset_ntiid
 from nti.app.contenttypes.presentation.utils import VISIBILITY_SCOPE_MAP
 from nti.app.contenttypes.presentation.utils import get_visibility_for_scope
 
@@ -29,6 +32,10 @@ from nti.contenttypes.presentation.interfaces import CREDIT
 from nti.contenttypes.presentation.interfaces import EVERYONE
 from nti.contenttypes.presentation.interfaces import PURCHASED
 
+from nti.contenttypes.presentation.interfaces import INTILessonOverview
+
+from nti.coremetadata.interfaces import SYSTEM_USER_NAME
+
 class TestUtils(unittest.TestCase):
 
 	def test_visibility_map(self):
@@ -40,3 +47,9 @@ class TestUtils(unittest.TestCase):
 		assert_that(VISIBILITY_SCOPE_MAP, has_entry(ES_CREDIT_DEGREE, is_(CREDIT)))
 		assert_that(VISIBILITY_SCOPE_MAP, has_entry(ES_CREDIT_NONDEGREE, is_(CREDIT)))
 		assert_that(get_visibility_for_scope(ES_ALL), is_(EVERYONE))
+
+	def test_make_asset_ntiid(self):
+		ntiid = make_asset_ntiid(INTILessonOverview, extra='ICHIGO')
+		assert_that(SYSTEM_USER_NAME, is_in(ntiid))
+		assert_that('NTILessonOverview', is_in(ntiid))
+		assert_that(ntiid, ends_with('_ICHIGO'))

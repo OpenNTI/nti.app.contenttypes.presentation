@@ -104,8 +104,7 @@ def add_2_connection(item, registry=None, connection=None):
 	connection = get_db_connection(registry) if connection is None else connection
 	if connection is not None and getattr(item, '_p_jar', None) is None:
 		connection.add(item)
-	result = getattr(item, '_p_jar', None) is not None
-	return result
+	return getattr(item, '_p_jar', None) is not None
 
 def intid_register(item, registry=None, connection=None, event=True):
 	if add_2_connection(item, registry, connection):
@@ -118,8 +117,7 @@ def intid_register(item, registry=None, connection=None, event=True):
 
 def get_registry_by_name(name):
 	folder = get_host_site(name, safe=True)
-	result = folder.getSiteManager() if folder is not None else None
-	return result
+	return folder.getSiteManager() if folder is not None else None
 registry_by_name = get_registry_by_name
 
 def get_component_site(context, provided, name=None):
@@ -233,11 +231,12 @@ def remove_presentation_asset(item, registry=None, catalog=None,
 	else:
 		remove_asset(item, registry, catalog, name=name, event=event)
 
-def make_asset_ntiid(nttype, creator=SYSTEM_USER_NAME, base=None, extra=None):
+def make_asset_ntiid(nttype, creator=SYSTEM_USER_NAME, base=None, extra=None, now=None):
 	if type(nttype) == InterfaceClass:
 		nttype = nttype.__name__[1:]
 
-	current_time = time_to_64bit_int(time.time())
+	now = time.time() if now is None else now
+	current_time = time_to_64bit_int(now)
 	creator = getattr(creator, 'username', creator)
 	provider = get_provider(base) or 'NTI' if base else 'NTI'
 
@@ -258,8 +257,7 @@ def make_asset_ntiid(nttype, creator=SYSTEM_USER_NAME, base=None, extra=None):
 	return ntiid
 
 def get_course_for_node(node):
-	course = find_interface(node, ICourseInstance, strict=False)
-	return course
+	return find_interface(node, ICourseInstance, strict=False)
 course_for_node = get_course_for_node
 
 def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None, sites=None):
