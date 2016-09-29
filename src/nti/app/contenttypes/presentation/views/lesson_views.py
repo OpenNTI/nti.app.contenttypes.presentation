@@ -37,10 +37,7 @@ from nti.externalization.externalization import to_external_object
 
 from nti.externalization.interfaces import StandardExternalFields
 
-CLASS = StandardExternalFields.CLASS
-ITEMS = StandardExternalFields.ITEMS
 TOTAL = StandardExternalFields.TOTAL
-MIMETYPE = StandardExternalFields.MIMETYPE
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
 @view_config(context=ILessonPublicationConstraints)
