@@ -9,7 +9,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from zope import interface
 from zope import lifecycleevent
 
 from pyramid import httpexceptions as hexc
@@ -34,26 +33,15 @@ from nti.contenttypes.presentation.interfaces import ILessonPublicationConstrain
 
 from nti.dataserver import authorization as nauth
 
-from nti.dataserver_core.interfaces import ILinkExternalHrefOnly
-
 from nti.externalization.externalization import to_external_object
 
 from nti.externalization.interfaces import StandardExternalFields
-
-from nti.links.externalization import render_link
-
-from nti.links.links import Link
 
 CLASS = StandardExternalFields.CLASS
 ITEMS = StandardExternalFields.ITEMS
 TOTAL = StandardExternalFields.TOTAL
 MIMETYPE = StandardExternalFields.MIMETYPE
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
-
-def render_to_external_ref(resource):
-	link = Link(target=resource)
-	interface.alsoProvides(link, ILinkExternalHrefOnly)
-	return render_link(link)
 
 @view_config(context=ILessonPublicationConstraints)
 @view_defaults(route_name='objects.generic.traversal',
