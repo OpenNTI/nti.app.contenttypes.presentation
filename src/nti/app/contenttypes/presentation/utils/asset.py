@@ -36,7 +36,7 @@ from nti.common.random import generate_random_hex_string
 
 from nti.common.string import to_unicode
 
-from nti.coremetadata.interfaces import SYSTEM_USER_ID
+from nti.coremetadata.interfaces import SYSTEM_USER_NAME
 
 from nti.contentlibrary.indexed_data import get_site_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
@@ -233,7 +233,7 @@ def remove_presentation_asset(item, registry=None, catalog=None,
 	else:
 		remove_asset(item, registry, catalog, name=name, event=event)
 
-def make_asset_ntiid(nttype, creator=SYSTEM_USER_ID, base=None, extra=None):
+def make_asset_ntiid(nttype, creator=SYSTEM_USER_NAME, base=None, extra=None):
 	if type(nttype) == InterfaceClass:
 		nttype = nttype.__name__[1:]
 
@@ -263,12 +263,11 @@ def get_course_for_node(node):
 course_for_node = get_course_for_node
 
 def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None, sites=None):
-	creator = getattr(node, 'creator', None) or SYSTEM_USER_ID
+	creator = getattr(node, 'creator', None)
 	creator = getattr(creator, 'username', creator)
 	if not ntiid:
-		extra = generate_random_hex_string(6)
+		extra = generate_random_hex_string(6).upper()
 		ntiid = make_asset_ntiid(nttype=INTILessonOverview,
-								 creator=creator,
 								 base=node.ntiid,
 								 extra=extra)
 

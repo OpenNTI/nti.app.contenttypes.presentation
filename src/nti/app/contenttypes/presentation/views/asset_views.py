@@ -331,7 +331,7 @@ def _canonicalize(items, creator, base=None, registry=None):
 		created = True
 		provided = iface_of_asset(item)
 		if not item.ntiid:
-			item.ntiid = make_asset_ntiid(provided, creator, base=base, extra=idx)
+			item.ntiid = make_asset_ntiid(provided, base=base, extra=idx)
 		else:
 			stored = registry.queryUtility(provided, name=item.ntiid)
 			if stored is not None:
@@ -442,7 +442,7 @@ class PresentationAssetMixin(object):
 
 	@Lazy
 	def _extra(self):
-		return str(uuid.uuid4()).split('-')[0]
+		return str(uuid.uuid4()).split('-')[0].upper()
 
 	@Lazy
 	def _registry(self):
@@ -491,7 +491,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 			if self._registry.queryUtility(provided, name=ntiid):
 				raise hexc.HTTPUnprocessableEntity(_("Asset already exists."))
 		else:
-			item.ntiid = make_asset_ntiid(provided, creator, extra=self._extra)
+			item.ntiid = make_asset_ntiid(provided, extra=self._extra)
 		return item
 
 	def _set_creator(self, item, creator):
