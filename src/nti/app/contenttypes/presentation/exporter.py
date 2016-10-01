@@ -67,10 +67,10 @@ class LessonOverviewsExporter(BaseSectionExporter):
 		ext_obj.pop(OID, None)
 		ext_obj.pop(CONTAINER_ID, None)
 
-		# save asset resources
-		asset = IConcreteAsset(asset, asset)
-		provided = iface_of_asset(asset)
-		save_resources_to_filer(provided, asset, filer, ext_obj)
+		# save asset/concrete resources
+		concrete = IConcreteAsset(asset, asset)
+		provided = iface_of_asset(concrete)
+		save_resources_to_filer(provided, concrete, filer, ext_obj)
 
 		# check 'children'
 		if IItemAssetContainer.providedBy(asset):
