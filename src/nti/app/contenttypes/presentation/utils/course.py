@@ -23,10 +23,9 @@ from nti.appserver.pyramid_authorization import has_permission
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
-from nti.contentlibrary.interfaces import IContentUnit
-from nti.contentlibrary.interfaces import IContentPackage
-
 from nti.contenttypes.courses.interfaces import ES_ALL
+from nti.contenttypes.courses.interfaces import NTIID_ENTRY_TYPE
+
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
@@ -34,7 +33,6 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.contenttypes.courses.utils import get_any_enrollment
 from nti.contenttypes.courses.utils import get_course_hierarchy
-from nti.contenttypes.courses.utils import get_content_unit_courses
 from nti.contenttypes.courses.utils import get_courses_for_packages
 from nti.contenttypes.courses.utils import is_course_instructor_or_editor
 
@@ -42,6 +40,7 @@ from nti.coremetadata.mixins import CreatedAndModifiedTimeMixin
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
+from nti.ntiids.ntiids import is_ntiid_of_type
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.site.hostpolicy import get_host_site
@@ -93,19 +92,15 @@ def get_containers(ntiids=()):
 def get_courses(ntiids=()):
 	result = set()
 	for ntiid in ntiids or ():
-		course = None
-		context = find_object_with_ntiid(ntiid)
-		if IContentPackage.providedBy( context ):
-			courses = get_content_unit_courses( context )
-			result.update( courses )
+		# As shortcut, we only want our entry types.This
+		# prevents expensive lookups of content units.
+		if not is_ntiid_of_type( ntiid, NTIID_ENTRY_TYPE ):
 			continue
-
+		context = find_object_with_ntiid(ntiid)
 		if ICourseCatalogEntry.providedBy(context):
 			course = ICourseInstance(context, None)
 		elif ICourseInstance.providedBy(context):
 			course = context
-		elif not IContentUnit.providedBy(context):  # ignore content units
-			course = ICourseInstance(context, None)
 		if course is not None:
 			result.add(course)
 	return result
