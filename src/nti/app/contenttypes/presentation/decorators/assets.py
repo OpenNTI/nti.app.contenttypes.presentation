@@ -612,11 +612,6 @@ class _BaseAssessmentRefDecorator(_BaseAssetDecorator):
 			question_count = getattr( target, 'draw', None ) or len( target.questions )
 		external[u'question-count'] = str( question_count )
 
-@component.adapter(IQuestionSet)
-@interface.implementer(IExternalObjectDecorator)
-class _NTIQuestionSetDecorator(_BaseAssessmentRefDecorator):
-	pass
-
 @component.adapter(INTIQuestionSetRef)
 @interface.implementer(IExternalObjectDecorator)
 class _NTIQuestionSetRefDecorator(_BaseAssessmentRefDecorator):
