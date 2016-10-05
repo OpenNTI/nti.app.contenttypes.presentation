@@ -153,6 +153,10 @@
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"
 				for="nti.contenttypes.presentation.interfaces.INTIQuestionRef" />
 
+	<subscriber factory=".assets._NTIQuestionSetDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.assessment.interfaces.IQuestionSet" />
+
 	<subscriber factory=".assets._NTIQuestionSetRefDecorator"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"
 				for="nti.contenttypes.presentation.interfaces.INTIQuestionSetRef" />

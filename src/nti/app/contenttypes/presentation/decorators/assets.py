@@ -44,6 +44,7 @@ from nti.appserver.pyramid_authorization import has_permission
 
 from nti.assessment.interfaces import IQSurvey
 from nti.assessment.interfaces import IQAssignment
+from nti.assessment.interfaces import IQuestionSet
 
 from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackage
@@ -610,6 +611,11 @@ class _BaseAssessmentRefDecorator(_BaseAssetDecorator):
 		if target is not None:
 			question_count = getattr( target, 'draw', None ) or len( target.questions )
 		external[u'question-count'] = str( question_count )
+
+@component.adapter(IQuestionSet)
+@interface.implementer(IExternalObjectDecorator)
+class _NTIQuestionSetDecorator(_BaseAssessmentRefDecorator):
+	pass
 
 @component.adapter(INTIQuestionSetRef)
 @interface.implementer(IExternalObjectDecorator)
