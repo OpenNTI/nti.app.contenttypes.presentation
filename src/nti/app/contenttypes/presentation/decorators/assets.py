@@ -44,7 +44,6 @@ from nti.appserver.pyramid_authorization import has_permission
 
 from nti.assessment.interfaces import IQSurvey
 from nti.assessment.interfaces import IQAssignment
-from nti.assessment.interfaces import IQuestionSet
 
 from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackage
