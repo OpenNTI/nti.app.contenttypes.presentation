@@ -173,11 +173,11 @@ class _NTITranscriptResolver(object):
 		parts = get_parts(key)
 		specific = parts.specific[:parts.specific.rfind('.')]
 		for nttype in (NTI_VIDEO, NTI_AUDIO):
-			# transform to a video NTIID
-			ntiid = make_ntiid(date=parts.date,
-							   provider=parts.provider,
-							   nttype=nttype,
-							   specific=specific)
+			# transform to a media NTIID
+			ntiid = make_ntiid(nttype=nttype,
+							   date=parts.date,
+							   specific=specific,
+							   provider=parts.provider)
 			media = find_object_with_ntiid(ntiid)
 			if INTIMedia.providedBy(media):
 				for transcript in media.transcripts or ():
