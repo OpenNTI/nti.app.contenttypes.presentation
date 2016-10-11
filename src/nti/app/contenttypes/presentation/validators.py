@@ -14,7 +14,7 @@ from zope import interface
 
 from zope.i18n import translate
 
-from nti.app.contenttypes.presentation import MessageFactory as _m
+from nti.app.contenttypes.presentation import MessageFactory as _
 
 from nti.app.contenttypes.presentation.interfaces import IItemRefValidator
 from nti.app.contenttypes.presentation.interfaces import ILessonPublicationConstraintValidator
@@ -116,10 +116,10 @@ class _AssignmentCompletionConstraintValidator(object):
 		constraint = self.constraint if constraint is None else constraint
 		assignments = constraint.assignments
 		if not assignments:
-			raise ValueError(_m("Assignment list cannot be empty."))
+			raise ValueError(_("Assignment list cannot be empty."))
 			
 		for ntiid in assignments:
 			if component.queryUtility(IQAssignment, name=ntiid) is None:
-				msg = translate(_m("Assigment ${ntiid} does not exist.",
+				msg = translate(_("Assigment ${ntiid} does not exist.",
 								mapping={'ntiid': ntiid}))
 				raise ValueError(msg)
