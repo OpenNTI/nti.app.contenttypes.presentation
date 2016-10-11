@@ -15,3 +15,4 @@ from .. import VIEW_NODE_MOVE
 from .. import VIEW_NODE_CONTENTS
 from .. import VIEW_OVERVIEW_CONTENT
 from .. import VIEW_OVERVIEW_SUMMARY
+from .. import VIEW_LESSON_REMOVE_REFS

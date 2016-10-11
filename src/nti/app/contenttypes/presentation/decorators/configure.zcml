@@ -219,4 +219,9 @@
 				for="nti.contenttypes.presentation.interfaces.INTILessonOverview
 					 pyramid.interfaces.IRequest" />
 
+	<subscriber factory=".lessons._LessonLinkDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTILessonOverview
+					 pyramid.interfaces.IRequest" />
+
 </configure>

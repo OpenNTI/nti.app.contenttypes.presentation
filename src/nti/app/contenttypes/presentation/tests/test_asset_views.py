@@ -37,6 +37,7 @@ from zope.intid.interfaces import IIntIds
 
 from nti.app.contenttypes.presentation import VIEW_NODE_MOVE
 from nti.app.contenttypes.presentation import VIEW_ORDERED_CONTENTS
+from nti.app.contenttypes.presentation import VIEW_LESSON_REMOVE_REFS
 
 from nti.app.products.courseware.resources.utils import is_internal_file_link
 
@@ -671,7 +672,7 @@ class TestAssetViews(ApplicationLayerTest):
 			obj = find_object_with_ntiid(ntiid)
 			rel_ntiid = res.json_body['ntiid']
 			assert_that(obj, has_property('Items', has_length(2)))
-			
+
 			history = ITransactionRecordHistory(obj)
 			assert_that(history, has_length(greater_than_or_equal_to(4)))
 			self._check_container_index(obj)
@@ -1258,3 +1259,76 @@ class TestAssetViews(ApplicationLayerTest):
 		params = {'ntiid':self.course_ntiid}
 		res = self.testapp.get(href, params)
 		assert_that(res.json_body, has_entry('Total', is_(71)))
+
+	@WithSharedApplicationMockDS(testapp=True, users=True)
+	def test_removing_refs(self):
+		assignment_ntiid = "tag:nextthought.com,2011-10:OU-NAQ-CS1323_F_2015_Intro_to_Computer_Programming.naq.asg.assignment:iClicker_8_26"
+		admin_environ = self._make_extra_environ(username=self.default_username)
+
+		source = self._load_resource('ntilessonoverview.json')
+		source.pop('NTIID', None)
+
+		video_source = self._load_resource('ntivideo.json')
+		video_source.pop('NTIID', None)
+		res = self.testapp.post_json(self.assets_url, video_source, status=201)
+		res = res.json_body
+		video_ntiid = res.get('ntiid')
+
+		# Insert lesson (with one group) and three groups.
+		res = self.testapp.post_json(self.assets_url, source, status=201)
+		res = res.json_body
+		lesson_ntiid = res.get('ntiid')
+		lesson_href = res.get('href')
+		assert_that(lesson_ntiid, not_none())
+		assert_that(lesson_href, not_none())
+		group_zero_size = len( res.get( 'Items' )[0].get( 'Items' ) )
+		remove_refs_link = self.require_link_href_with_rel(res, VIEW_LESSON_REMOVE_REFS)
+		group_source = {'title':'mygroup'}
+		contents_link = self.require_link_href_with_rel(res, VIEW_ORDERED_CONTENTS)
+		group_one = self.testapp.post_json(contents_link, group_source).json_body
+		g1_contents_link = self.require_link_href_with_rel(group_one, VIEW_ORDERED_CONTENTS)
+		group_two = self.testapp.post_json(contents_link, group_source).json_body
+		g2_contents_link = self.require_link_href_with_rel(group_two, VIEW_ORDERED_CONTENTS)
+		group_three = self.testapp.post_json(contents_link, group_source).json_body
+		g3_contents_link = self.require_link_href_with_rel(group_three, VIEW_ORDERED_CONTENTS)
+
+		ref = {
+			"MimeType": "application/vnd.nextthought.assignmentref",
+			"Target-NTIID": assignment_ntiid,
+			"title": "title",
+			"label": "label"
+		}
+
+		# Insert some refs into various groups.
+		# Group one, just the assignment ref
+		self.testapp.post_json(g1_contents_link, ref, status=201)
+		# Group two, just a video
+		res = self.testapp.post_json(g2_contents_link, {'ntiid':video_ntiid}, status=201)
+		# Group three, one of each
+		res = self.testapp.post_json(g3_contents_link, {'ntiid':video_ntiid}, status=201)
+		self.testapp.post_json(g3_contents_link, ref, status=201)
+
+		# Validate current state
+		lesson = self.testapp.get(lesson_href, status=200)
+		lesson = lesson.json_body
+		groups = lesson.get( 'Items' )
+		assert_that( groups[0].get( 'Items' ), has_length( group_zero_size ))
+		assert_that( groups[1].get( 'Items' ), has_length( 1 ))
+		assert_that( groups[2].get( 'Items' ), has_length( 1 ))
+		assert_that( groups[3].get( 'Items' ), has_length( 2 ))
+
+		# Now remove all corresponding refs
+		self.testapp.delete( '%s?target=%s' % (remove_refs_link, assignment_ntiid),
+							 extra_environ=admin_environ )
+
+		lesson = self.testapp.get(lesson_href, status=200)
+		lesson = lesson.json_body
+		groups = lesson.get( 'Items' )
+		assert_that( groups[0].get( 'Items' ), has_length( group_zero_size ))
+		assert_that( groups[1].get( 'Items' ), has_length( 0 ))
+		assert_that( groups[2].get( 'Items' ), has_length( 1 ))
+		assert_that( groups[3].get( 'Items' ), has_length( 1 ))
+
+		# Again with no hits works.
+		self.testapp.delete( '%s?target=%s' % (remove_refs_link, assignment_ntiid),
+							 extra_environ=admin_environ )

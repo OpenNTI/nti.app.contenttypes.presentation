@@ -53,6 +53,7 @@ from nti.app.contenttypes.presentation.utils import resolve_discussion_course_bu
 from nti.app.contenttypes.presentation.views import VIEW_ASSETS
 from nti.app.contenttypes.presentation.views import VIEW_CONTENTS
 from nti.app.contenttypes.presentation.views import VIEW_NODE_MOVE
+from nti.app.contenttypes.presentation.views import VIEW_LESSON_REMOVE_REFS
 
 from nti.app.contenttypes.presentation.views.view_mixins import hexdigest
 from nti.app.contenttypes.presentation.views.view_mixins import PublishVisibilityMixin
@@ -85,6 +86,8 @@ from nti.assessment.interfaces import IQInquiry
 from nti.assessment.interfaces import IQAssessment
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQuestionSet
+
+from nti.common.maps import CaseInsensitiveDict
 
 from nti.contentfile.interfaces import IContentBaseFile
 
@@ -1189,7 +1192,8 @@ class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
 		this index, the object will still be deleted, as long as it
 		is unambiguous.
 
-	:raises HTTPConflict if state has changed out from underneath user
+	:raises HTTPConflict if state (index of object) has changed out
+	from underneath user
 	"""
 
 	def _is_target(self, obj, ntiid):
@@ -1197,12 +1201,12 @@ class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
 				or 	ntiid == getattr(obj, 'ntiid', '')
 
 	def _remove(self, item, index):
-		# We remove the item from our context, and clean it
+		# We remove the item from our context and clean it
 		# up. We want to make sure we clean up the underlying asset.
 		# Safe if already gone.
 		if item is not None:
 			self.context.remove(item)
-			# remove concrete o avoid leaks
+			# remove concrete to avoid leaks
 			concrete = IConcreteAsset(item, item)
 			if concrete is not item and IUserCreatedAsset.providedBy(concrete):
 				remove_presentation_asset(concrete)
@@ -1210,6 +1214,61 @@ class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
 			self.context.pop(index)
 		remove_presentation_asset(item)
 		event_notify(ItemRemovedFromItemAssetContainerEvent(self.context, item))
+
+@view_config(route_name='objects.generic.traversal',
+			 renderer='rest',
+			 name=VIEW_LESSON_REMOVE_REFS,
+			 context=INTILessonOverview,
+			 request_method='DELETE',
+			 permission=nauth.ACT_CONTENT_EDIT)
+class RemoveRefsView( AbstractAuthenticatedView ):
+	"""
+	Remove all refs underneath a lesson pointing at a given ntiid.
+
+	target
+		The ref target that will be used to find out which refs to
+		remove.
+	"""
+
+	def _is_target(self, obj, ntiid):
+		return ntiid == getattr(obj, 'target', '')
+
+	def _remove_from_group(self, item, group):
+		# We remove the item from our context and clean it
+		# up. We want to make sure we clean up the underlying asset.
+		# Safe if already gone.
+		group.remove(item)
+		# remove concrete to avoid leaks
+		concrete = IConcreteAsset(item, item)
+		if concrete is not item and IUserCreatedAsset.providedBy(concrete):
+			remove_presentation_asset(concrete)
+		remove_presentation_asset(item)
+		event_notify(ItemRemovedFromItemAssetContainerEvent(group, item))
+		group.childOrderLock()
+
+	def _get_target_ntiid(self):
+		values = CaseInsensitiveDict(self.request.params)
+		target_ntiid = 	values.get('target') \
+					or 	values.get( 'target_ntiid' ) \
+					or 	values.get( 'ntiid' )
+		return target_ntiid
+
+	def __call__(self):
+		count = 0
+		target_ntiid = self._get_target_ntiid()
+
+		if target_ntiid is None:
+			raise hexc.HTTPUnprocessableEntity(_('No target NTIID given for reference removal.'))
+
+		for group in self.context.Items or ():
+			for item in list( group ) or ():
+				if self._is_target( item, target_ntiid ):
+					self._remove_from_group( item, group )
+					count += 1
+
+		logger.info( '%s refs removed from %s (target=%s)',
+					 count, self.context.ntiid, target_ntiid )
+		return hexc.HTTPOk()
 
 # ordered contents
 
