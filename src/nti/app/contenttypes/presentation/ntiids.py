@@ -14,6 +14,8 @@ import os
 from zope import component
 from zope import interface
 
+from zope.intid.interfaces import IIntIds
+
 from nti.app.authentication import get_remote_user
 
 from nti.app.contenttypes.presentation.utils import resolve_discussion_course_bundle
@@ -21,8 +23,6 @@ from nti.app.contenttypes.presentation.utils import get_course_by_relative_path_
 
 from nti.contenttypes.courses.discussions.utils import get_discussion_for_path
 
-from nti.contenttypes.presentation import NTI_AUDIO
-from nti.contenttypes.presentation import NTI_VIDEO
 from nti.contenttypes.presentation import NTI_LESSON_OVERVIEW
 
 from nti.contenttypes.presentation.interfaces import INTIAudio
@@ -171,18 +171,18 @@ class _NTITranscriptResolver(object):
 
 	def resolve(self, key):
 		parts = get_parts(key)
-		specific = parts.specific[:parts.specific.rfind('.')]
-		for nttype in (NTI_VIDEO, NTI_AUDIO):
-			# transform to a media NTIID
-			ntiid = make_ntiid(nttype=nttype,
-							   date=parts.date,
-							   specific=specific,
-							   provider=parts.provider)
-			media = find_object_with_ntiid(ntiid)
+		raw_specific = parts.specific
+		doc_id = parts.specific[:raw_specific.rfind('.')]
+		try:
+			doc_id = int(doc_id) # media intid
+			intids = component.getUtility(IIntIds)
+			media = intids.queryObject(doc_id)
 			if INTIMedia.providedBy(media):
 				for transcript in media.transcripts or ():
-					if transcript.ntiid == key:
+					if transcript.ntiid.endswith(raw_specific):
 						return transcript
+		except (ValueError, TypeError, LookupError):
+			pass
 		return None
 
 @interface.implementer(INTIIDResolver)
