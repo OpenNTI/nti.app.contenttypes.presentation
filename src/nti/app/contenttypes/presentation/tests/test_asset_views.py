@@ -575,7 +575,7 @@ class TestAssetViews(ApplicationLayerTest):
 			catalog.update_containers(slide_deck, containers=original_containers)
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
-	@fudge.patch('nti.app.contenttypes.presentation.views.asset_views.CourseOverviewGroupOrderedContentsView.readInput',
+	@fudge.patch('nti.app.contenttypes.presentation.views.asset_views.CourseOverviewGroupInsertView.readInput',
 				 'nti.app.contenttypes.presentation.views.asset_views.get_course_filer')
 	def test_overview_group(self, mc_ri, mc_cf):
 		source = self._load_resource('nticourseoverviewgroup.json')

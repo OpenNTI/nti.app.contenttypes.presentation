@@ -1344,9 +1344,9 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 			   request_method='POST',
 			   name=VIEW_CONTENTS,
 			   permission=nauth.ACT_CONTENT_EDIT)
-class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
-											 ModeledContentUploadRequestUtilsMixin,
-											 IndexedRequestMixin):  # order matters
+class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
+									ModeledContentUploadRequestUtilsMixin,
+									IndexedRequestMixin):  # order matters
 	"""
 	We accept asset items by index here. We handle two types specially here:
 
@@ -1361,7 +1361,7 @@ class CourseOverviewGroupOrderedContentsView(PresentationAssetSubmitViewMixin,
 		mimeType = ext_obj.get(MIMETYPE) or ext_obj.get('mimeType')
 		is_media = bool(mimeType in VIDEO_MIMETYES or mimeType in AUDIO_MIMETYES)
 		if mimeType and not is_media and mimeType not in TIMELINE_MIMETYES:
-			super(CourseOverviewGroupOrderedContentsView, self)._remove_ntiids(ext_obj, do_remove)
+			super(CourseOverviewGroupInsertView, self)._remove_ntiids(ext_obj, do_remove)
 
 	def _do_preflight_input(self, externalValue):
 		"""

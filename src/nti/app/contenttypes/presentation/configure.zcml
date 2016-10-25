@@ -72,9 +72,14 @@
 			 for="nti.contenttypes.presentation.interfaces.IAssignmentCompletionConstraint"
 			 provides=".interfaces.ILessonPublicationConstraintChecker" />
 
-	<!-- Subscribers -->				 
+	<!-- Subscribers -->
 	<subscriber factory=".predicates.LessonPublishablePredicate"
 				provides="nti.coremetadata.interfaces.ICalendarPublishablePredicate" />
+
+	<!-- Search filters -->
+	<subscriber factory=".search_predicates._LessonsSearchHitPostProcessingPredicate"
+				provides="nti.contentsearch.interfaces.ISearchHitPostProcessingPredicate"
+				for="nti.contenttypes.presentation.interfaces.IPresentationAsset" />
 
 	<!-- ACLs -->
 	<adapter factory=".acl.NTIAudioACLProvider" />
@@ -141,7 +146,7 @@
 	<utility factory=".ntiids._NTICourseOverviewGroupResolver" name="NTICourseOverviewGroup" />
 
 	<utility factory=".ntiids._NTICourseBundleResolver" name="NTICourseBundle" />
-	
+
 	<utility factory=".ntiids._NTITranscriptResolver" name="NTITranscript" />
 
 	<utility factory=".ntiids._NTILessonCompletionConstraintResolver" name="NTILessonCompletionConstraint" />
@@ -157,7 +162,7 @@
 			 for="nti.contenttypes.presentation.interfaces.IPresentationAsset pyramid.interfaces.IRequest"
 			 provides="zope.traversing.interfaces.ITraversable"
 			 name="fields" />
-			 
+
 	<!-- Events -->
 	<subscriber handler=".subscribers._on_outlinenode_unregistered" />
 
