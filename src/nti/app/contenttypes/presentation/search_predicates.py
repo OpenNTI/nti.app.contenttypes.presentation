@@ -51,7 +51,7 @@ class _LessonsSearchHitPostProcessingPredicate(object):
 	def _is_published(self, lesson):
 		return not IPublishable.providedBy(lesson) or lesson.is_published()
 
-	def allow(self, item, unused_score, **kwargs):
+	def allow(self, item, unused_score, query):
 		lessons = self._get_lessons_for_item( item )
 		if not lessons:
 			# If no lesson, we're allowed.
