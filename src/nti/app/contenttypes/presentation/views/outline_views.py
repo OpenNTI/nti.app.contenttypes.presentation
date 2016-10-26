@@ -440,6 +440,8 @@ class OutlineNodeDeleteMixin(AbstractAuthenticatedView, NTIIDPathMixin):
 	def _delete_node(self, parent, ntiid):
 		try:
 			node = parent[ntiid]
+			# Clean up our node's lesson.
+			self._delete_lesson( node )
 			unregisterUtility(name=ntiid,
 							  registry=self._registry,
 							  provided=iface_of_node(node))
@@ -466,14 +468,6 @@ class OutlineNodeDeleteContentsView(OutlineNodeDeleteMixin):
 
 	def __call__(self):
 		ntiid = self._get_ntiid()
-		# 12.2015 - We currently do not delete the underlying lesson
-		# and assets tied to this node. Potentially, we could allow
-		# the user to recover/undo these deleted lesson nodes, or
-		# through administrative action.
-		# if self.context.LessonOverviewNTIID:
-		# 	self._remove_lesson(self.context.LessonOverviewNTIID)
-		# TODO: Do we want to permanently delete nodes, or delete placeholder
-		# mark them (to undo and save transaction history)?
 		self._delete_node(self.context, ntiid)
 		return hexc.HTTPOk()
 
@@ -485,7 +479,6 @@ class OutlineNodeDeleteContentsView(OutlineNodeDeleteMixin):
 class OutlineNodeDeleteView(OutlineNodeDeleteMixin):
 
 	def __call__(self):
-		self._delete_lesson(self.context)
 		self._delete_node(self.context.__parent__, self.context.ntiid)
 		return hexc.HTTPNoContent()
 

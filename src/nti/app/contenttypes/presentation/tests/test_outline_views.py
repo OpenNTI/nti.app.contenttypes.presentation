@@ -529,7 +529,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		# Editing content node title changes lesson title.
 		content_data = {'title':'new content title2'}
 		self.testapp.put_json(content_href, content_data,
-							extra_environ=instructor_environ)
+							  extra_environ=instructor_environ)
 		self._check_obj_state( content_node_ntiid, parent_ntiid=first_unit_ntiid, is_published=True )
 		self._check_obj_state( lesson_ntiid, parent_ntiid=content_node_ntiid )
 
@@ -643,6 +643,13 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self._check_ext_state( content_node_ntiid2, is_lesson_visible=False,
 							published=True, has_lesson=True,
 							environ=student_environ )
+
+		# Deleting content node also deletes lesson
+		unit_url = '/dataserver2/NTIIDs/%s/contents' % first_unit_ntiid
+		delete_suffix = self._get_delete_url_suffix( 4, content_node_ntiid )
+		self.testapp.delete(unit_url + delete_suffix,
+							extra_environ=instructor_environ)
+		self.testapp.get( '/dataserver2/Objects/%s' % lesson_ntiid, status=404 )
 
 	def _test_moving_content_nodes(self):
 		"""
