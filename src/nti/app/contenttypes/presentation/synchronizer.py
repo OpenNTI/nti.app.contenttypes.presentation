@@ -62,6 +62,7 @@ from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import IConcreteAsset 
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
+from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
@@ -200,6 +201,10 @@ def _remove_registered_course_overview(name=None, registry=None, course=None, fo
 
 	def _do_remove(obj):
 		ntiid = obj.ntiid
+		concrete = IConcreteAsset(obj, obj)
+		if concrete is not obj and IUserCreatedAsset.providedBy(concrete):
+			_do_remove(concrete)
+
 		removed = _removed_registered(interface_of_asset(obj),
 									  name=ntiid,
 								   	  registry=registry,
