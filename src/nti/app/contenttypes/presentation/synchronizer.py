@@ -554,7 +554,7 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 										   			 	 	 registry=registry,
 										   			 	 	 force=force,
 										   			  	 	 course=course))
-		else:
+		elif not force:
 			locked.add(item.ntiid)
 
 	if container_ntiids:  # unindex all other objects
@@ -564,7 +564,7 @@ def _remove_and_unindex_course_assets(container_ntiids=None, namespace=None,
 									  namespace=namespace,
 									  sites=sites,
 									  intids=intids)
-		for obj in objs or ():  # we are mutating
+		for obj in objs or ():
 			doc_id = intids.queryId(obj)
 			# ignore objects that belong to locked lesson
 			lesson = find_interface(obj, INTILessonOverview, strict=False)
