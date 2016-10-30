@@ -96,6 +96,7 @@ def get_courses(ntiids=()):
 		# prevents expensive lookups of content units.
 		if not is_ntiid_of_type( ntiid, NTIID_ENTRY_TYPE ):
 			continue
+		course = None
 		context = find_object_with_ntiid(ntiid)
 		if ICourseCatalogEntry.providedBy(context):
 			course = ICourseInstance(context, None)
