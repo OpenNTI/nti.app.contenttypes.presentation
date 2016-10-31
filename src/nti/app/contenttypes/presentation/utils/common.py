@@ -30,6 +30,7 @@ from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.contenttypes.presentation import iface_of_asset
 
+from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 from nti.contenttypes.presentation.interfaces import ICoursePresentationAsset
@@ -128,6 +129,14 @@ def remove_site_invalid_assets(current, intids=None, catalog=None, seen=None):
 
 		if IItemAssetContainer.providedBy(item) and not has_a_valid_parent(item, intids):
 			logger.warn("Removing unreachable (%s,%s) from site %s",
+						provided.__name__, ntiid, site_name)
+			removed.add(ntiid)
+			remove_presentation_asset(item, registry, catalog, name=ntiid)
+			continue
+
+		if 		IAssetRef.providedBy(item) \
+			and find_object_with_ntiid(item.target) is None:
+			logger.warn("Removing invalid asset ref (%s,%s) from site %s",
 						provided.__name__, ntiid, site_name)
 			removed.add(ntiid)
 			remove_presentation_asset(item, registry, catalog, name=ntiid)
