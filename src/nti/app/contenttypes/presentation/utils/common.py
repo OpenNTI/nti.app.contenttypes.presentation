@@ -30,10 +30,11 @@ from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.contenttypes.presentation import iface_of_asset
 
-from nti.contenttypes.presentation.interfaces import IAssetRef
+from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 from nti.contenttypes.presentation.interfaces import ICoursePresentationAsset
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.contenttypes.courses.common import get_course_site
@@ -134,10 +135,10 @@ def remove_site_invalid_assets(current, intids=None, catalog=None, seen=None):
 			remove_presentation_asset(item, registry, catalog, name=ntiid)
 			continue
 
-		if 		IAssetRef.providedBy(item) \
+		if 		(INTIRelatedWorkRefPointer.providedBy(item) or INTITimelineRef.providedBy(item)) \
 			and find_object_with_ntiid(item.target) is None:
-			logger.warn("Removing invalid asset ref (%s,%s) from site %s",
-						provided.__name__, ntiid, site_name)
+			logger.warn("Removing invalid asset ref (%s to %s) from site %s",
+						ntiid, item.target, site_name)
 			removed.add(ntiid)
 			remove_presentation_asset(item, registry, catalog, name=ntiid)
 			continue
