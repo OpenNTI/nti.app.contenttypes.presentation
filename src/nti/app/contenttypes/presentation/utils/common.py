@@ -144,8 +144,8 @@ def remove_site_invalid_assets(current, intids=None, catalog=None, seen=None):
 					removed.add(ntiid)
 					remove_presentation_asset(item, registry, catalog, name=ntiid)
 					continue
-
-		seen.add(ntiid)
+			# track
+			seen.add(ntiid)
 	return removed
 
 def remove_all_invalid_assets():
