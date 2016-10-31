@@ -12,6 +12,7 @@ logger = __import__('logging').getLogger(__name__)
 from collections import OrderedDict
 
 from zope import component
+from zope.component.hooks import site as current_site
 
 from zope.interface.adapter import _lookupAll as zopeLookupAll # Private func
 
@@ -116,32 +117,33 @@ def remove_site_invalid_assets(current, intids=None, catalog=None, seen=None):
 	site_components = lookup_all_presentation_assets(registry)
 	logger.info("%s asset(s) found in %s", len(site_components), site_name)
 
-	for ntiid, item in site_components.items():
-		provided = iface_of_asset(item)
-		doc_id = intids.queryId(item)
-
-		# registration for a removed asset
-		if doc_id is None:
-			logger.warn("Removing invalid registration (%s,%s) from site %s",
-						provided.__name__, ntiid, site_name)
-			removed.add(ntiid)
-			remove_presentation_asset(item, registry, catalog, name=ntiid)
-			continue
-
-		if IItemAssetContainer.providedBy(item) and not has_a_valid_parent(item, intids):
-			logger.warn("Removing unreachable (%s,%s) from site %s",
-						provided.__name__, ntiid, site_name)
-			removed.add(ntiid)
-			remove_presentation_asset(item, registry, catalog, name=ntiid)
-			continue
-
-		if 		(INTIRelatedWorkRefPointer.providedBy(item) or INTITimelineRef.providedBy(item)) \
-			and find_object_with_ntiid(item.target) is None:
-			logger.warn("Removing invalid asset ref (%s to %s) from site %s",
-						ntiid, item.target, site_name)
-			removed.add(ntiid)
-			remove_presentation_asset(item, registry, catalog, name=ntiid)
-			continue
+	with current_site(current):
+		for ntiid, item in site_components.items():
+			provided = iface_of_asset(item)
+			doc_id = intids.queryId(item)
+	
+			# registration for a removed asset
+			if doc_id is None:
+				logger.warn("Removing invalid registration (%s,%s) from site %s",
+							provided.__name__, ntiid, site_name)
+				removed.add(ntiid)
+				remove_presentation_asset(item, registry, catalog, name=ntiid)
+				continue
+	
+			if IItemAssetContainer.providedBy(item) and not has_a_valid_parent(item, intids):
+				logger.warn("Removing unreachable (%s,%s) from site %s",
+							provided.__name__, ntiid, site_name)
+				removed.add(ntiid)
+				remove_presentation_asset(item, registry, catalog, name=ntiid)
+				continue
+	
+			if 		(INTIRelatedWorkRefPointer.providedBy(item) or INTITimelineRef.providedBy(item)) \
+				and find_object_with_ntiid(item.target) is None:
+					logger.warn("Removing invalid asset ref (%s to %s) from site %s",
+								ntiid, item.target, site_name)
+					removed.add(ntiid)
+					remove_presentation_asset(item, registry, catalog, name=ntiid)
+					continue
 
 		seen.add(ntiid)
 	return removed
