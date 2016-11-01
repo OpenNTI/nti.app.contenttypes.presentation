@@ -98,7 +98,7 @@ class LessonOverviewsImporter(BaseSectionImporter):
 			asset_items = asset.Items if asset.Items is not None else ()
 			for item in asset_items:
 				self._post_process_asset(item, source_filer, target_filer)
-		check_docket_targets(asset)
+		check_docket_targets(concrete)
 
 	def _get_course_site(self, course):
 		site_name = get_course_site(course)
