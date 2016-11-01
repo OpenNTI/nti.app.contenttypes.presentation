@@ -75,31 +75,31 @@ class _SurveyRefValidator(_ItemRefValidator):
 
 @component.adapter(INTIVideoRef)
 class _VideoRefValidator(_ItemRefValidator):
-	field_name = 'ntiid'
+	field_name = 'target'
 	item_type = 'Video'
 	provided = INTIVideo
 
 @component.adapter(INTIAudioRef)
 class _AudioRefValidator(_ItemRefValidator):
-	field_name = 'ntiid'
+	field_name = 'target'
 	item_type = 'Audio'
 	provided = INTIAudio
 
 @component.adapter(INTISlideDeckRef)
 class _SlideDeckRefValidator(_ItemRefValidator):
-	field_name = 'ntiid'
+	field_name = 'target'
 	item_type = 'SlideDeck'
 	provided = INTISlideDeck
 
 @component.adapter(INTITimelineRef)
 class _TimelineRefValidator(_ItemRefValidator):
-	field_name = 'ntiid'
+	field_name = 'target'
 	item_type = 'Timeline'
 	provided = INTITimeline
 
 @component.adapter(INTIRelatedWorkRefPointer)
 class _RelatedWorkRefPointerValidator(_ItemRefValidator):
-	field_name = 'ntiid'
+	field_name = 'target'
 	item_type = 'RelatedWork'
 	provided = INTIRelatedWorkRef
 
