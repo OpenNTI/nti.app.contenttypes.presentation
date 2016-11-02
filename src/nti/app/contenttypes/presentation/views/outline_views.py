@@ -440,8 +440,12 @@ class OutlineNodeDeleteMixin(AbstractAuthenticatedView, NTIIDPathMixin):
 	def _delete_node(self, parent, ntiid):
 		try:
 			node = parent[ntiid]
+			# Clean up children first
+			for child_node in node.values():
+				self._delete_node(node, child_node.ntiid)
 			# Clean up our node's lesson.
 			self._delete_lesson( node )
+			# Finally take care of ourselves
 			unregisterUtility(name=ntiid,
 							  registry=self._registry,
 							  provided=iface_of_node(node))
