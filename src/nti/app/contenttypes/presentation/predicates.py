@@ -20,8 +20,8 @@ from zope.interface.adapter import _lookupAll as zopeLookupAll  # Private func
 
 from zope.security.interfaces import IPrincipal
 
-from nti.app.assessment.common import has_submitted_assigment
 from nti.app.assessment.common import has_submitted_inquiry
+from nti.app.assessment.common import has_submitted_assigment
 from nti.app.assessment.common import get_available_for_submission_ending
 
 from nti.app.contenttypes.presentation.interfaces import ILessonPublicationConstraintChecker
@@ -33,15 +33,15 @@ from nti.contenttypes.courses.utils import is_course_instructor_or_editor
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
-from nti.contenttypes.presentation.interfaces import IAssignmentCompletionConstraint
 from nti.contenttypes.presentation.interfaces import ISurveyCompletionConstraint
+from nti.contenttypes.presentation.interfaces import IAssignmentCompletionConstraint
 
 from nti.contenttypes.presentation.lesson import constraints_for_lesson
 
 from nti.appserver.pyramid_authorization import has_permission
 
-from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQSurvey
+from nti.assessment.interfaces import IQAssignment
 
 from nti.coremetadata.interfaces import ICalendarPublishablePredicate
 
