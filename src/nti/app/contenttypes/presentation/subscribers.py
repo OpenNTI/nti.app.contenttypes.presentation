@@ -56,7 +56,8 @@ from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.courses.common import get_course_packages
 
-from nti.contenttypes.presentation.interfaces import TRX_ASSET_MOVE_TYPE
+from nti.contenttypes.presentation.interfaces import TRX_ASSET_MOVE_TYPE,\
+	IConcreteAsset
 from nti.contenttypes.presentation.interfaces import TRX_OVERVIEW_GROUP_MOVE_TYPE
 from nti.contenttypes.presentation.interfaces import TRX_ASSET_REMOVED_FROM_ITEM_ASSET_CONTAINER
 
@@ -89,6 +90,7 @@ from nti.externalization.interfaces import StandardExternalFields
 
 from nti.externalization.oids import to_external_ntiid_oid
 
+from nti.intid.interfaces import IntIdAddedEvent as INTIIntIdAddedEvent
 from nti.intid.interfaces import IIntIdRemovedEvent as INTIIntIdRemovedEvent
 
 from nti.ntiids.ntiids import find_object_with_ntiid
@@ -258,6 +260,21 @@ def _on_docket_asset_removed(asset, event):
 			source = get_file_from_external_link(value)
 			if IContentBaseFile.providedBy(source):
 				source.remove_association(asset)
+
+@component.adapter(INTICourseOverviewGroup, INTIIntIdAddedEvent)
+def _on_course_overview_registered(group, event):
+	# TODO: Execute only if there is an interaction
+	parent = group.__parent__
+	catalog = get_library_catalog()
+	extended = (group.ntiid, getattr(parent, 'ntiid', None))
+	for item in group or ():
+		concrete = IConcreteAsset(item, item)
+		for asset in {concrete, item}:
+			catalog.update_containers(asset, extended)
+
+@component.adapter(INTICourseOverviewGroup, IObjectModifiedEvent)
+def _on_course_overview_modified(group, event):
+	_on_course_overview_registered(group, None)
 
 @component.adapter(IContentBaseFile, INTIIntIdRemovedEvent)
 def _on_content_file_removed(context, event):
