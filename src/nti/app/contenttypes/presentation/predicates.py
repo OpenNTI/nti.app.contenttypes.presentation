@@ -9,6 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from datetime import datetime
+
 from zope import component
 from zope import interface
 
@@ -19,6 +21,8 @@ from zope.interface.adapter import _lookupAll as zopeLookupAll  # Private func
 from zope.security.interfaces import IPrincipal
 
 from nti.app.assessment.common import has_submitted_assigment
+from nti.app.assessment.common import has_submitted_inquiry
+from nti.app.assessment.common import get_available_for_submission_ending
 
 from nti.app.contenttypes.presentation.interfaces import ILessonPublicationConstraintChecker
 
@@ -30,12 +34,14 @@ from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import IAssignmentCompletionConstraint
+from nti.contenttypes.presentation.interfaces import ISurveyCompletionConstraint
 
 from nti.contenttypes.presentation.lesson import constraints_for_lesson
 
 from nti.appserver.pyramid_authorization import has_permission
 
 from nti.assessment.interfaces import IQAssignment
+from nti.assessment.interfaces import IQSurvey
 
 from nti.coremetadata.interfaces import ICalendarPublishablePredicate
 
@@ -114,6 +120,37 @@ class AssignmentCompletionConstraintChecker(object):
 			if assignment is None:
 				continue
 			if not has_submitted_assigment(course, user, assignment):
+				return False
+		return True
+	
+@component.adapter(ISurveyCompletionConstraint)
+@interface.implementer(ILessonPublicationConstraintChecker)
+class SurveyCompletionConstraintChecker(object):
+	
+	constraint = None
+	
+	def __init__(self, constraint=None):
+		self.constraint = constraint
+		
+	def is_satisfied(self, constraint=None, principal=None):
+		user = get_user(principal)
+		if user is None:
+			return False
+		constraint = self.constraint if constraint is None else constraint
+		course = ICourseInstance(constraint, None)
+		if course is None:
+			return False
+		# always allow editors and instructors 
+		if 		is_course_instructor_or_editor(course, user) \
+			or  has_permission(ACT_CONTENT_EDIT, course):
+			return True
+		now = datetime.utcnow()
+		for survey_ntiid in constraint.surveys:
+			survey = component.queryUtility(IQSurvey, name=survey_ntiid)
+			if survey is None:
+				continue
+			due_date = get_available_for_submission_ending(survey, course) or now
+			if due_date >= now and not has_submitted_inquiry(course, user, survey):
 				return False
 		return True
 

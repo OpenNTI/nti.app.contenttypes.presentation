@@ -104,3 +104,62 @@ class TestLessonViews(ApplicationLayerTest):
 
 		clear_constraints_link = '%s/@@clear' % publication_constraints_link
 		self.testapp.post_json(clear_constraints_link, status=200)
+		
+	@WithSharedApplicationMockDS(testapp=True, users=True)
+	@fudge.patch('nti.app.contenttypes.presentation.predicates.has_submitted_inquiry')
+	def test_survey_completion_constraints(self, has_submitted_inquiry):	
+		
+		# create and enroll student
+		with mock_dataserver.mock_db_trans(self.ds):
+			self._create_user(STUDENT)
+		self._do_enroll()
+
+		# get all assets
+		admin_environ = self._make_extra_environ(username=self.default_username)
+		assets_herf = '%s?accept=application/vnd.nextthought.ntilessonoverview' % self.assets_url
+		res = self.testapp.get(assets_herf, extra_environ=admin_environ)
+
+		# grab first lesson and force-publish
+		lesson = res.json_body['Items'][0]['ntiid']
+		lesson_link = '/dataserver2/Objects/' + lesson
+		self.testapp.post(lesson_link + '/@@publish')
+		res = self.testapp.get(lesson_link, status=200)
+		self.require_link_href_with_rel( res.json_body, "constraints")
+		
+		# POST constraint
+		publication_constraints_link = '%s/PublicationConstraints' % lesson_link
+		survey = "tag:nextthought.com,2011-10:OU-NAQ-CLC3403_LawAndJustice.naq.set.survey:KNOWING_aristotle"
+		constraint = {
+			"MimeType": "application/vnd.nextthought.lesson.surveycompletionconstraint",
+			'surveys':[survey]
+		}
+		
+		res = self.testapp.post_json(publication_constraints_link, constraint, status=201)
+		assert_that(res.json_body, has_entry('OID', is_not(none())))
+		assert_that(res.json_body, has_entry('NTIID', is_not(none())))
+		ntiid = res.json_body['NTIID']
+		
+		res = self.testapp.get(publication_constraints_link, status=200)
+		assert_that(res.json_body, has_entry('Items', has_length(1)))
+	
+		with mock_dataserver.mock_db_trans(self.ds, 'platform.ou.edu'):
+			lesson_object = find_object_with_ntiid(lesson)
+
+			student = User.get_user(STUDENT)
+
+			has_submitted_inquiry.is_callable().returns(True)
+			result = lesson_object.is_published(principal=student)
+			assert_that(result, is_(True))
+
+			has_submitted_inquiry.is_callable().returns(False)
+			result = lesson_object.is_published(principal=student)
+			assert_that(result, is_(False))
+
+		constraint_link = '/dataserver2/Objects/' + ntiid
+		self.testapp.delete(constraint_link, status=204)
+		
+		res = self.testapp.get(publication_constraints_link, status=200)
+		assert_that(res.json_body, has_entry('Items', has_length(0)))
+
+		clear_constraints_link = '%s/@@clear' % publication_constraints_link
+		self.testapp.post_json(clear_constraints_link, status=200)

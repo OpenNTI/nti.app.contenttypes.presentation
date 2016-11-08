@@ -37,6 +37,7 @@ from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import IAssignmentCompletionConstraint
+from nti.contenttypes.presentation.interfaces import ISurveyCompletionConstraint
 
 @interface.implementer(IItemRefValidator)
 class _ItemRefValidator(object):
@@ -121,5 +122,26 @@ class _AssignmentCompletionConstraintValidator(object):
 		for ntiid in assignments:
 			if component.queryUtility(IQAssignment, name=ntiid) is None:
 				msg = translate(_("Assigment ${ntiid} does not exist.",
+								mapping={'ntiid': ntiid}))
+				raise ValueError(msg)
+
+@component.adapter(ISurveyCompletionConstraint)
+@interface.implementer(ILessonPublicationConstraintValidator)
+class _SurveyCompletionConstraintValidator(object):
+
+	constraint = None
+
+	def __init__(self, constraint):
+		self.constraint = constraint
+
+	def validate(self, constraint=None):
+		constraint = self.constraint if constraint is None else constraint
+		surveys = constraint.surveys
+		if not surveys:
+			raise ValueError(_("Survey list cannot be empty."))
+			
+		for ntiid in surveys:
+			if component.queryUtility(IQSurvey, name=ntiid) is None:
+				msg = translate(_("Survey ${ntiid} does not exist.",
 								mapping={'ntiid': ntiid}))
 				raise ValueError(msg)

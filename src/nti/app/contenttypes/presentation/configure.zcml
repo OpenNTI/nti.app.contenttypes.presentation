@@ -28,6 +28,7 @@
 	<adapter factory=".validators._AssignmentRefValidator" />
 	<adapter factory=".validators._RelatedWorkRefPointerValidator" />
 	<adapter factory=".validators._AssignmentCompletionConstraintValidator" />
+	<adapter factory=".validators._SurveyCompletionConstraintValidator" />
 
 	<adapter factory=".adapters._pollref_to_poll" />
 	<adapter factory=".adapters._audioref_to_audio" />
@@ -70,6 +71,10 @@
 
 	<adapter factory=".predicates.AssignmentCompletionConstraintChecker"
 			 for="nti.contenttypes.presentation.interfaces.IAssignmentCompletionConstraint"
+			 provides=".interfaces.ILessonPublicationConstraintChecker" />
+			 
+	<adapter factory=".predicates.SurveyCompletionConstraintChecker"
+			 for="nti.contenttypes.presentation.interfaces.ISurveyCompletionConstraint"
 			 provides=".interfaces.ILessonPublicationConstraintChecker" />
 
 	<!-- Subscribers -->
