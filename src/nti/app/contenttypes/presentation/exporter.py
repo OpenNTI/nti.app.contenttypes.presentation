@@ -112,7 +112,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
 			filer.save(name, source, overwrite=True,
 					   bucket="Lessons", contentType=u"application/x-json")
 
-	def export(self, context, filer):
+	def export(self, context, filer, backup=True):
 		seen = set()
 		course = ICourseInstance(context)
 		self._do_export(context, filer, seen)
