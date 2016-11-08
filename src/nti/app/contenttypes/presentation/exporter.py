@@ -97,7 +97,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
 				and is_ntiid_of_type(value, TYPE_OID):
 				ext_obj.pop(name, None)
 
-	def _do_export(self, context, filer, seen):
+	def _do_export(self, context, filer, seen, backup=True):
 		course = ICourseInstance(context)
 		nodes = _outline_nodes(course.Outline, seen)
 		for node, lesson in nodes:
@@ -115,7 +115,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
 	def export(self, context, filer, backup=True):
 		seen = set()
 		course = ICourseInstance(context)
-		self._do_export(context, filer, seen)
+		self._do_export(context, filer, seen, backup)
 		for sub_instance in get_course_subinstances(course):
 			if sub_instance.Outline is not course.Outline:
-				self._do_export(sub_instance, filer, seen)
+				self._do_export(sub_instance, filer, seen, backup)
