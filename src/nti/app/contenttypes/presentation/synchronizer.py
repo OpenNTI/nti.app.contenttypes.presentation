@@ -673,16 +673,19 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 						  namespace=namespace,
 						  container_ntiids=to_index)
 		else:
-			namespace = None if IPackagePresentationAsset.providedBy(item) else namespace
+			ns_name = None if IPackagePresentationAsset.providedBy(item) else namespace
 			_intid_register(item, intids, connection=connection)
 			catalog.index(item,
 						  sites=sites,
 						  intids=intids,
-						  namespace=namespace,
+						  namespace=ns_name,
 						  container_ntiids=to_index)
 			concrete = IConcreteAsset(item, item)
 			if concrete is not item:
-				catalog.update_containers(concrete, to_index)
+				catalog.index(concrete,
+						 	  sites=sites,
+						 	  intids=intids,
+						 	  container_ntiids=to_index)
 
 		# set any internal resource after gaining an intid
 		provided = interface_of_asset(item)
