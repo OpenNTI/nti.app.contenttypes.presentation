@@ -683,7 +683,6 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 			concrete = IConcreteAsset(item, item)
 			if concrete is not item:
 				catalog.index(concrete,
-						 	  sites=sites,
 						 	  intids=intids,
 						 	  container_ntiids=to_index)
 
