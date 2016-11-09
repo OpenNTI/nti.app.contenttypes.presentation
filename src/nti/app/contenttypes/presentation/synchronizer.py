@@ -674,14 +674,15 @@ def _index_overview_items(items, container_ntiids=None, namespace=None,
 						  container_ntiids=to_index)
 		else:
 			namespace = None if IPackagePresentationAsset.providedBy(item) else namespace
-
-			# register and index
 			_intid_register(item, intids, connection=connection)
 			catalog.index(item,
 						  sites=sites,
 						  intids=intids,
 						  namespace=namespace,
 						  container_ntiids=to_index)
+			concrete = IConcreteAsset(item, item)
+			if concrete is not item:
+				catalog.update_containers(concrete, to_index)
 
 		# set any internal resource after gaining an intid
 		provided = interface_of_asset(item)
