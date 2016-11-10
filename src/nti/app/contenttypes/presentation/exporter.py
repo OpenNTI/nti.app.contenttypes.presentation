@@ -24,6 +24,7 @@ from nti.contenttypes.presentation import iface_of_asset
 
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
+from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 
 from nti.externalization.externalization import to_external_object
@@ -88,7 +89,9 @@ class LessonOverviewsExporter(BaseSectionExporter):
 						ext_obj.pop(NTIID, None)
 						ext_obj.pop(NTIID.lower(), None)
 					self._post_process_asset(item, item_ext, filer)
-
+		elif INTIAssessmentRef.providedBy(asset):
+			
+			pass
 		# don't leak internal OIDs
 		for name in (NTIID, NTIID.lower(), INTERNAL_CONTAINER_ID, 'target'):
 			value = ext_obj.get(name)

@@ -41,6 +41,7 @@
 	<adapter factory=".adapters._slideckref_to_slidedeck" />
 	<adapter factory=".adapters._timelineref_to_timeline" />
 	<adapter factory=".adapters._assignmentref_to_assignment" />
+	<adapter factory=".adapters._evaluationref_to_evaluation" />
 	<adapter factory=".adapters._questionsetref_to_questionset" />
 	<adapter factory=".adapters._relatedworkrefpointer_to_relatedworkref" />
 

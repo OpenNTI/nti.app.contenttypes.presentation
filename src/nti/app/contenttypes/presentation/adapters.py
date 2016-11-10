@@ -18,7 +18,7 @@ from nti.appserver._adapters import _AbstractExternalFieldTraverser
 
 from nti.appserver.interfaces import IExternalFieldTraversable
 
-from nti.assessment.interfaces import IQPoll
+from nti.assessment.interfaces import IQPoll, IQEvaluation
 from nti.assessment.interfaces import IQSurvey
 from nti.assessment.interfaces import IQInquiry
 from nti.assessment.interfaces import IQuestion
@@ -46,6 +46,7 @@ from nti.contenttypes.presentation.interfaces import INTIInquiryRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionRef
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
+from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import IGroupOverViewable
@@ -92,89 +93,80 @@ def _publication_constraint_to_lesson(item):
 @interface.implementer(INTIAudio)
 def _audioref_to_audio(context):
 	name = context.target or context.ntiid
-	result = component.queryUtility(INTIAudio, name=name)
-	return result
+	return component.queryUtility(INTIAudio, name=name)
 
 @component.adapter(INTIVideoRef)
 @interface.implementer(INTIVideo)
 def _videoref_to_video(context):
 	name = context.target or context.ntiid
-	result = component.queryUtility(INTIVideo, name=name)
-	return result
+	return component.queryUtility(INTIVideo, name=name)
 
 @component.adapter(INTIMediaRef)
 @interface.implementer(INTIMedia)
 def _mediaref_to_media(context):
 	name = context.target or context.ntiid
-	result = component.queryUtility(INTIMedia, name=name)
-	return result
+	return component.queryUtility(INTIMedia, name=name)
 
 @interface.implementer(IQuestion)
 @component.adapter(INTIQuestionRef)
 def _questionref_to_question(context):
-	result = component.queryUtility(IQuestion, name=context.target)
-	return result
+	return component.queryUtility(IQuestion, name=context.target)
 
 @interface.implementer(IQuestionSet)
 @component.adapter(INTIQuestionSetRef)
 def _questionsetref_to_questionset(context):
-	result = component.queryUtility(IQuestionSet, name=context.target)
-	return result
+	return component.queryUtility(IQuestionSet, name=context.target)
 
 @interface.implementer(IQAssignment)
 @component.adapter(INTIAssignmentRef)
 def _assignmentref_to_assignment(context):
-	result = component.queryUtility(IQAssignment, name=context.target)
-	return result
+	return component.queryUtility(IQAssignment, name=context.target)
 
 @interface.implementer(IQSurvey)
 @component.adapter(INTISurveyRef)
 def _surveyref_to_survey(context):
-	result = component.queryUtility(IQSurvey, name=context.target)
-	return result
+	return component.queryUtility(IQSurvey, name=context.target)
 
 @interface.implementer(IQPoll)
 @component.adapter(INTIPollRef)
 def _pollref_to_poll(context):
-	result = component.queryUtility(IQPoll, name=context.target)
-	return result
+	return component.queryUtility(IQPoll, name=context.target)
 
 @interface.implementer(IQInquiry)
 @component.adapter(INTIInquiryRef)
 def _inquiryref_to_inquiry(context):
-	result = component.queryUtility(IQInquiry, name=context.target)
-	return result
+	return component.queryUtility(IQInquiry, name=context.target)
+
+@interface.implementer(IQEvaluation)
+@component.adapter(INTIAssessmentRef)
+def _evaluationref_to_evaluation(context):
+	return component.queryUtility(IQEvaluation, name=context.target)
 
 @component.adapter(INTISlideDeckRef)
 @interface.implementer(INTISlideDeck)
 def _slideckref_to_slidedeck(context):
-	result = component.queryUtility(INTISlideDeck, name=context.target)
-	return result
+	return component.queryUtility(INTISlideDeck, name=context.target)
 
 @interface.implementer(INTITimeline)
 @component.adapter(INTITimelineRef)
 def _timelineref_to_timeline(context):
-	result = component.queryUtility(INTITimeline, name=context.target)
-	return result
+	return component.queryUtility(INTITimeline, name=context.target)
 
 @interface.implementer(INTIRelatedWorkRef)
 @component.adapter(INTIRelatedWorkRefPointer)
 def _relatedworkrefpointer_to_relatedworkref(context):
-	result = component.queryUtility(INTIRelatedWorkRef, name=context.target)
-	return result
+	return component.queryUtility(INTIRelatedWorkRef, name=context.target)
 
 @component.adapter(IAssetRef)
 @interface.implementer(IConcreteAsset)
 def _reference_to_concrete(context):
-	result = component.queryUtility(IPresentationAsset, name=context.target)
-	return result
+	return component.queryUtility(IPresentationAsset, name=context.target)
 
 @component.adapter(ICourseOutlineNode)
 @interface.implementer(INTILessonOverview)
 def _outlinenode_to_lesson(context):
 	ntiid = context.LessonOverviewNTIID
-	result = component.queryUtility(INTILessonOverview, name=ntiid or u'')
-	return result
+	return component.queryUtility(INTILessonOverview, name=ntiid or u'')
 
 @component.adapter(IPresentationAsset)
 @interface.implementer(IExternalFieldTraversable)
