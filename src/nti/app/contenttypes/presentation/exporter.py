@@ -13,6 +13,9 @@ from zope import interface
 
 from nti.app.products.courseware.utils.exporter import save_resources_to_filer
 
+from nti.assessment.interfaces import IQEvaluation
+from nti.assessment.interfaces import IQEditableEvaluation
+
 from nti.contenttypes.courses.exporter import BaseSectionExporter
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -64,7 +67,7 @@ def _outline_nodes(outline, seen):
 @interface.implementer(ICourseSectionExporter)
 class LessonOverviewsExporter(BaseSectionExporter):
 
-	def _post_process_asset(self, asset, ext_obj, filer):
+	def _post_process_asset(self, asset, ext_obj, filer, backup=True):
 		ext_obj.pop(OID, None)
 		ext_obj.pop(CONTAINER_ID, None)
 
@@ -80,7 +83,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
 					ext_items = ext_obj.get(name) or ()
 					deck_items = getattr(asset, name, None) or ()
 					for item, item_ext in zip(deck_items, ext_items):
-						self._post_process_asset(item, item_ext, filer)
+						self._post_process_asset(item, item_ext, filer, backup)
 			else:
 				ext_items = ext_obj.get(ITEMS) or ()
 				asset_items = asset.Items if asset.Items is not None else ()
@@ -88,10 +91,12 @@ class LessonOverviewsExporter(BaseSectionExporter):
 					if not item_ext.get(NTIID): # check valid NTIID
 						ext_obj.pop(NTIID, None)
 						ext_obj.pop(NTIID.lower(), None)
-					self._post_process_asset(item, item_ext, filer)
-		elif INTIAssessmentRef.providedBy(asset):
-			
-			pass
+					self._post_process_asset(item, item_ext, filer, backup)
+		elif 	 not backup \
+			 and INTIAssessmentRef.providedBy(asset) \
+			 and asset.target \
+			 and IQEditableEvaluation.providedBy(IQEvaluation(asset, None)):
+			ext_obj['target'] = self.hash_ntiid(asset.target)
 		# don't leak internal OIDs
 		for name in (NTIID, NTIID.lower(), INTERNAL_CONTAINER_ID, 'target'):
 			value = ext_obj.get(name)
@@ -106,7 +111,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
 		for node, lesson in nodes:
 			ext_obj = to_external_object(lesson, name="exporter", decorate=False)
 			# process internal resources
-			self._post_process_asset(lesson, ext_obj, filer)
+			self._post_process_asset(lesson, ext_obj, filer, backup)
 			# save to json
 			source = self.dump(ext_obj)
 			# save to filer
