@@ -65,7 +65,6 @@ from nti.intid.common import addIntId
 
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
-from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
 
 from nti.ntiids.ntiids import is_valid_ntiid_string
@@ -235,17 +234,10 @@ def make_asset_ntiid(nttype, creator=SYSTEM_USER_NAME, base=None, extra=None, no
 	if type(nttype) == InterfaceClass:
 		nttype = nttype.__name__[1:]
 
-	now = time.time() if now is None else now
-	current_time = time_to_64bit_int(now)
 	creator = getattr(creator, 'username', creator)
 	provider = get_provider(base) or 'NTI' if base else 'NTI'
-
-	specific_base = get_specific(base) if base else None
-	if specific_base:
-		specific_base += '.%s.%s' % (creator, current_time)
-	else:
-		specific_base = '%s.%s' % (creator, current_time)
-
+	current_time = time_to_64bit_int(time.time() if now is None else now)
+	specific_base = '%s.%s' % (creator, current_time)
 	if extra:
 		specific_base = specific_base + ".%s" % extra
 	specific = make_specific_safe(specific_base)
