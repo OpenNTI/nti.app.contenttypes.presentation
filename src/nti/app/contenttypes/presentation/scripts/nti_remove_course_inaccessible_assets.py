@@ -14,9 +14,13 @@ import sys
 import pprint
 import argparse
 
+from zope import component
+
 from zope.component.hooks import site as current_site
 
 from nti.app.contenttypes.presentation.utils.common import remove_course_inaccessible_assets
+
+from nti.contentlibrary.interfaces import IContentPackageLibrary
 
 from nti.dataserver.utils import run_with_dataserver
 from nti.dataserver.utils.base_script import create_context
@@ -25,6 +29,8 @@ from nti.site.hostpolicy import get_host_site
 from nti.site.hostpolicy import get_all_host_sites
 
 def _process_args(args):
+	library = component.getUtility(IContentPackageLibrary)
+	library.syncContentPackages()
 	if args.verbose:
 		print()
 	if args.all:

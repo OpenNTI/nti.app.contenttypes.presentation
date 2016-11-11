@@ -13,12 +13,18 @@ import os
 import sys
 import argparse
 
+from zope import component
+
 from nti.app.contenttypes.presentation.utils.common import remove_all_invalid_assets
+
+from nti.contentlibrary.interfaces import IContentPackageLibrary
 
 from nti.dataserver.utils import run_with_dataserver
 from nti.dataserver.utils.base_script import create_context
 
 def _process_args(args):
+	library = component.getUtility(IContentPackageLibrary)
+	library.syncContentPackages()
 	remove_all_invalid_assets()
 
 def main():
