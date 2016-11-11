@@ -42,6 +42,7 @@ from nti.ntiids.ntiids import is_ntiid_of_type
 from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
 
+ID = StandardExternalFields.ID
 OID = StandardExternalFields.OID
 ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID
@@ -70,6 +71,10 @@ class LessonOverviewsExporter(BaseSectionExporter):
 	def _post_process_asset(self, asset, ext_obj, filer, backup=True):
 		ext_obj.pop(OID, None)
 		ext_obj.pop(CONTAINER_ID, None)
+		if not backup: # generate NTIIDs
+			ext_obj.pop(ID, None)
+			ext_obj.pop(NTIID, None)
+			ext_obj.pop(NTIID.lower(), None)
 
 		# save asset/concrete resources
 		concrete = IConcreteAsset(asset, asset)
@@ -97,13 +102,14 @@ class LessonOverviewsExporter(BaseSectionExporter):
 			 and asset.target \
 			 and IQEditableEvaluation.providedBy(IQEvaluation(asset, None)):
 			ext_obj['target'] = self.hash_ntiid(asset.target)
-		# don't leak internal OIDs
-		for name in (NTIID, NTIID.lower(), INTERNAL_CONTAINER_ID, 'target'):
-			value = ext_obj.get(name)
-			if 		value \
-				and	is_valid_ntiid_string(value) \
-				and is_ntiid_of_type(value, TYPE_OID):
-				ext_obj.pop(name, None)
+			
+		if not backup: # don't leak internal OIDs
+			for name in (NTIID, NTIID.lower(), INTERNAL_CONTAINER_ID, 'target'):
+				value = ext_obj.get(name)
+				if 		value \
+					and	is_valid_ntiid_string(value) \
+					and is_ntiid_of_type(value, TYPE_OID):
+					ext_obj.pop(name, None)
 
 	def _do_export(self, context, filer, seen, backup=True):
 		course = ICourseInstance(context)
