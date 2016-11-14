@@ -25,7 +25,8 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation import iface_of_asset
 
-from nti.contenttypes.presentation.interfaces import INTISlideDeck
+from nti.contenttypes.presentation.interfaces import INTISlideDeck,\
+	INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
@@ -79,7 +80,8 @@ class LessonOverviewsExporter(BaseSectionExporter):
 		if not backup: # generate NTIIDs
 			ext_obj.pop(ID, None)
 			ext_obj.pop(NTIID, None)
-			if not IPackagePresentationAsset.providedBy(concrete):
+			if 		not IPackagePresentationAsset.providedBy(concrete) \
+				and not INTIDiscussionRef.providedBy(asset):
 				ext_obj.pop(NTIID.lower(), None)
 
 		# save asset/concrete resources
