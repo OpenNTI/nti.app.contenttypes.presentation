@@ -25,10 +25,11 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation import iface_of_asset
 
-from nti.contenttypes.presentation.interfaces import INTISlideDeck,\
-	INTIDiscussionRef
+from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
+from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
+from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
 
@@ -74,7 +75,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
 		concrete = IConcreteAsset(asset, asset)
 		provided = iface_of_asset(concrete)
 
-		# remove oid/ntiids if not backup mode
+		# remove unquired data if not backup mode
 		ext_obj.pop(OID, None)
 		ext_obj.pop(CONTAINER_ID, None)
 		if not backup: # generate NTIIDs
@@ -85,6 +86,8 @@ class LessonOverviewsExporter(BaseSectionExporter):
 			ext_obj.pop(NTIID, None)
 			if not IPackagePresentationAsset.providedBy(concrete):
 				ext_obj.pop(NTIID.lower(), None)
+			if INTIAssignmentRef.providedBy(asset):
+				ext_obj.pop('containerId', None)
 
 		# save asset/concrete resources
 		save_resources_to_filer(provided, concrete, filer, ext_obj)
