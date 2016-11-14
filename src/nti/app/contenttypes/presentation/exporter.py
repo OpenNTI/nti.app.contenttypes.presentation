@@ -70,17 +70,19 @@ def _outline_nodes(outline, seen):
 class LessonOverviewsExporter(BaseSectionExporter):
 
 	def _post_process_asset(self, asset, ext_obj, filer, backup=True):
+		concrete = IConcreteAsset(asset, asset)
+		provided = iface_of_asset(concrete)
+
+		# remove oid/ntiids if not backup mode
 		ext_obj.pop(OID, None)
 		ext_obj.pop(CONTAINER_ID, None)
 		if not backup: # generate NTIIDs
 			ext_obj.pop(ID, None)
 			ext_obj.pop(NTIID, None)
-			if not IPackagePresentationAsset.providedBy(asset):
+			if not IPackagePresentationAsset.providedBy(concrete):
 				ext_obj.pop(NTIID.lower(), None)
 
 		# save asset/concrete resources
-		concrete = IConcreteAsset(asset, asset)
-		provided = iface_of_asset(concrete)
 		save_resources_to_filer(provided, concrete, filer, ext_obj)
 
 		# check 'children'
