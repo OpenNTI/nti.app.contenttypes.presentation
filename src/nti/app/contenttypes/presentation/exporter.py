@@ -78,10 +78,10 @@ class LessonOverviewsExporter(BaseSectionExporter):
 		ext_obj.pop(OID, None)
 		ext_obj.pop(CONTAINER_ID, None)
 		if not backup: # generate NTIIDs
-			ext_obj.pop(ID, None)
+			if not INTIDiscussionRef.providedBy(asset):
+				ext_obj.pop(ID, None)
 			ext_obj.pop(NTIID, None)
-			if 		not IPackagePresentationAsset.providedBy(concrete) \
-				and not INTIDiscussionRef.providedBy(asset):
+			if not IPackagePresentationAsset.providedBy(concrete):
 				ext_obj.pop(NTIID.lower(), None)
 
 		# save asset/concrete resources
