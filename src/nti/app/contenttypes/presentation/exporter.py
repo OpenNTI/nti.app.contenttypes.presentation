@@ -80,6 +80,8 @@ class LessonOverviewsExporter(BaseSectionExporter):
 		if not backup: # generate NTIIDs
 			if not INTIDiscussionRef.providedBy(asset):
 				ext_obj.pop(ID, None)
+			elif asset.isCourseBundle():
+				ext_obj.pop('target', None)
 			ext_obj.pop(NTIID, None)
 			if not IPackagePresentationAsset.providedBy(concrete):
 				ext_obj.pop(NTIID.lower(), None)
