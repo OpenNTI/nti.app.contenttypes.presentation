@@ -27,7 +27,6 @@ from nti.contenttypes.presentation import iface_of_asset
 
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
-from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
@@ -86,8 +85,8 @@ class LessonOverviewsExporter(BaseSectionExporter):
 			ext_obj.pop(NTIID, None)
 			if not IPackagePresentationAsset.providedBy(concrete):
 				ext_obj.pop(NTIID.lower(), None)
-			if INTIAssignmentRef.providedBy(asset):
-				ext_obj.pop('containerId', None)
+			if INTIAssessmentRef.providedBy(asset):
+				ext_obj.pop(INTERNAL_CONTAINER_ID, None)
 
 		# save asset/concrete resources
 		save_resources_to_filer(provided, concrete, filer, ext_obj)
