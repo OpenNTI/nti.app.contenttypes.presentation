@@ -18,10 +18,11 @@ from nti.appserver._adapters import _AbstractExternalFieldTraverser
 
 from nti.appserver.interfaces import IExternalFieldTraversable
 
-from nti.assessment.interfaces import IQPoll, IQEvaluation
+from nti.assessment.interfaces import IQPoll
 from nti.assessment.interfaces import IQSurvey
 from nti.assessment.interfaces import IQInquiry
 from nti.assessment.interfaces import IQuestion
+from nti.assessment.interfaces import IQEvaluation
 from nti.assessment.interfaces import IQuestionSet
 from nti.assessment.interfaces import IQAssignment
 
