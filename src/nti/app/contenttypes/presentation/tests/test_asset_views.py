@@ -652,7 +652,7 @@ class TestAssetViews(ApplicationLayerTest):
 			# Our group does not adapt to a course (since no parent).
 			self._check_container_index(obj, container_ids=(ntiid,), course=False)
 
-		# Delete video from group; but asset still exists.
+		# Delete video from group; asset is deleted.
 		delete_suffix = self._get_delete_url_suffix(0, video_ntiid)
 		self.testapp.delete(contents_url + delete_suffix)
 		# No problem with multiple calls
@@ -661,8 +661,7 @@ class TestAssetViews(ApplicationLayerTest):
 			obj = find_object_with_ntiid(ntiid)
 			assert_that(obj, has_property('Items', has_length(1)))
 			actual_video = find_object_with_ntiid(video_ntiid)
-			assert_that(actual_video, not_none())
-			assert_that(actual_video.__parent__, not_none())
+			assert_that(actual_video, none())
 
 		# Insert at index 0
 		res = self.testapp.post_json(contents_url + '/index/0',
@@ -1049,7 +1048,7 @@ class TestAssetViews(ApplicationLayerTest):
 		assert_that(group_items, has_length(1))
 		assert_that(group_items[0].get('NTIID'), is_not(timeline_ntiid))
 
-		self.testapp.get('/dataserver2/Objects/%s' % timeline_ntiid)
+		self.testapp.get('/dataserver2/Objects/%s' % timeline_ntiid, status=404)
 
 	@WithSharedApplicationMockDS(testapp=True, users=True)
 	def test_moves(self):
