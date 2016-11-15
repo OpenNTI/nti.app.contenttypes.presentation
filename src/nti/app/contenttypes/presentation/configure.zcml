@@ -83,9 +83,7 @@
 				provides="nti.coremetadata.interfaces.ICalendarPublishablePredicate" />
 
 	<!-- Search filters -->
-	<subscriber factory=".search_predicates._LessonsSearchHitPostProcessingPredicate"
-				provides="nti.contentsearch.interfaces.ISearchHitPostProcessingPredicate"
-				for="nti.contenttypes.presentation.interfaces.IPresentationAsset" />
+	<include package=".search" />
 
 	<!-- ACLs -->
 	<adapter factory=".acl.NTIAudioACLProvider" />
