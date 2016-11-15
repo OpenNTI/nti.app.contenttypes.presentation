@@ -25,6 +25,7 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation import iface_of_asset
 
+from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
@@ -83,7 +84,8 @@ class LessonOverviewsExporter(BaseSectionExporter):
 			elif asset.isCourseBundle():
 				ext_obj.pop('target', None)
 			ext_obj.pop(NTIID, None)
-			if not IPackagePresentationAsset.providedBy(concrete):
+			if 		not IPackagePresentationAsset.providedBy(concrete) \
+				or	INTIMediaRoll.providedBy(asset.__parent__):
 				ext_obj.pop(NTIID.lower(), None)
 			if INTIAssessmentRef.providedBy(asset):
 				ext_obj.pop(INTERNAL_CONTAINER_ID, None)
