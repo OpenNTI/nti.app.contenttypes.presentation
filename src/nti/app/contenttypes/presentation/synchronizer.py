@@ -16,7 +16,7 @@ import time
 import simplejson
 from urlparse import urlparse
 
-from zope import component
+from zope import component, lifecycleevent
 
 from zope.component.hooks import getSite
 
@@ -41,6 +41,7 @@ from nti.contentlibrary.indexed_data import get_site_registry
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.common import get_course_packages
+from nti.contenttypes.courses.common import get_course_site_registry
 
 from nti.contenttypes.courses.interfaces import NTI_COURSE_FILE_SCHEME
 
@@ -52,7 +53,7 @@ from nti.contenttypes.courses.interfaces import	ICourseOutlineContentNode
 from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import get_course_hierarchy
 
-from nti.contenttypes.presentation import interface_of_asset
+from nti.contenttypes.presentation import interface_of_asset, iface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
@@ -872,8 +873,18 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 
 	return result
 
-def _clear_course_assets(course):
+def _clear_course_assets(course, unregister=True):
 	container = _asset_container(course)
+	if unregister:
+		catalog = get_library_catalog()
+		intids = component.getUtility(IIntIds)
+		registry = get_course_site_registry(course)
+		for ntiid, item in list(container.values()):
+			uid = intids.queryId(item)
+			lifecycleevent.removed(item) # remove int id
+			_unregister(registry, item, iface_of_asset(item), name=ntiid)
+			if catalog is not None and uid is not None:
+				catalog.unindex(uid)
 	container.clear()
 clear_course_assets = _clear_course_assets
 
