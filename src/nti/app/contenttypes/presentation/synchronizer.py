@@ -16,7 +16,7 @@ import time
 import simplejson
 from urlparse import urlparse
 
-from zope import component, lifecycleevent
+from zope import component
 
 from zope.component.hooks import getSite
 
@@ -32,6 +32,7 @@ from nti.app.contenttypes.presentation.utils import create_lesson_4_node
 
 from nti.app.contenttypes.presentation.utils.asset import allowed_in_registry
 from nti.app.contenttypes.presentation.utils.asset import check_docket_targets
+from nti.app.contenttypes.presentation.utils.asset import remove_presentation_asset
 
 from nti.app.products.courseware.resources.utils import get_course_filer
 
@@ -53,7 +54,7 @@ from nti.contenttypes.courses.interfaces import	ICourseOutlineContentNode
 from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import get_course_hierarchy
 
-from nti.contenttypes.presentation import interface_of_asset, iface_of_asset
+from nti.contenttypes.presentation import interface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
@@ -877,14 +878,22 @@ def _clear_course_assets(course, unregister=True):
 	container = _asset_container(course)
 	if unregister:
 		catalog = get_library_catalog()
-		intids = component.getUtility(IIntIds)
 		registry = get_course_site_registry(course)
-		for ntiid, item in list(container.values()):
-			uid = intids.queryId(item)
-			lifecycleevent.removed(item) # remove int id
-			_unregister(registry, item, iface_of_asset(item), name=ntiid)
-			if catalog is not None and uid is not None:
-				catalog.unindex(uid)
+		
+		# remove user crated concrete assets
+		for ntiid, obj in list(container.items()): # modifying
+			concrete = IConcreteAsset(obj, None)
+			if 		concrete is not None \
+				and IUserCreatedAsset.providedBy(concrete) \
+				and not IContentBackedPresentationAsset.providedBy(concrete):
+				remove_presentation_asset(obj, registry, catalog, name=ntiid)
+				container.pop(ntiid, None)
+
+		# remove the rest
+		for ntiid, item in list(container.items()): # modifying
+			remove_presentation_asset(item, registry, catalog, name=ntiid)
+
+	# clear all
 	container.clear()
 clear_course_assets = _clear_course_assets
 
