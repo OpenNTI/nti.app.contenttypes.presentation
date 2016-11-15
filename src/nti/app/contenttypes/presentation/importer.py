@@ -92,7 +92,6 @@ class LessonOverviewsImporter(BaseSectionImporter):
 		concrete.creator = asset.creator = self.current_principal.id
 		# mark as created
 		interface.alsoProvides(asset, IUserCreatedAsset)
-		interface.alsoProvides(concrete, IUserCreatedAsset)
 		# check 'children'
 		if IItemAssetContainer.providedBy(asset):
 			asset_items = asset.Items if asset.Items is not None else ()
