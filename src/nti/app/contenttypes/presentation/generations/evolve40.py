@@ -25,8 +25,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.presentation.interfaces import IAssetRef
-from nti.contenttypes.presentation.interfaces import INTIAudio
-from nti.contenttypes.presentation.interfaces import INTIVideo
+from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -61,17 +60,19 @@ class MockDataserver(object):
 def _fix_media_refs(current_site, seen):
 	result = 0
 	registry = current_site.getSiteManager()
-	for provided in (INTIVideo, INTIAudio):
-		for name, item in list(registry.getUtilitiesFor(provided)):
-			if name in seen:
-				continue
-			seen.add(name)
+	for name, item in list(registry.getUtilitiesFor(IPackagePresentationAsset)):
+		if name in seen:
+			continue
+		seen.add(name)
+		if INTIMedia.providedBy(item):
 			for field in ('sources', 'transcripts'):
-				for part in getattr(item, field, None) or ():
-					part.__parent__ = item
-					part.__dict__.pop(NTIID, None) # remove ntiid
-					part.__dict__.pop(NTIID.lower(), None) # remove ntiid
-					result += 1
+					for part in getattr(item, field, None) or ():
+						part.__parent__ = item
+						part.__dict__.pop(NTIID, None) # remove ntiid
+						part.__dict__.pop(NTIID.lower(), None) # remove ntiid
+						result += 1
+			interface.alsoProvides(item, IContentBackedPresentationAsset)
+		elif not IUserCreatedAsset.providedBy(item):
 			interface.alsoProvides(item, IContentBackedPresentationAsset)
 	return result
 
@@ -102,18 +103,6 @@ def _fix_containers_refs(current_site, seen, catalog):
 		result += 1
 	return result
 
-def _fix_package_refs(current_site, seen, catalog):
-	result = 0
-	registry = current_site.getSiteManager()
-	for name, item in list(registry.getUtilitiesFor(IPackagePresentationAsset)):
-		if name in seen:
-			continue
-		seen.add(name)
-		if not IUserCreatedAsset.providedBy(item):
-			interface.alsoProvides(item, IContentBackedPresentationAsset)
-			result += 1
-	return result
-
 def do_evolve(context, generation=generation):
 	setHooks()
 	conn = context.connection
@@ -137,7 +126,6 @@ def do_evolve(context, generation=generation):
 			with site(current_site):
 				result += _fix_media_refs(current_site, seen)
 				result += _fix_containers_refs(current_site, seen, catalog)
-				result += _fix_package_refs(current_site, seen, catalog)
 
 		logger.info('Evolution %s done. %s item(s) processed',
 					generation, result)
