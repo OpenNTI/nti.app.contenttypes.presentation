@@ -209,7 +209,7 @@ def _on_asset_moved(asset, event):
 		record_transaction(asset, principal=event.principal,
 						   type_=TRX_ASSET_MOVE_TYPE)
 
-@component.adapter(IUserCreatedAsset, IIntIdAddedEvent)
+@component.adapter(IPresentationAsset, IIntIdAddedEvent)
 def _on_asset_registered(asset, event):
 	if queryInteraction() is not None:
 		interface.alsoProvides(asset, IUserCreatedAsset)
