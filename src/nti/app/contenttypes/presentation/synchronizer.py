@@ -880,14 +880,12 @@ def _clear_course_assets(course, unregister=True):
 		catalog = get_library_catalog()
 		registry = get_course_site_registry(course)
 		
-		# remove user crated concrete assets
-		for ntiid, obj in list(container.items()): # modifying
-			concrete = IConcreteAsset(obj, None)
-			if 		concrete is not None \
-				and IUserCreatedAsset.providedBy(concrete) \
+		# remove user created concrete assets
+		for ntiid, item in list(container.items()): # modifying
+			concrete = IConcreteAsset(item, None)
+			if 		IUserCreatedAsset.providedBy(concrete) \
 				and not IContentBackedPresentationAsset.providedBy(concrete):
-				remove_presentation_asset(obj, registry, catalog, name=ntiid)
-				container.pop(ntiid, None)
+				remove_presentation_asset(concrete, registry, catalog, name=ntiid)
 
 		# remove the rest
 		for ntiid, item in list(container.items()): # modifying
