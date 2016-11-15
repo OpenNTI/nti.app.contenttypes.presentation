@@ -57,7 +57,7 @@ class MockDataserver(object):
 			return resolver.get_object_by_oid(oid, ignore_creator=ignore_creator)
 		return None
 
-def _fix_media_refs(current_site, seen):
+def _fix_pacakge_refs(current_site, seen):
 	result = 0
 	registry = current_site.getSiteManager()
 	for name, item in list(registry.getUtilitiesFor(IPackagePresentationAsset)):
@@ -124,7 +124,7 @@ def do_evolve(context, generation=generation):
 		catalog = get_library_catalog()
 		for current_site in get_all_host_sites():
 			with site(current_site):
-				result += _fix_media_refs(current_site, seen)
+				result += _fix_pacakge_refs(current_site, seen)
 				result += _fix_containers_refs(current_site, seen, catalog)
 
 		logger.info('Evolution %s done. %s item(s) processed',
