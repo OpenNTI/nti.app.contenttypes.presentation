@@ -65,21 +65,21 @@ def remove_leaks(current, intids, catalog, seen):
 		# registration for a removed asset
 		if doc_id is None:
 			logger.warn("Removing invalid registration %s from site %s", ntiid, site_name)
-			remove_presentation_asset(item, registry, catalog, package=False)
+			remove_presentation_asset(item, registry, catalog)
 			continue
 
 		# invalid lesson overview
 		if INTILessonOverview.providedBy(item) and not _valid_parent(item, intids):
 			logger.warn("Removing invalid lesson overview %s from site %s",
 						ntiid, site_name)
-			remove_presentation_asset(item, registry, catalog, package=False)
+			remove_presentation_asset(item, registry, catalog)
 			continue
 
 		# invalid overview groups overview
 		if INTICourseOverviewGroup.providedBy(item) and not _valid_parent(item, intids):
 			logger.warn("Removing invalid course overview %s from site %s",
 						ntiid, site_name)
-			remove_presentation_asset(item, registry, catalog, package=False)
+			remove_presentation_asset(item, registry, catalog)
 			continue
 		
 		# invalid media roll overview

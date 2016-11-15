@@ -154,6 +154,7 @@ from nti.contenttypes.presentation.interfaces import ICoursePresentationAsset
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
+from nti.contenttypes.presentation.interfaces import IContentBackedPresentationAsset
 
 from nti.contenttypes.presentation.interfaces import OverviewGroupMovedEvent
 from nti.contenttypes.presentation.interfaces import PresentationAssetMovedEvent
@@ -1208,7 +1209,9 @@ class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
 			self.context.remove(item)
 			# remove concrete to avoid leaks
 			concrete = IConcreteAsset(item, item)
-			if concrete is not item and IUserCreatedAsset.providedBy(concrete):
+			if 		concrete is not item \
+				and IUserCreatedAsset.providedBy(concrete) \
+				and not IContentBackedPresentationAsset.providedBy(concrete):
 				remove_presentation_asset(concrete)
 		else:
 			self.context.pop(index)
@@ -1240,7 +1243,9 @@ class RemoveRefsView( AbstractAuthenticatedView ):
 		group.remove(item)
 		# remove concrete to avoid leaks
 		concrete = IConcreteAsset(item, item)
-		if concrete is not item and IUserCreatedAsset.providedBy(concrete):
+		if 		concrete is not item \
+			and IUserCreatedAsset.providedBy(concrete) \
+			and not IContentBackedPresentationAsset.providedBy(concrete):
 			remove_presentation_asset(concrete)
 		remove_presentation_asset(item)
 		event_notify(ItemRemovedFromItemAssetContainerEvent(group, item))

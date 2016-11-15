@@ -191,8 +191,7 @@ def remove_course_inaccessible_assets():
 			if registry.queryUtility(provided, name=ntiid) is None:
 				container.pop(ntiid, None)
 				remove_transaction_history(asset)
-				remove_presentation_asset(asset, registry, catalog,
-										  package=False, name=ntiid)
+				remove_presentation_asset(asset, registry, catalog, name=ntiid)
 			# check it has a valid uid and parent
 			elif uid is None or not has_a_valid_parent(asset, intids):
 				container.pop(ntiid, None)
@@ -213,8 +212,7 @@ def remove_course_inaccessible_assets():
 			uid = intids.queryId(asset)
 			if uid is None or ntiid not in master:
 				remove_transaction_history(asset)
-				remove_presentation_asset(asset, registry, catalog,
-										  package=False, name=ntiid)
+				remove_presentation_asset(asset, registry, catalog, name=ntiid)
 				items.append({
 					INTID:uid,
 					NTIID:ntiid,
@@ -235,8 +233,7 @@ def remove_course_inaccessible_assets():
 			provided = iface_of_asset(asset)
 			if component.queryUtility(provided, name=ntiid) is None:
 				remove_transaction_history(asset)
-				remove_presentation_asset(asset, catalog=catalog,
-										  package=False, name=ntiid)
+				remove_presentation_asset(asset, catalog=catalog, name=ntiid)
 				items.append({
 					INTID:uid,
 					NTIID:ntiid,
