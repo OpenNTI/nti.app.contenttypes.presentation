@@ -25,6 +25,7 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation import iface_of_asset
 
+from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
@@ -78,17 +79,24 @@ class LessonOverviewsExporter(BaseSectionExporter):
 		# remove unquired data if not backup mode
 		ext_obj.pop(OID, None)
 		ext_obj.pop(CONTAINER_ID, None)
-		if not backup: # generate NTIIDs
+		if not backup: # remove unrequired keys
 			if not INTIDiscussionRef.providedBy(asset):
 				ext_obj.pop(ID, None)
 			elif asset.isCourseBundle():
 				ext_obj.pop('target', None)
-			ext_obj.pop(NTIID, None)
+			if INTIAssessmentRef.providedBy(asset):
+				ext_obj.pop(INTERNAL_CONTAINER_ID, None)
 			if 		not IPackagePresentationAsset.providedBy(concrete) \
 				or	INTIMediaRoll.providedBy(asset.__parent__):
 				ext_obj.pop(NTIID.lower(), None)
-			if INTIAssessmentRef.providedBy(asset):
-				ext_obj.pop(INTERNAL_CONTAINER_ID, None)
+			elif 	INTIMedia.providedBy(concrete) \
+				and	not INTIMediaRoll.providedBy(asset.__parent__):
+				for name in ('sources', 'transcripts'):
+					for item in ext_obj.get(name) or ():
+						item.pop(OID, None)
+						item.pop(NTIID, None)
+						item.pop(NTIID.lower(), None)
+			ext_obj.pop(NTIID, None)
 
 		# save asset/concrete resources
 		save_resources_to_filer(provided, concrete, filer, ext_obj)
@@ -109,10 +117,10 @@ class LessonOverviewsExporter(BaseSectionExporter):
 						ext_obj.pop(NTIID, None)
 						ext_obj.pop(NTIID.lower(), None)
 					self._post_process_asset(item, item_ext, filer, backup)
-		elif 	 not backup \
-			 and INTIAssessmentRef.providedBy(asset) \
-			 and asset.target \
-			 and IQEditableEvaluation.providedBy(IQEvaluation(asset, None)):
+		# check references to authored evaluations
+		elif	not backup \
+			and INTIAssessmentRef.providedBy(asset) \
+			and IQEditableEvaluation.providedBy(IQEvaluation(asset, None)):
 			ext_obj['target'] = self.hash_ntiid(asset.target)
 			
 		if not backup: # don't leak internal OIDs
