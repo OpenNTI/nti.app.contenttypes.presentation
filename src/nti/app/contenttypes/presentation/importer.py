@@ -52,6 +52,7 @@ from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraints
+from nti.contenttypes.presentation.interfaces import IContentBackedPresentationAsset
 
 from nti.coremetadata.interfaces import IRecordable 
 from nti.coremetadata.interfaces import IPublishable 
@@ -88,15 +89,21 @@ class LessonOverviewsImporter(BaseSectionImporter):
 									  concrete, 
 									  source_filer, 
 									  target_filer)
+
 		# set creator
 		concrete.creator = asset.creator = self.current_principal.id
+
 		# mark as created
 		interface.alsoProvides(asset, IUserCreatedAsset)
+		if not IContentBackedPresentationAsset.providedBy(concrete):
+			interface.alsoProvides(concrete, IUserCreatedAsset)
+
 		# check 'children'
 		if IItemAssetContainer.providedBy(asset):
 			asset_items = asset.Items if asset.Items is not None else ()
 			for item in asset_items:
 				self._post_process_asset(item, source_filer, target_filer)
+		
 		# set proper target
 		check_docket_targets(concrete)
 
