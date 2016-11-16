@@ -114,7 +114,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
 				ext_items = ext_obj.get(ITEMS) or ()
 				asset_items = asset.Items if asset.Items is not None else ()
 				for item, item_ext in zip(asset_items, ext_items):
-					if not item_ext.get(NTIID): # check valid NTIID
+					if not item_ext.get(NTIID) or not item_ext.get(NTIID.lower()): # check valid NTIID
 						item_ext.pop(NTIID, None)
 						item_ext.pop(NTIID.lower(), None)
 					self._post_process_asset(item, item_ext, filer, backup)
