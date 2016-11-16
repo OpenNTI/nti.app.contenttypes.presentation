@@ -97,6 +97,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
 						item.pop(NTIID, None)
 						item.pop(NTIID.lower(), None)
 			ext_obj.pop(NTIID, None)
+			ext_obj.pop(NTIID.lower(), None)
 
 		# save asset/concrete resources
 		save_resources_to_filer(provided, concrete, filer, ext_obj)
@@ -114,15 +115,15 @@ class LessonOverviewsExporter(BaseSectionExporter):
 				asset_items = asset.Items if asset.Items is not None else ()
 				for item, item_ext in zip(asset_items, ext_items):
 					if not item_ext.get(NTIID): # check valid NTIID
-						ext_obj.pop(NTIID, None)
-						ext_obj.pop(NTIID.lower(), None)
+						item_ext.pop(NTIID, None)
+						item_ext.pop(NTIID.lower(), None)
 					self._post_process_asset(item, item_ext, filer, backup)
 		# check references to authored evaluations
 		elif	not backup \
 			and INTIAssessmentRef.providedBy(asset) \
 			and IQEditableEvaluation.providedBy(IQEvaluation(asset, None)):
 			ext_obj['target'] = self.hash_ntiid(asset.target)
-			
+
 		if not backup: # don't leak internal OIDs
 			for name in (NTIID, NTIID.lower(), INTERNAL_CONTAINER_ID, 'target'):
 				value = ext_obj.get(name)
