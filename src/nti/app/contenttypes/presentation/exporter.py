@@ -50,6 +50,7 @@ ID = StandardExternalFields.ID
 OID = StandardExternalFields.OID
 ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID
+INTERNAL_NTIID = StandardInternalFields.NTIID
 CONTAINER_ID = StandardExternalFields.CONTAINER_ID
 INTERNAL_CONTAINER_ID = StandardInternalFields.CONTAINER_ID
 
@@ -88,14 +89,14 @@ class LessonOverviewsExporter(BaseSectionExporter):
 				ext_obj.pop(INTERNAL_CONTAINER_ID, None)
 			if 		not IPackagePresentationAsset.providedBy(concrete) \
 				or	INTIMediaRoll.providedBy(asset.__parent__):
-				ext_obj.pop(NTIID.lower(), None)
+				ext_obj.pop(INTERNAL_NTIID, None)
 			elif 	INTIMedia.providedBy(concrete) \
 				and	not INTIMediaRoll.providedBy(asset.__parent__):
 				for name in ('sources', 'transcripts'):
 					for item in ext_obj.get(name) or ():
 						item.pop(OID, None)
 						item.pop(NTIID, None)
-						item.pop(NTIID.lower(), None)
+						item.pop(INTERNAL_NTIID, None)
 			ext_obj.pop(NTIID, None)
 
 		# save asset/concrete resources
@@ -113,9 +114,9 @@ class LessonOverviewsExporter(BaseSectionExporter):
 				ext_items = ext_obj.get(ITEMS) or ()
 				asset_items = asset.Items if asset.Items is not None else ()
 				for item, item_ext in zip(asset_items, ext_items):
-					if not item_ext.get(NTIID) or not item_ext.get(NTIID.lower()): # check valid NTIID
+					if not item_ext.get(NTIID) or not item_ext.get(INTERNAL_NTIID): # check valid NTIID
 						item_ext.pop(NTIID, None)
-						item_ext.pop(NTIID.lower(), None)
+						item_ext.pop(INTERNAL_NTIID, None)
 					self._post_process_asset(item, item_ext, filer, backup)
 		# check references to authored evaluations
 		elif	not backup \
@@ -124,7 +125,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
 			ext_obj['target'] = self.hash_ntiid(asset.target)
 
 		if not backup: # don't leak internal OIDs
-			for name in (NTIID, NTIID.lower(), INTERNAL_CONTAINER_ID, 'target'):
+			for name in (NTIID, INTERNAL_NTIID, INTERNAL_CONTAINER_ID, 'target'):
 				value = ext_obj.get(name)
 				if 		value \
 					and	is_valid_ntiid_string(value) \
