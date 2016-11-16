@@ -97,7 +97,6 @@ class LessonOverviewsExporter(BaseSectionExporter):
 						item.pop(NTIID, None)
 						item.pop(NTIID.lower(), None)
 			ext_obj.pop(NTIID, None)
-			ext_obj.pop(NTIID.lower(), None)
 
 		# save asset/concrete resources
 		save_resources_to_filer(provided, concrete, filer, ext_obj)
