@@ -115,17 +115,17 @@ class LessonOverviewsImporter(BaseSectionImporter):
 	def _asset_callback(self, asset, parsed):
 		modified = False
 		locked = parsed.get('isLocked')
-		if locked and IRecordable.providedBy(asset):
+		if (locked or locked is None) and IRecordable.providedBy(asset):
 			asset.lock(event=False)
 			modified = True
 
 		locked = parsed.get('isChildOrderLocked')
-		if locked and IRecordableContainer.providedBy(asset):
+		if (locked or locked is None) and IRecordableContainer.providedBy(asset):
 			asset.childOrderLock(event=False)
 			modified = True
 
 		isPublished = parsed.get('isPublished') 
-		if isPublished:
+		if isPublished or isPublished is None:
 			if ICalendarPublishable.providedBy(asset):
 				if not asset.publishBeginning:
 					asset.publish(event=False)
