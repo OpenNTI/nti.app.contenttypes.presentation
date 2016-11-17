@@ -73,7 +73,7 @@ def _outline_nodes(outline, seen):
 @interface.implementer(ICourseSectionExporter)
 class LessonOverviewsExporter(BaseSectionExporter):
 
-	def _post_process_asset(self, asset, ext_obj, filer, backup=True):
+	def _post_process_asset(self, asset, ext_obj, filer, backup=True, salt=None):
 		concrete = IConcreteAsset(asset, asset)
 		provided = iface_of_asset(concrete)
 
@@ -122,7 +122,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
 		elif	not backup \
 			and INTIAssessmentRef.providedBy(asset) \
 			and IQEditableEvaluation.providedBy(IQEvaluation(asset, None)):
-			ext_obj['target'] = self.hash_ntiid(asset.target)
+			ext_obj['target'] = self.hash_ntiid(asset.target, salt)
 
 		if not backup: # don't leak internal OIDs
 			for name in (NTIID, INTERNAL_NTIID, INTERNAL_CONTAINER_ID, 'target'):
@@ -132,13 +132,13 @@ class LessonOverviewsExporter(BaseSectionExporter):
 					and is_ntiid_of_type(value, TYPE_OID):
 					ext_obj.pop(name, None)
 
-	def _do_export(self, context, filer, seen, backup=True):
+	def _do_export(self, context, filer, seen, backup=True, salt=None):
 		course = ICourseInstance(context)
 		nodes = _outline_nodes(course.Outline, seen)
 		for node, lesson in nodes:
 			ext_obj = to_external_object(lesson, name="exporter", decorate=False)
 			# process internal resources
-			self._post_process_asset(lesson, ext_obj, filer, backup)
+			self._post_process_asset(lesson, ext_obj, filer, backup, salt)
 			# save to json
 			source = self.dump(ext_obj)
 			# save to filer
@@ -147,10 +147,10 @@ class LessonOverviewsExporter(BaseSectionExporter):
 			filer.save(name, source, overwrite=True,
 					   bucket="Lessons", contentType=u"application/x-json")
 
-	def export(self, context, filer, backup=True):
+	def export(self, context, filer, backup=True, salt=None):
 		seen = set()
 		course = ICourseInstance(context)
-		self._do_export(context, filer, seen, backup)
+		self._do_export(context, filer, seen, backup, salt)
 		for sub_instance in get_course_subinstances(course):
 			if sub_instance.Outline is not course.Outline:
-				self._do_export(sub_instance, filer, seen, backup)
+				self._do_export(sub_instance, filer, seen, backup, salt)
