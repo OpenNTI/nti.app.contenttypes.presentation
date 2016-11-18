@@ -61,7 +61,7 @@ from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIMediaRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
-from nti.contenttypes.presentation.interfaces import IConcreteAsset 
+from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
@@ -343,7 +343,7 @@ def _update_sync_results(lesson_ntiid, sync_results, lesson_locked):
 
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 											validate=False, course=None,
-                                            node=None, sync_results=None, 
+                                            node=None, sync_results=None,
 											lesson_callback=None):
 	registry = get_site_registry(registry)
 
@@ -359,6 +359,8 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 	_update_sync_results(overview.ntiid, sync_results, is_locked)
 	if is_locked:
 		logger.info('Not syncing lesson (%s) (locked=%s)', overview.ntiid, locked_ntiids)
+		if lesson_callback is not None: # lesson loaded callback
+			lesson_callback(overview, source_data)
 		return existing_overview, ()
 
 	# remove and register
@@ -388,7 +390,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 		idx = 0
 		items = group.Items or ()
 		json_items = json_groups[gdx].get(ITEMS)
-		
+
 		# base containers for group assets
 		containers = {group.ntiid, overview.ntiid}
 
@@ -402,7 +404,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 				roll_item = item
 				# TODO: generalize media type
 				media_roll = NTIVideoRoll()
-				
+
 				# coalesce into a media roll
 				while _is_auto_roll_coalesce(roll_item):
 
@@ -745,12 +747,12 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 									   **kwargs):
 	"""
 	Synchronize course lesson overviews
-	
+
 	:param course: Course to sync
 	:param intids: IntID facility
 	:param catalog: Presentation assets catalog index
 	:param buckets: Array of source buckets where lesson files are located
-	:param lesson_callback: Optional callback (lesson, json_data) 
+	:param lesson_callback: Optional callback (lesson, json_data)
 	"""
 	result = []
 	namespaces = set()
@@ -763,7 +765,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 
 	# capture all hierarchy entry ntiids
 	hierarchy = [ICourseCatalogEntry(x).ntiid for x in get_course_hierarchy(course)]
-				
+
 	course_packages = get_course_packages(course)
 	catalog = get_library_catalog() if catalog is None else catalog
 	intids = component.getUtility(IIntIds) if intids is None else intids
@@ -879,7 +881,7 @@ def _clear_course_assets(course, unregister=True):
 	if unregister:
 		catalog = get_library_catalog()
 		registry = get_course_site_registry(course)
-		
+
 		# remove user created concrete assets
 		for ntiid, item in list(container.items()): # modifying
 			concrete = IConcreteAsset(item, None)
