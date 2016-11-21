@@ -790,10 +790,9 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 		# This is an import case; if the node already has a registered lesson that is
 		# locked, make sure we do not re-sync (since the underlying json may not yet
 		# have ntiids for us to check state up ahead).
-		if node.LessonOverviewNTIID:
-			lesson = find_object_with_ntiid( node.LessonOverviewNTIID )
-			if lesson is not None and _is_obj_locked( lesson ):
-				continue
+		lesson = INTILessonOverview(node, None)
+		if lesson is not None and _is_obj_locked( lesson ):
+			continue
 
 		# process node
 		namespace = node.src
