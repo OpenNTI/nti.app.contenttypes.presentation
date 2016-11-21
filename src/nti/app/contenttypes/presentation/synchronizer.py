@@ -789,7 +789,9 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 	for node in nodes:
 		# This is an import case; if the node already has a registered lesson that is
 		# locked, make sure we do not re-sync (since the underlying json may not yet
-		# have ntiids for us to check state up ahead).
+		# have ntiids for us to check state up ahead). This also works because
+		# we do not allow sync-updates on lesson children if the lesson (or any of its
+		# children) are locked.
 		lesson = INTILessonOverview(node, None)
 		if lesson is not None and _is_obj_locked( lesson ):
 			continue
