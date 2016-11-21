@@ -327,6 +327,7 @@ def _add_2_package_containers(course, item, catalog, container_ntiids=()):
 		container = _asset_container(main_pkg)
 		container[item.ntiid] = item
 		# index
+		_intid_register(item)
 		container_ntiids.add(main_pkg.ntiid)
 		catalog.index(item,
 					  sites=getSite().__name__,
@@ -459,7 +460,6 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 					# register underlying
 					assert ntiid, 'Must provide an ntiid'
 					_, registered = _do_register(item, registry)
-					_intid_register(registered)
 					_add_2_package_containers(course, registered, catalog, containers)
 
 					# transform to timeline ref
