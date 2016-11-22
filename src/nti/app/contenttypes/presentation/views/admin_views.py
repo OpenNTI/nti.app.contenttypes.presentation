@@ -127,54 +127,69 @@ class GetCoursePresentationAssetsView(AbstractAuthenticatedView):
 		result[ITEM_COUNT] = result[TOTAL] = total
 		return result
 
-@view_config(context=IDataserverFolder)
-@view_config(context=CourseAdminPathAdapter)
+@view_config(context=ICourseInstance)
+@view_config(context=ICourseCatalogEntry)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   permission=nauth.ACT_NTI_ADMIN,
 			   name='ResetCoursePresentationAssets')
 class ResetCoursePresentationAssetsView(_AbstractSyncAllLibrariesView):
 
+	def _process_course(self, context, force=False):
+		catalog = get_library_catalog()
+		course = ICourseInstance(context)
+		folder = find_interface(course, IHostPolicyFolder, strict=False)
+		with current_site(get_host_site(folder.__name__)):
+			removed = []
+			registry = folder.getSiteManager()
+
+			# remove registered assets
+			for name, item, container in course_assets(course):
+				provided = iface_of_asset(item)
+				registered = component.queryUtility(provided, name)
+				if registered is None or can_be_removed(registered, force=force):
+					container.pop(name, None)
+					removed.append(item)
+					remove_presentation_asset(item, registry, catalog, 
+											  name=name, event=False)
+
+			# remove last mod keys
+			clear_namespace_last_modified(course, catalog)
+
+			# remove all transactions
+			for obj in removed:
+				remove_transaction_history(obj)
+
+			# only return ntiids
+			return [x.ntiid for x in removed]
+
 	def _do_call(self):
+		values = self.readInput()
+		force = is_true(values.get('force'))
+		result = LocatedExternalDict()
+		items = result[ITEMS] = self._process_course(self.context, force)
+		result[ITEM_COUNT] = result[TOTAL] = len(items)
+		return result
+
+@view_config(context=ICourseInstance)
+@view_config(context=ICourseCatalogEntry)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   permission=nauth.ACT_NTI_ADMIN,
+			   name='ResetAllCoursePresentationAssets')
+class ResetAllCoursePresentationAssetsView(ResetCoursePresentationAssetsView):
+
+	def _do_call(self):
+		total = 0
 		values = self.readInput()
 		ntiids = _get_course_ntiids(values)
 		force = is_true(values.get('force'))
-
-		total = 0
 		result = LocatedExternalDict()
 		items = result[ITEMS] = {}
-		catalog = get_library_catalog()
 		for course in yield_sync_courses(ntiids):
-			folder = find_interface(course, IHostPolicyFolder, strict=False)
-			with current_site(get_host_site(folder.__name__)):
-				removed = []
-
-				registry = folder.getSiteManager()
-				entry = ICourseCatalogEntry(course)
-	
-				# remove registered assets
-				for name, item, container in course_assets(course):
-					provided = iface_of_asset(item)
-					registered = component.queryUtility(provided, name)
-					if registered is None or can_be_removed(registered, force=force):
-						container.pop(name, None)
-						removed.append(item)
-						remove_presentation_asset(item, registry, catalog, 
-												  name=name, event=False)
-
-				# remove last mod keys
-				clear_namespace_last_modified(course, catalog)
-
-				# remove all transactions
-				for obj in removed:
-					remove_transaction_history(obj)
-
-				# keep total
-				total += len(removed)
-
-				# only return ntiids
-				items[entry.ntiid] = [x.ntiid for x in removed]
-
+			entry = ICourseCatalogEntry(course)
+			items[entry.ntiid] = self._process_course(course, force)
+			total += len(items[entry.ntiid])
 		result[ITEM_COUNT] = result[TOTAL] = total
 		return result
 
@@ -186,18 +201,35 @@ class ResetCoursePresentationAssetsView(_AbstractSyncAllLibrariesView):
 			   name='SyncCoursePresentationAssets')
 class SyncCoursePresentationAssetsView(_AbstractSyncAllLibrariesView):
 
+	def _process_course(self, context):
+		course = ICourseInstance(context)
+		folder = find_interface(course, IHostPolicyFolder, strict=False)
+		with current_site(get_host_site(folder.__name__)):
+			synchronize_course_lesson_overview(course)
+
+	def _do_call(self):
+		now = time.time()
+		result = LocatedExternalDict()
+		result['SyncTime'] = time.time() - now
+		return result
+
+@view_config(context=IDataserverFolder)
+@view_config(context=CourseAdminPathAdapter)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   permission=nauth.ACT_SYNC_LIBRARY,
+			   name='SyncAllCoursePresentationAssets')
+class SyncAllCoursePresentationAssetsView(SyncCoursePresentationAssetsView):
+
 	def _do_call(self):
 		now = time.time()
 		values = self.readInput()
 		result = LocatedExternalDict()
 		ntiids = _get_course_ntiids(values)
-		courses = list(yield_sync_courses(ntiids=ntiids))
 		items = result[ITEMS] = []
-		for course in courses:
-			folder = find_interface(course, IHostPolicyFolder, strict=False)
-			with current_site(get_host_site(folder.__name__)):
-				synchronize_course_lesson_overview(course)
-				items.append(ICourseCatalogEntry(course).ntiid)
+		for course in list(yield_sync_courses(ntiids=ntiids)):
+			self._process_course(course)
+			items.append(ICourseCatalogEntry(course).ntiid)
 		result['SyncTime'] = time.time() - now
 		return result
 
