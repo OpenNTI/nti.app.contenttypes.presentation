@@ -132,8 +132,8 @@ class GetCoursePresentationAssetsView(AbstractAuthenticatedView):
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   permission=nauth.ACT_NTI_ADMIN,
-			   name='ResetCoursePresentationAssets')
-class ResetCoursePresentationAssetsView(_AbstractSyncAllLibrariesView):
+			   name='ResetPresentationAssets')
+class ResetPresentationAssetsView(_AbstractSyncAllLibrariesView):
 
 	def _process_course(self, context, force=False):
 		catalog = get_library_catalog()
@@ -176,8 +176,8 @@ class ResetCoursePresentationAssetsView(_AbstractSyncAllLibrariesView):
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   permission=nauth.ACT_NTI_ADMIN,
-			   name='ResetAllCoursePresentationAssets')
-class ResetAllCoursePresentationAssetsView(ResetCoursePresentationAssetsView):
+			   name='ResetCoursePresentationAssets')
+class ResetCoursePresentationAssetsView(ResetPresentationAssetsView):
 
 	def _do_call(self):
 		total = 0
@@ -198,8 +198,8 @@ class ResetAllCoursePresentationAssetsView(ResetCoursePresentationAssetsView):
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   permission=nauth.ACT_SYNC_LIBRARY,
-			   name='SyncCoursePresentationAssets')
-class SyncCoursePresentationAssetsView(_AbstractSyncAllLibrariesView):
+			   name='SyncPresentationAssets')
+class SyncPresentationAssetsView(_AbstractSyncAllLibrariesView):
 
 	def _process_course(self, context):
 		course = ICourseInstance(context)
@@ -218,8 +218,8 @@ class SyncCoursePresentationAssetsView(_AbstractSyncAllLibrariesView):
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
 			   permission=nauth.ACT_SYNC_LIBRARY,
-			   name='SyncAllCoursePresentationAssets')
-class SyncAllCoursePresentationAssetsView(SyncCoursePresentationAssetsView):
+			   name='SyncCoursePresentationAssets')
+class SyncAllCoursePresentationAssetsView(SyncPresentationAssetsView):
 
 	def _do_call(self):
 		now = time.time()
