@@ -219,7 +219,7 @@ class SyncPresentationAssetsView(_AbstractSyncAllLibrariesView):
 			   renderer='rest',
 			   permission=nauth.ACT_SYNC_LIBRARY,
 			   name='SyncCoursePresentationAssets')
-class SyncAllCoursePresentationAssetsView(SyncPresentationAssetsView):
+class SyncCoursePresentationAssetsView(SyncPresentationAssetsView):
 
 	def _do_call(self):
 		now = time.time()
