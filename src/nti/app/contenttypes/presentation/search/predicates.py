@@ -18,7 +18,9 @@ from nti.appserver.pyramid_authorization import has_permission
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
-from nti.contentsearch.interfaces import ISearchHitPostProcessingPredicate
+from nti.contentsearch.interfaces import ISearchHitPredicate
+
+from nti.contentsearch.predicates import DefaultSearchHitPredicate
 
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 
@@ -28,10 +30,10 @@ from nti.dataserver.authorization import ACT_READ
 
 from nti.traversal.traversal import find_interface
 
-@interface.implementer(ISearchHitPostProcessingPredicate)
-class _LessonsSearchHitPostProcessingPredicate(object):
+@interface.implementer(ISearchHitPredicate)
+class _LessonsSearchHitPredicate(DefaultSearchHitPredicate):
 	"""
-	A `ISearchHitPostProcessingPredicate` that only allows `IPresentationAsset`
+	A `ISearchHitPredicate` that only allows `IPresentationAsset`
 	items through that are in lessons that are accessible (readable and
 	published).
 	"""
