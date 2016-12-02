@@ -121,7 +121,9 @@ def get_presentation_asset_containers(item):
 def get_course_by_relative_path_parts(*parts):
 	for site in get_component_hierarchy_names():
 		with current_site(get_host_site(site)):
-			context = component.getUtility(IPersistentCourseCatalog)
+			context = component.queryUtility(IPersistentCourseCatalog)
+			if context is None:
+				continue
 			for name in parts:
 				# Underscore parts are given, so we'll want to replace with
 				# the possible space-inclusive keys we have in our folder
