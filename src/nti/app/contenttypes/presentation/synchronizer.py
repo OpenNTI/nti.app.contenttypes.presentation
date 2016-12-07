@@ -17,6 +17,7 @@ import simplejson
 from urlparse import urlparse
 
 from zope import component
+from zope import lifecycleevent
 
 from zope.component.hooks import getSite
 
@@ -72,6 +73,7 @@ from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
+from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraints
 from nti.contenttypes.presentation.interfaces import IContentBackedPresentationAsset
 
 from nti.contenttypes.presentation.media import NTIVideoRoll
@@ -79,11 +81,16 @@ from nti.contenttypes.presentation.media import NTIVideoRoll
 from nti.contenttypes.presentation.utils import create_lessonoverview_from_external
 
 from nti.coremetadata.interfaces import IRecordable
+from nti.coremetadata.interfaces import IPublishable
+from nti.coremetadata.interfaces import ICalendarPublishable
 from nti.coremetadata.interfaces import IRecordableContainer
 
 from nti.externalization.externalization import to_external_object
 
 from nti.externalization.interfaces import StandardExternalFields
+
+from nti.externalization.internalization import find_factory_for
+from nti.externalization.internalization import update_from_external_object
 
 from nti.intid.common import addIntId
 from nti.intid.common import removeIntId
@@ -342,10 +349,54 @@ def _update_sync_results(lesson_ntiid, sync_results, lesson_locked):
 			sync_results.Lessons = lessons = CourseLessonSyncResults()
 		getattr(lessons, field).append(lesson_ntiid)
 
+def _update_asset_state(asset, parsed):
+	"""
+	Finalize our lesson/asset state by setting locked and publication
+	state.
+	"""
+	modified = False
+	locked = parsed.get('isLocked')
+	if locked and IRecordable.providedBy(asset):
+		asset.lock(event=False)
+		modified = True
+
+	locked = parsed.get('isChildOrderLocked')
+	if locked and IRecordableContainer.providedBy(asset):
+		asset.childOrderLock(event=False)
+		modified = True
+
+	isPublished = parsed.get('isPublished')
+	if isPublished or isPublished is None:
+		if ICalendarPublishable.providedBy(asset):
+			if not asset.publishBeginning:
+				asset.publish(event=False)
+				modified = True
+		elif IPublishable.providedBy(asset):
+			asset.publish(event=False)
+			modified = True
+
+	ext_obj = parsed.get('PublicationConstraints')
+	if ext_obj:
+		imported_constraints = find_factory_for(ext_obj)()
+		update_from_external_object(imported_constraints, ext_obj, notify=False)
+		constraints = ILessonPublicationConstraints(asset)
+		constraints.extend(imported_constraints.Items)
+		modified = True
+
+	# Update recursively
+	if IItemAssetContainer.providedBy( asset ):
+		# Will these always be the same length...?
+		for child, parsed_child in zip( asset.Items or (),
+										parsed.get( 'Items' ) or [] ):
+			if parsed_child:
+				_update_asset_state( child, parsed_child )
+
+	if modified:
+		lifecycleevent.modified(asset)
+
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 											validate=False, course=None,
-                                            node=None, sync_results=None,
-											lesson_callback=None):
+                                            node=None, sync_results=None):
 	registry = get_site_registry(registry)
 
 	# read and parse json text
@@ -360,8 +411,8 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 	_update_sync_results(overview.ntiid, sync_results, is_locked)
 	if is_locked:
 		logger.info('Not syncing lesson (%s) (locked=%s)', overview.ntiid, locked_ntiids)
-		if lesson_callback is not None: # lesson loaded callback
-			lesson_callback(overview, source_data)
+		# We may update lesson/asset state even if locked...
+		_update_asset_state(overview, source_data)
 		return existing_overview, ()
 
 	# remove and register
@@ -485,8 +536,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 			if not IPackagePresentationAsset.providedBy(item):
 				item.__parent__ = group
 
-	if lesson_callback is not None: # lesson loaded callback
-		lesson_callback(overview, source_data)
+	_update_asset_state(overview, source_data)
 	return overview, removed
 
 def _copy_remove_transactions(items, registry=None):
@@ -743,8 +793,7 @@ def _add_buckets(course, buckets):
 	return buckets
 
 def synchronize_course_lesson_overview(course, intids=None, catalog=None,
-									   buckets=None, lesson_callback=None,
-									   **kwargs):
+									   buckets=None, **kwargs):
 	"""
 	Synchronize course lesson overviews
 
@@ -752,7 +801,6 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 	:param intids: IntID facility
 	:param catalog: Presentation assets catalog index
 	:param buckets: Array of source buckets where lesson files are located
-	:param lesson_callback: Optional callback (lesson, json_data)
 	"""
 	result = []
 	namespaces = set()
@@ -854,7 +902,6 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 											course=course,
 											ntiid=ref_ntiid,
 											registry=registry,
-											lesson_callback=lesson_callback,
 											**kwargs)
 			removed.extend(rmv)
 			result.append(overview)
