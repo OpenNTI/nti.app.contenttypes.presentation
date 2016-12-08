@@ -28,7 +28,7 @@ from nti.app.contenttypes.presentation.synchronizer import synchronize_course_le
 
 from nti.app.products.courseware.resources.utils import get_course_filer
 
-from nti.app.products.courseware.utils.importer import transfer_resources_from_filer
+from nti.app.products.courseware.utils import transfer_resources_from_filer
 
 from nti.cabinet.filer import transfer_to_native_file
 

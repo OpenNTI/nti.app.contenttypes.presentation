@@ -25,6 +25,8 @@ from zope.interface.interfaces import IMethod
 
 from zope.intid.interfaces import IIntIds
 
+from nti.app.products.courseware.utils import transfer_resources_from_filer
+
 from nti.app.contenttypes.presentation.interfaces import IItemRefValidator
 
 from nti.app.contenttypes.presentation.utils import db_connection
@@ -36,6 +38,8 @@ from nti.app.contenttypes.presentation.utils.asset import check_docket_targets
 from nti.app.contenttypes.presentation.utils.asset import remove_presentation_asset
 
 from nti.app.products.courseware.resources.utils import get_course_filer
+
+from nti.cabinet.filer import DirectoryFiler
 
 from nti.contentfile.interfaces import IContentBaseFile
 
@@ -349,10 +353,11 @@ def _update_sync_results(lesson_ntiid, sync_results, lesson_locked):
 			sync_results.Lessons = lessons = CourseLessonSyncResults()
 		getattr(lessons, field).append(lesson_ntiid)
 
-def _update_asset_state(asset, parsed):
+def _update_asset_state(asset, parsed, course, source_filer=None, target_filer=None):
 	"""
 	Finalize our lesson/asset state by setting locked and publication
-	state.
+	state. We also transfer file docs/images into our course resources
+	file store.
 	"""
 	asset = IConcreteAsset(asset, asset)
 	modified = False
@@ -384,13 +389,22 @@ def _update_asset_state(asset, parsed):
 		constraints.extend(imported_constraints.Items)
 		modified = True
 
+	# Now update our hrefs/icons, if necessary.
+	target_filer = get_course_filer(course) if target_filer is None else target_filer
+	source_filer = DirectoryFiler(course.root.absolute_path) if source_filer is None else source_filer
+	transfer_resources_from_filer(interface_of_asset(asset),
+								  asset,
+								  source_filer,
+								  target_filer)
+
 	# Update recursively
 	if IItemAssetContainer.providedBy( asset ):
 		# Will these always be the same length...?
 		for child, parsed_child in zip( asset.Items or (),
 										parsed.get( 'Items' ) or [] ):
 			if parsed_child:
-				_update_asset_state( child, parsed_child )
+				_update_asset_state( child, parsed_child, course,
+									 source_filer, target_filer )
 
 	if modified:
 		lifecycleevent.modified(asset)
@@ -413,7 +427,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 	if is_locked:
 		logger.info('Not syncing lesson (%s) (locked=%s)', overview.ntiid, locked_ntiids)
 		# We may update lesson/asset state even if locked...
-		_update_asset_state(overview, source_data)
+		_update_asset_state(overview, source_data, course)
 		return existing_overview, ()
 
 	# remove and register
@@ -537,7 +551,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 			if not IPackagePresentationAsset.providedBy(item):
 				item.__parent__ = group
 
-	_update_asset_state(overview, source_data)
+	_update_asset_state(overview, source_data, course)
 	return overview, removed
 
 def _copy_remove_transactions(items, registry=None):
