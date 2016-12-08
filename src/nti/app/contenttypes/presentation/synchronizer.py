@@ -354,6 +354,7 @@ def _update_asset_state(asset, parsed):
 	Finalize our lesson/asset state by setting locked and publication
 	state.
 	"""
+	asset = IConcreteAsset(asset, asset)
 	modified = False
 	locked = parsed.get('isLocked')
 	if locked and IRecordable.providedBy(asset):
