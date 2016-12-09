@@ -1022,23 +1022,38 @@ class SyncLockOutlineView(AbstractAuthenticatedView,
 		_recur(outline)
 		return result
 
-	def _do_op(self, node, do_lessons=True):
-		node.lock()
-		lifecycleevent.modified(node)
-		if do_lessons:
-			lesson = INTILessonOverview(node, None)
-			if lesson is not None:
-				lesson.lock()
-				lifecycleevent.modified(lesson)
+	def _handle_container(self, container):
+		container.lock()
 
-	def _do_call(self, outline, do_lessons=True):
+	def _handle_object(self, obj):
+		obj.lock()
+
+	def _do_call(self, outline, do_lessons=True, do_assets=True):
 		for node in self._get_nodes(outline):
-			self._do_op(node, do_lessons)
+			self._handle_container(node)
+			lifecycleevent.modified(node)
+			if do_lessons:
+				lesson = INTILessonOverview(node, None)
+				if lesson is not None:
+					self._handle_container(lesson)
+					lifecycleevent.modified(lesson)
+					if do_assets:
+						for group in lesson or ():
+							self._handle_container(group)
+							lifecycleevent.modified(group)
+							for item in group or ():
+								asset = IConcreteAsset( item, item )
+								self._handle_object(item)
+								lifecycleevent.modified(item)
+								if asset != item:
+									self._handle_object(asset)
+									lifecycleevent.modified(asset)
 
 	def __call__(self):
 		values = self.readInput()
+		do_assets = is_true(values.get('asset') or values.get('assets'))
 		do_lessons = is_true(values.get('lesson') or values.get('lessons'))
-		self._do_call(self.context, do_lessons)
+		self._do_call(self.context, do_lessons, do_assets)
 		return hexc.HTTPNoContent()
 
 @view_config(route_name='objects.generic.traversal',
@@ -1052,12 +1067,10 @@ class SyncUnlockOutlineView(SyncLockOutlineView):
 	Unlocks all nodes and lesson overviews pointed by the outline.
 	"""
 
-	def _do_op(self, node, do_lessons=True):
-		node.unlock()
-		lifecycleevent.modified(node)
-		if do_lessons:
-			lesson = INTILessonOverview(node, None)
-			if lesson is not None:
-				lesson.unlock()
-				lesson.childOrderUnlock()
-				lifecycleevent.modified(lesson)
+	def _handle_container(self, container):
+		container.unlock()
+		container.childOrderUnlock()
+
+	def _handle_object(self, obj):
+		obj.unlock()
+
