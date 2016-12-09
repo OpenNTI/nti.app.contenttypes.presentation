@@ -353,7 +353,7 @@ class FixImportCourseReferences(AbstractAuthenticatedView):
 					change_count += 1
 		return change_count
 
-	def _do_call(self):
+	def __call__(self):
 		result = LocatedExternalDict()
 		course = ICourseInstance( self.context )
 		course_filer = get_course_filer( course )
