@@ -27,9 +27,15 @@ from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.contentlibrary.views.sync_views import _AbstractSyncAllLibrariesView
 
+from nti.app.products.courseware.resources.utils import get_course_filer
+
+from nti.app.products.courseware.utils import transfer_resources_from_filer
+
 from nti.app.externalization.internalization import read_body_as_external_object
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
+
+from nti.app.contenttypes.presentation.interfaces import IConcreteAsset
 
 from nti.app.contenttypes.presentation.synchronizer import can_be_removed
 from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
@@ -44,11 +50,16 @@ from nti.app.contenttypes.presentation.utils.common import remove_course_inacces
 
 from nti.app.products.courseware.views import CourseAdminPathAdapter
 
+from nti.cabinet.filer import DirectoryFiler
+
 from nti.common.maps import CaseInsensitiveDict
 
 from nti.common.string import is_true
 
 from nti.contentlibrary.indexed_data import get_library_catalog
+
+from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussion
+from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
@@ -150,7 +161,7 @@ class ResetPresentationAssetsView(_AbstractSyncAllLibrariesView):
 				if registered is None or can_be_removed(registered, force=force):
 					container.pop(name, None)
 					removed.append(item)
-					remove_presentation_asset(item, registry, catalog, 
+					remove_presentation_asset(item, registry, catalog,
 											  name=name, event=False)
 
 			# remove last mod keys
@@ -302,4 +313,58 @@ class OutlineObjectCourseResolverView(AbstractAuthenticatedView):
 					items.append(course)
 		result[TOTAL] = result[ITEM_COUNT] = len(items)
 		result['Site'] = result['SiteInfo'] = getSite().__name__
+		return result
+
+@view_config(context=ICourseInstance)
+@view_config(context=ICourseCatalogEntry)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='POST',
+			   permission=nauth.ACT_NTI_ADMIN,
+			   name='FixImportCourseReferences')
+class FixImportCourseReferences(AbstractAuthenticatedView):
+	"""
+	For imported/synced courses, iterate through and make sure
+	any course-file images/refs on disk are synced into course
+	structure.
+	"""
+
+	def _update_assets(self, course, source_filer, course_filer):
+		change_count = 0
+		for _, item, _ in course_assets(course):
+			asset = IConcreteAsset( item, item )
+			transfer_result = transfer_resources_from_filer(iface_of_asset(asset),
+															asset,
+															source_filer,
+															course_filer)
+			if transfer_result:
+				change_count += 1
+		return change_count
+
+	def _update_discussions(self, course, source_filer, course_filer):
+		change_count = 0
+		discussions = ICourseDiscussions( course )
+		if discussions is not None:
+			for discussion in discussions.values():
+				transfer_result = transfer_resources_from_filer(ICourseDiscussion,
+																discussion,
+																source_filer,
+																course_filer)
+				if transfer_result:
+					change_count += 1
+		return change_count
+
+	def _do_call(self):
+		result = LocatedExternalDict()
+		course = ICourseInstance( self.context )
+		course_filer = get_course_filer( course )
+		source_filer = DirectoryFiler(course.root.absolute_path)
+		disc_change = self._update_discussions( course, source_filer, course_filer )
+		asset_change = self._update_assets( course, source_filer, course_filer )
+		result['DiscussionChangeCount'] = disc_change
+		result['AssetChangeCount'] = asset_change
+		result[ITEM_COUNT] = result[TOTAL] = asset_change + disc_change
+		entry_ntiid = ICourseCatalogEntry( course ).ntiid
+		logger.info( 'Asset/Discussion refs updated from disk (asset=%s) (discussion=%s) (course=%s)',
+					 asset_change, disc_change, entry_ntiid )
 		return result
