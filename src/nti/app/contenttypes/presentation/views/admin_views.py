@@ -35,8 +35,6 @@ from nti.app.externalization.internalization import read_body_as_external_object
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
-from nti.app.contenttypes.presentation.interfaces import IConcreteAsset
-
 from nti.app.contenttypes.presentation.synchronizer import can_be_removed
 from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
 from nti.app.contenttypes.presentation.synchronizer import synchronize_course_lesson_overview
@@ -68,6 +66,7 @@ from nti.contenttypes.courses.utils import get_course_hierarchy
 
 from nti.contenttypes.presentation import iface_of_asset
 
+from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import ICoursePresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
