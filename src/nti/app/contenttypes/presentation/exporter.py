@@ -29,6 +29,7 @@ from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
+from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
@@ -97,7 +98,11 @@ class LessonOverviewsExporter(BaseSectionExporter):
 						item.pop(OID, None)
 						item.pop(NTIID, None)
 						item.pop(INTERNAL_NTIID, None)
-			ext_obj.pop(NTIID, None)
+			# If not user created and not a package asset, we always
+			# want to pop the ntiid to avoid ntiid collission.
+			if		not IUserCreatedAsset.providedBy( concrete ) \
+				and not IPackagePresentationAsset.providedBy( concrete ):
+				ext_obj.pop(NTIID, None)
 
 		# save asset/concrete resources
 		save_resources_to_filer(provided, concrete, filer, ext_obj)
