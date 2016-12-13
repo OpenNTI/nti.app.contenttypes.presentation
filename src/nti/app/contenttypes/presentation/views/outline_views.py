@@ -1028,6 +1028,18 @@ class SyncLockOutlineView(AbstractAuthenticatedView,
 	def _handle_object(self, obj):
 		obj.lock()
 
+	def _handle_inner_assets(self, lesson):
+		for group in lesson or ():
+			self._handle_container(group)
+			lifecycleevent.modified(group)
+			for item in group or ():
+				asset = IConcreteAsset( item, item )
+				self._handle_object(item)
+				lifecycleevent.modified(item)
+				if asset != item:
+					self._handle_object(asset)
+					lifecycleevent.modified(asset)
+
 	def _do_call(self, outline, do_lessons=True, do_assets=True):
 		for node in self._get_nodes(outline):
 			self._handle_container(node)
@@ -1035,19 +1047,10 @@ class SyncLockOutlineView(AbstractAuthenticatedView,
 			if do_lessons:
 				lesson = INTILessonOverview(node, None)
 				if lesson is not None:
- 					self._handle_container(lesson)
- 					lifecycleevent.modified(lesson)
+					self._handle_container(lesson)
+					lifecycleevent.modified(lesson)
 					if do_assets:
-						for group in lesson or ():
-							self._handle_container(group)
-							lifecycleevent.modified(group)
-							for item in group or ():
-								asset = IConcreteAsset( item, item )
-								self._handle_object(item)
-								lifecycleevent.modified(item)
-								if asset != item:
-									self._handle_object(asset)
-									lifecycleevent.modified(asset)
+						self._handle_inner_assets(lesson)
 
 	def __call__(self):
 		values = self.readInput()
@@ -1073,4 +1076,3 @@ class SyncUnlockOutlineView(SyncLockOutlineView):
 
 	def _handle_object(self, obj):
 		obj.unlock()
-
