@@ -87,6 +87,7 @@ from nti.coremetadata.interfaces import IRecordable
 from nti.coremetadata.utils import current_principal as core_current_principal
 
 from nti.externalization.interfaces import StandardExternalFields
+from nti.externalization.interfaces import IObjectModifiedFromExternalEvent
 
 from nti.externalization.oids import to_external_ntiid_oid
 
@@ -214,7 +215,7 @@ def _on_asset_registered(asset, event):
 	if queryInteraction() is not None:
 		interface.alsoProvides(asset, IUserCreatedAsset)
 
-@component.adapter(IPresentationAsset, IObjectModifiedEvent)
+@component.adapter(IPresentationAsset, IObjectModifiedFromExternalEvent)
 def _on_asset_modified(asset, event):
 	if current_principal() is not None:
 		catalog = get_library_catalog()
@@ -251,7 +252,7 @@ def _on_will_update_presentation_asset(asset, event):
 				source = get_file_from_external_link(value)
 				if IContentBaseFile.providedBy(source):
 					source.remove_association(asset)
-				
+
 @component.adapter(INTIDocketAsset, INTIIntIdRemovedEvent)
 def _on_docket_asset_removed(asset, event):
 	for name in ('href', 'icon'):

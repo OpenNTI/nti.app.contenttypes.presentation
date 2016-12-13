@@ -1035,8 +1035,8 @@ class SyncLockOutlineView(AbstractAuthenticatedView,
 			if do_lessons:
 				lesson = INTILessonOverview(node, None)
 				if lesson is not None:
-# 					self._handle_container(lesson)
-# 					lifecycleevent.modified(lesson)
+ 					self._handle_container(lesson)
+ 					lifecycleevent.modified(lesson)
 					if do_assets:
 						for group in lesson or ():
 							self._handle_container(group)
@@ -1048,8 +1048,6 @@ class SyncLockOutlineView(AbstractAuthenticatedView,
 								if asset != item:
 									self._handle_object(asset)
 									lifecycleevent.modified(asset)
-					self._handle_container(lesson)
-					lifecycleevent.modified(lesson)
 
 	def __call__(self):
 		values = self.readInput()

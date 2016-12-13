@@ -187,7 +187,7 @@ def _register_utility(item, provided, ntiid, registry=None):
 		if registered is None:
 			assert is_valid_ntiid_string(ntiid), "invalid NTIID %s" % ntiid
 			registerUtility(registry, item, provided=provided, name=ntiid)
-			logger.debug("(%s,%s) has been registered", provided.__name__, ntiid)
+			logger.info("(%s,%s) has been registered", provided.__name__, ntiid)
 			return (True, item)
 		return (False, registered)
 	return (False, None)
@@ -908,7 +908,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 															 intids=intids,
 															 course=course))
 
-			logger.debug("Synchronizing %s", namespace)
+			logger.info("Synchronizing %s", namespace)
 
 			index_text = sibling_key.readContents()
 			overview, rmv = _load_and_register_lesson_overview_json(
