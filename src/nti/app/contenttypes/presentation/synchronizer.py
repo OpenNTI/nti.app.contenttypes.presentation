@@ -412,7 +412,8 @@ def _update_asset_state(asset, parsed, course, source_filer=None, target_filer=N
 
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 											validate=False, course=None,
-                                            node=None, sync_results=None):
+                                            node=None, sync_results=None,
+                                            intids=None, connection=None):
 	registry = get_site_registry(registry)
 
 	# read and parse json text
@@ -547,8 +548,10 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 				items[idx] = registered
 			idx += 1
 
-		# set lineage just in case for non pacakge assets
+		# set lineage just in case for non package assets
 		for item in items or ():
+			# Register here before updating asset state
+			_intid_register(item, intids, connection=connection)
 			if not IPackagePresentationAsset.providedBy(item):
 				item.__parent__ = group
 
@@ -918,6 +921,8 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 											course=course,
 											ntiid=ref_ntiid,
 											registry=registry,
+											intids=intids,
+											connection=connection,
 											**kwargs)
 			removed.extend(rmv)
 			result.append(overview)
