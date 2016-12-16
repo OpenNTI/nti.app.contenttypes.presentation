@@ -392,11 +392,13 @@ def _update_asset_state(asset, parsed, course, source_filer=None, target_filer=N
 	# Now update our hrefs/icons, if necessary.
 	if course is not None:
 		target_filer = get_course_filer(course) if target_filer is None else target_filer
-		source_filer = DirectoryFiler(course.root.absolute_path) if source_filer is None else source_filer
-		transfer_resources_from_filer(interface_of_asset(asset),
-									  asset,
-									  source_filer,
-									  target_filer)
+		if source_filer is None and os.path.exists( course.root.absolute_path ):
+			source_filer = DirectoryFiler(course.root.absolute_path)
+		if source_filer is not None:
+			transfer_resources_from_filer(interface_of_asset(asset),
+										  asset,
+										  source_filer,
+										  target_filer)
 
 	# Update recursively
 	if IItemAssetContainer.providedBy( asset ):
