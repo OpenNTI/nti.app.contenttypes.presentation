@@ -21,6 +21,8 @@ from zope.security.interfaces import IPrincipal
 
 from nti.appserver.pyramid_authorization import has_permission
 
+from nti.base.mixins import CreatedAndModifiedTimeMixin
+
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import ES_ALL
@@ -35,8 +37,6 @@ from nti.contenttypes.courses.utils import get_any_enrollment
 from nti.contenttypes.courses.utils import get_course_hierarchy
 from nti.contenttypes.courses.utils import get_courses_for_packages
 from nti.contenttypes.courses.utils import is_course_instructor_or_editor
-
-from nti.coremetadata.mixins import CreatedAndModifiedTimeMixin
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
