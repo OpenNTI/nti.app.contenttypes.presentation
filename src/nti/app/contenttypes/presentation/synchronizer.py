@@ -431,7 +431,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 	if is_locked:
 		logger.info('Not syncing lesson (%s) (locked=%s)', overview.ntiid, locked_ntiids)
 		# We may update lesson/asset state even if locked...
-		_update_asset_state(overview, source_data, course)
+		_update_asset_state(existing_overview, source_data, course)
 		return existing_overview, ()
 
 	# remove and register
@@ -903,8 +903,8 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 
 			# this remove all lesson overviews and overview groups
 			# for specified namespace file. As of 20150521 we
-			# don't allow shaing of lesson amogst different courses
-			# (not in hierarchy).. and overview groups are unique to
+			# don't allow sharing of lesson amongst different courses
+			# (not in hierarchy)...and overview groups are unique to
 			# its own lesson
 			removed.extend(_remove_and_unindex_course_assets(namespace=namespace,
 															 container_ntiids=ntiid,
