@@ -25,6 +25,9 @@ from zope.lifecycleevent.interfaces import IObjectModifiedEvent
 
 from zope.security.management import queryInteraction
 
+from zc.intid.interfaces import IAfterIdAddedEvent
+from zc.intid.interfaces import IBeforeIdRemovedEvent
+
 from nti.app.contenttypes.presentation.synchronizer import clear_course_assets
 from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
 from nti.app.contenttypes.presentation.synchronizer import remove_and_unindex_course_assets
@@ -90,9 +93,6 @@ from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IObjectModifiedFromExternalEvent
 
 from nti.externalization.oids import to_external_ntiid_oid
-
-from nti.intid.interfaces import IntIdAddedEvent as INTIIntIdAddedEvent
-from nti.intid.interfaces import IIntIdRemovedEvent as INTIIntIdRemovedEvent
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -253,7 +253,7 @@ def _on_will_update_presentation_asset(asset, event):
 				if IContentBaseFile.providedBy(source):
 					source.remove_association(asset)
 
-@component.adapter(INTIDocketAsset, INTIIntIdRemovedEvent)
+@component.adapter(INTIDocketAsset, IBeforeIdRemovedEvent)
 def _on_docket_asset_removed(asset, event):
 	for name in ('href', 'icon'):
 		value = getattr(asset, name, None)
@@ -262,7 +262,7 @@ def _on_docket_asset_removed(asset, event):
 			if IContentBaseFile.providedBy(source):
 				source.remove_association(asset)
 
-@component.adapter(INTICourseOverviewGroup, INTIIntIdAddedEvent)
+@component.adapter(INTICourseOverviewGroup, IAfterIdAddedEvent)
 def _on_course_overview_registered(group, event):
 	# TODO: Execute only if there is an interaction
 	parent = group.__parent__
@@ -277,7 +277,7 @@ def _on_course_overview_registered(group, event):
 def _on_course_overview_modified(group, event):
 	_on_course_overview_registered(group, None)
 
-@component.adapter(IContentBaseFile, INTIIntIdRemovedEvent)
+@component.adapter(IContentBaseFile, IBeforeIdRemovedEvent)
 def _on_content_file_removed(context, event):
 	if not context.has_associations():
 		return
@@ -292,7 +292,7 @@ def _on_content_file_removed(context, event):
 			else: # refers to icon
 				obj.icon = None
 
-@component.adapter(IQAssignment, INTIIntIdRemovedEvent)
+@component.adapter(IQAssignment, IBeforeIdRemovedEvent)
 def _on_assignment_removed(assignment, event):
 	"""
 	Remove deleted assignment from all overview groups referencing it.
