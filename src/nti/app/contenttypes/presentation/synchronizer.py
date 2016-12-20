@@ -59,7 +59,7 @@ from nti.contenttypes.courses.interfaces import	ICourseOutlineContentNode
 from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import get_course_hierarchy
 
-from nti.contenttypes.presentation import interface_of_asset
+from nti.contenttypes.presentation import interface_of_asset, iface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
@@ -522,21 +522,31 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 			elif INTITimeline.providedBy(item) or INTIRelatedWorkRef.providedBy(item):
 				ntiid = item.ntiid or u''
 				found = find_object_with_ntiid(ntiid)
+				if 		found is not None \
+					and not IContentBackedPresentationAsset.providedBy(found):
+					# Remove and register our mew object if we not content backed.
+					# This could be a related work ref only present in the Lessons
+					# folder of a course (import/export/synced). Therefore we must
+					# update if not locked.
+					removed_item = _removed_registered(iface_of_asset( found ),
+													   ntiid,
+													   intids,
+													   registry)
+					if removed_item is not None:
+						found = None
+
+				if found is None:
+					# Register the new object
+					assert ntiid, 'Must provide an ntiid'
+					_, registered = _do_register(item, registry)
+					_add_2_package_containers(course, registered, catalog, containers)
+					found = registered
+
 				if INTITimeline.providedBy(found):
 					item = INTITimelineRef(found)  # transform to ref
 				elif INTIRelatedWorkRef.providedBy(found):
 					item = INTIRelatedWorkRefPointer(found) # transform to ref
-				else:
-					# register underlying
-					assert ntiid, 'Must provide an ntiid'
-					_, registered = _do_register(item, registry)
-					_add_2_package_containers(course, registered, catalog, containers)
 
-					# transform to timeline ref
-					if INTITimeline.providedBy(item):
-						item = INTITimelineRef(registered)
-					elif INTIRelatedWorkRef.providedBy(item):
-						item = INTIRelatedWorkRefPointer(registered)
 				# add to items
 				items[idx] = item
 			# register item
