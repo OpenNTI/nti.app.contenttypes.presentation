@@ -29,9 +29,9 @@ from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
-from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
+from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
 
@@ -136,7 +136,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
 					and	is_valid_ntiid_string(value) \
 					and is_ntiid_of_type(value, TYPE_OID):
 					ext_obj.pop(name, None)
-
+				
 	def _do_export(self, context, filer, seen, backup=True, salt=None):
 		course = ICourseInstance(context)
 		nodes = _outline_nodes(course.Outline, seen)
@@ -149,6 +149,8 @@ class LessonOverviewsExporter(BaseSectionExporter):
 			# save to filer
 			name = safe_filename(node.src or lesson.ntiid)
 			name = name + '.json' if not name.endswith('.json') else name
+			if not backup: # hash source file
+				name = self.hash_filename(name, salt)
 			filer.save(name, source, overwrite=True,
 					   bucket="Lessons", contentType=u"application/x-json")
 
