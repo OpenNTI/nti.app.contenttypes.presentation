@@ -31,9 +31,8 @@ from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
-from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
-from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
+from nti.contenttypes.presentation.interfaces import IContentBackedPresentationAsset
 
 from nti.externalization.externalization import to_external_object
 
@@ -88,10 +87,10 @@ class LessonOverviewsExporter(BaseSectionExporter):
 				ext_obj.pop('target', None)
 			if INTIAssessmentRef.providedBy(asset):
 				ext_obj.pop(INTERNAL_CONTAINER_ID, None)
-			if 		not IPackagePresentationAsset.providedBy(concrete) \
-				or	INTIMediaRoll.providedBy(asset.__parent__):
+			if INTIMediaRoll.providedBy(asset.__parent__):
+				ext_obj.pop(NTIID, None)
 				ext_obj.pop(INTERNAL_NTIID, None)
-			elif 	INTIMedia.providedBy(concrete) \
+			if 		INTIMedia.providedBy(concrete) \
 				and	not INTIMediaRoll.providedBy(asset.__parent__):
 				for name in ('sources', 'transcripts'):
 					for item in ext_obj.get(name) or ():
@@ -100,9 +99,9 @@ class LessonOverviewsExporter(BaseSectionExporter):
 						item.pop(INTERNAL_NTIID, None)
 			# If not user created and not a package asset, we always
 			# want to pop the ntiid to avoid ntiid collission.
-			if		not IUserCreatedAsset.providedBy( concrete ) \
-				and not IPackagePresentationAsset.providedBy( concrete ):
+			if	not IContentBackedPresentationAsset.providedBy( concrete ):
 				ext_obj.pop(NTIID, None)
+				ext_obj.pop(INTERNAL_NTIID, None)
 
 		# save asset/concrete resources
 		save_resources_to_filer(provided, concrete, filer, ext_obj)
