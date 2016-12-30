@@ -26,6 +26,8 @@ from nti.app.contenttypes.presentation.decorators import VIEW_OVERVIEW_SUMMARY
 from nti.app.contenttypes.presentation.decorators import is_legacy_uas
 from nti.app.contenttypes.presentation.decorators import _AbstractMoveLinkDecorator
 
+from nti.app.links.externalization import render_link
+
 from nti.app.products.courseware.decorators import BaseRecursiveAuditLogLinkDecorator
 
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
@@ -52,8 +54,6 @@ from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalMappingDecorator
-
-from nti.links.externalization import render_link
 
 from nti.links.links import Link
 
