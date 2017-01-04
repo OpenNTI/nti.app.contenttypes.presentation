@@ -123,6 +123,7 @@ def get_presentation_asset_containers(item):
     entries = catalog.get_containers(item)
     return get_containers(entries) if entries else ()
 
+
 def find_course_by_parts(catalog, parts=()):
     result = None
     context = catalog
@@ -143,24 +144,22 @@ def find_course_by_parts(catalog, parts=()):
             elif transformed in context:
                 context = context[transformed]
             else:
-                break # nothing found
+                break  # nothing found
             # check for course
             if ICourseInstance.providedBy(context):
-                if not parts: # nothing more
+                if not parts:  # nothing more
                     result = context
                     break
                 context = context.SubInstances
-        except IndexError:
-            logger.exception("Invalid parts", context)
-            break
-        except TypeError:
-            logger.exception("Context %s is not a valid map", context)
+        except (TypeError, IndexError):
+            logger.exception("Invalid context or parts", context)
             break
         except KeyError:
             logger.error("Invalid key %s in context %s", name, context)
             break
     return result
-            
+
+
 def get_course_by_relative_path_parts(parts=()):
     for site in get_component_hierarchy_names():
         with current_site(get_host_site(site)):
