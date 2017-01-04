@@ -186,31 +186,8 @@ class ResetPresentationAssetsView(_AbstractSyncAllLibrariesView):
         return result
 
 
-@view_config(context=IDataserverFolder)
-@view_config(context=CourseAdminPathAdapter)
-@view_defaults(route_name='objects.generic.traversal',
-               renderer='rest',
-               permission=nauth.ACT_NTI_ADMIN,
-               name='ResetCoursePresentationAssets')
-class ResetCoursePresentationAssetsView(ResetPresentationAssetsView):
-
-    def _do_call(self):
-        total = 0
-        values = self.readInput()
-        ntiids = _get_course_ntiids(values)
-        force = is_true(values.get('force'))
-        result = LocatedExternalDict()
-        items = result[ITEMS] = {}
-        for course in yield_sync_courses(ntiids):
-            entry = ICourseCatalogEntry(course)
-            items[entry.ntiid] = self._process_course(course, force)
-            total += len(items[entry.ntiid])
-        result[ITEM_COUNT] = result[TOTAL] = total
-        return result
-
-
-@view_config(context=IDataserverFolder)
-@view_config(context=CourseAdminPathAdapter)
+@view_config(context=ICourseInstance)
+@view_config(context=ICourseCatalogEntry)
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
                permission=nauth.ACT_SYNC_LIBRARY,
@@ -226,27 +203,6 @@ class SyncPresentationAssetsView(_AbstractSyncAllLibrariesView):
     def _do_call(self):
         now = time.time()
         result = LocatedExternalDict()
-        result['SyncTime'] = time.time() - now
-        return result
-
-
-@view_config(context=IDataserverFolder)
-@view_config(context=CourseAdminPathAdapter)
-@view_defaults(route_name='objects.generic.traversal',
-               renderer='rest',
-               permission=nauth.ACT_SYNC_LIBRARY,
-               name='SyncCoursePresentationAssets')
-class SyncCoursePresentationAssetsView(SyncPresentationAssetsView):
-
-    def _do_call(self):
-        now = time.time()
-        values = self.readInput()
-        result = LocatedExternalDict()
-        ntiids = _get_course_ntiids(values)
-        items = result[ITEMS] = []
-        for course in list(yield_sync_courses(ntiids=ntiids)):
-            self._process_course(course)
-            items.append(ICourseCatalogEntry(course).ntiid)
         result['SyncTime'] = time.time() - now
         return result
 
