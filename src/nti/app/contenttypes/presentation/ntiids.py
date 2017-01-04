@@ -139,7 +139,7 @@ class _NTICourseBundleResolver(object):
 
 	def get_course(self, splits=()):
 		if splits and len(splits) >= 2:  # by parts e.g Fall2015:BIOL_2124
-			return get_course_by_relative_path_parts(*splits[:2])
+			return get_course_by_relative_path_parts(splits[:2])
 		return None
 
 	def get_discussion(self, splits, course=None):

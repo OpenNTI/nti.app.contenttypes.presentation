@@ -47,104 +47,136 @@ from nti.site.hostpolicy import get_host_site
 
 from nti.site.site import get_component_hierarchy_names
 
+
 @interface.implementer(ICourseInstanceEnrollmentRecord)
 class ProxyEnrollmentRecord(CreatedAndModifiedTimeMixin, Contained):
 
-	Scope = None
-	Principal = None
-	CourseInstance = None
+    Scope = None
+    Principal = None
+    CourseInstance = None
 
-	def __init__(self, course=None, principal=None, scope=None):
-		self.Scope = scope
-		self.Principal = principal
-		self.CourseInstance = course
+    def __init__(self, course=None, principal=None, scope=None):
+        self.Scope = scope
+        self.Principal = principal
+        self.CourseInstance = course
+
 
 def get_enrollment_record(context, user):
-	course = ICourseInstance(context, None)  # e.g. course in lineage
-	if course is None:
-		return None
-	else:
-		is_editor = has_permission(ACT_CONTENT_EDIT, course)
-		# give priority to course in lineage before checking the rest
-		for instance in get_course_hierarchy(course):
-			if is_course_instructor_or_editor(instance, user) or is_editor:
-				# create a fake enrollment record w/ all scopes to signal an instructor
-				return ProxyEnrollmentRecord(course, IPrincipal(user), ES_ALL)
-		# find any enrollment
-		result = get_any_enrollment(course, user)
-		return result
+    course = ICourseInstance(context, None)  # e.g. course in lineage
+    if course is None:
+        return None
+    else:
+        is_editor = has_permission(ACT_CONTENT_EDIT, course)
+        # give priority to course in lineage before checking the rest
+        for instance in get_course_hierarchy(course):
+            if is_course_instructor_or_editor(instance, user) or is_editor:
+                # create a fake enrollment record w/ all scopes to signal an
+                # instructor
+                return ProxyEnrollmentRecord(course, IPrincipal(user), ES_ALL)
+        # find any enrollment
+        result = get_any_enrollment(course, user)
+        return result
+
 
 def get_courses_for_pacakge(ntiid):
-	sites = get_component_hierarchy_names()
-	result = get_courses_for_packages(sites, ntiid)
-	return result
+    sites = get_component_hierarchy_names()
+    result = get_courses_for_packages(sites, ntiid)
+    return result
+
 
 def get_containers(ntiids=()):
-	result = []
-	for ntiid in ntiids or ():
-		context = find_object_with_ntiid(ntiid)
-		if ICourseCatalogEntry.providedBy(context):
-			context = ICourseInstance(context, None)
-		if context is not None:
-			result.append(context)
-	return result
+    result = []
+    for ntiid in ntiids or ():
+        context = find_object_with_ntiid(ntiid)
+        if ICourseCatalogEntry.providedBy(context):
+            context = ICourseInstance(context, None)
+        if context is not None:
+            result.append(context)
+    return result
+
 
 def get_courses(ntiids=()):
-	result = set()
-	for ntiid in ntiids or ():
-		# As shortcut, we only want our entry types.This
-		# prevents expensive lookups of content units.
-		if not is_ntiid_of_type(ntiid, NTIID_ENTRY_TYPE):
-			continue
-		course = None
-		context = find_object_with_ntiid(ntiid)
-		if 		ICourseInstance.providedBy(context) \
-			or	ICourseCatalogEntry.providedBy(context): 
-			course = ICourseInstance(context, None)
-		if course is not None:
-			result.add(course)
-	return result
+    result = set()
+    for ntiid in ntiids or ():
+        # As shortcut, we only want our entry types.This
+        # prevents expensive lookups of content units.
+        if not is_ntiid_of_type(ntiid, NTIID_ENTRY_TYPE):
+            continue
+        course = None
+        context = find_object_with_ntiid(ntiid)
+        if 		ICourseInstance.providedBy(context) \
+                or ICourseCatalogEntry.providedBy(context):
+            course = ICourseInstance(context, None)
+        if course is not None:
+            result.add(course)
+    return result
+
 
 def get_presentation_asset_courses(item):
-	catalog = get_library_catalog()
-	entries = catalog.get_containers(item)
-	result = get_courses(entries) if entries else ()
-	return result
+    catalog = get_library_catalog()
+    entries = catalog.get_containers(item)
+    return get_courses(entries) if entries else ()
+
 
 def get_presentation_asset_containers(item):
-	catalog = get_library_catalog()
-	entries = catalog.get_containers(item)
-	result = get_containers(entries) if entries else ()
-	return result
+    catalog = get_library_catalog()
+    entries = catalog.get_containers(item)
+    return get_containers(entries) if entries else ()
 
-def get_course_by_relative_path_parts(*parts):
-	for site in get_component_hierarchy_names():
-		with current_site(get_host_site(site)):
-			context = component.queryUtility(IPersistentCourseCatalog)
-			if context is None:
-				continue
-			for name in parts:
-				# Underscore parts are given, so we'll want to replace with
-				# the possible space-inclusive keys we have in our folder
-				# structure.
-				transformed = name.replace('_', ' ')
-				try:
-					if name in context:
-						context = context[name]
-					elif transformed in context:
-						context = context[transformed]
-					if ICourseInstance.providedBy(context):
-						return context
-				except TypeError:
-					logger.exception("context %s is not a valid map", context)
-					break
-				except KeyError:
-					logger.error("Invalid key %s in context %s", name, context)
+def find_course_by_parts(catalog, parts=()):
+    result = None
+    context = catalog
+    parts = list(parts)
+    while parts:
+        # check context
+        if not context:
+            break
+        try:
+            name = parts.pop(0)
+            # Underscore parts are given, so we'll want to replace with
+            # the possible space-inclusive keys we have in our folder
+            # structure.
+            transformed = name.replace('_', ' ')
+            # find in context
+            if name in context:
+                context = context[name]
+            elif transformed in context:
+                context = context[transformed]
+            else:
+                break # nothing found
+            # check for course
+            if ICourseInstance.providedBy(context):
+                if not parts: # nothing more
+                    result = context
+                    break
+                context = context.SubInstances
+        except IndexError:
+            logger.exception("Invalid parts", context)
+            break
+        except TypeError:
+            logger.exception("Context %s is not a valid map", context)
+            break
+        except KeyError:
+            logger.error("Invalid key %s in context %s", name, context)
+            break
+    return result
+            
+def get_course_by_relative_path_parts(parts=()):
+    for site in get_component_hierarchy_names():
+        with current_site(get_host_site(site)):
+            context = component.queryUtility(IPersistentCourseCatalog)
+            if not context:
+                continue
+            result = find_course_by_parts(context, parts)
+            if result is not None:
+                return result
 
-	logger.debug("Could not find a course for paths '%s' under site '%s'",
-			 	 parts, getSite().__name__)
+    logger.debug("Could not find a course for paths '%s' under site '%s'",
+                 parts, getSite().__name__)
+    return None
 
-def get_entry_by_relative_path_parts(*parts):
-	course = get_course_by_relative_path_parts(*parts)
-	result = ICourseCatalogEntry(course, None)
-	return result
+
+def get_entry_by_relative_path_parts(parts=()):
+    course = get_course_by_relative_path_parts(parts)
+    result = ICourseCatalogEntry(course, None)
+    return result
