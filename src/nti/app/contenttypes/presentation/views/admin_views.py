@@ -91,279 +91,291 @@ ITEMS = StandardExternalFields.ITEMS
 TOTAL = StandardExternalFields.TOTAL
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
+
 def _get_course_ntiids(values):
-	ntiids = values.get('ntiid') or	values.get('ntiids')
-	if ntiids and isinstance(ntiids, six.string_types):
-		ntiids = ntiids.split()
-	return ntiids
+    ntiids = values.get('ntiid') or values.get('ntiids')
+    if ntiids and isinstance(ntiids, six.string_types):
+        ntiids = ntiids.split()
+    return ntiids
+
 
 def _read_input(request):
-	result = CaseInsensitiveDict()
-	if request:
-		if request.body:
-			values = read_body_as_external_object(request)
-		else:
-			values = request.params
-		result.update(values)
-	return result
+    result = CaseInsensitiveDict()
+    if request:
+        if request.body:
+            values = read_body_as_external_object(request)
+        else:
+            values = request.params
+        result.update(values)
+    return result
+
 
 @view_config(context=IDataserverFolder)
 @view_config(context=CourseAdminPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   request_method='GET',
-			   permission=nauth.ACT_NTI_ADMIN,
-			   name='GetCoursePresentationAssets')
+               renderer='rest',
+               request_method='GET',
+               permission=nauth.ACT_NTI_ADMIN,
+               name='GetCoursePresentationAssets')
 class GetCoursePresentationAssetsView(AbstractAuthenticatedView):
 
-	def _found(self, x):
-		ntiid = x.ntiid
-		return ntiid and component.queryUtility(ICoursePresentationAsset, name=ntiid) != None
+    def _found(self, x):
+        ntiid = x.ntiid
+        return ntiid and component.queryUtility(ICoursePresentationAsset, name=ntiid) != None
 
-	def __call__(self):
-		total = 0
-		params = CaseInsensitiveDict(self.request.params)
-		ntiids = _get_course_ntiids(params)
-		result = LocatedExternalDict()
-		result[ITEMS] = items = {}
-		for course in yield_sync_courses(ntiids):
-			entry = ICourseCatalogEntry(course)
-			container = IPresentationAssetContainer(course)
-			items[entry.ntiid] = sorted((x for x in container.values() if self._found(x)),
-										key=lambda x: x.__class__.__name__)
-			total += len(items[entry.ntiid])
+    def __call__(self):
+        total = 0
+        params = CaseInsensitiveDict(self.request.params)
+        ntiids = _get_course_ntiids(params)
+        result = LocatedExternalDict()
+        result[ITEMS] = items = {}
+        for course in yield_sync_courses(ntiids):
+            entry = ICourseCatalogEntry(course)
+            container = IPresentationAssetContainer(course)
+            items[entry.ntiid] = sorted((x for x in container.values() if self._found(x)),
+                                        key=lambda x: x.__class__.__name__)
+            total += len(items[entry.ntiid])
 
-		self.request.acl_decoration = False
-		result[ITEM_COUNT] = result[TOTAL] = total
-		return result
+        self.request.acl_decoration = False
+        result[ITEM_COUNT] = result[TOTAL] = total
+        return result
+
 
 @view_config(context=ICourseInstance)
 @view_config(context=ICourseCatalogEntry)
 @view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   permission=nauth.ACT_NTI_ADMIN,
-			   name='ResetPresentationAssets')
+               renderer='rest',
+               permission=nauth.ACT_NTI_ADMIN,
+               name='ResetPresentationAssets')
 class ResetPresentationAssetsView(_AbstractSyncAllLibrariesView):
 
-	def _process_course(self, context, force=False):
-		catalog = get_library_catalog()
-		course = ICourseInstance(context)
-		folder = find_interface(course, IHostPolicyFolder, strict=False)
-		with current_site(get_host_site(folder.__name__)):
-			removed = []
-			registry = folder.getSiteManager()
+    def _process_course(self, context, force=False):
+        catalog = get_library_catalog()
+        course = ICourseInstance(context)
+        folder = find_interface(course, IHostPolicyFolder, strict=False)
+        with current_site(get_host_site(folder.__name__)):
+            removed = []
+            registry = folder.getSiteManager()
 
-			# remove registered assets
-			for name, item, container in course_assets(course):
-				provided = iface_of_asset(item)
-				registered = component.queryUtility(provided, name)
-				if registered is None or can_be_removed(registered, force=force):
-					container.pop(name, None)
-					removed.append(item)
-					remove_presentation_asset(item, registry, catalog,
-											  name=name, event=False)
+            # remove registered assets
+            for name, item, container in course_assets(course):
+                provided = iface_of_asset(item)
+                registered = component.queryUtility(provided, name)
+                if registered is None or can_be_removed(registered, force=force):
+                    container.pop(name, None)
+                    removed.append(item)
+                    remove_presentation_asset(item, registry, catalog,
+                                              name=name, event=False)
 
-			# remove last mod keys
-			clear_namespace_last_modified(course, catalog)
+            # remove last mod keys
+            clear_namespace_last_modified(course, catalog)
 
-			# remove all transactions
-			for obj in removed:
-				remove_transaction_history(obj)
+            # remove all transactions
+            for obj in removed:
+                remove_transaction_history(obj)
 
-			# only return ntiids
-			return [x.ntiid for x in removed]
+            # only return ntiids
+            return [x.ntiid for x in removed]
 
-	def _do_call(self):
-		values = self.readInput()
-		force = is_true(values.get('force'))
-		result = LocatedExternalDict()
-		items = result[ITEMS] = self._process_course(self.context, force)
-		result[ITEM_COUNT] = result[TOTAL] = len(items)
-		return result
+    def _do_call(self):
+        values = self.readInput()
+        force = is_true(values.get('force'))
+        result = LocatedExternalDict()
+        items = result[ITEMS] = self._process_course(self.context, force)
+        result[ITEM_COUNT] = result[TOTAL] = len(items)
+        return result
 
-@view_config(context=ICourseInstance)
-@view_config(context=ICourseCatalogEntry)
+
+@view_config(context=IDataserverFolder)
+@view_config(context=CourseAdminPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   permission=nauth.ACT_NTI_ADMIN,
-			   name='ResetCoursePresentationAssets')
+               renderer='rest',
+               permission=nauth.ACT_NTI_ADMIN,
+               name='ResetCoursePresentationAssets')
 class ResetCoursePresentationAssetsView(ResetPresentationAssetsView):
 
-	def _do_call(self):
-		total = 0
-		values = self.readInput()
-		ntiids = _get_course_ntiids(values)
-		force = is_true(values.get('force'))
-		result = LocatedExternalDict()
-		items = result[ITEMS] = {}
-		for course in yield_sync_courses(ntiids):
-			entry = ICourseCatalogEntry(course)
-			items[entry.ntiid] = self._process_course(course, force)
-			total += len(items[entry.ntiid])
-		result[ITEM_COUNT] = result[TOTAL] = total
-		return result
+    def _do_call(self):
+        total = 0
+        values = self.readInput()
+        ntiids = _get_course_ntiids(values)
+        force = is_true(values.get('force'))
+        result = LocatedExternalDict()
+        items = result[ITEMS] = {}
+        for course in yield_sync_courses(ntiids):
+            entry = ICourseCatalogEntry(course)
+            items[entry.ntiid] = self._process_course(course, force)
+            total += len(items[entry.ntiid])
+        result[ITEM_COUNT] = result[TOTAL] = total
+        return result
+
 
 @view_config(context=IDataserverFolder)
 @view_config(context=CourseAdminPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   permission=nauth.ACT_SYNC_LIBRARY,
-			   name='SyncPresentationAssets')
+               renderer='rest',
+               permission=nauth.ACT_SYNC_LIBRARY,
+               name='SyncPresentationAssets')
 class SyncPresentationAssetsView(_AbstractSyncAllLibrariesView):
 
-	def _process_course(self, context):
-		course = ICourseInstance(context)
-		folder = find_interface(course, IHostPolicyFolder, strict=False)
-		with current_site(get_host_site(folder.__name__)):
-			synchronize_course_lesson_overview(course)
+    def _process_course(self, context):
+        course = ICourseInstance(context)
+        folder = find_interface(course, IHostPolicyFolder, strict=False)
+        with current_site(get_host_site(folder.__name__)):
+            synchronize_course_lesson_overview(course)
 
-	def _do_call(self):
-		now = time.time()
-		result = LocatedExternalDict()
-		result['SyncTime'] = time.time() - now
-		return result
+    def _do_call(self):
+        now = time.time()
+        result = LocatedExternalDict()
+        result['SyncTime'] = time.time() - now
+        return result
+
 
 @view_config(context=IDataserverFolder)
 @view_config(context=CourseAdminPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   permission=nauth.ACT_SYNC_LIBRARY,
-			   name='SyncCoursePresentationAssets')
+               renderer='rest',
+               permission=nauth.ACT_SYNC_LIBRARY,
+               name='SyncCoursePresentationAssets')
 class SyncCoursePresentationAssetsView(SyncPresentationAssetsView):
 
-	def _do_call(self):
-		now = time.time()
-		values = self.readInput()
-		result = LocatedExternalDict()
-		ntiids = _get_course_ntiids(values)
-		items = result[ITEMS] = []
-		for course in list(yield_sync_courses(ntiids=ntiids)):
-			self._process_course(course)
-			items.append(ICourseCatalogEntry(course).ntiid)
-		result['SyncTime'] = time.time() - now
-		return result
+    def _do_call(self):
+        now = time.time()
+        values = self.readInput()
+        result = LocatedExternalDict()
+        ntiids = _get_course_ntiids(values)
+        items = result[ITEMS] = []
+        for course in list(yield_sync_courses(ntiids=ntiids)):
+            self._process_course(course)
+            items.append(ICourseCatalogEntry(course).ntiid)
+        result['SyncTime'] = time.time() - now
+        return result
+
 
 @view_config(context=IDataserverFolder)
 @view_config(context=CourseAdminPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   permission=nauth.ACT_SYNC_LIBRARY,
-			   name='RemoveCourseInaccessibleAssets')
+               renderer='rest',
+               permission=nauth.ACT_SYNC_LIBRARY,
+               name='RemoveCourseInaccessibleAssets')
 class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
-							  	   		 ModeledContentUploadRequestUtilsMixin):
+                                         ModeledContentUploadRequestUtilsMixin):
 
-	def readInput(self, value=None):
-		return _read_input(self.request)
+    def readInput(self, value=None):
+        return _read_input(self.request)
 
-	def __call__(self):
-		endInteraction()
-		try:
-			result = remove_course_inaccessible_assets()
-		finally:
-			restoreInteraction()
-		return result
+    def __call__(self):
+        endInteraction()
+        try:
+            result = remove_course_inaccessible_assets()
+        finally:
+            restoreInteraction()
+        return result
+
 
 @view_config(context=IDataserverFolder)
 @view_config(context=CourseAdminPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   permission=nauth.ACT_SYNC_LIBRARY,
-			   name='RemoveInvalidPresentationAssets')
+               renderer='rest',
+               permission=nauth.ACT_SYNC_LIBRARY,
+               name='RemoveInvalidPresentationAssets')
 class RemoveInvalidPresentationAssetsView(AbstractAuthenticatedView,
-									  	  ModeledContentUploadRequestUtilsMixin):
+                                          ModeledContentUploadRequestUtilsMixin):
 
-	def __call__(self):
-		result = LocatedExternalDict()
-		endInteraction()
-		try:
-			result[ITEMS] = dict(remove_all_invalid_assets())
-		finally:
-			restoreInteraction()
-		return result
+    def __call__(self):
+        result = LocatedExternalDict()
+        endInteraction()
+        try:
+            result[ITEMS] = dict(remove_all_invalid_assets())
+        finally:
+            restoreInteraction()
+        return result
+
 
 @view_config(route_name='objects.generic.traversal',
-			 renderer='rest',
-			 context=IDataserverFolder,
-			 permission=nauth.ACT_NTI_ADMIN,
-			 name='OutlineObjectCourseResolver')
+             renderer='rest',
+             context=IDataserverFolder,
+             permission=nauth.ACT_NTI_ADMIN,
+             name='OutlineObjectCourseResolver')
 class OutlineObjectCourseResolverView(AbstractAuthenticatedView):
-	"""
-	An admin view to fetch the courses associated with a given
-	outline object (node/lesson/group/asset), given by an `ntiid`
-	param.
-	"""
+    """
+    An admin view to fetch the courses associated with a given
+    outline object (node/lesson/group/asset), given by an `ntiid`
+    param.
+    """
 
-	def _possible_courses(self, course):
-		return get_course_hierarchy(course)
+    def _possible_courses(self, course):
+        return get_course_hierarchy(course)
 
-	def __call__(self):
-		result = LocatedExternalDict()
-		result[ITEMS] = items = []
-		params = CaseInsensitiveDict(self.request.params)
-		ntiid = params.get('ntiid')
-		obj = find_object_with_ntiid(ntiid)
-		course = find_interface(obj, ICourseInstance, strict=False)
-		course = ICourseInstance(obj, None) if course is None else course
-		if course is not None:
-			possible_courses = self._possible_courses(course)
-			our_outline = course.Outline
-			for course in possible_courses:
-				if course.Outline == our_outline:
-					items.append(course)
-		result[TOTAL] = result[ITEM_COUNT] = len(items)
-		result['Site'] = result['SiteInfo'] = getSite().__name__
-		return result
+    def __call__(self):
+        result = LocatedExternalDict()
+        result[ITEMS] = items = []
+        params = CaseInsensitiveDict(self.request.params)
+        ntiid = params.get('ntiid')
+        obj = find_object_with_ntiid(ntiid)
+        course = find_interface(obj, ICourseInstance, strict=False)
+        course = ICourseInstance(obj, None) if course is None else course
+        if course is not None:
+            possible_courses = self._possible_courses(course)
+            our_outline = course.Outline
+            for course in possible_courses:
+                if course.Outline == our_outline:
+                    items.append(course)
+        result[TOTAL] = result[ITEM_COUNT] = len(items)
+        result['Site'] = result['SiteInfo'] = getSite().__name__
+        return result
+
 
 @view_config(context=ICourseInstance)
 @view_config(context=ICourseCatalogEntry)
 @view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   request_method='POST',
-			   permission=nauth.ACT_NTI_ADMIN,
-			   name='FixImportCourseReferences')
+               renderer='rest',
+               request_method='POST',
+               permission=nauth.ACT_NTI_ADMIN,
+               name='FixImportCourseReferences')
 class FixImportCourseReferences(AbstractAuthenticatedView):
-	"""
-	For imported/synced courses, iterate through and make sure
-	any course-file images/refs on disk are synced into course
-	structure.
-	"""
+    """
+    For imported/synced courses, iterate through and make sure
+    any course-file images/refs on disk are synced into course
+    structure.
+    """
 
-	def _update_assets(self, course, source_filer, course_filer):
-		change_count = 0
-		for _, item, _ in course_assets(course):
-			asset = IConcreteAsset( item, item )
-			transfer_result = transfer_resources_from_filer(iface_of_asset(asset),
-															asset,
-															source_filer,
-															course_filer)
-			if transfer_result:
-				change_count += 1
-		return change_count
+    def _update_assets(self, course, source_filer, course_filer):
+        change_count = 0
+        for _, item, _ in course_assets(course):
+            asset = IConcreteAsset(item, item)
+            transfer_result = transfer_resources_from_filer(iface_of_asset(asset),
+                                                            asset,
+                                                            source_filer,
+                                                            course_filer)
+            if transfer_result:
+                change_count += 1
+        return change_count
 
-	def _update_discussions(self, course, source_filer, course_filer):
-		change_count = 0
-		discussions = ICourseDiscussions( course )
-		if discussions is not None:
-			for discussion in discussions.values():
-				transfer_result = transfer_resources_from_filer(ICourseDiscussion,
-																discussion,
-																source_filer,
-																course_filer)
-				if transfer_result:
-					change_count += 1
-		return change_count
+    def _update_discussions(self, course, source_filer, course_filer):
+        change_count = 0
+        discussions = ICourseDiscussions(course)
+        if discussions is not None:
+            for discussion in discussions.values():
+                transfer_result = transfer_resources_from_filer(ICourseDiscussion,
+                                                                discussion,
+                                                                source_filer,
+                                                                course_filer)
+                if transfer_result:
+                    change_count += 1
+        return change_count
 
-	def __call__(self):
-		result = LocatedExternalDict()
-		course = ICourseInstance( self.context )
-		course_filer = get_course_filer( course )
-		source_filer = DirectoryFiler(course.root.absolute_path)
-		disc_change = self._update_discussions( course, source_filer, course_filer )
-		asset_change = self._update_assets( course, source_filer, course_filer )
-		result['DiscussionChangeCount'] = disc_change
-		result['AssetChangeCount'] = asset_change
-		result[ITEM_COUNT] = result[TOTAL] = asset_change + disc_change
-		entry_ntiid = ICourseCatalogEntry( course ).ntiid
-		logger.info( 'Asset/Discussion refs updated from disk (asset=%s) (discussion=%s) (course=%s)',
-					 asset_change, disc_change, entry_ntiid )
-		return result
+    def __call__(self):
+        result = LocatedExternalDict()
+        course = ICourseInstance(self.context)
+        course_filer = get_course_filer(course)
+        source_filer = DirectoryFiler(course.root.absolute_path)
+        disc_change = self._update_discussions(
+            course, source_filer, course_filer)
+        asset_change = self._update_assets(course, source_filer, course_filer)
+        result['DiscussionChangeCount'] = disc_change
+        result['AssetChangeCount'] = asset_change
+        result[ITEM_COUNT] = result[TOTAL] = asset_change + disc_change
+        entry_ntiid = ICourseCatalogEntry(course).ntiid
+        logger.info('Asset/Discussion refs updated from disk (asset=%s) (discussion=%s) (course=%s)',
+                    asset_change, disc_change, entry_ntiid)
+        return result
