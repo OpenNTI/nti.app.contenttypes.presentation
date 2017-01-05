@@ -1028,17 +1028,24 @@ class SyncLockOutlineView(AbstractAuthenticatedView,
 	def _handle_object(self, obj):
 		obj.lock()
 
-	def _handle_inner_assets(self, lesson):
+	def _handle_asset(self, item):
+		asset = IConcreteAsset( item, item )
+		self._handle_object(item)
+		lifecycleevent.modified(item)
+		if asset != item:
+			self._handle_object(asset)
+			lifecycleevent.modified(asset)
+		children = getattr(item, 'Items', None)
+		for child in children or ():
+			# Recur
+			self._handle_asset( child )
+
+	def _handle_group(self, lesson):
 		for group in lesson or ():
 			self._handle_container(group)
 			lifecycleevent.modified(group)
 			for item in group or ():
-				asset = IConcreteAsset( item, item )
-				self._handle_object(item)
-				lifecycleevent.modified(item)
-				if asset != item:
-					self._handle_object(asset)
-					lifecycleevent.modified(asset)
+				self._handle_asset(item)
 
 	def _do_call(self, outline, do_lessons=True, do_assets=True):
 		for node in self._get_nodes(outline):
@@ -1050,7 +1057,7 @@ class SyncLockOutlineView(AbstractAuthenticatedView,
 					self._handle_container(lesson)
 					lifecycleevent.modified(lesson)
 					if do_assets:
-						self._handle_inner_assets(lesson)
+						self._handle_group(lesson)
 
 	def __call__(self):
 		values = self.readInput()
