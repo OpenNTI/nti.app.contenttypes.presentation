@@ -28,6 +28,8 @@ from zope.security.management import queryInteraction
 from zc.intid.interfaces import IAfterIdAddedEvent
 from zc.intid.interfaces import IBeforeIdRemovedEvent
 
+from nti.app.assessment.common import get_evaluation_courses
+
 from nti.app.contenttypes.presentation.synchronizer import clear_course_assets
 from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
 from nti.app.contenttypes.presentation.synchronizer import remove_and_unindex_course_assets
@@ -299,19 +301,20 @@ def _on_assignment_removed(assignment, event):
 	"""
 	count = 0
 	ntiid = getattr(assignment, 'ntiid', None)
-	course = find_interface(assignment, ICourseInstance, strict=False)
+	courses = get_evaluation_courses( assignment )
 	registry = get_site_registry()
 	if 	   not ntiid \
-		or course is None \
+		or not courses \
 		or current_principal() is None \
 		or registry == component.getGlobalSiteManager():
 		return
 	# Get all overview groups for course.
-	ntiid = ICourseCatalogEntry(course).ntiid
+	container_ntiids = [ICourseCatalogEntry(x).ntiid for x in courses]
 	catalog = get_library_catalog()
 	sites = get_component_hierarchy_names()
 	groups = tuple(catalog.search_objects(provided=INTICourseOverviewGroup,
-										  container_ntiids=ntiid,
+										  container_ntiids=container_ntiids,
+										  container_all_of=False,
 										  sites=sites))
 	for group in groups:
 		for item in tuple(group):
