@@ -873,6 +873,8 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 		# children) are locked.
 		lesson = INTILessonOverview(node, None)
 		if lesson is not None and _is_obj_locked( lesson ):
+			logger.info('Not syncing lesson for node because lesson is locked (node=%s) (lesson=%s)',
+						lesson.ntiid, node.ntiid)
 			continue
 
 		# process node
