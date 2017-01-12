@@ -945,10 +945,10 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 		# create and validate
 		contentObject = create_from_external(externalValue, notify=False)
 		contentObject = self.checkContentObject(contentObject, externalValue)
-		# set creator
-		self._set_creator(contentObject, creator)
 		# update with external
 		self.updateContentObject(contentObject, externalValue, set_id=True, notify=False)
+		# set creator
+		self._set_creator(contentObject, creator)
 		return contentObject, result
 
 	def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
@@ -1491,6 +1491,8 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
 
 		# check item does not exists and notify
 		self._check_exists(provided, contentObject, creator)
+		# set creator
+		self._set_creator(contentObject, creator)
 		# Must have intid before doing multipart (as we setup weak refs).
 		intid_register(contentObject, registry=self._registry)
 
