@@ -16,6 +16,10 @@ from zope import interface
 
 from nti.appserver.pyramid_authorization import has_permission
 
+from nti.app.authentication import get_remote_user
+
+from nti.app.contenttypes.presentation.utils import is_item_visible
+
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contentsearch.interfaces import ISearchHitPredicate
@@ -67,3 +71,14 @@ class _LessonsSearchHitPredicate(DefaultSearchHitPredicate):
 				and has_permission( ACT_READ, lesson, request ):
 				return True
 		return result
+
+@interface.implementer(ISearchHitPredicate)
+class _AssetVisibleSearchPredicate(DefaultSearchHitPredicate):
+	"""
+	A `ISearchHitPredicate` that only allows `IPresentationAsset`
+	items through that are in lessons that are visible.
+	"""
+
+	def allow(self, item, unused_score, query):
+		user = get_remote_user()
+		return is_item_visible( item, user )

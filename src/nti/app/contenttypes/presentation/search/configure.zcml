@@ -12,4 +12,8 @@
 				provides="nti.contentsearch.interfaces.ISearchHitPredicate"
 				for="nti.contenttypes.presentation.interfaces.IPresentationAsset" />
 
+	<subscriber factory=".predicates._AssetVisibleSearchPredicate"
+                provides="nti.contentsearch.interfaces.ISearchHitPredicate"
+                for="nti.contenttypes.presentation.interfaces.IPresentationAsset" />
+
 </configure>
