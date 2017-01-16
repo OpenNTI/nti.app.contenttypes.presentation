@@ -36,49 +36,53 @@ from nti.traversal.traversal import find_interface
 
 @interface.implementer(ISearchHitPredicate)
 class _LessonsSearchHitPredicate(DefaultSearchHitPredicate):
-	"""
-	A `ISearchHitPredicate` that only allows `IPresentationAsset`
-	items through that are in lessons that are accessible (readable and
-	published).
-	"""
+    """
+    A `ISearchHitPredicate` that only allows `IPresentationAsset`
+    items through that are in lessons that are accessible (readable and
+    published).
+    """
 
-	def _get_lessons_for_item( self, item ):
-		"""
-		For the given item, get all containing lessons.
-		"""
-		results = set()
-		catalog = get_library_catalog()
-		for container in catalog.get_containers(item):
-			lesson = find_interface(container, INTILessonOverview, strict=False)
-			if lesson is not None:
-				results.add(lesson)
-		return results
+    __name__ = 'LessonsPresentationAsset'
 
-	def _is_published(self, lesson):
-		return not IPublishable.providedBy(lesson) or lesson.is_published()
+    def _get_lessons_for_item( self, item ):
+        """
+        For the given item, get all containing lessons.
+        """
+        results = set()
+        catalog = get_library_catalog()
+        for container in catalog.get_containers(item):
+            lesson = find_interface(container, INTILessonOverview, strict=False)
+            if lesson is not None:
+                results.add(lesson)
+        return results
 
-	def allow(self, item, unused_score, query):
-		lessons = self._get_lessons_for_item( item )
-		if not lessons:
-			# If no lesson, we're allowed.
-			return True
+    def _is_published(self, lesson):
+        return not IPublishable.providedBy(lesson) or lesson.is_published()
 
-		request = get_current_request()
-		result = False
-		for lesson in lessons:
-			# Just need a single available/readable lesson to allow.
-			if 		self._is_published( lesson ) \
-				and has_permission( ACT_READ, lesson, request ):
-				return True
-		return result
+    def allow(self, item, unused_score, query):
+        lessons = self._get_lessons_for_item( item )
+        if not lessons:
+            # If no lesson, we're allowed.
+            return True
+
+        result = False
+        request = get_current_request()  
+        for lesson in lessons:
+            # Just need a single available/readable lesson to allow.
+            if      self._is_published( lesson ) \
+                and has_permission( ACT_READ, lesson, request ):
+                return True
+        return result
 
 @interface.implementer(ISearchHitPredicate)
 class _AssetVisibleSearchPredicate(DefaultSearchHitPredicate):
-	"""
-	A `ISearchHitPredicate` that only allows `IPresentationAsset`
-	items through that are in lessons that are visible.
-	"""
+    """
+    A `ISearchHitPredicate` that only allows `IPresentationAsset`
+    items through that are in lessons that are visible.
+    """
 
-	def allow(self, item, unused_score, query):
-		user = get_remote_user()
-		return is_item_visible( item, user )
+    __name__ = 'PresentationAssetVisible'
+    
+    def allow(self, item, unused_score, query):
+        user = get_remote_user()
+        return is_item_visible( item, user )
