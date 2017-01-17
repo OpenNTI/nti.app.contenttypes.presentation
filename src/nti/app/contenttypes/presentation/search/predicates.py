@@ -53,8 +53,9 @@ class _LessonsSearchHitPredicate(DefaultSearchHitPredicate):
         results = set()
         catalog = get_library_catalog()
         for container in catalog.get_containers(item):
-            lesson = find_interface(
-                container, INTILessonOverview, strict=False)
+            lesson = find_interface(container, 
+                                    INTILessonOverview, 
+                                    strict=False)
             if lesson is not None:
                 results.add(lesson)
         return results
