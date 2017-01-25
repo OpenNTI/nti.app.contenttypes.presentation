@@ -34,8 +34,6 @@ from nti.app.contenttypes.presentation.utils.course import get_entry_by_relative
 from nti.app.contenttypes.presentation.utils.course import get_course_by_relative_path_parts
 from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_containers
 
-from nti.app.products.courseware.discussions import get_forum_scopes
-
 from nti.appserver.pyramid_authorization import has_permission
 
 from nti.contenttypes.courses.interfaces import ES_ALL

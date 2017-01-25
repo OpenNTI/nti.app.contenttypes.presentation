@@ -54,7 +54,7 @@ def get_containers(ntiids=()):
 def get_courses(ntiids=()):
     result = set()
     for ntiid in ntiids or ():
-        # As shortcut, we only want our entry types.This
+        # As shortcut, we only want our entry types. This
         # prevents expensive lookups of content units.
         if not is_ntiid_of_type(ntiid, NTIID_ENTRY_TYPE):
             continue
