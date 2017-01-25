@@ -23,8 +23,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
 
 from nti.contenttypes.courses.utils import get_courses_for_packages
-# re-export
-from nti.contenttypes.courses.utils import get_user_or_instructor_enrollment_record as get_enrollment_record
+from nti.contenttypes.courses.utils import get_user_or_instructor_enrollment_record
 
 from nti.ntiids.ntiids import is_ntiid_of_type
 from nti.ntiids.ntiids import find_object_with_ntiid
@@ -33,9 +32,11 @@ from nti.site.hostpolicy import get_host_site
 
 from nti.site.site import get_component_hierarchy_names
 
+# Rexport for BWC
+get_enrollment_record = get_user_or_instructor_enrollment_record
 
-def get_courses_for_pacakge(ntiid):
-    sites = get_component_hierarchy_names()
+
+def get_courses_for_pacakge(ntiid, sites=None):
     result = get_courses_for_packages(sites, ntiid)
     return result
 
@@ -60,8 +61,8 @@ def get_courses(ntiids=()):
             continue
         course = None
         context = find_object_with_ntiid(ntiid)
-        if 		ICourseInstance.providedBy(context) \
-                or ICourseCatalogEntry.providedBy(context):
+        if     ICourseInstance.providedBy(context) \
+            or ICourseCatalogEntry.providedBy(context):
             course = ICourseInstance(context, None)
         if course is not None:
             result.add(course)
