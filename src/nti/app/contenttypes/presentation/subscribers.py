@@ -208,7 +208,7 @@ def _on_asset_moved(asset, event):
 		catalog = get_library_catalog()
 		catalog.remove_containers(asset, event.old_parent_ntiid)
 		catalog.update_containers(asset, asset.__parent__.ntiid)
-	if ntiid:
+	if ntiid and IRecordable.providedBy(asset):
 		record_transaction(asset, principal=event.principal,
 						   type_=TRX_ASSET_MOVE_TYPE)
 
