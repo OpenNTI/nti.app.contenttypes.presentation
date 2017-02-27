@@ -522,7 +522,8 @@ class _NTITranscriptURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 	def _do_decorate_external(self, context, result):
 		package = find_interface(context, IContentPackage, strict=False)
 		if package is not None:
-			location = IContentUnitHrefMapper(package.key.bucket).href  # parent
+			mapper =  IContentUnitHrefMapper(package.key.bucket, None)
+			location = mapper.href  if mapper is not None else u''
 			for name in ('src', 'srcjsonp'):
 				value = getattr(context, name, None)
 				if value and not value.startswith('/') and '://' not in value:
