@@ -30,11 +30,9 @@ from plone.namedfile.interfaces import INamed as IPloneNamed
 from nti.app.products.courseware.resources.utils import is_internal_file_link
 from nti.app.products.courseware.resources.utils import get_file_from_external_link
 
-from nti.common.file import safe_filename
+from nti.base._compat import to_unicode
 
 from nti.common.random import generate_random_hex_string
-
-from nti.common.string import to_unicode
 
 from nti.coremetadata.interfaces import SYSTEM_USER_NAME
 
@@ -61,6 +59,8 @@ from nti.contenttypes.presentation.lesson import NTILessonOverView
 from nti.externalization.oids import to_external_ntiid_oid
 
 from nti.intid.common import addIntId
+
+from nti.namedfile.file import safe_filename
 
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
