@@ -500,8 +500,10 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		package = find_interface(context, IContentPackage, strict=False)
 		if package is None:
 			package = _get_item_content_package(context)
-		if package is not None and self._should_process(context):
-			location = IContentUnitHrefMapper(package.key.bucket).href  # parent
+		if 	package is not None \
+			and self._should_process(context):
+			mapper =  IContentUnitHrefMapper(package.key.bucket, None)
+			location = mapper.href  if mapper is not None else u''
 			for name in ('href', 'icon'):
 				value = getattr(context, name, None)
 				if value and not value.startswith('/') and '://' not in value:
