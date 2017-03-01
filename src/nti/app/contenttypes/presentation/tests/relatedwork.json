@@ -8,5 +8,6 @@
 	"icon": "http://bleach.com/aizen.jpg",
 	"type": "application/vnd.nextthought.content",
 	"visibility": "everyone",
-	"label": "The Critical Year: 1968"
+	"label": "The Critical Year: 1968",
+	"nti_requirements": "requirements"
 }
