@@ -122,8 +122,8 @@ class AssignmentCompletionConstraintChecker(object):
             return True
         # check assignment constraints
         for assignment_ntiid in constraint.assignments or ():
-            assignment = component.queryUtility(
-                IQAssignment, name=assignment_ntiid)
+            assignment = component.queryUtility(IQAssignment,
+                                                name=assignment_ntiid)
             if assignment is None:
                 continue
             if not has_submitted_assigment(course, user, assignment):
