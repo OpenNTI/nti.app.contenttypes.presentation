@@ -129,8 +129,9 @@ class LessonOverviewsImporter(BaseSectionImporter):
                 lessons = synchronize_course_lesson_overview(course,
                                                              buckets=(bucket,))
                 for lesson in lessons or ():
-                    self._post_process_asset(
-                        lesson, source_filer, target_filer)
+                    self._post_process_asset(lesson, 
+                                             source_filer, 
+                                             target_filer)
 
             # save sources in main course Lessos folder
             parent = get_parent_course(course)
