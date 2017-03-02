@@ -152,7 +152,8 @@ class TestAssetViews(ApplicationLayerTest):
             entry = find_object_with_ntiid(self.course_ntiid)
             course = ICourseInstance(entry)
             package_ids = [
-                x.ntiid for x in course.ContentPackageBundle.ContentPackages]
+                x.ntiid for x in course.ContentPackageBundle.ContentPackages
+            ]
         if container_ids:
             expected_containers.extend(container_ids)
         expected_containers.extend(package_ids)
@@ -251,8 +252,9 @@ class TestAssetViews(ApplicationLayerTest):
             self._check_containers(course, packages=False, items=(roll_obj,))
 
             self._check_container_index(roll_obj)
-            self._check_containers(
-                course, packages=False, items=roll_obj.Items)
+            self._check_containers(course, 
+                                   packages=False,
+                                   items=roll_obj.Items)
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_video_roll(self):
@@ -263,8 +265,8 @@ class TestAssetViews(ApplicationLayerTest):
         group_ntiid = res.get('ntiid')
         group_href = res.get('href')
         assert_that(res.get('Items'), has_length(1))
-        contents_link = self.require_link_href_with_rel(
-            res, VIEW_ORDERED_CONTENTS)
+        contents_link = self.require_link_href_with_rel(res, 
+                                                        VIEW_ORDERED_CONTENTS)
 
         media_res = self._media_by_outline()
         container_ntiid = media_res.get('ContainerOrder')[0]
@@ -294,11 +296,12 @@ class TestAssetViews(ApplicationLayerTest):
 
         # Post video to our ordered contents link
         video_source['ntiid'] = video_ntiid
-        res = self.testapp.post_json(
-            contents_link + '/index/0', video_source, status=201)
+        res = self.testapp.post_json(contents_link + '/index/0', 
+                                     video_source,
+                                    status=201)
         res = res.json_body
-        assert_that(
-            res.get('MimeType'), is_('application/vnd.nextthought.ntivideo'))
+        assert_that(res.get('MimeType'), 
+                    is_('application/vnd.nextthought.ntivideo'))
         assert_that(res.get('NTIID'), is_(video_ntiid))
 
         group_res = self.testapp.get(group_href)
@@ -306,8 +309,8 @@ class TestAssetViews(ApplicationLayerTest):
         assert_that(group_res.get('Items'), has_length(2))
         item_zero = group_res.get('Items')[0]
         assert_that(item_zero.get('ntiid'), is_(video_ntiid))
-        assert_that(item_zero.get('MimeType'), is_(
-            'application/vnd.nextthought.ntivideo'))
+        assert_that(item_zero.get('MimeType'),
+                    is_('application/vnd.nextthought.ntivideo'))
 
         # Now it's in our media container.
         media_res = self._media_by_outline()
@@ -377,8 +380,8 @@ class TestAssetViews(ApplicationLayerTest):
             # self._check_containers(course, items=(roll_obj,))
             # self._check_containers(course, packages=False, items=roll_obj.Items)
 
-            self._check_container_index(
-                roll_obj, container_ids=(group_ntiid, lesson_ntiid))
+            self._check_container_index(roll_obj,
+                                        container_ids=(group_ntiid, lesson_ntiid))
 
             assert_that(roll_obj.locked, is_(True))
             new_item = roll_obj.Items[0]
@@ -407,11 +410,11 @@ class TestAssetViews(ApplicationLayerTest):
         video_ntiids = [x.get('NTIID') for x in roll_items]
         assert_that(video_ntiids, contains(roll_item_zero_ntiid, video_ntiid))
         assert_that(roll_items[0].get('NTIID'), is_(roll_item_zero_ntiid))
-        assert_that(roll_items[0].get('MimeType'), is_(
-            'application/vnd.nextthought.ntivideo'))
+        assert_that(roll_items[0].get('MimeType'), 
+                    is_('application/vnd.nextthought.ntivideo'))
         assert_that(roll_items[1].get('NTIID'), is_(video_ntiid))
-        assert_that(roll_items[1].get('MimeType'), is_(
-            'application/vnd.nextthought.ntivideo'))
+        assert_that(roll_items[1].get('MimeType'), 
+                    is_('application/vnd.nextthought.ntivideo'))
 
         with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
             roll_obj = find_object_with_ntiid(video_roll_ntiid)
@@ -435,17 +438,17 @@ class TestAssetViews(ApplicationLayerTest):
         roll_items = res.get('Items')
         assert_that(roll_items, has_length(3))
         video_ntiids = [x.get('NTIID') for x in roll_items]
-        assert_that(video_ntiids, contains(
-            roll_item_zero_ntiid, video_ntiid, video_ntiid))
+        assert_that(video_ntiids, 
+                    contains(roll_item_zero_ntiid, video_ntiid, video_ntiid))
         assert_that(roll_items[0].get('NTIID'), is_(roll_item_zero_ntiid))
-        assert_that(roll_items[0].get('MimeType'), is_(
-            'application/vnd.nextthought.ntivideo'))
+        assert_that(roll_items[0].get('MimeType'), 
+                    is_('application/vnd.nextthought.ntivideo'))
         assert_that(roll_items[1].get('NTIID'), is_(video_ntiid))
-        assert_that(roll_items[1].get('MimeType'), is_(
-            'application/vnd.nextthought.ntivideo'))
+        assert_that(roll_items[1].get('MimeType'), 
+                    is_('application/vnd.nextthought.ntivideo'))
         assert_that(roll_items[2].get('NTIID'), is_(video_ntiid))
-        assert_that(roll_items[2].get('MimeType'), is_(
-            'application/vnd.nextthought.ntivideo'))
+        assert_that(roll_items[2].get('MimeType'), 
+                    is_('application/vnd.nextthought.ntivideo'))
 
         with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
             roll_obj = find_object_with_ntiid(video_roll_ntiid)
@@ -463,12 +466,12 @@ class TestAssetViews(ApplicationLayerTest):
         res = self.testapp.post_json(self.assets_url, video_source, status=201)
         res = res.json_body
         new_video_ntiid = res.get('ntiid')
-        res = self.testapp.post_json(
-            contents_link, {'ntiid': new_video_ntiid}, status=201)
+        res = self.testapp.post_json(contents_link, 
+                                     {'ntiid': new_video_ntiid}, status=201)
         res = res.json_body
         assert_that(res.get('ntiid'), is_(new_video_ntiid))
-        assert_that(
-            res.get('MimeType'), is_('application/vnd.nextthought.ntivideo'))
+        assert_that(res.get('MimeType'), 
+                    is_('application/vnd.nextthought.ntivideo'))
 
         group_res = self.testapp.get(group_href)
         group_res = group_res.json_body
@@ -520,8 +523,8 @@ class TestAssetViews(ApplicationLayerTest):
             assert_that(obj.__parent__, not_none())
             assert_that(obj, has_property('locked', is_(True)))
             assert_that(obj, validly_provides(INTISlideDeck))
-            assert_that(
-                obj, has_property('title', is_('Install Software on a Macintosh')))
+            assert_that(obj, 
+                        has_property('title', is_('Install Software on a Macintosh')))
 
             entry = find_object_with_ntiid(self.course_ntiid)
             course = ICourseInstance(entry)
@@ -543,13 +546,13 @@ class TestAssetViews(ApplicationLayerTest):
         with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
             obj = find_object_with_ntiid(ntiid)
             assert_that(obj, has_property('locked', is_(True)))
-            assert_that(
-                obj, has_property('title', is_('Install Software on a MAC')))
+            assert_that(obj,
+                        has_property('title', is_('Install Software on a MAC')))
             history = ITransactionRecordHistory(obj)
             assert_that(history, has_length(2))
             # Only title shows up in history attributes.
-            assert_that(
-                tuple(history.records())[-1].attributes, contains('title'))
+            assert_that(tuple(history.records())[-1].attributes, 
+                        contains('title'))
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_slidedeck(self):
@@ -564,8 +567,8 @@ class TestAssetViews(ApplicationLayerTest):
         res = res.json_body
         group_ntiid = res.get('ntiid')
         assert_that(res.get('Items'), has_length(1))
-        contents_link = self.require_link_href_with_rel(
-            res, VIEW_ORDERED_CONTENTS)
+        contents_link = self.require_link_href_with_rel(res, 
+                                                        VIEW_ORDERED_CONTENTS)
 
         with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
             slide_deck = find_object_with_ntiid(slide_deck_ntiid)
@@ -575,7 +578,8 @@ class TestAssetViews(ApplicationLayerTest):
             catalog = get_library_catalog()
             original_containers = catalog.get_containers(slide_deck)
             containers = (
-                'tag:nextthought.com,2011-10:OU-HTML-CS1323_F_2015_Intro_to_Computer_Programming.lec:02.02_LESSON',)
+                'tag:nextthought.com,2011-10:OU-HTML-CS1323_F_2015_Intro_to_Computer_Programming.lec:02.02_LESSON',
+            )
             catalog.remove_containers(slide_deck, containers=containers)
 
         # Empty
@@ -605,8 +609,8 @@ class TestAssetViews(ApplicationLayerTest):
     def test_overview_group(self, mc_ri, mc_cf):
         source = self._load_resource('nticourseoverviewgroup.json')
         video_source = source.get('Items')[1]
-        video_res = self.testapp.post_json(
-            self.assets_url, video_source, status=201)
+        video_res = self.testapp.post_json(self.assets_url, 
+                                           video_source, status=201)
         video_ntiid = video_res.json_body.get('ntiid')
         source.get('Items')[1]['NTIID'] = video_ntiid
 
@@ -646,7 +650,8 @@ class TestAssetViews(ApplicationLayerTest):
         # contents
         source = self._load_resource('relatedwork.json')
         source.pop('ntiid', None)
-        assert_that(source, has_entry('icon', 'http://bleach.com/aizen.jpg'))
+        assert_that(source, 
+                    has_entry('icon', 'http://bleach.com/aizen.jpg'))
 
         mc_ri.is_callable().with_args().returns(source)
 
@@ -667,8 +672,8 @@ class TestAssetViews(ApplicationLayerTest):
 
         with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
             # check returned object
-            assert_that(
-                res.json_body, has_entry('icon', 'http://bleach.org/ichigo.png'))
+            assert_that(res.json_body, 
+                        has_entry('icon', 'http://bleach.org/ichigo.png'))
 
             obj = find_object_with_ntiid(ntiid)
             rel_ntiid = res.json_body['ntiid']
@@ -680,8 +685,9 @@ class TestAssetViews(ApplicationLayerTest):
 
             obj = find_object_with_ntiid(rel_ntiid)
             # Our group does not adapt to a course (since no parent).
-            self._check_container_index(
-                obj, container_ids=(ntiid,), course=False)
+            self._check_container_index(obj,
+                                        container_ids=(ntiid,), 
+                                        course=False)
 
         # Delete video from group; asset is deleted.
         delete_suffix = self._get_delete_url_suffix(0, video_ntiid)
@@ -767,8 +773,8 @@ class TestAssetViews(ApplicationLayerTest):
         lesson_href = res.get('href')
         assert_that(lesson_ntiid, not_none())
         assert_that(lesson_href, not_none())
-        contents_link = self.require_link_href_with_rel(
-            res, VIEW_ORDERED_CONTENTS)
+        contents_link = self.require_link_href_with_rel(res, 
+                                                        VIEW_ORDERED_CONTENTS)
 
         with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
             obj = find_object_with_ntiid(lesson_ntiid)
@@ -789,7 +795,8 @@ class TestAssetViews(ApplicationLayerTest):
 
         # Permissions
         non_perm_env = self._get_non_perm_environ()
-        self.testapp.get(lesson_href, extra_environ=non_perm_env, status=403)
+        self.testapp.get(lesson_href,
+                        extra_environ=non_perm_env, status=403)
 
         # remove ntiid to fake a new group
         source['Items'][0].pop('ntiid', None)
@@ -819,16 +826,18 @@ class TestAssetViews(ApplicationLayerTest):
 
             # No course since we do not have course lineage through lesson.
             obj = find_object_with_ntiid(group_ntiid)
-            self._check_container_index(
-                obj, container_ids=(lesson_ntiid,), course=False)
+            self._check_container_index(obj, 
+                                        container_ids=(lesson_ntiid,), 
+                                        course=False)
 
         # Long title validation
         invalid_source = {'title': INVALID_TITLE}
         self.testapp.post_json(contents_link, invalid_source, status=422)
 
         # Insert group at index 0
-        res = self.testapp.post_json(
-            contents_link + '/index/0', source, status=201)
+        res = self.testapp.post_json(contents_link + '/index/0',
+                                    source, 
+                                    status=201)
         with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
             obj = find_object_with_ntiid(lesson_ntiid)
             group_ntiid = res.json_body['ntiid']
@@ -838,8 +847,9 @@ class TestAssetViews(ApplicationLayerTest):
             obj.child_order_locked = False  # Reset
 
             obj = find_object_with_ntiid(group_ntiid)
-            self._check_container_index(
-                obj, container_ids=(lesson_ntiid,), course=False)
+            self._check_container_index(obj, 
+                                        container_ids=(lesson_ntiid,), 
+                                        course=False)
 
         # Another append
         utz_special = {
@@ -924,8 +934,8 @@ class TestAssetViews(ApplicationLayerTest):
         res = res.json_body
         group_ntiid = res.get('ntiid')
         assert_that(res.get('Items'), has_length(1))
-        contents_link = self.require_link_href_with_rel(
-            res, VIEW_ORDERED_CONTENTS)
+        contents_link = self.require_link_href_with_rel(res, 
+                                                        VIEW_ORDERED_CONTENTS)
 
         source = self._load_resource('relatedwork.json')
         source.pop('NTIID', None)
@@ -960,8 +970,8 @@ class TestAssetViews(ApplicationLayerTest):
         assert_that(ref_ntiid, not_none())
         assert_that(res.get('href'), is_('http://www.google.com'))
         assert_that(res.get('target'), is_not('http://www.google.com'))
-        assert_that(
-            res.get('type'), is_("application/vnd.nextthought.externallink"))
+        assert_that(res.get('type'),
+                    is_("application/vnd.nextthought.externallink"))
         assert_that(res.get('nti_requirements'), is_('requirements'))
 
         internal_link = dict(non_target_source)
@@ -983,8 +993,8 @@ class TestAssetViews(ApplicationLayerTest):
         res = res.json_body
         group_ntiid = res.get('ntiid')
         assert_that(res.get('Items'), has_length(1))
-        contents_link = self.require_link_href_with_rel(
-            res, VIEW_ORDERED_CONTENTS)
+        contents_link = self.require_link_href_with_rel(res,
+                                                        VIEW_ORDERED_CONTENTS)
 
         source = self._load_resource('ntitimeline.json')
         source.pop('NTIID', None)
@@ -1035,8 +1045,8 @@ class TestAssetViews(ApplicationLayerTest):
         group_ntiid = 'tag:nextthought.com,2011-10:OU-NTICourseOverviewGroup-CS1323_F_2015_Intro_to_Computer_Programming.lec:01.01_LESSON.0'
         res = self.testapp.get('/dataserver2/Objects/%s' % group_ntiid)
         # Read in content bytes and the timeline source itself.
-        path = os.path.join(
-            os.path.dirname(__file__), 'ntitimeline_content.json')
+        path = os.path.join(os.path.dirname(__file__), 
+                            'ntitimeline_content.json')
         with open(path, "rb") as fp:
             timeline_content = fp.read()
         timeline_source = self._load_resource('ntitimeline.json')
@@ -1048,15 +1058,15 @@ class TestAssetViews(ApplicationLayerTest):
         assert_that(res.get('Items'), has_length(1))
 
         # Now insert our timeline with a multipart href to the actual content.
-        contents_link = self.require_link_href_with_rel(
-            res, VIEW_ORDERED_CONTENTS)
+        contents_link = self.require_link_href_with_rel(res, 
+                                                        VIEW_ORDERED_CONTENTS)
         res = self.testapp.post(contents_link, timeline_source,
                                 upload_files=[('href', 'timeline_content', timeline_content)])
         res = res.json_body
         timeline_ntiid = res.get('NTIID')
         assert_that(timeline_ntiid, not_none())
-        assert_that(res.get('MimeType'), is_(
-            'application/vnd.nextthought.ntitimeline'))
+        assert_that(res.get('MimeType'), 
+                    is_('application/vnd.nextthought.ntitimeline'))
         assert_that(res.get('href'), not_none())
         content_file = res.get('ContentFile')
         assert_that(content_file, not_none())
@@ -1075,8 +1085,8 @@ class TestAssetViews(ApplicationLayerTest):
         with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
             group = find_object_with_ntiid(group_ntiid)
             timeline_ref = group.Items[1]
-            assert_that(timeline_ref.mime_type, is_(
-                'application/vnd.nextthought.ntitimelineref'))
+            assert_that(timeline_ref.mime_type,
+                        is_('application/vnd.nextthought.ntitimelineref'))
             assert_that(timeline_ref.target, is_(timeline_ntiid))
 
             timeline = find_object_with_ntiid(timeline_ntiid)
@@ -1084,12 +1094,12 @@ class TestAssetViews(ApplicationLayerTest):
             assert_that(timeline.ntiid, is_(timeline_ntiid))
             assert_that(timeline.__parent__, validly_provides(IContentPackage))
 
-            timeline_ref = component.queryUtility(
-                INTITimelineRef, name=timeline_ref.ntiid)
+            timeline_ref = component.queryUtility(INTITimelineRef, 
+                                                  name=timeline_ref.ntiid)
             assert_that(timeline_ref, not_none())
             assert_that(timeline_ref.ntiid, is_(timeline_ref.ntiid))
-            assert_that(
-                timeline_ref.__parent__, validly_provides(INTICourseOverviewGroup))
+            assert_that(timeline_ref.__parent__, 
+                        validly_provides(INTICourseOverviewGroup))
 
         # Test delete
         delete_suffix = self._get_delete_url_suffix(1, timeline_ntiid)
@@ -1132,8 +1142,9 @@ class TestAssetViews(ApplicationLayerTest):
             self._check_container_index(obj)
 
         # Move our last item to first
-        move_data = self._get_move_json(
-            last_group_ntiid, lesson_ntiid, 0, lesson_ntiid)
+        move_data = self._get_move_json(last_group_ntiid, 
+                                        lesson_ntiid, 
+                                        0, lesson_ntiid)
         self.testapp.post_json(move_link, move_data)
 
         res = self.testapp.get(lesson_url)
@@ -1151,8 +1162,8 @@ class TestAssetViews(ApplicationLayerTest):
             self._check_container_index(obj)
             moved_group = find_object_with_ntiid(last_group_ntiid)
             assert_that(moved_group.__parent__.ntiid, is_(lesson_ntiid))
-            self._test_transaction_history(
-                moved_group, TRX_OVERVIEW_GROUP_MOVE_TYPE)
+            self._test_transaction_history(moved_group, 
+                                           TRX_OVERVIEW_GROUP_MOVE_TYPE)
             self._check_container_index(moved_group,
                                         container_ids=(lesson_ntiid,))
 
@@ -1205,12 +1216,12 @@ class TestAssetViews(ApplicationLayerTest):
         assert_that(len(groups), is_(original_group_count))
         new_source_group = groups[source_group_index]
         new_source_group_items = new_source_group.get('Items')
-        assert_that(
-            new_source_group_items, has_length(original_source_group_size))
-        assert_that(
-            new_source_group_items[-2].get('NTIID'), is_(last_asset_ntiid))
-        assert_that(
-            new_source_group_items[-1].get('NTIID'), is_(first_asset_ntiid))
+        assert_that(new_source_group_items,
+                    has_length(original_source_group_size))
+        assert_that(new_source_group_items[-2].get('NTIID'), 
+                    is_(last_asset_ntiid))
+        assert_that(new_source_group_items[-1].get('NTIID'), 
+                    is_(first_asset_ntiid))
 
         with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
             obj = find_object_with_ntiid(source_group_ntiid)
@@ -1225,8 +1236,9 @@ class TestAssetViews(ApplicationLayerTest):
             obj = find_object_with_ntiid(target_group_ntiid)
             assert_that(obj.child_order_locked, is_(False))
 
-        move_data = self._get_move_json(
-            first_asset_ntiid, target_group_ntiid, 0, source_group_ntiid)
+        move_data = self._get_move_json(first_asset_ntiid, 
+                                        target_group_ntiid, 
+                                        0, source_group_ntiid)
         self.testapp.post_json(move_link, move_data)
 
         res = self.testapp.get(lesson_url)
@@ -1237,14 +1249,14 @@ class TestAssetViews(ApplicationLayerTest):
         new_target_group = groups[target_group_index]
         new_source_group_items = new_source_group.get('Items')
         new_target_group_items = new_target_group.get('Items')
-        assert_that(
-            new_source_group_items, has_length(original_source_group_size - 1))
-        assert_that(
-            new_target_group_items, has_length(original_target_group_size + 1))
-        assert_that(
-            new_source_group_items[-1].get('NTIID'), is_not(first_asset_ntiid))
-        assert_that(
-            new_target_group_items[0].get('NTIID'), is_(first_asset_ntiid))
+        assert_that(new_source_group_items, 
+                    has_length(original_source_group_size - 1))
+        assert_that(new_target_group_items, 
+                    has_length(original_target_group_size + 1))
+        assert_that(new_source_group_items[-1].get('NTIID'), 
+                    is_not(first_asset_ntiid))
+        assert_that(new_target_group_items[0].get('NTIID'), 
+                    is_(first_asset_ntiid))
 
         with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
             obj = find_object_with_ntiid(target_group_ntiid)
@@ -1259,8 +1271,9 @@ class TestAssetViews(ApplicationLayerTest):
                                         container_ids=(lesson_ntiid, target_group_ntiid))
 
         # Move back to original group
-        move_data = self._get_move_json(
-            first_asset_ntiid, source_group_ntiid, 0, target_group_ntiid)
+        move_data = self._get_move_json(first_asset_ntiid,
+                                        source_group_ntiid, 0, 
+                                        target_group_ntiid)
         self.testapp.post_json(move_link, move_data)
 
         res = self.testapp.get(lesson_url)
@@ -1271,14 +1284,14 @@ class TestAssetViews(ApplicationLayerTest):
         new_target_group = groups[target_group_index]
         new_source_group_items = new_source_group.get('Items')
         new_target_group_items = new_target_group.get('Items')
-        assert_that(
-            new_source_group_items, has_length(original_source_group_size))
-        assert_that(
-            new_target_group_items, has_length(original_target_group_size))
-        assert_that(
-            new_source_group_items[0].get('NTIID'), is_(first_asset_ntiid))
-        assert_that(
-            new_target_group_items[0].get('NTIID'), is_not(first_asset_ntiid))
+        assert_that(new_source_group_items,
+                    has_length(original_source_group_size))
+        assert_that(new_target_group_items, 
+                    has_length(original_target_group_size))
+        assert_that(new_source_group_items[0].get('NTIID'),
+                    is_(first_asset_ntiid))
+        assert_that(new_target_group_items[0].get('NTIID'),
+                    is_not(first_asset_ntiid))
 
         with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
             obj = find_object_with_ntiid(target_group_ntiid)
@@ -1306,8 +1319,9 @@ class TestAssetViews(ApplicationLayerTest):
         # Add our overview group and registered video.
         group_source = self._load_resource('nticourseoverviewgroup.json')
         video_source = group_source.get('Items')[-1]
-        video_res = self.testapp.post_json(
-            self.assets_url, video_source, status=201)
+        video_res = self.testapp.post_json(self.assets_url, 
+                                           video_source, 
+                                           status=201)
         video_ntiid = video_res.json_body.get('ntiid')
         video_source['NTIID'] = video_ntiid
         self.testapp.post_json('/dataserver2/Objects/%s/contents' % lesson_ntiid,
@@ -1334,8 +1348,7 @@ class TestAssetViews(ApplicationLayerTest):
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_removing_refs(self):
         assignment_ntiid = "tag:nextthought.com,2011-10:OU-NAQ-CS1323_F_2015_Intro_to_Computer_Programming.naq.asg.assignment:iClicker_8_26"
-        admin_environ = self._make_extra_environ(
-            username=self.default_username)
+        admin_environ = self._make_extra_environ(username=self.default_username)
 
         source = self._load_resource('ntilessonoverview.json')
         source.pop('NTIID', None)
@@ -1354,23 +1367,23 @@ class TestAssetViews(ApplicationLayerTest):
         assert_that(lesson_ntiid, not_none())
         assert_that(lesson_href, not_none())
         group_zero_size = len(res.get('Items')[0].get('Items'))
-        remove_refs_link = self.require_link_href_with_rel(
-            res, VIEW_LESSON_REMOVE_REFS)
+        remove_refs_link = self.require_link_href_with_rel(res,
+                                                           VIEW_LESSON_REMOVE_REFS)
         group_source = {'title': 'mygroup'}
-        contents_link = self.require_link_href_with_rel(
-            res, VIEW_ORDERED_CONTENTS)
-        group_one = self.testapp.post_json(
-            contents_link, group_source).json_body
-        g1_contents_link = self.require_link_href_with_rel(
-            group_one, VIEW_ORDERED_CONTENTS)
-        group_two = self.testapp.post_json(
-            contents_link, group_source).json_body
-        g2_contents_link = self.require_link_href_with_rel(
-            group_two, VIEW_ORDERED_CONTENTS)
-        group_three = self.testapp.post_json(
-            contents_link, group_source).json_body
-        g3_contents_link = self.require_link_href_with_rel(
-            group_three, VIEW_ORDERED_CONTENTS)
+        contents_link = self.require_link_href_with_rel(res, 
+                                                        VIEW_ORDERED_CONTENTS)
+        group_one = self.testapp.post_json(contents_link, 
+                                           group_source).json_body
+        g1_contents_link = self.require_link_href_with_rel(group_one, 
+                                                           VIEW_ORDERED_CONTENTS)
+        group_two = self.testapp.post_json(contents_link, 
+                                           group_source).json_body
+        g2_contents_link = self.require_link_href_with_rel(group_two, 
+                                                           VIEW_ORDERED_CONTENTS)
+        group_three = self.testapp.post_json(contents_link, 
+                                             group_source).json_body
+        g3_contents_link = self.require_link_href_with_rel(group_three, 
+                                                           VIEW_ORDERED_CONTENTS)
 
         ref = {
             "MimeType": "application/vnd.nextthought.assignmentref",
@@ -1383,11 +1396,11 @@ class TestAssetViews(ApplicationLayerTest):
         # Group one, just the assignment ref
         self.testapp.post_json(g1_contents_link, ref, status=201)
         # Group two, just a video
-        res = self.testapp.post_json(
-            g2_contents_link, {'ntiid': video_ntiid}, status=201)
+        res = self.testapp.post_json(g2_contents_link, 
+                                     {'ntiid': video_ntiid}, status=201)
         # Group three, one of each
-        res = self.testapp.post_json(
-            g3_contents_link, {'ntiid': video_ntiid}, status=201)
+        res = self.testapp.post_json(g3_contents_link, 
+                                     {'ntiid': video_ntiid}, status=201)
         self.testapp.post_json(g3_contents_link, ref, status=201)
 
         # Validate current state
