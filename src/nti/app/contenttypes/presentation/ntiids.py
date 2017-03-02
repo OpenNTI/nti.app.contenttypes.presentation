@@ -57,147 +57,175 @@ from nti.ntiids.ntiids import get_parts
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import find_object_with_ntiid
 
+
 @interface.implementer(INTIIDResolver)
 class _PresentationResolver(object):
 
-	_ext_iface = IPresentationAsset
+    _ext_iface = IPresentationAsset
 
-	def resolve(self, key):
-		result = component.queryUtility(self._ext_iface, name=key)
-		return result
+    def resolve(self, key):
+        result = component.queryUtility(self._ext_iface, name=key)
+        return result
+
 
 class _NTIQuestionRef(_PresentationResolver):
-	_ext_iface = INTIQuestionRef
+    _ext_iface = INTIQuestionRef
+
 
 class _NTIQuestionSetRef(_PresentationResolver):
-	_ext_iface = INTIQuestionSetRef
+    _ext_iface = INTIQuestionSetRef
+
 
 class _NTIAssignmentRef(_PresentationResolver):
-	_ext_iface = INTIAssignmentRef
+    _ext_iface = INTIAssignmentRef
+
 
 class _NTIInquiryRef(_PresentationResolver):
-	_ext_iface = INTIInquiryRef
+    _ext_iface = INTIInquiryRef
+
 
 class _NTIAudioRefResolver(_PresentationResolver):
-	_ext_iface = INTIAudioRef
+    _ext_iface = INTIAudioRef
+
 
 class _NTIAudioResolver(_PresentationResolver):
-	_ext_iface = INTIAudio
+    _ext_iface = INTIAudio
+
 
 class _NTIVideoRefResolver(_PresentationResolver):
-	_ext_iface = INTIVideoRef
+    _ext_iface = INTIVideoRef
+
 
 class _NTIVideoResolver(_PresentationResolver):
-	_ext_iface = INTIVideo
+    _ext_iface = INTIVideo
+
 
 class _NTIAudioRollResolver(_PresentationResolver):
-	_ext_iface = INTIAudioRoll
+    _ext_iface = INTIAudioRoll
+
 
 class _NTIVideoRollResolver(_PresentationResolver):
-	_ext_iface = INTIVideoRoll
+    _ext_iface = INTIVideoRoll
+
 
 class _NTISlideResolver(_PresentationResolver):
-	_ext_iface = INTISlide
+    _ext_iface = INTISlide
+
 
 class _NTISlideVideoResolver(_PresentationResolver):
-	_ext_iface = INTISlideVideo
+    _ext_iface = INTISlideVideo
+
 
 class _NTITimelineResolver(_PresentationResolver):
-	_ext_iface = INTITimeline
+    _ext_iface = INTITimeline
+
 
 class _NTITimelineRefResolver(_PresentationResolver):
-	_ext_iface = INTITimelineRef
+    _ext_iface = INTITimelineRef
+
 
 class _NTISlideDeckResolver(_PresentationResolver):
-	_ext_iface = INTISlideDeck
+    _ext_iface = INTISlideDeck
+
 
 class _NTISlideDeckRefResolver(_PresentationResolver):
-	_ext_iface = INTISlideDeckRef
+    _ext_iface = INTISlideDeckRef
+
 
 class _NTIRelatedWorkRefResolver(_PresentationResolver):
-	_ext_iface = INTIRelatedWorkRef
+    _ext_iface = INTIRelatedWorkRef
+
 
 class _NTIRelatedWorkRefPointerResolver(_PresentationResolver):
-	_ext_iface = INTIRelatedWorkRefPointer
+    _ext_iface = INTIRelatedWorkRefPointer
+
 
 class _NTIDiscussionRefResolver(_PresentationResolver):
-	_ext_iface = INTIDiscussionRef
+    _ext_iface = INTIDiscussionRef
+
 
 class _GroupOverViewableResolver(_PresentationResolver):
-	_ext_iface = IGroupOverViewable
+    _ext_iface = IGroupOverViewable
+
 
 class _NTILessonOverviewResolver(_PresentationResolver):
-	_ext_iface = INTILessonOverview
+    _ext_iface = INTILessonOverview
+
 
 class _NTICourseOverviewGroupResolver(_PresentationResolver):
-	_ext_iface = INTICourseOverviewGroup
+    _ext_iface = INTICourseOverviewGroup
+
 
 @interface.implementer(INTIIDResolver)
 class _NTICourseBundleResolver(object):
 
-	separator = ':'
+    separator = ':'
 
-	def get_course(self, splits=()):
-		if splits and len(splits) >= 2:  # by parts e.g Fall2015:BIOL_2124
-			return get_course_by_relative_path_parts(splits[:2])
-		return None
+    def get_course(self, splits=()):
+        if splits and len(splits) >= 2:  # by parts e.g Fall2015:BIOL_2124
+            return get_course_by_relative_path_parts(splits[:2])
+        return None
 
-	def get_discussion(self, splits, course=None):
-		course = self.get_course(splits) if course is None else course
-		path = os.path.sep.join(splits[2:]) if len(splits or ()) >= 3 else None
-		if course is not None and path:
-			result = get_discussion_for_path(path, course)
-			return result
-		return None
+    def get_discussion(self, splits, course=None):
+        course = self.get_course(splits) if course is None else course
+        path = os.path.sep.join(splits[2:]) if len(splits or ()) >= 3 else None
+        if course is not None and path:
+            result = get_discussion_for_path(path, course)
+            return result
+        return None
 
-	def resolve(self, key):
-		user = get_remote_user()
-		if user is not None:
-			parts = get_parts(key) if key else None
-			specific = parts.specific if parts else None
-			splits = specific.split(self.separator) if specific else ()
-			course = self.get_course(splits)
-			discussion = self.get_discussion(splits, course)
-			if discussion is not None:
-				result = resolve_discussion_course_bundle(user, discussion, course)
-				if result:
-					_, topic = result
-					return topic
-		return None
+    def resolve(self, key):
+        user = get_remote_user()
+        if user is not None:
+            parts = get_parts(key) if key else None
+            specific = parts.specific if parts else None
+            splits = specific.split(self.separator) if specific else ()
+            course = self.get_course(splits)
+            discussion = self.get_discussion(splits, course)
+            if discussion is not None:
+                result = resolve_discussion_course_bundle(user,
+                                                          discussion,
+                                                          course)
+                if result:
+                    _, topic = result
+                    return topic
+        return None
+
 
 @interface.implementer(INTIIDResolver)
 class _NTITranscriptResolver(object):
 
-	def resolve(self, key):
-		parts = get_parts(key)
-		specific = parts.specific[:parts.specific.rfind('.')]
-		for nttype in (NTI_VIDEO, NTI_AUDIO):
-			# transform to a media NTIID
-			ntiid = make_ntiid(nttype=nttype,
-							   date=parts.date,
-							   specific=specific,
-							   provider=parts.provider)
-			media = find_object_with_ntiid(ntiid)
-			if INTIMedia.providedBy(media):
-				for transcript in media.transcripts or ():
-					if transcript.ntiid == key:
-						return transcript
-		return None
+    def resolve(self, key):
+        parts = get_parts(key)
+        specific = parts.specific[:parts.specific.rfind('.')]
+        for nttype in (NTI_VIDEO, NTI_AUDIO):
+            # transform to a media NTIID
+            ntiid = make_ntiid(nttype=nttype,
+                               date=parts.date,
+                               specific=specific,
+                               provider=parts.provider)
+            media = find_object_with_ntiid(ntiid)
+            if INTIMedia.providedBy(media):
+                for transcript in media.transcripts or ():
+                    if transcript.ntiid == key:
+                        return transcript
+        return None
+
 
 @interface.implementer(INTIIDResolver)
 class _NTILessonCompletionConstraintResolver(object):
 
-	def resolve(self, key):
-		parts = get_parts(key)
-		specific = parts.specific[:parts.specific.rfind('.')]
-		ntiid = make_ntiid(date=parts.date,
-						   specific=specific,
-						   provider=parts.provider,
-						   nttype=NTI_LESSON_OVERVIEW)
-		lesson = find_object_with_ntiid(ntiid)
-		if INTILessonOverview.providedBy(lesson):
-			constraints = ILessonPublicationConstraints(lesson)
-			for constraint in constraints.Items:
-				if constraint.ntiid == key:
-					return constraint
-		return None
+    def resolve(self, key):
+        parts = get_parts(key)
+        specific = parts.specific[:parts.specific.rfind('.')]
+        ntiid = make_ntiid(date=parts.date,
+                           specific=specific,
+                           provider=parts.provider,
+                           nttype=NTI_LESSON_OVERVIEW)
+        lesson = find_object_with_ntiid(ntiid)
+        if INTILessonOverview.providedBy(lesson):
+            constraints = ILessonPublicationConstraints(lesson)
+            for constraint in constraints.Items:
+                if constraint.ntiid == key:
+                    return constraint
+        return None

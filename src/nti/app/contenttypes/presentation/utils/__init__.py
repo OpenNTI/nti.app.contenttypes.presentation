@@ -97,15 +97,15 @@ def get_participation_principal():
 
 def _get_scope(user, context, record):
     if user is not None:
-        record = get_enrollment_record(
-            context, user) if record is None else record
+        if record is None:
+            record = get_enrollment_record(context, user)
     else:
         user = get_participation_principal()
 
     scope = record.Scope if record is not None else None
-    if         scope is None \
-            and IAnonymouslyAccessibleCourseInstance.providedBy(context) \
-            and IUnauthenticatedPrincipal.providedBy(user):
+    if      scope is None \
+        and IAnonymouslyAccessibleCourseInstance.providedBy(context) \
+        and IUnauthenticatedPrincipal.providedBy(user):
         # If our context allows anonymous access, we should treat
         # anonymous users as Open for visibility checks.
         scope = ES_PUBLIC
@@ -116,9 +116,9 @@ def is_item_visible(item, user, context=None, record=None):
     context = item if context is None else context
     user_visibility = get_user_visibility(user)
     # If it has non-everyone visibility, unequal to our user's, check scope.
-    if 		item.visibility \
-            and item.visibility != EVERYONE \
-            and user_visibility != item.visibility:
+    if      item.visibility \
+        and item.visibility != EVERYONE \
+        and user_visibility != item.visibility:
         scope = _get_scope(user, context, record)
         if scope != ES_ALL and get_visibility_for_scope(scope) != item.visibility:
             # Our item is scoped and not-visible to us, but editors always have

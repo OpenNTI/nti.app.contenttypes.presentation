@@ -11,27 +11,31 @@ from zope import interface
 
 from zope.deprecation import deprecated
 
+
 deprecated('IPresentationAssetsIndex', 'Use lastest library implementation')
 class IPresentationAssetsIndex(interface.Interface):
-	pass
+    pass
+
 
 class IItemRefValidator(interface.Interface):
 
-	def validate():
-		"""
-		Return whether or not the item reference is valid
-		"""
+    def validate():
+        """
+        Return whether or not the item reference is valid
+        """
+
 
 class ILessonPublicationConstraintChecker(interface.Interface):
 
-	def is_satisfied(constraint, principal=None):
-		"""
-		Return whether or not a constraint is satisfied.
-		"""
+    def is_satisfied(constraint, principal=None):
+        """
+        Return whether or not a constraint is satisfied.
+        """
+
 
 class ILessonPublicationConstraintValidator(interface.Interface):
 
-	def validate():
-		"""
-		Raise an exception if the contraint is not valid
-		"""
+    def validate():
+        """
+        Raise an exception if the contraint is not valid
+        """

@@ -39,109 +39,120 @@ from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import IAssignmentCompletionConstraint
 from nti.contenttypes.presentation.interfaces import ISurveyCompletionConstraint
 
+
 @interface.implementer(IItemRefValidator)
 class _ItemRefValidator(object):
 
-	provided = None
-	item_type = None
-	field_name = None
+    provided = None
+    item_type = None
+    field_name = None
 
-	def __init__(self, item):
-		self.item = item
+    def __init__(self, item):
+        self.item = item
 
-	def validate(self):
-		reference = self.provided(self.item, None)
-		name = getattr(self.item, self.field_name, None) or u''
-		if reference is None:
-			logger.error("Could not find %s %s", self.item_type, name)
-		return bool(reference is not None)
+    def validate(self):
+        reference = self.provided(self.item, None)
+        name = getattr(self.item, self.field_name, None) or u''
+        if reference is None:
+            logger.error("Could not find %s %s", self.item_type, name)
+        return bool(reference is not None)
+
 
 @component.adapter(INTIAssignmentRef)
 class _AssignmentRefValidator(_ItemRefValidator):
-	field_name = 'target'
-	item_type = 'Assignment'
-	provided = IQAssignment
+    field_name = 'target'
+    item_type = 'Assignment'
+    provided = IQAssignment
+
 
 @component.adapter(INTIPollRef)
 class _PollRefValidator(_ItemRefValidator):
-	field_name = 'target'
-	item_type = 'Poll'
-	provided = IQPoll
+    field_name = 'target'
+    item_type = 'Poll'
+    provided = IQPoll
+
 
 @component.adapter(INTISurveyRef)
 class _SurveyRefValidator(_ItemRefValidator):
-	field_name = 'target'
-	item_type = 'Survey'
-	provided = IQSurvey
+    field_name = 'target'
+    item_type = 'Survey'
+    provided = IQSurvey
+
 
 @component.adapter(INTIVideoRef)
 class _VideoRefValidator(_ItemRefValidator):
-	field_name = 'target'
-	item_type = 'Video'
-	provided = INTIVideo
+    field_name = 'target'
+    item_type = 'Video'
+    provided = INTIVideo
+
 
 @component.adapter(INTIAudioRef)
 class _AudioRefValidator(_ItemRefValidator):
-	field_name = 'target'
-	item_type = 'Audio'
-	provided = INTIAudio
+    field_name = 'target'
+    item_type = 'Audio'
+    provided = INTIAudio
+
 
 @component.adapter(INTISlideDeckRef)
 class _SlideDeckRefValidator(_ItemRefValidator):
-	field_name = 'target'
-	item_type = 'SlideDeck'
-	provided = INTISlideDeck
+    field_name = 'target'
+    item_type = 'SlideDeck'
+    provided = INTISlideDeck
+
 
 @component.adapter(INTITimelineRef)
 class _TimelineRefValidator(_ItemRefValidator):
-	field_name = 'target'
-	item_type = 'Timeline'
-	provided = INTITimeline
+    field_name = 'target'
+    item_type = 'Timeline'
+    provided = INTITimeline
+
 
 @component.adapter(INTIRelatedWorkRefPointer)
 class _RelatedWorkRefPointerValidator(_ItemRefValidator):
-	field_name = 'target'
-	item_type = 'RelatedWork'
-	provided = INTIRelatedWorkRef
+    field_name = 'target'
+    item_type = 'RelatedWork'
+    provided = INTIRelatedWorkRef
+
 
 @component.adapter(IAssignmentCompletionConstraint)
 @interface.implementer(ILessonPublicationConstraintValidator)
 class _AssignmentCompletionConstraintValidator(object):
 
-	constraint = None
+    constraint = None
 
-	def __init__(self, constraint):
-		self.constraint = constraint
+    def __init__(self, constraint):
+        self.constraint = constraint
 
-	def validate(self, constraint=None):
-		constraint = self.constraint if constraint is None else constraint
-		assignments = constraint.assignments
-		if not assignments:
-			raise ValueError(_("Assignment list cannot be empty."))
-			
-		for ntiid in assignments:
-			if component.queryUtility(IQAssignment, name=ntiid) is None:
-				msg = translate(_("Assigment ${ntiid} does not exist.",
-								mapping={'ntiid': ntiid}))
-				raise ValueError(msg)
+    def validate(self, constraint=None):
+        constraint = self.constraint if constraint is None else constraint
+        assignments = constraint.assignments
+        if not assignments:
+            raise ValueError(_("Assignment list cannot be empty."))
+
+        for ntiid in assignments:
+            if component.queryUtility(IQAssignment, name=ntiid) is None:
+                msg = translate(_("Assigment ${ntiid} does not exist.",
+                                  mapping={'ntiid': ntiid}))
+                raise ValueError(msg)
+
 
 @component.adapter(ISurveyCompletionConstraint)
 @interface.implementer(ILessonPublicationConstraintValidator)
 class _SurveyCompletionConstraintValidator(object):
 
-	constraint = None
+    constraint = None
 
-	def __init__(self, constraint):
-		self.constraint = constraint
+    def __init__(self, constraint):
+        self.constraint = constraint
 
-	def validate(self, constraint=None):
-		constraint = self.constraint if constraint is None else constraint
-		surveys = constraint.surveys
-		if not surveys:
-			raise ValueError(_("Survey list cannot be empty."))
-			
-		for ntiid in surveys:
-			if component.queryUtility(IQSurvey, name=ntiid) is None:
-				msg = translate(_("Survey ${ntiid} does not exist.",
-								mapping={'ntiid': ntiid}))
-				raise ValueError(msg)
+    def validate(self, constraint=None):
+        constraint = self.constraint if constraint is None else constraint
+        surveys = constraint.surveys
+        if not surveys:
+            raise ValueError(_("Survey list cannot be empty."))
+
+        for ntiid in surveys:
+            if component.queryUtility(IQSurvey, name=ntiid) is None:
+                msg = translate(_("Survey ${ntiid} does not exist.",
+                                  mapping={'ntiid': ntiid}))
+                raise ValueError(msg)

@@ -21,16 +21,18 @@ from nti.contenttypes.presentation.interfaces import ILessonPublicationConstrain
 from nti.traversal.traversal import DefaultAdapterTraversable
 from nti.traversal.traversal import ContainerAdapterTraversable
 
+
 @component.adapter(INTILessonOverview, IRequest)
 class _LessonOverviewTraversable(DefaultAdapterTraversable):
 
-	def traverse(self, key, remaining_path):
-		if key == 'PublicationConstraints':
-			return  ILessonPublicationConstraints(self.context)
-		raise LocationError(key)
+    def traverse(self, key, remaining_path):
+        if key == 'PublicationConstraints':
+            return ILessonPublicationConstraints(self.context)
+        raise LocationError(key)
+
 
 @component.adapter(ILessonPublicationConstraints, IRequest)
 class _LessonPublicationConstraintsTraversable(ContainerAdapterTraversable):
 
-	def traverse(self, key, remaining_path):
-		return super(_LessonPublicationConstraintsTraversable, self).traverse(key, remaining_path)
+    def traverse(self, key, remaining_path):
+        return super(_LessonPublicationConstraintsTraversable, self).traverse(key, remaining_path)

@@ -13,22 +13,27 @@ from zope.deprecation import deprecated
 
 from persistent import Persistent
 
+
 deprecated('KeepSetIndex', 'Use lastest library index implementation')
 class KeepSetIndex(Persistent):
-	pass
+    pass
+
 
 deprecated('NamespaceIndex', 'Use lastest library index implementation')
 class NamespaceIndex(Persistent):
-	pass
+    pass
+
 
 deprecated('TypeIndex', 'Use lastest library index implementation')
 class TypeIndex(Persistent):
-	pass
+    pass
+
 
 deprecated('PACatalogIndex', 'Use lastest library index implementation')
 class PACatalogIndex(Persistent):
-	pass
+    pass
+
 
 deprecated('PresentationAssetCatalog', 'Use lastest library index implementation')
 class PresentationAssetCatalog(Persistent):
-	pass
+    pass

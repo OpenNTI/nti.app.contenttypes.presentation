@@ -22,7 +22,7 @@ from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTISlideVideo
-from nti.contenttypes.presentation.interfaces import INTITranscript 
+from nti.contenttypes.presentation.interfaces import INTITranscript
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
@@ -48,120 +48,138 @@ from nti.property.property import Lazy
 
 from nti.traversal.traversal import find_interface
 
+
 @interface.implementer(IACLProvider)
 class BasePresentationAssetACLProvider(object):
 
-	def __init__(self, context):
-		self.context = context
+    def __init__(self, context):
+        self.context = context
 
-	@property
-	def __acl__(self):
-		result = acl_from_aces(ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
-		result.append(ace_allowing(ROLE_CONTENT_ADMIN, ALL_PERMISSIONS, type(self)))
-		courses = get_presentation_asset_courses(self.context)
-		for course in courses or ():
-			result.extend(IACLProvider(course).__acl__)
+    @property
+    def __acl__(self):
+        result = acl_from_aces(ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
+        result.append(ace_allowing(ROLE_CONTENT_ADMIN, ALL_PERMISSIONS, type(self)))
+        courses = get_presentation_asset_courses(self.context)
+        for course in courses or ():
+            result.extend(IACLProvider(course).__acl__)
 
-		# If legacy, let parent objects determine ACL.
-		if not ILegacyPresentationAsset.providedBy(self.context):
-			result.append(ACE_DENY_ALL)
-		return result
+        # If legacy, let parent objects determine ACL.
+        if not ILegacyPresentationAsset.providedBy(self.context):
+            result.append(ACE_DENY_ALL)
+        return result
+
 
 @component.adapter(IPresentationAsset)
 class PresentationAssetACLProvider(BasePresentationAssetACLProvider):
-	pass
+    pass
+
 
 @component.adapter(INTIAudio)
 class NTIAudioACLProvider(BasePresentationAssetACLProvider):
-	pass
+    pass
+
 
 @component.adapter(INTIVideo)
 class NTIVideoACLProvider(BasePresentationAssetACLProvider):
-	pass
+    pass
+
 
 @component.adapter(INTIRelatedWorkRef)
 class NTIRelatedWorkRefACLProvider(BasePresentationAssetACLProvider):
-	pass
+    pass
+
 
 @component.adapter(INTITimeline)
 class NTITimelineACLProvider(BasePresentationAssetACLProvider):
-	pass
+    pass
+
 
 @component.adapter(INTISlideDeck)
 class NTISlideDeckACLProvider(BasePresentationAssetACLProvider):
-	pass
+    pass
+
 
 @component.adapter(INTISlideVideo)
 class NTISlideVideoACLProvider(BasePresentationAssetACLProvider):
-	pass
+    pass
+
 
 class AbstractCourseLineageACLProvider(object):
 
-	def __init__(self, context):
-		self.context = context
+    def __init__(self, context):
+        self.context = context
 
-	@property
-	def __parent__(self):
-		return self.context.__parent__
+    @property
+    def __parent__(self):
+        return self.context.__parent__
 
-	@Lazy
-	def __acl__(self):
-		result = acl_from_aces(ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
-		course = find_interface(self.context, ICourseInstance, strict=False)
-		if course is not None:
-			result.extend(IACLProvider(course).__acl__)
-		result.append(ACE_DENY_ALL)
-		return result
+    @Lazy
+    def __acl__(self):
+        result = acl_from_aces(ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
+        course = find_interface(self.context, ICourseInstance, strict=False)
+        if course is not None:
+            result.extend(IACLProvider(course).__acl__)
+        result.append(ACE_DENY_ALL)
+        return result
+
 
 @component.adapter(INTITimelineRef)
 @interface.implementer(IACLProvider)
 class NTITimelineRefACLProvider(AbstractCourseLineageACLProvider):
-	pass
+    pass
+
 
 @component.adapter(INTISlideDeckRef)
 @interface.implementer(IACLProvider)
 class NTISlideDeckRefACLProvider(AbstractCourseLineageACLProvider):
-	pass
+    pass
+
 
 @component.adapter(INTIMediaRoll)
 @interface.implementer(IACLProvider)
 class NTIMediaRollACLProvider(AbstractCourseLineageACLProvider):
-	pass
+    pass
+
 
 @interface.implementer(IACLProvider)
 @component.adapter(INTICourseOverviewGroup)
 class NTICourseOverviewGroupACLProvider(AbstractCourseLineageACLProvider):
-	pass
+    pass
+
 
 @interface.implementer(IACLProvider)
 @component.adapter(INTILessonOverview)
 class NTILessonOverviewACLProvider(AbstractCourseLineageACLProvider):
-	pass
+    pass
+
 
 @interface.implementer(IACLProvider)
 class AdminEditorParentObjectACLProvider(object):
-	
-	def __init__(self, context):
-		self.context = context
 
-	@property
-	def __parent__(self):
-		return self.context.__parent__
-	
-	@Lazy
-	def __acl__(self):
-		result = acl_from_aces(ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
-		result.append(ace_allowing(ROLE_CONTENT_ADMIN, ALL_PERMISSIONS, type(self)))
-		return result
+    def __init__(self, context):
+        self.context = context
+
+    @property
+    def __parent__(self):
+        return self.context.__parent__
+
+    @Lazy
+    def __acl__(self):
+        result = acl_from_aces(ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
+        result.append(ace_allowing(ROLE_CONTENT_ADMIN, ALL_PERMISSIONS, type(self)))
+        return result
+
 
 @component.adapter(INTITranscript)
 class NTITranscriptACLProvider(AdminEditorParentObjectACLProvider):
-	pass
+    pass
+
 
 @component.adapter(ILessonPublicationConstraint)
 class LessonPublicationConstraintACLProvider(AdminEditorParentObjectACLProvider):
-	pass
+    pass
+
 
 @component.adapter(ILessonPublicationConstraints)
 class LessonPublicationConstraintsACLProvider(AdminEditorParentObjectACLProvider):
-	pass
+    pass

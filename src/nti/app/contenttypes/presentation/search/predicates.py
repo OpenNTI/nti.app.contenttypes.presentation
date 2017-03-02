@@ -14,11 +14,11 @@ from pyramid.threadlocal import get_current_request
 
 from zope import interface
 
-from nti.appserver.pyramid_authorization import has_permission
-
 from nti.app.authentication import get_remote_user
 
 from nti.app.contenttypes.presentation.utils import is_item_visible
+
+from nti.appserver.pyramid_authorization import has_permission
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
@@ -53,8 +53,8 @@ class _LessonsSearchHitPredicate(DefaultSearchHitPredicate):
         results = set()
         catalog = get_library_catalog()
         for container in catalog.get_containers(item):
-            lesson = find_interface(container, 
-                                    INTILessonOverview, 
+            lesson = find_interface(container,
+                                    INTILessonOverview,
                                     strict=False)
             if lesson is not None:
                 results.add(lesson)

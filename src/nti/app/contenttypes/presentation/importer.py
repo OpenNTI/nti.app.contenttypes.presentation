@@ -60,96 +60,99 @@ from nti.site.hostpolicy import get_host_site
 
 from nti.site.site import get_component_hierarchy_names
 
+
 @interface.implementer(ICourseSectionImporter)
 class LessonOverviewsImporter(BaseSectionImporter):
 
-	__LESSONS__ = 'Lessons'
+    __LESSONS__ = 'Lessons'
 
-	@Lazy
-	def current_principal(self):
-		remoteUser = IPrincipal(get_remote_user(), None)
-		if remoteUser is None:
-			remoteUser = current_principal(True)
-		return remoteUser
+    @Lazy
+    def current_principal(self):
+        remoteUser = IPrincipal(get_remote_user(), None)
+        if remoteUser is None:
+            remoteUser = current_principal(True)
+        return remoteUser
 
-	def _post_process_asset(self, asset, source_filer, target_filer):
-		# save asset resources
-		concrete = IConcreteAsset(asset, asset) # make sure we transfer from concrete
-		transfer_resources_from_filer(iface_of_asset(concrete),
-									  concrete,
-									  source_filer,
-									  target_filer)
+    def _post_process_asset(self, asset, source_filer, target_filer):
+        # save asset resources
+        # make sure we transfer from concrete
+        concrete = IConcreteAsset(asset, asset)
+        transfer_resources_from_filer(iface_of_asset(concrete),
+                                      concrete,
+                                      source_filer,
+                                      target_filer)
 
-		# set creator
-		concrete.creator = asset.creator = self.current_principal.id
+        # set creator
+        concrete.creator = asset.creator = self.current_principal.id
 
-		# mark as created
-		interface.alsoProvides(asset, IUserCreatedAsset)
-		if not IContentBackedPresentationAsset.providedBy(concrete):
-			interface.alsoProvides(concrete, IUserCreatedAsset)
+        # mark as created
+        interface.alsoProvides(asset, IUserCreatedAsset)
+        if not IContentBackedPresentationAsset.providedBy(concrete):
+            interface.alsoProvides(concrete, IUserCreatedAsset)
 
-		# check 'children'
-		if IItemAssetContainer.providedBy(asset):
-			asset_items = asset.Items if asset.Items is not None else ()
-			for item in asset_items:
-				self._post_process_asset(item, source_filer, target_filer)
+        # check 'children'
+        if IItemAssetContainer.providedBy(asset):
+            asset_items = asset.Items if asset.Items is not None else ()
+            for item in asset_items:
+                self._post_process_asset(item, source_filer, target_filer)
 
-		# set proper target
-		check_docket_targets(concrete)
+        # set proper target
+        check_docket_targets(concrete)
 
-	def _get_course_site(self, course):
-		site_name = get_course_site(course)
-		site = get_host_site(site_name)
-		return site
+    def _get_course_site(self, course):
+        site_name = get_course_site(course)
+        site = get_host_site(site_name)
+        return site
 
-	def _do_import(self, context, source_filer, save_sources=True):
-		course = ICourseInstance(context)
-		entry = ICourseCatalogEntry(course)
-		site = self._get_course_site(course)
-		target_filer = get_course_filer(course)
-		named_sites = get_component_hierarchy_names()
+    def _do_import(self, context, source_filer, save_sources=True):
+        course = ICourseInstance(context)
+        entry = ICourseCatalogEntry(course)
+        site = self._get_course_site(course)
+        target_filer = get_course_filer(course)
+        named_sites = get_component_hierarchy_names()
 
-		if source_filer.is_bucket(self.__LESSONS__):
-			bucket = source_filer.get(self.__LESSONS__)
-			with current_site(site):
-				registry = site.getSiteManager()
+        if source_filer.is_bucket(self.__LESSONS__):
+            bucket = source_filer.get(self.__LESSONS__)
+            with current_site(site):
+                registry = site.getSiteManager()
 
-				# clear assets - not merging
-				clear_course_assets(course)
-				clear_namespace_last_modified(course)
-				remove_and_unindex_course_assets(namespace=entry.ntiid,
-										  		 registry=registry,
-										  		 course=course,
-										 		 sites=named_sites,
-										 		 force=True)  # not merging
+                # clear assets - not merging
+                clear_course_assets(course)
+                clear_namespace_last_modified(course)
+                remove_and_unindex_course_assets(namespace=entry.ntiid,
+                                                 registry=registry,
+                                                 course=course,
+                                                 sites=named_sites,
+                                                 force=True)  # not merging
 
-				# load assets
-				lessons = synchronize_course_lesson_overview(course,
-															 buckets=(bucket,))
-				for lesson in lessons or ():
-					self._post_process_asset(lesson, source_filer, target_filer)
+                # load assets
+                lessons = synchronize_course_lesson_overview(course,
+                                                             buckets=(bucket,))
+                for lesson in lessons or ():
+                    self._post_process_asset(
+                        lesson, source_filer, target_filer)
 
-			# save sources in main course Lessos folder
-			parent = get_parent_course(course)
-			root = parent.root
-			if save_sources and IFilesystemBucket.providedBy(root):
-				out_path = os.path.join(root.absolute_path, self.__LESSONS__)
-				self.makedirs(out_path) # create
-				for path in source_filer.list(self.__LESSONS__):
-					if not source_filer.is_bucket(path):
-						source = source_filer.get(path)
-						name = source_filer.key_name(path)
-						new_path = os.path.join(out_path, name)
-						transfer_to_native_file(source, new_path)
-			return lessons
+            # save sources in main course Lessos folder
+            parent = get_parent_course(course)
+            root = parent.root
+            if save_sources and IFilesystemBucket.providedBy(root):
+                out_path = os.path.join(root.absolute_path, self.__LESSONS__)
+                self.makedirs(out_path)  # create
+                for path in source_filer.list(self.__LESSONS__):
+                    if not source_filer.is_bucket(path):
+                        source = source_filer.get(path)
+                        name = source_filer.key_name(path)
+                        new_path = os.path.join(out_path, name)
+                        transfer_to_native_file(source, new_path)
+            return lessons
 
-		return ()
+        return ()
 
-	def process(self, context, filer, writeout=True):
-		result = []
-		course = ICourseInstance(context)
-		result.extend(self._do_import(context, filer, writeout))
-		for sub_instance in get_course_subinstances(course):
-			if sub_instance.Outline is not course.Outline:
-				result.extend(self._do_import(sub_instance, filer, writeout))
-		return tuple(result)
+    def process(self, context, filer, writeout=True):
+        result = []
+        course = ICourseInstance(context)
+        result.extend(self._do_import(context, filer, writeout))
+        for sub_instance in get_course_subinstances(course):
+            if sub_instance.Outline is not course.Outline:
+                result.extend(self._do_import(sub_instance, filer, writeout))
+        return tuple(result)

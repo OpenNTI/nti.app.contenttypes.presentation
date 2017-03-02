@@ -31,36 +31,40 @@ from nti.links.links import Link
 
 LINKS = StandardExternalFields.LINKS
 
+
 @component.adapter(INTILessonOverview)
 @interface.implementer(IExternalMappingDecorator)
 class _LessonPublicationConstraintsLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
-	def _predicate(self, context, result):
-		return 		self._is_authenticated \
-				and (has_permission(ACT_CONTENT_EDIT, context, self.request))
+    def _predicate(self, context, result):
+        return  self._is_authenticated \
+            and (has_permission(ACT_CONTENT_EDIT, context, self.request))
 
-	def _do_decorate_external(self, context, result):
-		_links = result.setdefault(LINKS, [])
-		link = Link(context, rel='constraints', elements=('PublicationConstraints',))
-		interface.alsoProvides(link, ILocation)
-		link.__name__ = ''
-		link.__parent__ = context
-		_links.append(link)
+    def _do_decorate_external(self, context, result):
+        _links = result.setdefault(LINKS, [])
+        link = Link(context,
+                    rel='constraints', 
+                    elements=('PublicationConstraints',))
+        interface.alsoProvides(link, ILocation)
+        link.__name__ = ''
+        link.__parent__ = context
+        _links.append(link)
+
 
 @component.adapter(INTILessonOverview)
 @interface.implementer(IExternalMappingDecorator)
 class _LessonLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
-	def _predicate(self, context, result):
-		return 		self._is_authenticated \
-				and (has_permission(ACT_CONTENT_EDIT, context, self.request))
+    def _predicate(self, context, result):
+        return  self._is_authenticated \
+            and (has_permission(ACT_CONTENT_EDIT, context, self.request))
 
-	def _do_decorate_external(self, context, result):
-		_links = result.setdefault(LINKS, [])
-		link = Link(context, rel=VIEW_LESSON_REMOVE_REFS,
-					elements=('@@%s' % VIEW_LESSON_REMOVE_REFS,),
-					method='DELETE')
-		interface.alsoProvides(link, ILocation)
-		link.__name__ = ''
-		link.__parent__ = context
-		_links.append(link)
+    def _do_decorate_external(self, context, result):
+        _links = result.setdefault(LINKS, [])
+        link = Link(context, rel=VIEW_LESSON_REMOVE_REFS,
+                    elements=('@@%s' % VIEW_LESSON_REMOVE_REFS,),
+                    method='DELETE')
+        interface.alsoProvides(link, ILocation)
+        link.__name__ = ''
+        link.__parent__ = context
+        _links.append(link)

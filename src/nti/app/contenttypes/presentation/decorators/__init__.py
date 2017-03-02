@@ -39,39 +39,41 @@ from nti.property.property import Lazy
 LINKS = StandardExternalFields.LINKS
 
 LEGACY_UAS_20 = ("NTIFoundation DataLoader NextThought/1.0",
-				 "NTIFoundation DataLoader NextThought/1.1",
-				 "NTIFoundation DataLoader NextThought/1.1.1",
-				 "NTIFoundation DataLoader NextThought/1.2.")
+                 "NTIFoundation DataLoader NextThought/1.1",
+                 "NTIFoundation DataLoader NextThought/1.1.1",
+                 "NTIFoundation DataLoader NextThought/1.2.")
 
 LEGACY_UAS_40 = LEGACY_UAS_20 + \
-				("NTIFoundation DataLoader NextThought/1.3.",
-				 "NTIFoundation DataLoader NextThought/1.4.0")
+                ("NTIFoundation DataLoader NextThought/1.3.",
+                 "NTIFoundation DataLoader NextThought/1.4.0")
+
 
 def is_legacy_uas(request, legacy_uas=LEGACY_UAS_40):
-	ua = request.environ.get(b'HTTP_USER_AGENT', '')
-	if not ua:
-		return False
-	for lua in legacy_uas:
-		if ua.startswith(lua):
-			return True
-	return False
+    ua = request.environ.get(b'HTTP_USER_AGENT', '')
+    if not ua:
+        return False
+    for lua in legacy_uas:
+        if ua.startswith(lua):
+            return True
+    return False
+
 
 class _AbstractMoveLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
-	@Lazy
-	def _acl_decoration(self):
-		result = getattr(self.request, 'acl_decoration', True)
-		return result
+    @Lazy
+    def _acl_decoration(self):
+        result = getattr(self.request, 'acl_decoration', True)
+        return result
 
-	def _predicate(self, context, result):
-		return (	self._acl_decoration
-				and self._is_authenticated
-				and has_permission(ACT_CONTENT_EDIT, context, self.request))
+    def _predicate(self, context, result):
+        return (    self._acl_decoration
+                and self._is_authenticated
+                and has_permission(ACT_CONTENT_EDIT, context, self.request))
 
-	def _do_decorate_external(self, context, result):
-		links = result.setdefault(LINKS, [])
-		link = Link(context, rel=VIEW_NODE_MOVE, elements=(VIEW_NODE_MOVE,))
-		interface.alsoProvides(link, ILocation)
-		link.__name__ = ''
-		link.__parent__ = context
-		links.append(link)
+    def _do_decorate_external(self, context, result):
+        links = result.setdefault(LINKS, [])
+        link = Link(context, rel=VIEW_NODE_MOVE, elements=(VIEW_NODE_MOVE,))
+        interface.alsoProvides(link, ILocation)
+        link.__name__ = ''
+        link.__parent__ = context
+        links.append(link)
