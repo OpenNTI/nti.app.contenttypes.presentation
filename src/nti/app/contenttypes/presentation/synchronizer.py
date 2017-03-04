@@ -414,8 +414,8 @@ def _update_asset_state(asset, parsed, course, source_filer=None, target_filer=N
 
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 											validate=False, course=None,
-                                            node=None, sync_results=None,
-                                            intids=None, connection=None):
+											node=None, sync_results=None,
+											intids=None, connection=None):
 	registry = get_site_registry(registry)
 
 	# read and parse json text
@@ -704,6 +704,7 @@ def _set_internal_resource_from_filer(provided, obj, filer):
 				href = filer.get_external_link(item)
 				if IContentBaseFile.providedBy(item):
 					item.add_association(obj)
+					lifecycleevent.modified(item)
 				setattr(obj, field_name, href)
 				result[field_name] = href
 

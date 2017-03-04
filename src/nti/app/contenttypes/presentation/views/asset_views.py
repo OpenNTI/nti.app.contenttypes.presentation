@@ -18,7 +18,7 @@ from collections import Mapping
 
 import transaction
 
-from zope import interface
+from zope import interface, lifecycleevent
 
 from zope.component.hooks import getSite
 
@@ -554,6 +554,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 				external = to_external_file_link(content_file)
 				setattr(item, name, external)
 				content_file.add_association(item)
+				lifecycleevent.modified(content_file)
 				if name == 'href':  # update target and type
 					item.target = to_external_ntiid_oid(item)  # NTIID
 					if INTIRelatedWorkRef.providedBy(item):

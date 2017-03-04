@@ -13,6 +13,7 @@ from itertools import chain
 
 from zope import component
 from zope import interface
+from zope import lifecycleevent
 
 from zope.interface.interfaces import IUnregistered
 
@@ -254,6 +255,7 @@ def _on_will_update_presentation_asset(asset, event):
 				source = get_file_from_external_link(value)
 				if IContentBaseFile.providedBy(source):
 					source.remove_association(asset)
+					lifecycleevent.modified(source)
 
 @component.adapter(INTIDocketAsset, IBeforeIdRemovedEvent)
 def _on_docket_asset_removed(asset, event):
@@ -263,6 +265,7 @@ def _on_docket_asset_removed(asset, event):
 			source = get_file_from_external_link(value)
 			if IContentBaseFile.providedBy(source):
 				source.remove_association(asset)
+				lifecycleevent.modified(source)
 
 @component.adapter(INTICourseOverviewGroup, IAfterIdAddedEvent)
 def _on_course_overview_registered(group, event):
