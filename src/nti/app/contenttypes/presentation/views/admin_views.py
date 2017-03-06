@@ -12,6 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 import six
 import time
 
+from requests.structures import CaseInsensitiveDict
+
 from zope import component
 
 from zope.component.hooks import getSite
@@ -49,8 +51,6 @@ from nti.app.contenttypes.presentation.utils.common import remove_course_inacces
 from nti.app.products.courseware.views import CourseAdminPathAdapter
 
 from nti.cabinet.filer import DirectoryFiler
-
-from nti.common.maps import CaseInsensitiveDict
 
 from nti.common.string import is_true
 

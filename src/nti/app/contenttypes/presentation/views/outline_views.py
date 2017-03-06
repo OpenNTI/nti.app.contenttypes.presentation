@@ -12,6 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 import time
 import simplejson
 
+from requests.structures import CaseInsensitiveDict
+
 from zope import component
 from zope import lifecycleevent
 
@@ -65,8 +67,6 @@ from nti.appserver.pyramid_authorization import has_permission
 
 from nti.assessment.interfaces import IQSurvey
 from nti.assessment.interfaces import IQAssignment
-
-from nti.common.maps import CaseInsensitiveDict
 
 from nti.common.string import is_true
 

@@ -18,6 +18,8 @@ from collections import Mapping
 
 import transaction
 
+from requests.structures import CaseInsensitiveDict
+
 from zope import interface, lifecycleevent
 
 from zope.component.hooks import getSite
@@ -86,8 +88,6 @@ from nti.assessment.interfaces import IQInquiry
 from nti.assessment.interfaces import IQAssessment
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQuestionSet
-
-from nti.common.maps import CaseInsensitiveDict
 
 from nti.contentfile.interfaces import IContentBaseFile
 
