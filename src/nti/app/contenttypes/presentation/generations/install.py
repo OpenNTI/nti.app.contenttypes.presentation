@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-generation = 40
+generation = 41
 
 from zope import interface
 
@@ -17,20 +17,22 @@ from zope.generations.generations import SchemaManager as BaseSchemaManager
 
 from zope.generations.interfaces import IInstallableSchemaManager
 
+
 @interface.implementer(IInstallableSchemaManager)
 class _SchemaManager(BaseSchemaManager):
-	"""
-	A schema manager that we can register as a utility in ZCML.
-	"""
+    """
+    A schema manager that we can register as a utility in ZCML.
+    """
 
-	def __init__(self):
-		super(_SchemaManager, self).__init__(
-						generation=generation,
-						minimum_generation=generation,
-						package_name='nti.app.contenttypes.presentation.generations')
+    def __init__(self):
+        super(_SchemaManager, self).__init__(
+            generation=generation,
+            minimum_generation=generation,
+            package_name='nti.app.contenttypes.presentation.generations')
 
-	def install(self, context):
-		evolve(context)
+    def install(self, context):
+        evolve(context)
+
 
 def evolve(context):
-	pass
+    pass

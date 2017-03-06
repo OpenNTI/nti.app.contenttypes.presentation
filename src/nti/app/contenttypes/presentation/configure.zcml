@@ -206,9 +206,4 @@
 					provides="nti.dataserver.interfaces.IPrincipalMetadataObjects" />
 	</configure>
 
-	<!-- Wref -->
-	<adapter factory="nti.intid.wref.NoCachingArbitraryOrderableWeakRef"
-			 provides="nti.wref.interfaces.IWeakRef"
-			 for="nti.contenttypes.presentation.interfaces.IPresentationAsset" />
-
 </configure>

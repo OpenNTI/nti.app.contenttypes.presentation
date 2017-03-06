@@ -18,8 +18,6 @@ from zope.component.hooks import site as current_site
 
 from zope.intid.interfaces import IIntIds
 
-from persistent.wref import WeakRef as PersistentWeakRef
-
 from nti.app.products.courseware.resources.adapters import course_resources
 
 from nti.contentfolder.interfaces import INamedContainer
@@ -28,6 +26,8 @@ from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
+
+from nti.contenttypes.presentation.wref import PresentationAssetWeakRef
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
@@ -54,12 +54,12 @@ def process_course_resources(container):
         if INamedContainer.providedBy(value):
             process_course_resources(value)
         elif '_associations' in value.__dict__:
-            for w in list(value._associations or ()):
-                if isinstance(w, PersistentWeakRef):
-                    obj = w()
+            for wref in list(value._associations or ()):
+                if not isinstance(wref, PresentationAssetWeakRef):
+                    obj = wref()
                     if not IPresentationAsset.providedBy(obj):
                         continue
-                    value.remove_association(w)
+                    value.remove_association(wref)
                     value.add_association(obj)
 
 
@@ -76,7 +76,7 @@ def _process_site(current, intids, seen):
             seen.add(doc_id)
             resources = course_resources(course, create=False)
             if resources:
-                process_course_resources(resources, intids)
+                process_course_resources(resources)
 
 
 def do_evolve(context, generation=generation):
