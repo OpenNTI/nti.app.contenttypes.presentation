@@ -28,6 +28,10 @@ from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecora
 
 from nti.appserver.pyramid_authorization import has_permission
 
+from nti.common.string import is_true
+
+from nti.coremetadata.interfaces import IPublishable
+
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.externalization.interfaces import StandardExternalFields
@@ -56,6 +60,31 @@ def is_legacy_uas(request, legacy_uas=LEGACY_UAS_40):
         if ua.startswith(lua):
             return True
     return False
+
+
+def _is_visible(item, request, show_unpublished=True):
+    return     not IPublishable.providedBy(item) \
+            or item.is_published() \
+            or (show_unpublished and has_permission(ACT_CONTENT_EDIT, item, request))
+
+
+def get_omit_published(request):
+    omit_unpublished = request.params.get('omit_unpublished', False)
+    try:
+        omit_unpublished = is_true(omit_unpublished)
+    except ValueError:
+        omit_unpublished = False
+    return omit_unpublished
+
+
+def can_view_publishable(context, request):
+    """
+    Defines whether the given publishable object is visible to the end-user.
+    If an `omit_unpublished` param exists on the request, the unpublished
+    item will be hidden from editors as well.
+    """
+    show_unpublished = not get_omit_published(request)
+    return _is_visible(context, request, show_unpublished=show_unpublished)
 
 
 class _AbstractMoveLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):

@@ -24,6 +24,7 @@ from nti.app.contenttypes.presentation.decorators import LEGACY_UAS_40
 from nti.app.contenttypes.presentation.decorators import VIEW_ORDERED_CONTENTS
 
 from nti.app.contenttypes.presentation.decorators import is_legacy_uas
+from nti.app.contenttypes.presentation.decorators import can_view_publishable
 from nti.app.contenttypes.presentation.decorators import _AbstractMoveLinkDecorator
 
 from nti.app.contenttypes.presentation.utils import is_item_visible
@@ -65,7 +66,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_for_user
 
-from nti.contenttypes.presentation.interfaces import IVisible
+from nti.contenttypes.presentation.interfaces import IVisible, IConcreteAsset
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTISlide
@@ -373,9 +374,15 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 			return True
 		return False
 
+	def _can_view_ref_target(self, ref):
+		target = IConcreteAsset(ref, ref)
+		return can_view_publishable(target, self.request)
+
 	def _handle_relatedworkref_pointer(self, context, items, item, idx):
 		source = INTIRelatedWorkRef(item, None)
-		if source is not None and self._allow_visible(context, source):
+		if 		source is not None \
+			and self._allow_visible(context, source) \
+			and self._can_view_ref_target(source):
 			items[idx] = to_external_object(source)
 			return True
 		return False

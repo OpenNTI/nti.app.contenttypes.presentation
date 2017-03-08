@@ -24,6 +24,8 @@ from nti.app.contenttypes.presentation.decorators import VIEW_OVERVIEW_CONTENT
 from nti.app.contenttypes.presentation.decorators import VIEW_OVERVIEW_SUMMARY
 
 from nti.app.contenttypes.presentation.decorators import is_legacy_uas
+from nti.app.contenttypes.presentation.decorators import get_omit_published
+from nti.app.contenttypes.presentation.decorators import can_view_publishable
 from nti.app.contenttypes.presentation.decorators import _AbstractMoveLinkDecorator
 
 from nti.app.products.courseware.decorators import BaseRecursiveAuditLogLinkDecorator
@@ -31,8 +33,6 @@ from nti.app.products.courseware.decorators import BaseRecursiveAuditLogLinkDeco
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
 from nti.appserver.pyramid_authorization import has_permission
-
-from nti.common.string import is_true
 
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentUnitHrefMapper
@@ -45,8 +45,6 @@ from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 from nti.contenttypes.courses.utils import get_course_hierarchy
 
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
-
-from nti.coremetadata.interfaces import IPublishable
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
@@ -61,23 +59,16 @@ from nti.property.property import Lazy
 
 LINKS = StandardExternalFields.LINKS
 
-def _is_visible(item, request, show_unpublished=True):
-	return 		not IPublishable.providedBy(item) \
-			or 	item.is_published() \
-			or	(show_unpublished and has_permission(ACT_CONTENT_EDIT, item, request))
-
 def _lesson_overview_links(context, request):
-	omit_unpublished = False
-	try:
-		omit_unpublished = is_true(request.params.get('omit_unpublished', False))
-	except ValueError:
-		pass
-
 	lesson = INTILessonOverview(context, None)
-	if lesson is not None and _is_visible(lesson, request, not omit_unpublished):
+	if lesson is not None and can_view_publishable(lesson, request):
 		result = []
+		omit_unpublished = get_omit_published(request)
 		for name in (VIEW_OVERVIEW_CONTENT, VIEW_OVERVIEW_SUMMARY):
-			result.append(Link(context, rel=name, elements=('@@' + name,)))
+			link = Link(context, rel=name,
+						elements=('@@' + name,),
+						params={'omit_unpublished': omit_unpublished})
+			result.append(link)
 		return tuple(result)
 	return None
 
