@@ -698,12 +698,11 @@ class _NTIRelatedWorkRefDecorator(object):
             external[u'creator'] = external['byline']  # legacy
         description = external.get('description')
         if description:
-            external[u'desc'] = external[
-                'description'] = description.strip()  # legacy
+            external[u'desc'] = external['description'] = description.strip()  # legacy
         if 'target' in external:
             # legacy
-            external[
-                u'target-NTIID'] = external[u'target-ntiid'] = external['target']
+            external[u'target-ntiid'] = external['target']
+            external[u'target-NTIID'] = external['target']
         if 'type' in external:
             external[u'targetMimeType'] = external['type']
 
@@ -834,8 +833,7 @@ class _NTIVideoDecorator(_BaseMediaDecorator):
     __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
-        super(_NTIVideoDecorator, self).decorateExternalObject(
-            original, external)
+        super(_NTIVideoDecorator, self).decorateExternalObject(original, external)
         if 'closed_caption' in external:
             external[u'closedCaptions'] = external['closed_caption']  # legacy
 
