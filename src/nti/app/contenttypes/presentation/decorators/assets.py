@@ -375,7 +375,7 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 		return False
 
 	def _can_view_ref_target(self, ref):
-		target = IConcreteAsset(ref, ref)
+		target = find_object_with_ntiid(ref.target)
 		return can_view_publishable(target, self.request)
 
 	def _handle_relatedworkref_pointer(self, context, items, item, idx):
