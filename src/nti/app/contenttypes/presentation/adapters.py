@@ -14,6 +14,8 @@ from zope import interface
 
 from zope.interface.interfaces import IMethod
 
+from zope.location.interfaces import IContained
+
 from nti.appserver._adapters import _AbstractExternalFieldTraverser
 
 from nti.appserver.interfaces import IExternalFieldTraversable
@@ -25,6 +27,8 @@ from nti.assessment.interfaces import IQuestion
 from nti.assessment.interfaces import IQEvaluation
 from nti.assessment.interfaces import IQuestionSet
 from nti.assessment.interfaces import IQAssignment
+
+from nti.containers.containers import CaseInsensitiveLastModifiedBTreeContainer
 
 from nti.contenttypes.presentation import iface_of_asset
 
@@ -57,6 +61,7 @@ from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
+from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraint
 
 from nti.namedfile.constraints import FileConstraints
@@ -226,3 +231,24 @@ class _RelatedWorkRefFileConstraints(FileConstraints):
 @component.adapter(INTIMedia)
 class _MediaFileConstraints(FileConstraints):
     max_file_size = 104857600  # 100 MB
+
+
+# course
+
+
+@interface.implementer(IPresentationAssetContainer, IContained)
+class _CoursePresentationAssets(CaseInsensitiveLastModifiedBTreeContainer):
+
+    __name__ = None
+    __parent__ = None
+
+    def append(self, item):
+        self[item.ntiid] = item
+
+    def extend(self, items):
+        for item in items or ():
+            self.append(item)
+
+    def assets(self):
+        return list(self.values())
+
