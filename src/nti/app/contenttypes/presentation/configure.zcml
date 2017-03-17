@@ -73,7 +73,7 @@
 	<adapter factory=".predicates.AssignmentCompletionConstraintChecker"
 			 for="nti.contenttypes.presentation.interfaces.IAssignmentCompletionConstraint"
 			 provides=".interfaces.ILessonPublicationConstraintChecker" />
-			 
+
 	<adapter factory=".predicates.SurveyCompletionConstraintChecker"
 			 for="nti.contenttypes.presentation.interfaces.ISurveyCompletionConstraint"
 			 provides=".interfaces.ILessonPublicationConstraintChecker" />
@@ -190,6 +190,10 @@
 	<subscriber handler=".subscribers._clear_data_when_course_removed"
 				for="nti.contenttypes.courses.interfaces.ICourseInstance
 					 zope.lifecycleevent.IObjectRemovedEvent" />
+
+    <subscriber factory=".subscribers._RelatedWorkRefContentUnitAssociations"
+                provides="nti.contentlibrary.interfaces.IContentUnitAssociations"
+                for="nti.contentlibrary.interfaces.IContentUnit" />
 
 	<!-- Exporters -->
 	<utility factory=".exporter.LessonOverviewsExporter" name="015:Lesson_Overviews" />
