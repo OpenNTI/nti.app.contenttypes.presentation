@@ -420,3 +420,19 @@ class _RelatedWorkRefContentUnitAssociations(object):
                     if self._contains_unit(package, ref):
                         result.append(ref)
         return result
+
+
+@component.adapter(IContentUnit, IBeforeIdRemovedEvent)
+def _on_content_removed(unit, event):
+    """
+    Remove related work refs pointing to deleted content.
+    """
+    subscriber = _RelatedWorkRefContentUnitAssociations()
+    refs = subscriber.associations(unit)
+    for ref in refs or ():
+        # This ends up removing from group here.
+        remove_presentation_asset(ref)
+        logger.info(
+            'Removed related work ref (%s) on content deletion (%s)',
+            ref.ntiid,
+            unit.ntiid)
