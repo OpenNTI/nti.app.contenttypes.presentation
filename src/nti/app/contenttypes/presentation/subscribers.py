@@ -56,6 +56,7 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackage
 from nti.contentlibrary.interfaces import IContentUnitAssociations
+from nti.contentlibrary.interfaces import IContentPackageRemovedEvent
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
@@ -422,17 +423,31 @@ class _RelatedWorkRefContentUnitAssociations(object):
         return result
 
 
-@component.adapter(IContentUnit, IBeforeIdRemovedEvent)
-def _on_content_removed(unit, event):
+def _get_content_units_for_package(package):
+    result = []
+    def _recur(unit):
+        result.append(unit)
+        for child in unit.children:
+            _recur(child)
+    _recur(package)
+    return result
+
+
+@component.adapter(IContentPackage, IContentPackageRemovedEvent)
+def _on_content_removed(package, event):
     """
     Remove related work refs pointing to deleted content.
+    XXX: This must be a content package removed event because
+    we may churn intids during re-renders.
     """
     subscriber = _RelatedWorkRefContentUnitAssociations()
-    refs = subscriber.associations(unit)
-    for ref in refs or ():
-        # This ends up removing from group here.
-        remove_presentation_asset(ref)
-        logger.info(
-            'Removed related work ref (%s) on content deletion (%s)',
-            ref.ntiid,
-            unit.ntiid)
+    units = _get_content_units_for_package(package)
+    for unit in units:
+        refs = subscriber.associations(unit)
+        for ref in refs or ():
+            # This ends up removing from group here.
+            remove_presentation_asset(ref)
+            logger.info(
+                'Removed related work ref (%s) on content deletion (%s)',
+                ref.ntiid,
+                unit.ntiid)
