@@ -419,7 +419,7 @@ class _RelatedWorkRefContentUnitAssociations(object):
             if courses:
                 refs = self._get_course_refs(courses)
                 for ref in refs:
-                    if self._contains_unit(package, ref):
+                    if self._contains_unit(context, ref):
                         result.append(ref)
         return result
 
