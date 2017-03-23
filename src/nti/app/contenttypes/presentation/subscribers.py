@@ -55,6 +55,7 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackage
+from nti.contentlibrary.interfaces import IContentUnitRemovedEvent
 from nti.contentlibrary.interfaces import IContentUnitAssociations
 from nti.contentlibrary.interfaces import IContentPackageRemovedEvent
 
@@ -423,6 +424,25 @@ class _RelatedWorkRefContentUnitAssociations(object):
         return result
 
 
+@component.adapter(IContentUnit, IContentUnitRemovedEvent)
+def _on_content_removed(unit, event, subscriber=None):
+    """
+    Remove related work refs pointing to deleted content.
+    XXX: This must be a content removed event because
+    we may churn intids during re-renders.
+    """
+    if subscriber is None:
+        subscriber = _RelatedWorkRefContentUnitAssociations()
+    refs = subscriber.associations(unit)
+    for ref in refs or ():
+        # This ends up removing from group here.
+        remove_presentation_asset(ref)
+        logger.info(
+            'Removed related work ref (%s) on content deletion (%s)',
+            ref.ntiid,
+            unit.ntiid)
+
+
 def _get_content_units_for_package(package):
     result = []
     def _recur(unit):
@@ -434,20 +454,15 @@ def _get_content_units_for_package(package):
 
 
 @component.adapter(IContentPackage, IContentPackageRemovedEvent)
-def _on_content_removed(package, event):
+def _on_package_removed(package, event):
     """
     Remove related work refs pointing to deleted content.
     XXX: This must be a content package removed event because
     we may churn intids during re-renders.
     """
+    logger.info( 'Removed related work refs on package deletion (%s)',
+                 package.ntiid)
     subscriber = _RelatedWorkRefContentUnitAssociations()
     units = _get_content_units_for_package(package)
     for unit in units:
-        refs = subscriber.associations(unit)
-        for ref in refs or ():
-            # This ends up removing from group here.
-            remove_presentation_asset(ref)
-            logger.info(
-                'Removed related work ref (%s) on content deletion (%s)',
-                ref.ntiid,
-                unit.ntiid)
+        _on_content_removed(unit, event, subscriber=subscriber)
