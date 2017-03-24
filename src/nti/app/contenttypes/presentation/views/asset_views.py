@@ -514,8 +514,9 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		if item.__parent__ is None and packages:
 			item.__parent__ = packages[0]
 
-		containers = _add_2_container(self._course, item, packages=True)
-		namespace = containers[0] if containers else None  # first pkg
+		# Don't store in packages; this ensures we index underneath course
+		containers = _add_2_container(self._course, item, packages=False)
+		namespace = containers[0] if containers else None
 		if provided == INTISlideDeck:
 			base = item.ntiid
 
