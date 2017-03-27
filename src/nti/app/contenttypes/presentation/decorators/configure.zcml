@@ -165,6 +165,16 @@
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"
 				for="nti.contenttypes.presentation.interfaces.INTIAssignmentRef" />
 
+	<subscriber factory=".assets._AssignmentRefEditLinkDecorator"
+                provides="nti.externalization.interfaces.IExternalObjectDecorator"
+                for="nti.contenttypes.presentation.interfaces.INTIAssignmentRef
+                     pyramid.interfaces.IRequest" />
+
+    <subscriber factory=".assets._SurveyRefEditLinkDecorator"
+                provides="nti.externalization.interfaces.IExternalObjectDecorator"
+                for="nti.contenttypes.presentation.interfaces.INTISurveyRef
+                     pyramid.interfaces.IRequest" />
+
 	<subscriber factory=".assets._NTIDiscussionRefDecorator"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"
 				for="nti.contenttypes.presentation.interfaces.INTIDiscussionRef" />

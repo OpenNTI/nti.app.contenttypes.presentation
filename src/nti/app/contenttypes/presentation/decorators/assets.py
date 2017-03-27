@@ -20,6 +20,8 @@ from zope.location.interfaces import ILocation
 
 from pyramid.interfaces import IRequest
 
+from nti.app.assessment.decorators.assignment import AssessmentPolicyEditLinkDecorator
+
 from nti.app.contenttypes.presentation.decorators import LEGACY_UAS_40
 from nti.app.contenttypes.presentation.decorators import VIEW_ORDERED_CONTENTS
 
@@ -671,6 +673,26 @@ class _NTIAssignmentRefDecorator(_BaseAssetDecorator):
         super(_NTIAssignmentRefDecorator, self).decorateExternalObject(original, external)
         if 'containerId' in external:
             external[u'ContainerId'] = external.pop('containerId')
+
+
+@interface.implementer(IExternalMappingDecorator)
+class _AssessmentRefEditLinkDecorator(AssessmentPolicyEditLinkDecorator):
+    """
+    Give editors and instructors policy edit links on assessment refs.
+    """
+
+    def get_context(self, context):
+        return find_object_with_ntiid(context.target)
+
+
+@interface.implementer(IExternalMappingDecorator)
+class _AssignmentRefEditLinkDecorator(_AssessmentRefEditLinkDecorator):
+    pass
+
+
+@interface.implementer(IExternalMappingDecorator)
+class _SurveyRefEditLinkDecorator(_AssessmentRefEditLinkDecorator):
+    pass
 
 
 @component.adapter(INTIDiscussionRef)
