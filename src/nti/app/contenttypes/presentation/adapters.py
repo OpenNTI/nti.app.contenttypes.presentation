@@ -251,4 +251,3 @@ class _CoursePresentationAssets(CaseInsensitiveLastModifiedBTreeContainer):
 
     def assets(self):
         return list(self.values())
-
