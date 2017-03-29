@@ -84,10 +84,8 @@ from nti.contenttypes.presentation.media import NTIVideoRoll
 
 from nti.contenttypes.presentation.utils import create_lessonoverview_from_external
 
-from nti.coremetadata.interfaces import IRecordable
 from nti.coremetadata.interfaces import IPublishable
 from nti.coremetadata.interfaces import ICalendarPublishable
-from nti.coremetadata.interfaces import IRecordableContainer
 
 from nti.externalization.externalization import to_external_object
 
@@ -106,6 +104,9 @@ from nti.ntiids.ntiids import is_ntiid_of_type
 from nti.ntiids.ntiids import make_provider_safe
 from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
+
+from nti.recorder.interfaces import IRecordable
+from nti.recorder.interfaces import IRecordableContainer
 
 from nti.recorder.record import copy_transaction_history
 from nti.recorder.record import remove_transaction_history

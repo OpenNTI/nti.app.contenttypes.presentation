@@ -96,8 +96,6 @@ from nti.contenttypes.presentation.interfaces import IWillRemovePresentationAsse
 from nti.contenttypes.presentation.interfaces import ItemRemovedFromItemAssetContainerEvent
 from nti.contenttypes.presentation.interfaces import IItemRemovedFromItemAssetContainerEvent
 
-from nti.coremetadata.interfaces import IRecordable
-
 from nti.coremetadata.utils import current_principal as core_current_principal
 
 from nti.externalization.interfaces import StandardExternalFields
@@ -108,6 +106,8 @@ from nti.externalization.oids import to_external_ntiid_oid
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.recorder.interfaces import TRX_TYPE_CREATE
+
+from nti.recorder.interfaces import IRecordable
 
 from nti.recorder.record import remove_transaction_history
 
