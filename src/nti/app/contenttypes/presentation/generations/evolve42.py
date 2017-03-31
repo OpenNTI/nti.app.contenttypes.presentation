@@ -69,7 +69,7 @@ def _process_site(current, intids, seen):
     with current_site(current):
         catalog = component.queryUtility(ICourseCatalog)
         if catalog is None or catalog.isEmpty():
-            return
+            return result
         for entry in catalog.iterCatalogEntries():
             course = ICourseInstance(entry, None)
             doc_id = intids.queryId(course)
