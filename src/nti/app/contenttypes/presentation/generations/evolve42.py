@@ -18,6 +18,8 @@ from zope.component.hooks import site as current_site
 
 from zope.intid.interfaces import IIntIds
 
+from nti.contentlibrary.interfaces import IContentPackageLibrary
+
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
@@ -92,6 +94,10 @@ def do_evolve(context, generation=generation):
     with current_site(ds_folder):
         assert component.getSiteManager() == ds_folder.getSiteManager(), \
                "Hooks not installed?"
+
+        library = component.queryUtility(IContentPackageLibrary)
+        if library is not None:
+            library.syncContentPackages()
 
         seen = set()
         lsm = ds_folder.getSiteManager()
