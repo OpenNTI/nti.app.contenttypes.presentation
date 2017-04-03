@@ -125,6 +125,7 @@ ITEMS = StandardExternalFields.ITEMS
 def current_principal():
     return core_current_principal(False)
 
+
 # courses
 
 
@@ -206,8 +207,9 @@ def _on_item_asset_containter_modified(container, event):
 @component.adapter(IPresentationAsset, IPresentationAssetCreatedEvent)
 def _on_presentation_asset_created(asset, event):
     if IRecordable.providedBy(asset) and event.principal:
-        record_transaction(
-            asset, principal=event.principal, type_=TRX_TYPE_CREATE)
+        record_transaction(asset, 
+                           principal=event.principal,
+                           type_=TRX_TYPE_CREATE)
 
 
 @component.adapter(INTICourseOverviewGroup, IOverviewGroupMovedEvent)
@@ -261,8 +263,7 @@ def _on_will_remove_presentation_asset(asset, event):
         for container in containers:
             if IItemAssetContainer.providedBy(container) and container.remove(asset):
                 # XXX: notify the item asset container has been modified
-                notify(
-                    ItemRemovedFromItemAssetContainerEvent(container, asset))
+                notify(ItemRemovedFromItemAssetContainerEvent(container, asset))
             else:
                 mapping = IPresentationAssetContainer(container, None)
                 if mapping is not None:
@@ -335,11 +336,12 @@ def _on_assignment_removed(assignment, event):
     ntiid = getattr(assignment, 'ntiid', None)
     courses = get_evaluation_courses(assignment)
     registry = get_site_registry()
-    if 	   not ntiid \
+    if     not ntiid \
         or not courses \
         or current_principal() is None \
         or registry == component.getGlobalSiteManager():
         return
+
     # Get all overview groups for course.
     container_ntiids = [ICourseCatalogEntry(x).ntiid for x in courses]
     catalog = get_library_catalog()
@@ -350,21 +352,21 @@ def _on_assignment_removed(assignment, event):
                                           sites=sites))
     for group in groups:
         for item in tuple(group):
-            if 		INTIAssignmentRef.providedBy(item) \
+            if      INTIAssignmentRef.providedBy(item) \
                 and assignment.ntiid == getattr(item, 'target', ''):
                 # This ends up removing from group here.
                 remove_presentation_asset(item, registry)
                 count += 1
     if count:
-        logger.info(
-            'Removed assignment (%s) from %s overview group(s)', ntiid, count)
+        logger.info('Removed assignment (%s) from %s overview group(s)', 
+                    ntiid, count)
 
 
 @component.adapter(IQEvaluation, IObjectModifiedEvent)
 def _on_evaluation_modified(evaluation, event):
     ntiid = getattr(evaluation, 'ntiid', None)
     course = find_interface(evaluation, ICourseInstance, strict=False)
-    if 	   not ntiid \
+    if not ntiid \
         or course is None \
         or current_principal() is None \
         or not IQEditableEvaluation.providedBy(evaluation) \
@@ -376,8 +378,10 @@ def _on_evaluation_modified(evaluation, event):
     catalog = get_library_catalog()
     sites = get_component_hierarchy_names()
     ntiid = ICourseCatalogEntry(course).ntiid
-    provided = (
-        INTIAssignmentRef, INTIQuestionSetRef, INTISurveyRef, INTIPollRef)
+
+    # update question counts
+    provided = (INTIAssignmentRef, INTIQuestionSetRef, 
+                INTISurveyRef, INTIPollRef)
     items = catalog.search_objects(provided=provided,
                                    container_ntiids=ntiid,
                                    sites=sites)
@@ -385,10 +389,10 @@ def _on_evaluation_modified(evaluation, event):
         target = getattr(item, 'target', '')
         if target == ntiid:
             item.title = evaluation.title or item.title
-            if 	   INTIQuestionSetRef.providedBy(item) \
+            if     INTIQuestionSetRef.providedBy(item) \
                 or INTISurveyRef.providedBy(item):
-                item.question_count =  getattr( evaluation, 'draw', None ) \
-                					or len(evaluation.questions or ())
+                item.question_count = getattr(evaluation, 'draw', None) \
+                                   or len(evaluation.questions or ())
 
 
 @component.adapter(IContentUnit)
@@ -417,8 +421,7 @@ class _RelatedWorkRefContentUnitAssociations(object):
         if package is not None:
             courses = get_courses_for_packages(packages=(package.ntiid,))
             if courses:
-                refs = self._get_course_refs(courses)
-                for ref in refs:
+                for ref in self._get_course_refs(courses):
                     if self._contains_unit(context, ref):
                         result.append(ref)
         return result
@@ -437,10 +440,9 @@ def _on_content_removed(unit, event, subscriber=None):
     for ref in refs or ():
         # This ends up removing from group here.
         remove_presentation_asset(ref)
-        logger.info(
-            'Removed related work ref (%s) on content deletion (%s)',
-            ref.ntiid,
-            unit.ntiid)
+        logger.info('Removed related work ref (%s) on content deletion (%s)',
+                    ref.ntiid,
+                    unit.ntiid)
 
 
 def _get_content_units_for_package(package):
@@ -460,8 +462,8 @@ def _on_package_removed(package, event):
     XXX: This must be a content package removed event because
     we may churn intids during re-renders.
     """
-    logger.info( 'Removed related work refs on package deletion (%s)',
-                 package.ntiid)
+    logger.info('Removed related work refs on package deletion (%s)',
+                package.ntiid)
     subscriber = _RelatedWorkRefContentUnitAssociations()
     units = _get_content_units_for_package(package)
     for unit in units:
