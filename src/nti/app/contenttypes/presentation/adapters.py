@@ -242,6 +242,22 @@ class _CoursePresentationAssets(CaseInsensitiveLastModifiedBTreeContainer):
     __name__ = None
     __parent__ = None
 
+    def __setitem__(self, key, value):
+        parent = value.__parent__ # save parent
+        try:
+            CaseInsensitiveLastModifiedBTreeContainer.__setitem__(self, key, value)
+        finally:
+            value.__parent__ = parent # restore parent
+        
+    def __delitem__(self, key):
+        value = self[key]
+        parent = value.__parent__ # save parent
+        try:
+            value.__parent__ = self
+            CaseInsensitiveLastModifiedBTreeContainer.__delitem__(self, key)
+        finally:
+            value.__parent__ = parent # restore parent
+
     def append(self, item):
         self[item.ntiid] = item
 
