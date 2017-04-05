@@ -28,7 +28,7 @@ from nti.assessment.interfaces import IQEvaluation
 from nti.assessment.interfaces import IQuestionSet
 from nti.assessment.interfaces import IQAssignment
 
-from nti.containers.containers import CaseInsensitiveLastModifiedBTreeContainer
+from nti.containers.containers import NOOwnershipLastModifiedBTreeContainer
 
 from nti.contenttypes.presentation import iface_of_asset
 
@@ -237,26 +237,10 @@ class _MediaFileConstraints(FileConstraints):
 
 
 @interface.implementer(IPresentationAssetContainer, IContained)
-class _CoursePresentationAssets(CaseInsensitiveLastModifiedBTreeContainer):
+class _CoursePresentationAssets(NOOwnershipLastModifiedBTreeContainer):
 
     __name__ = None
     __parent__ = None
-
-    def __setitem__(self, key, value):
-        parent = value.__parent__ # save parent
-        try:
-            CaseInsensitiveLastModifiedBTreeContainer.__setitem__(self, key, value)
-        finally:
-            value.__parent__ = parent # restore parent
-        
-    def __delitem__(self, key):
-        value = self[key]
-        parent = value.__parent__ # save parent
-        try:
-            value.__parent__ = self
-            CaseInsensitiveLastModifiedBTreeContainer.__delitem__(self, key)
-        finally:
-            value.__parent__ = parent # restore parent
 
     def append(self, item):
         self[item.ntiid] = item
