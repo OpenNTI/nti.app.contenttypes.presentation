@@ -18,10 +18,13 @@ from zope.component.hooks import site as current_site
 
 from zope.intid.interfaces import IIntIds
 
+from nti.contentlibrary.indexed_data import get_library_catalog
+
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
@@ -50,6 +53,8 @@ class MockDataserver(object):
 
 def process_course(course, intids):
     result = 0
+    catalog = get_library_catalog()
+    entry =  ICourseCatalogEntry(course)
     course_container = IPresentationAssetContainer(course)
     for package in get_course_packages(course):
         # only look at root
@@ -61,7 +66,10 @@ def process_course(course, intids):
                 if doc_id is None:
                     course_container.pop(asset.ntiid, None)
                 elif asset.ntiid not in course_container:
+                    asset.__parent__ = course
                     course_container.append(asset)
+                    catalog.update_containers(asset, 
+                                              containers=(entry.ntiid,))
                     result += 1
     return result
 
