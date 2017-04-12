@@ -18,6 +18,8 @@ from nti.app.authentication import get_remote_user
 
 from nti.app.contenttypes.presentation.utils import is_item_visible
 
+from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_courses
+
 from nti.appserver.pyramid_authorization import has_permission
 
 from nti.contentlibrary.indexed_data import get_library_catalog
@@ -91,5 +93,9 @@ class _AssetVisibleSearchPredicate(DefaultSearchHitPredicate):
     def allow(self, item, unused_score, query):
         user = get_remote_user()
         if IVisible.providedBy(item):
-            return is_item_visible(item, user)
+            courses = get_presentation_asset_courses(item)
+            for course in courses or ():
+                if is_item_visible(item, user, context=course):
+                    return True
+            return False
         return True
