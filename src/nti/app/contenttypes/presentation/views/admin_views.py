@@ -203,6 +203,8 @@ class SyncPresentationAssetsView(_AbstractSyncAllLibrariesView):
     def _do_call(self):
         now = time.time()
         result = LocatedExternalDict()
+        items = result[ITEMS] = self._process_course(self.context)
+        result[ITEM_COUNT] = result[TOTAL] = len(items)
         result['SyncTime'] = time.time() - now
         return result
 
