@@ -120,8 +120,8 @@ def _read_input(request):
 class GetCoursePresentationAssetsView(AbstractAuthenticatedView):
 
     def _found(self, x):
-        ntiid = x.ntiid
-        return ntiid and component.queryUtility(ICoursePresentationAsset, name=ntiid) != None
+        ntiid = x.ntiid or u''
+        return component.queryUtility(ICoursePresentationAsset, name=ntiid) != None
 
     def __call__(self):
         total = 0
@@ -325,9 +325,12 @@ class FixImportCourseReferences(AbstractAuthenticatedView):
         course = ICourseInstance(self.context)
         course_filer = get_course_filer(course)
         source_filer = DirectoryFiler(course.root.absolute_path)
-        disc_change = self._update_discussions(
-            course, source_filer, course_filer)
-        asset_change = self._update_assets(course, source_filer, course_filer)
+        disc_change = self._update_discussions(course,
+                                               source_filer,
+                                               course_filer)
+        asset_change = self._update_assets(course,
+                                           source_filer,
+                                           course_filer)
         result['DiscussionChangeCount'] = disc_change
         result['AssetChangeCount'] = asset_change
         result[ITEM_COUNT] = result[TOTAL] = asset_change + disc_change
