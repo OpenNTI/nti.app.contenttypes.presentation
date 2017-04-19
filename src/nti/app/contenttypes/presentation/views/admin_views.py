@@ -198,7 +198,7 @@ class SyncPresentationAssetsView(_AbstractSyncAllLibrariesView):
         course = ICourseInstance(context)
         folder = find_interface(course, IHostPolicyFolder, strict=False)
         with current_site(get_host_site(folder.__name__)):
-            synchronize_course_lesson_overview(course)
+            return synchronize_course_lesson_overview(course)
 
     def _do_call(self):
         now = time.time()
