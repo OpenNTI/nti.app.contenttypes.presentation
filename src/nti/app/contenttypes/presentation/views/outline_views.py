@@ -673,9 +673,8 @@ class AssetByOutlineNodeView(AbstractAuthenticatedView):
 		return not IPublishable.providedBy(obj) or obj.is_published()
 
 	def _is_visible(self, item, course, record):
-		return 		not IVisible.providedBy(item) \
-				or  is_item_visible(item, self.remoteUser,
-									context=course, record=record)
+		return is_item_visible(item, self.remoteUser,
+							   context=course, record=record)
 
 	def _include(self, item, course, record):
 		return		self.mime_filter.include(item) \

@@ -16,6 +16,8 @@ from zope.interface.interfaces import IMethod
 
 from zope.location.interfaces import IContained
 
+from nti.app.contenttypes.presentation.utils import is_item_visible
+
 from nti.appserver._adapters import _AbstractExternalFieldTraverser
 
 from nti.appserver.interfaces import IExternalFieldTraversable
@@ -62,7 +64,10 @@ from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
+from nti.contenttypes.presentation.interfaces import IUserAssetVisibilityUtility
 from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraint
+
+from nti.dataserver.interfaces import IUser
 
 from nti.namedfile.constraints import FileConstraints
 
@@ -251,3 +256,20 @@ class _CoursePresentationAssets(NOOwnershipLastModifiedBTreeContainer):
 
     def assets(self):
         return list(self.values())
+
+
+@component.adapter(IUser, ICourseInstance)
+@interface.implementer(IUserAssetVisibilityUtility)
+class _UserAssetVisibilityUtility(object):
+
+    def __init__(self, user, course):
+        self.user = user
+        self.course = course
+
+    def is_item_visible(self, item, user=None, course=None):
+        """
+        :return: a bool if the item is visible to the user.
+        """
+        user = user if user is not None else self.user
+        course = course if course is not None else self.course
+        return is_item_visible(item, user, course)

@@ -78,6 +78,11 @@
 			 for="nti.contenttypes.presentation.interfaces.ISurveyCompletionConstraint"
 			 provides=".interfaces.ILessonPublicationConstraintChecker" />
 
+    <adapter factory=".adapters._UserAssetVisibilityUtility"
+             for="nti.dataserver.interfaces.IUser
+                  nti.contenttypes.courses.interfaces.ICourseInstance"
+             provides="nti.contenttypes.presentation.interfaces.IUserAssetVisibilityUtility" />
+
 	<!-- Subscribers -->
 	<subscriber factory=".predicates.LessonPublishablePredicate"
 				provides="nti.coremetadata.interfaces.ICalendarPublishablePredicate" />

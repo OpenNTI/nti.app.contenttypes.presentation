@@ -62,6 +62,7 @@ from nti.contenttypes.presentation.interfaces import CREDIT
 from nti.contenttypes.presentation.interfaces import EVERYONE
 from nti.contenttypes.presentation.interfaces import PURCHASED
 
+from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IPresentationVisibility
 
 from nti.coremetadata.utils import current_principal
@@ -113,6 +114,9 @@ def _get_scope(user, context, record):
 
 
 def is_item_visible(item, user, context=None, record=None):
+    result = True
+    if not IVisible.providedBy(item):
+        return result
     context = item if context is None else context
     user_visibility = get_user_visibility(user)
     # If it has non-everyone visibility, unequal to our user's, check scope.
@@ -124,4 +128,4 @@ def is_item_visible(item, user, context=None, record=None):
             # Our item is scoped and not-visible to us, but editors always have
             # access.
             return has_permission(ACT_CONTENT_EDIT, context)
-    return True
+    return result
