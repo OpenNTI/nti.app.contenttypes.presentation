@@ -32,8 +32,6 @@ from nti.app.products.courseware.resources.utils import get_course_filer
 
 from nti.app.products.courseware.utils import transfer_resources_from_filer
 
-from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
-
 from nti.app.contenttypes.presentation.synchronizer import can_be_removed
 from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
 from nti.app.contenttypes.presentation.synchronizer import synchronize_course_lesson_overview
@@ -177,10 +175,9 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView):
                renderer='rest',
                permission=nauth.ACT_SYNC_LIBRARY,
                name='RemoveInvalidPresentationAssets')
-class RemoveInvalidPresentationAssetsView(AbstractAuthenticatedView,
-                                          ModeledContentUploadRequestUtilsMixin):
+class RemoveInvalidPresentationAssetsView(_AbstractSyncAllLibrariesView):
 
-    def __call__(self):
+    def _do_call(self):
         result = LocatedExternalDict()
         endInteraction()
         try:
