@@ -16,6 +16,8 @@ from zope.component.hooks import site as current_site
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
+from nti.contentlibrary.interfaces import IContentPackage
+
 from nti.contenttypes.courses.interfaces import NTIID_ENTRY_TYPE
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -54,10 +56,12 @@ def get_containers(ntiids=()):
 
 def get_courses(ntiids=()):
     result = set()
+    content_ntiids = set()
     for ntiid in ntiids or ():
         # As shortcut, we only want our entry types. This
         # prevents expensive lookups of content units.
         if not is_ntiid_of_type(ntiid, NTIID_ENTRY_TYPE):
+            content_ntiids.add(ntiid)
             continue
         course = None
         context = find_object_with_ntiid(ntiid)
@@ -66,6 +70,14 @@ def get_courses(ntiids=()):
             course = ICourseInstance(context, None)
         if course is not None:
             result.add(course)
+    if not result:
+        # If not courses, see if we can resolve via content.
+        for content_ntiid in content_ntiids:
+            context = find_object_with_ntiid(content_ntiid)
+            if IContentPackage.providedBy(context):
+                course = ICourseInstance(context, None)
+                if course is not None:
+                    result.add(course)
     return result
 
 
