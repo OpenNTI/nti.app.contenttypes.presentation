@@ -72,6 +72,8 @@ from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.dataserver import authorization as nauth
 
+from nti.dataserver.interfaces import IDataserverFolder
+
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 
@@ -226,6 +228,7 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
         return result
 
 
+@view_config(context=IDataserverFolder)
 @view_config(context=CourseAdminPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
