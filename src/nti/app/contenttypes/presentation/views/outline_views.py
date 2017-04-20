@@ -1035,8 +1035,7 @@ class SyncLockOutlineView(AbstractAuthenticatedView,
     """
 
     def readInput(self, value=None):
-        result = ModeledContentUploadRequestUtilsMixin.readInput(
-            self, value=value)
+        result = super(SyncLockOutlineView, self).readInput(value)
         return CaseInsensitiveDict(result)
 
     def _get_nodes(self, outline):
