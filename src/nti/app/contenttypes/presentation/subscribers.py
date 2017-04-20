@@ -90,6 +90,7 @@ from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import IPresentationAssetCreatedEvent
 from nti.contenttypes.presentation.interfaces import IWillRemovePresentationAssetEvent
@@ -207,7 +208,7 @@ def _on_item_asset_containter_modified(container, event):
 @component.adapter(IPresentationAsset, IPresentationAssetCreatedEvent)
 def _on_presentation_asset_created(asset, event):
     if IRecordable.providedBy(asset) and event.principal:
-        record_transaction(asset, 
+        record_transaction(asset,
                            principal=event.principal,
                            type_=TRX_TYPE_CREATE)
 
@@ -358,7 +359,7 @@ def _on_assignment_removed(assignment, event):
                 remove_presentation_asset(item, registry)
                 count += 1
     if count:
-        logger.info('Removed assignment (%s) from %s overview group(s)', 
+        logger.info('Removed assignment (%s) from %s overview group(s)',
                     ntiid, count)
 
 
@@ -380,7 +381,7 @@ def _on_evaluation_modified(evaluation, event):
     ntiid = ICourseCatalogEntry(course).ntiid
 
     # update question counts
-    provided = (INTIAssignmentRef, INTIQuestionSetRef, 
+    provided = (INTIAssignmentRef, INTIQuestionSetRef,
                 INTISurveyRef, INTIPollRef)
     items = catalog.search_objects(provided=provided,
                                    container_ntiids=ntiid,
@@ -427,6 +428,18 @@ class _RelatedWorkRefContentUnitAssociations(object):
         return result
 
 
+def _get_ref_pointers(ref):
+    """
+    For a related work ref, find all pointers to it.
+    """
+    catalog = get_library_catalog()
+    sites = get_component_hierarchy_names()
+    pointers = tuple(catalog.search_objects(provided=INTIRelatedWorkRefPointer,
+                                            target=ref.ntiid,
+                                            sites=sites))
+    return pointers
+
+
 @component.adapter(IContentUnit, IContentUnitRemovedEvent)
 def _on_content_removed(unit, event, subscriber=None):
     """
@@ -438,11 +451,17 @@ def _on_content_removed(unit, event, subscriber=None):
         subscriber = _RelatedWorkRefContentUnitAssociations()
     refs = subscriber.associations(unit)
     for ref in refs or ():
+        ref_ntiid = ref.ntiid
+        # Must get these before deleting ref.
+        pointers = _get_ref_pointers(ref)
         # This ends up removing from group here.
         remove_presentation_asset(ref)
-        logger.info('Removed related work ref (%s) on content deletion (%s)',
-                    ref.ntiid,
-                    unit.ntiid)
+        for pointer in pointers:
+            remove_presentation_asset(pointer)
+        logger.info('Removed related work ref (%s) on content deletion (%s) (pointers=%s)',
+                    ref_ntiid,
+                    unit.ntiid,
+                    len(pointers))
 
 
 def _get_content_units_for_package(package):
