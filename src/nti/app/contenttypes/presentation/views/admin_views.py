@@ -72,8 +72,6 @@ from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.dataserver import authorization as nauth
 
-from nti.dataserver.interfaces import IDataserverFolder
-
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 
@@ -110,7 +108,6 @@ def _read_input(request):
     return result
 
 
-@view_config(context=IDataserverFolder)
 @view_config(context=CourseAdminPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
@@ -209,7 +206,6 @@ class SyncPresentationAssetsView(_AbstractSyncAllLibrariesView):
         return result
 
 
-@view_config(context=IDataserverFolder)
 @view_config(context=CourseAdminPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
@@ -230,7 +226,6 @@ class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
         return result
 
 
-@view_config(context=IDataserverFolder)
 @view_config(context=CourseAdminPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
@@ -251,7 +246,7 @@ class RemoveInvalidPresentationAssetsView(AbstractAuthenticatedView,
 
 @view_config(route_name='objects.generic.traversal',
              renderer='rest',
-             context=IDataserverFolder,
+             context=CourseAdminPathAdapter,
              permission=nauth.ACT_NTI_ADMIN,
              name='OutlineObjectCourseResolver')
 class OutlineObjectCourseResolverView(AbstractAuthenticatedView):
