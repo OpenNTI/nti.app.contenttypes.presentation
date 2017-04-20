@@ -208,6 +208,7 @@ class SyncPresentationAssetsView(_AbstractSyncAllLibrariesView):
         return result
 
 
+@view_config(context=IDataserverFolder)
 @view_config(context=CourseAdminPathAdapter)
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
