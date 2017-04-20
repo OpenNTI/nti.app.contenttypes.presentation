@@ -1339,13 +1339,6 @@ class TestAssetViews(ApplicationLayerTest):
         assert_that(lesson_media, contains(video_ntiid))
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
-    def test_get_course_presentation_assets(self):
-        href = '/dataserver2/@@GetCoursePresentationAssets'
-        params = {'ntiid': self.course_ntiid}
-        res = self.testapp.get(href, params)
-        assert_that(res.json_body, has_entry('Total', is_(71)))
-
-    @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_removing_refs(self):
         assignment_ntiid = "tag:nextthought.com,2011-10:OU-NAQ-CS1323_F_2015_Intro_to_Computer_Programming.naq.asg.assignment:iClicker_8_26"
         admin_environ = self._make_extra_environ(username=self.default_username)

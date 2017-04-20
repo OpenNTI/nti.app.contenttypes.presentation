@@ -9,7 +9,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-import six
 import time
 
 from requests.structures import CaseInsensitiveDict
@@ -33,15 +32,12 @@ from nti.app.products.courseware.resources.utils import get_course_filer
 
 from nti.app.products.courseware.utils import transfer_resources_from_filer
 
-from nti.app.externalization.internalization import read_body_as_external_object
-
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
 from nti.app.contenttypes.presentation.synchronizer import can_be_removed
 from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
 from nti.app.contenttypes.presentation.synchronizer import synchronize_course_lesson_overview
 
-from nti.app.contenttypes.presentation.utils import yield_sync_courses
 from nti.app.contenttypes.presentation.utils import remove_presentation_asset
 
 from nti.app.contenttypes.presentation.utils.common import course_assets
@@ -67,8 +63,6 @@ from nti.contenttypes.courses.utils import get_course_hierarchy
 from nti.contenttypes.presentation import iface_of_asset
 
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
-from nti.contenttypes.presentation.interfaces import ICoursePresentationAsset
-from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.dataserver import authorization as nauth
 
@@ -90,54 +84,6 @@ from nti.traversal.traversal import find_interface
 ITEMS = StandardExternalFields.ITEMS
 TOTAL = StandardExternalFields.TOTAL
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
-
-
-def _get_course_ntiids(values):
-    ntiids = values.get('ntiid') or values.get('ntiids')
-    if ntiids and isinstance(ntiids, six.string_types):
-        ntiids = ntiids.split()
-    return ntiids
-
-
-def _read_input(request):
-    result = CaseInsensitiveDict()
-    if request:
-        if request.body:
-            values = read_body_as_external_object(request)
-        else:
-            values = request.params
-        result.update(values)
-    return result
-
-
-@view_config(context=CourseAdminPathAdapter)
-@view_defaults(route_name='objects.generic.traversal',
-               renderer='rest',
-               request_method='GET',
-               permission=nauth.ACT_NTI_ADMIN,
-               name='GetCoursePresentationAssets')
-class GetCoursePresentationAssetsView(AbstractAuthenticatedView):
-
-    def _found(self, x):
-        ntiid = x.ntiid or u''
-        return component.queryUtility(ICoursePresentationAsset, name=ntiid) != None
-
-    def __call__(self):
-        total = 0
-        params = CaseInsensitiveDict(self.request.params)
-        ntiids = _get_course_ntiids(params)
-        result = LocatedExternalDict()
-        result[ITEMS] = items = {}
-        for course in yield_sync_courses(ntiids):
-            entry = ICourseCatalogEntry(course)
-            container = IPresentationAssetContainer(course)
-            items[entry.ntiid] = sorted((x for x in container.values() if self._found(x)),
-                                        key=lambda x: x.__class__.__name__)
-            total += len(items[entry.ntiid])
-
-        self.request.acl_decoration = False
-        result[ITEM_COUNT] = result[TOTAL] = total
-        return result
 
 
 @view_config(context=ICourseInstance)
@@ -214,11 +160,7 @@ class SyncPresentationAssetsView(_AbstractSyncAllLibrariesView):
                renderer='rest',
                permission=nauth.ACT_SYNC_LIBRARY,
                name='RemoveCourseInaccessibleAssets')
-class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView,
-                                         ModeledContentUploadRequestUtilsMixin):
-
-    def readInput(self, value=None):
-        return _read_input(self.request)
+class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView):
 
     def __call__(self):
         endInteraction()

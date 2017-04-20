@@ -47,92 +47,97 @@ TOTAL = StandardExternalFields.TOTAL
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 
+
 @view_config(context=ICourseInstance)
 @view_config(context=ICourseCatalogEntry)
 @view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   name=VIEW_ASSETS,
-			   request_method='GET',
-			   permission=nauth.ACT_CONTENT_EDIT)
-class CoursePresentationAssetsView(AbstractAuthenticatedView, BatchingUtilsMixin):
+               renderer='rest',
+               name=VIEW_ASSETS,
+               request_method='GET',
+               permission=nauth.ACT_CONTENT_EDIT)
+class CoursePresentationAssetsView(AbstractAuthenticatedView, 
+								   BatchingUtilsMixin):
 
-	def _get_mimeTypes(self):
-		params = CaseInsensitiveDict(self.request.params)
-		accept = params.get('accept') or params.get('mimeTypes') or u''
-		accept = accept.split(',') if accept else ()
-		if accept and '*/*' not in accept:
-			accept = {e.strip().lower() for e in accept if e}
-			accept.discard(u'')
-		else:
-			accept = ()
-		return accept
+    def _get_mimeTypes(self):
+        params = CaseInsensitiveDict(self.request.params)
+        accept = params.get('accept') or params.get('mimeTypes') or u''
+        accept = accept.split(',') if accept else ()
+        if accept and '*/*' not in accept:
+            accept = {e.strip().lower() for e in accept if e}
+            accept.discard(u'')
+        else:
+            accept = ()
+        return accept
 
-	def _pkg_containers(self, pacakge):
-		result = []
-		def recur(unit):
-			for child in unit.children or ():
-				recur(child)
-			result.append(unit.ntiid)
-		recur(pacakge)
-		return result
+    def _pkg_containers(self, pacakge):
+        result = []
 
-	def _course_containers(self, course):
-		result = set()
-		entry = ICourseCatalogEntry(course)
-		for pacakge in get_course_packages(course):
-			result.update(self._pkg_containers(pacakge))
-		result.add(entry.ntiid)
-		return result
+        def recur(unit):
+            for child in unit.children or ():
+                recur(child)
+            result.append(unit.ntiid)
+        recur(pacakge)
+        return result
 
-	def _check_mimeType(self, item, mimeTypes=()):
-		if not mimeTypes:
-			return True
-		else:
-			item = IContentTypeAware(item, item)
-			mt = getattr(item, 'mimeType', None) or getattr(item, 'mime_type', None)
-			if mt in mimeTypes:
-				return True
-		return False
+    def _course_containers(self, course):
+        result = set()
+        entry = ICourseCatalogEntry(course)
+        for pacakge in get_course_packages(course):
+            result.update(self._pkg_containers(pacakge))
+        result.add(entry.ntiid)
+        return result
 
-	def _isBatching(self):
-		size, start = self._get_batch_size_start()
-		return bool(size is not None and start is not None)
+    def _check_mimeType(self, item, mimeTypes=()):
+        if not mimeTypes:
+            return True
+        else:
+            item = IContentTypeAware(item, item)
+            mt = getattr(item, 'mimeType', None) \
+              or getattr(item, 'mime_type', None)
+            if mt in mimeTypes:
+                return True
+        return False
 
-	def _yield_course_items(self, course, mimeTypes=()):
-		catalog = get_library_catalog()
-		intids = component.getUtility(IIntIds)
-		container_ntiids = self._course_containers(course)
-		for item in catalog.search_objects(intids=intids,
-										   container_all_of=False,
-										   container_ntiids=container_ntiids,
-										   sites=get_component_hierarchy_names(),
-										   provided=ALL_PRESENTATION_ASSETS_INTERFACES):
-			if self._check_mimeType(item, mimeTypes):
-				yield item
+    def _isBatching(self):
+        size, start = self._get_batch_size_start()
+        return bool(size is not None and start is not None)
 
-	def _do_call(self):
-		batching = self._isBatching()
-		result = LocatedExternalDict()
-		result.__name__ = self.request.view_name
-		result.__parent__ = self.request.context
-		self.request.acl_decoration = not batching  # decoration
+    def _yield_course_items(self, course, mimeTypes=()):
+        catalog = get_library_catalog()
+        intids = component.getUtility(IIntIds)
+        container_ntiids = self._course_containers(course)
+        for item in catalog.search_objects(intids=intids,
+                                           container_all_of=False,
+                                           container_ntiids=container_ntiids,
+                                           sites=get_component_hierarchy_names(),
+                                           provided=ALL_PRESENTATION_ASSETS_INTERFACES):
+            if self._check_mimeType(item, mimeTypes):
+                yield item
 
-		mimeTypes = self._get_mimeTypes()
-		course = ICourseInstance(self.context)
+    def _do_call(self):
+        batching = self._isBatching()
+        result = LocatedExternalDict()
+        result.__name__ = self.request.view_name
+        result.__parent__ = self.request.context
+        self.request.acl_decoration = not batching  # decoration
 
-		result[ITEMS] = items = []
-		items.extend(x for x in self._yield_course_items(course, mimeTypes))
-		items.sort()  # natural order
-		lastModified = reduce(lambda x, y: max(x, getattr(y, 'lastModified', 0)), items, 0)
+        mimeTypes = self._get_mimeTypes()
+        course = ICourseInstance(self.context)
 
-		if batching:
-			self._batch_items_iterable(result, items)
-		else:
-			result[ITEM_COUNT] = len(items)
+        result[ITEMS] = items = []
+        items.extend(x for x in self._yield_course_items(course, mimeTypes))
+        items.sort()  # natural order
+        lastModified = reduce(lambda x, y: 
+							  max(x, getattr(y, 'lastModified', 0)), items, 0)
 
-		result[TOTAL] = len(items)
-		result[LAST_MODIFIED] = result.lastModified = lastModified
-		return result
+        if batching:
+            self._batch_items_iterable(result, items)
+        else:
+            result[ITEM_COUNT] = len(items)
 
-	def __call__(self):
-		return self._do_call()
+        result[TOTAL] = len(items)
+        result[LAST_MODIFIED] = result.lastModified = lastModified
+        return result
+
+    def __call__(self):
+        return self._do_call()
