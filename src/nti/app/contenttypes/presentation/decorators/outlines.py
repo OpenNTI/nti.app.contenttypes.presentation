@@ -14,6 +14,8 @@ from urlparse import urljoin
 from zope import component
 from zope import interface
 
+from zope.cachedescriptors.property import Lazy
+
 from zope.location.interfaces import ILocation
 
 from pyramid.threadlocal import get_current_request
@@ -54,8 +56,6 @@ from nti.externalization.interfaces import IExternalMappingDecorator
 from nti.links import render_link
 
 from nti.links.links import Link
-
-from nti.property.property import Lazy
 
 LINKS = StandardExternalFields.LINKS
 

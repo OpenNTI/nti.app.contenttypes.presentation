@@ -13,6 +13,8 @@ import os
 
 from zope import interface
 
+from zope.cachedescriptors.property import Lazy
+
 from zope.component.hooks import site as current_site
 
 from zope.security.interfaces import IPrincipal
@@ -53,8 +55,6 @@ from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 from nti.contenttypes.presentation.interfaces import IContentBackedPresentationAsset
 
 from nti.coremetadata.utils import current_principal
-
-from nti.property.property import Lazy
 
 from nti.site.hostpolicy import get_host_site
 

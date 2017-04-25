@@ -19,6 +19,8 @@ from zope import lifecycleevent
 
 from zope.authentication.interfaces import IUnauthenticatedPrincipal
 
+from zope.cachedescriptors.property import Lazy
+
 from zope.component.hooks import getSite
 
 from zope.intid.interfaces import IIntIds
@@ -138,8 +140,6 @@ from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
 from nti.ntiids.ntiids import find_object_with_ntiid
-
-from nti.property.property import Lazy
 
 from nti.site.interfaces import IHostPolicyFolder
 

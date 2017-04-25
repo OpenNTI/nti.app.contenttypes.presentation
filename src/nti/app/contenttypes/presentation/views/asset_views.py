@@ -22,6 +22,8 @@ from requests.structures import CaseInsensitiveDict
 
 from zope import interface, lifecycleevent
 
+from zope.cachedescriptors.property import Lazy
+
 from zope.component.hooks import getSite
 
 from zope.event import notify as event_notify
@@ -188,8 +190,6 @@ from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
-
-from nti.property.property import Lazy
 
 from nti.site.interfaces import IHostPolicyFolder
 

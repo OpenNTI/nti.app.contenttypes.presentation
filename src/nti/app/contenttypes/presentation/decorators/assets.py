@@ -16,6 +16,8 @@ from urlparse import urljoin
 from zope import component
 from zope import interface
 
+from zope.cachedescriptors.property import Lazy
+
 from zope.location.interfaces import ILocation
 
 from pyramid.interfaces import IRequest
@@ -110,8 +112,6 @@ from nti.ntiids.ntiids import get_type
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_provider_safe
 from nti.ntiids.ntiids import find_object_with_ntiid
-
-from nti.property.property import Lazy
 
 from nti.traversal.traversal import find_interface
 

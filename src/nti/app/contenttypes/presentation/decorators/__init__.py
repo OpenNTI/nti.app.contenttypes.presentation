@@ -11,6 +11,8 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope import interface
 
+from zope.cachedescriptors.property import Lazy
+
 from zope.location.interfaces import ILocation
 
 from nti.app.contenttypes.presentation import MessageFactory
@@ -37,8 +39,6 @@ from nti.dataserver.authorization import ACT_CONTENT_EDIT
 from nti.externalization.interfaces import StandardExternalFields
 
 from nti.links.links import Link
-
-from nti.property.property import Lazy
 
 LINKS = StandardExternalFields.LINKS
 

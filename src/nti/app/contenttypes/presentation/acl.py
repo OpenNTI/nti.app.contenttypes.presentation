@@ -12,6 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from zope.cachedescriptors.property import Lazy
+
 from nti.app.contenttypes.presentation.utils import get_presentation_asset_courses
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -43,8 +45,6 @@ from nti.dataserver.interfaces import ACE_DENY_ALL
 from nti.dataserver.interfaces import ALL_PERMISSIONS
 
 from nti.dataserver.interfaces import IACLProvider
-
-from nti.property.property import Lazy
 
 from nti.traversal.traversal import find_interface
 
