@@ -569,7 +569,9 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		contentType = item.type or u'application/octet-stream'  # default
 
 		# if client has uploaded a file, capture contentType and target ntiid
-		if self.request.POST and 'href' in self.request.POST:
+		if 		self.request.POST \
+			and 'href' in self.request.POST \
+			and is_internal_file_link(href):
 			filer = get_course_filer(self._course)
 			named = filer.get(href) if href else None
 			if named is not None:
