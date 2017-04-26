@@ -85,7 +85,7 @@
 
 	<!-- Subscribers -->
 	<subscriber factory=".predicates.LessonPublishablePredicate"
-				provides="nti.coremetadata.interfaces.ICalendarPublishablePredicate" />
+				provides="nti.publishing.interfaces.ICalendarPublishablePredicate" />
 
 	<!-- Search filters -->
 	<include package=".search" />

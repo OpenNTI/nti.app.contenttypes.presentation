@@ -43,8 +43,6 @@ from nti.appserver.pyramid_authorization import has_permission
 from nti.assessment.interfaces import IQSurvey
 from nti.assessment.interfaces import IQAssignment
 
-from nti.coremetadata.interfaces import ICalendarPublishablePredicate
-
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.dataserver.interfaces import IUser
@@ -53,6 +51,8 @@ from nti.dataserver.interfaces import ISystemUserPrincipal
 from nti.dataserver.users.users import User
 
 from nti.metadata.predicates import BasePrincipalObjects
+
+from nti.publishing.interfaces import ICalendarPublishablePredicate
 
 from nti.site.hostpolicy import get_all_host_sites
 

@@ -32,13 +32,13 @@ from nti.appserver.pyramid_authorization import has_permission
 
 from nti.common.string import is_true
 
-from nti.coremetadata.interfaces import IPublishable
-
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.externalization.interfaces import StandardExternalFields
 
 from nti.links.links import Link
+
+from nti.publishing.interfaces import IPublishable
 
 LINKS = StandardExternalFields.LINKS
 

@@ -31,9 +31,9 @@ from nti.contentsearch.predicates import DefaultSearchHitPredicate
 from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 
-from nti.coremetadata.interfaces import IPublishable
-
 from nti.dataserver.authorization import ACT_READ
+
+from nti.publishing.interfaces import IPublishable
 
 from nti.traversal.traversal import find_interface
 

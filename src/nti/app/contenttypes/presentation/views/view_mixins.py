@@ -13,9 +13,9 @@ import hashlib
 
 from nti.appserver.pyramid_authorization import has_permission
 
-from nti.coremetadata.interfaces import IPublishable
-
 from nti.dataserver import authorization as nauth
+
+from nti.publishing.interfaces import IPublishable
 
 
 def hexdigest(data, hasher=None):

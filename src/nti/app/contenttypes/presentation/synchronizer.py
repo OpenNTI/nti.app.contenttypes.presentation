@@ -84,9 +84,6 @@ from nti.contenttypes.presentation.media import NTIVideoRoll
 
 from nti.contenttypes.presentation.utils import create_lessonoverview_from_external
 
-from nti.coremetadata.interfaces import IPublishable
-from nti.coremetadata.interfaces import ICalendarPublishable
-
 from nti.externalization.externalization import to_external_object
 
 from nti.externalization.interfaces import StandardExternalFields
@@ -110,6 +107,9 @@ from nti.recorder.interfaces import IRecordableContainer
 
 from nti.recorder.record import copy_transaction_history
 from nti.recorder.record import remove_transaction_history
+
+from nti.publishing.interfaces import IPublishable
+from nti.publishing.interfaces import ICalendarPublishable
 
 from nti.site.site import get_component_hierarchy_names
 

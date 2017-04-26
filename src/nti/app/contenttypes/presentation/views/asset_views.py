@@ -170,7 +170,6 @@ from nti.contenttypes.presentation.internalization import internalization_ntivid
 from nti.contenttypes.presentation.utils import create_from_external
 from nti.contenttypes.presentation.utils import get_external_pre_hook
 
-from nti.coremetadata.interfaces import IPublishable
 
 from nti.coremetadata.utils import current_principal
 
@@ -190,6 +189,8 @@ from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
+
+from nti.publishing.interfaces import IPublishable
 
 from nti.site.interfaces import IHostPolicyFolder
 
