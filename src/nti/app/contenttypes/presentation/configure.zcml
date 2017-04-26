@@ -8,7 +8,6 @@
 	<include package="zope.component" />
 	<include package="zope.security" />
 
-	<include package="nti.publishing" />
 	<include package="nti.contenttypes.presentation" />
 
 	<!-- Database creation and migration -->

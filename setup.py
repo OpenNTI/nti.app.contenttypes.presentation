@@ -36,7 +36,6 @@ setup(
     namespace_packages=['nti', 'nti.app', 'nti.app.contenttypes'],
     install_requires=[
         'setuptools',
-        'nti.publishing',
         'nti.contenttypes.presentation',
     ],
     entry_points=entry_points
