@@ -33,6 +33,8 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 
 from nti.dataserver.authorization import ACT_READ
 
+from nti.ntiids.ntiids import find_object_with_ntiid
+
 from nti.publishing.interfaces import IPublishable
 
 from nti.traversal.traversal import find_interface
@@ -55,11 +57,14 @@ class _LessonsSearchHitPredicate(DefaultSearchHitPredicate):
         results = set()
         catalog = get_library_catalog()
         for container in catalog.get_containers(item):
-            lesson = find_interface(container,
-                                    INTILessonOverview,
-                                    strict=False)
-            if lesson is not None:
-                results.add(lesson)
+            if container is not None:
+                container = find_object_with_ntiid(container)
+            if container is not None:
+                lesson = find_interface(container,
+                                        INTILessonOverview,
+                                        strict=False)
+                if lesson is not None:
+                    results.add(lesson)
         return results
 
     def _is_published(self, lesson):
@@ -71,14 +76,14 @@ class _LessonsSearchHitPredicate(DefaultSearchHitPredicate):
             # If no lesson, we're allowed.
             return True
 
-        result = False
         request = get_current_request()
         for lesson in lessons:
             # Just need a single available/readable lesson to allow.
             if      self._is_published(lesson) \
                 and has_permission(ACT_READ, lesson, request):
                 return True
-        return result
+        # We have lessons, but no access.
+        return False
 
 
 @interface.implementer(ISearchHitPredicate)
