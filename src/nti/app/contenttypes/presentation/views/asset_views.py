@@ -1157,7 +1157,9 @@ class MediaRollPutView(PresentationAssetPutView):
 			if ntiid not in updated:  # ref removed
 				remove_presentation_asset(item, self._registry, self._catalog)
 
+
 # delete views
+
 
 @view_config(context=IPresentationAsset)
 @view_defaults(route_name='objects.generic.traversal',
@@ -1165,7 +1167,9 @@ class MediaRollPutView(PresentationAssetPutView):
 			   request_method='DELETE',
 			   permission=nauth.ACT_CONTENT_EDIT)
 class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
-
+	
+	event = True
+	
 	@Lazy
 	def _site_name(self):
 		result = component_site(self.context,
@@ -1178,8 +1182,20 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 		return registry_by_name(self._site_name)
 
 	def _do_delete_object(self, theObject):
-		remove_presentation_asset(theObject, self._registry, self._catalog)
+		remove_presentation_asset(theObject, 
+								  self._registry,
+								  self._catalog,
+								  event=self.event)
 		return theObject
+
+@view_config(context=INTILessonOverview)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='DELETE',
+			   permission=nauth.ACT_CONTENT_EDIT)
+class LessonOverviewDeleteView(PresentationAssetDeleteView):
+	event = False
+
 
 @view_config(context=INTILessonOverview)
 @view_config(context=INTICourseOverviewGroup)
