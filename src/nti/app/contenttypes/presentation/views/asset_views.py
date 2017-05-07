@@ -1188,6 +1188,29 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 								  event=self.event)
 		return theObject
 
+@view_config(context=INTICourseOverviewGroup)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='DELETE',
+			   permission=nauth.ACT_CONTENT_EDIT)
+class CourseOverviewGroupDeleteView(PresentationAssetDeleteView):
+
+	event = True
+
+	def _do_delete_object(self, theObject):
+		# remove children first
+		for asset in theObject:
+			remove_presentation_asset(asset, 
+								  	  self._registry,
+								  	  self._catalog,
+								  	  event=False)
+		# ready to remove
+		remove_presentation_asset(theObject, 
+								  self._registry,
+								  self._catalog,
+								  event=self.event)
+		return theObject
+
 @view_config(context=INTILessonOverview)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
