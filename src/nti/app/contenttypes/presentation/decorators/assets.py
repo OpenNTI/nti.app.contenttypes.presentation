@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import os
 import six
 
 from urlparse import urljoin
@@ -469,18 +470,27 @@ class _NTILessonOverviewDecorator(AbstractAuthenticatedRequestAwareDecorator):
             ]
 
 
-def _get_content_package(ntiids=()):
+def _path_exists_in_package(path, package):
+    path_parts = os.path.split(path)
+    bucket = package.root
+    for path_part in path_parts or ():
+        bucket = bucket.getChildNamed(path_part)
+        if bucket is None:
+            break
+    return bucket is not None
+
+
+def _get_content_package(context, path, ntiids=()):
+    # Prefer to use package in our lineage if possible.
+    result = find_interface(context, IContentPackage, strict=False)
     # XXX: We would like context from clients.
     # Get the first available content package from the given ntiids.
     # This could be improved if we indexed/registered ContentUnits.
-    result = None
+    courses = set()
     for ntiid in ntiids or ():
         obj = find_object_with_ntiid(ntiid)
         if ICourseCatalogEntry.providedBy(obj) or ICourseInstance.providedBy(obj):
-            packages = get_course_packages(obj)
-            result = packages[0] if packages else None
-            if result is not None:
-                break
+            courses.add(obj)
         elif IContentPackage.providedBy(obj):
             result = obj
             break
@@ -488,13 +498,22 @@ def _get_content_package(ntiids=()):
             result = find_interface(obj, IContentPackage, strict=False)
             if result is not None:
                 break
+
+    if result is None:
+        # XXX: This is expensive; have to find the correct package inside our
+        # course for this ref.
+        for course in courses:
+            for package in get_course_packages(course) or ():
+                if _path_exists_in_package(path, package):
+                    result = package
+                    break
     return result
 
 
 def _get_item_content_package(item):
     catalog = get_library_catalog()
     entries = catalog.get_containers(item)
-    result = _get_content_package(entries) if entries else None
+    result = _get_content_package(item, entries) if entries else None
     return result
 
 
@@ -504,35 +523,36 @@ def _get_item_content_package(item):
 class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
     CONTENT_MIME_TYPE = b'application/vnd.nextthought.content'
-    EXTERNAL_LINK_IME_TYPE = b'application/vnd.nextthought.externallink'
+    EXTERNAL_LINK_MIME_TYPE = b'application/vnd.nextthought.externallink'
 
     @Lazy
     def is_legacy_ipad(self):
         return is_legacy_uas(self.request, LEGACY_UAS_40)
 
     def _predicate(self, context, result):
-        return self._is_authenticated
+        return self._is_authenticated and self._should_process(context)
 
     def _should_process(self, obj):
         result = False
         if INTITimeline.providedBy(obj) and not is_internal_file_link(obj.href or u''):
             result = True
         elif    INTIRelatedWorkRef.providedBy(obj) \
-            and obj.type in (self.EXTERNAL_LINK_IME_TYPE, self.CONTENT_MIME_TYPE):
+            and obj.type in (self.EXTERNAL_LINK_MIME_TYPE, self.CONTENT_MIME_TYPE):
             result = True
         return result
 
     def _do_decorate_external(self, context, result):
-        package = find_interface(context, IContentPackage, strict=False)
-        if package is None:
-            package = _get_item_content_package(context)
-        if     package is not None \
-            and self._should_process(context):
-            mapper = IContentUnitHrefMapper(package.key.bucket, None)
-            location = mapper.href if mapper is not None else u''
-            for name in ('href', 'icon'):
-                value = getattr(context, name, None)
-                if value and not value.startswith('/') and '://' not in value:
+        package = None
+        for name in ('href', 'icon'):
+            value = getattr(context, name, None)
+            if value and not value.startswith('/') and '://' not in value:
+                if     package is None \
+                    or not _path_exists_in_package(value, package):
+                    # We make sure each url is in the correct package.
+                    package = _get_item_content_package(context)
+                if package is not None:
+                    mapper = IContentUnitHrefMapper(package.key.bucket, None)
+                    location = mapper.href if mapper is not None else u''
                     value = urljoin(location, value)
                     if self.is_legacy_ipad:  # for legacy ipad
                         value = urljoin(self.request.host_url, value)
