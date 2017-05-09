@@ -142,7 +142,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
                         self._post_process_asset(asset=item,
                                                  ext_obj=item_ext,
                                                  filer=filer,
-                                                 backu=backup,
+                                                 backup=backup,
                                                  salt=salt)
             else:
                 ext_items = ext_obj.get(ITEMS) or ()
