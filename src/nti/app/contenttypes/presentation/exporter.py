@@ -139,11 +139,11 @@ class LessonOverviewsExporter(BaseSectionExporter):
                     ext_items = ext_obj.get(name) or ()
                     deck_items = getattr(asset, name, None) or ()
                     for item, item_ext in zip(deck_items, ext_items):
-                        self._post_process_asset(item,
-                                                 item_ext,
-                                                 filer,
-                                                 backup,
-                                                 salt)
+                        self._post_process_asset(asset=item,
+                                                 ext_obj=item_ext,
+                                                 filer=filer,
+                                                 backu=backup,
+                                                 salt=salt)
             else:
                 ext_items = ext_obj.get(ITEMS) or ()
                 asset_items = asset.Items if asset.Items is not None else ()
@@ -152,11 +152,11 @@ class LessonOverviewsExporter(BaseSectionExporter):
                         or not item_ext.get(INTERNAL_NTIID):  # check valid NTIID
                         item_ext.pop(NTIID, None)
                         item_ext.pop(INTERNAL_NTIID, None)
-                    self._post_process_asset(item,
-                                             item_ext,
-                                             filer,
-                                             backup,
-                                             salt)
+                    self._post_process_asset(asset=item,
+                                             ext_obj=item_ext,
+                                             filer=filer,
+                                             backup=backup,
+                                             salt=salt)
         # check references to authored evaluations
         elif    not backup \
             and INTIAssessmentRef.providedBy(asset) \
@@ -173,8 +173,8 @@ class LessonOverviewsExporter(BaseSectionExporter):
                 value = ext_obj.get(name)
                 if      value \
                     and is_valid_ntiid_string(value) \
-                    and (  is_ntiid_of_type(value, TYPE_OID) \
-                        or is_ntiid_of_type(value, TYPE_UUID)):
+                    and (   is_ntiid_of_type(value, TYPE_OID) \
+                         or is_ntiid_of_type(value, TYPE_UUID)):
                     ext_obj.pop(name, None)
 
         # save asset/concrete resources
