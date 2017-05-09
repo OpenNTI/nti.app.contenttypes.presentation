@@ -48,6 +48,7 @@ from nti.externalization.interfaces import StandardInternalFields
 from nti.namedfile.file import safe_filename
 
 from nti.ntiids.ntiids import TYPE_OID
+from nti.ntiids.ntiids import TYPE_UUID
 from nti.ntiids.ntiids import is_ntiid_of_type
 from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
@@ -131,9 +132,6 @@ class LessonOverviewsExporter(BaseSectionExporter):
                 ext_obj.pop(NTIID, None)
                 ext_obj.pop(INTERNAL_NTIID, None)
 
-        # save asset/concrete resources
-        save_resources_to_filer(provided, concrete, filer, ext_obj)
-
         # check 'children'
         if IItemAssetContainer.providedBy(asset):
             if INTISlideDeck.providedBy(asset):
@@ -141,7 +139,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
                     ext_items = ext_obj.get(name) or ()
                     deck_items = getattr(asset, name, None) or ()
                     for item, item_ext in zip(deck_items, ext_items):
-                        self._post_process_asset(item, 
+                        self._post_process_asset(item,
                                                  item_ext,
                                                  filer,
                                                  backup,
@@ -175,15 +173,19 @@ class LessonOverviewsExporter(BaseSectionExporter):
                 value = ext_obj.get(name)
                 if      value \
                     and is_valid_ntiid_string(value) \
-                    and is_ntiid_of_type(value, TYPE_OID):
+                    and (  is_ntiid_of_type(value, TYPE_OID) \
+                        or is_ntiid_of_type(value, TYPE_UUID)):
                     ext_obj.pop(name, None)
+
+        # save asset/concrete resources
+        save_resources_to_filer(provided, concrete, filer, ext_obj)
 
     def _do_export(self, context, filer, seen, backup=True, salt=None):
         course = ICourseInstance(context)
         nodes = _outline_nodes(course.Outline, seen)
         for node, lesson in nodes:
-            ext_obj = to_external_object(lesson, 
-                                         name="exporter", 
+            ext_obj = to_external_object(lesson,
+                                         name="exporter",
                                          decorate=False)
             # process internal resources
             self._post_process_asset(lesson, ext_obj, filer, backup, salt)
