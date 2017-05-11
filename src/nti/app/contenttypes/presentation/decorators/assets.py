@@ -471,7 +471,7 @@ class _NTILessonOverviewDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 
 def _path_exists_in_package(path, package):
-    path_parts = os.path.split(path)
+    path_parts = path.split(os.sep)
     bucket = package.root
     for path_part in path_parts or ():
         bucket = bucket.getChildNamed(path_part)
