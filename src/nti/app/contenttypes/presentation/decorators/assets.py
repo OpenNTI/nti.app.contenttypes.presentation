@@ -510,10 +510,10 @@ def _get_content_package(context, path, ntiids=()):
     return result
 
 
-def _get_item_content_package(item):
+def _get_item_content_package(item, path):
     catalog = get_library_catalog()
     entries = catalog.get_containers(item)
-    result = _get_content_package(item, entries) if entries else None
+    result = _get_content_package(item, path, entries) if entries else None
     return result
 
 
@@ -549,7 +549,7 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
                 if     package is None \
                     or not _path_exists_in_package(value, package):
                     # We make sure each url is in the correct package.
-                    package = _get_item_content_package(context)
+                    package = _get_item_content_package(context, value)
                 if package is not None:
                     mapper = IContentUnitHrefMapper(package.key.bucket, None)
                     location = mapper.href if mapper is not None else u''
