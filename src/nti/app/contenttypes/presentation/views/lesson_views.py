@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -97,13 +97,12 @@ class LessonPublicationConstraintsPostView(UGDPostView):
                              hexc.HTTPUnprocessableEntity,
                              {
                                  u'message': str(e),
-                                 u'code': 'ConstraintValidationError',
+                                 u'code': u'ConstraintValidationError',
                              },
                              None)
 
         lifecycleevent.created(constraint)
         self.context.append(constraint)
-        lifecycleevent.added(constraint)
         self.request.response.status_int = 201
         return constraint
 
@@ -129,7 +128,7 @@ class LessonCompletionConstraintPutView(UGDPutView):
                              hexc.HTTPUnprocessableEntity,
                              {
                                  u'message': str(e),
-                                 u'code': 'ConstraintValidationError',
+                                 u'code': u'ConstraintValidationError',
                              },
                              None)
         return result
@@ -144,5 +143,4 @@ class LessonPublicationConstraintDeleteView(UGDDeleteView):
 
     def _do_delete_object(self, theObject):
         del theObject.__parent__[theObject.__name__]
-        lifecycleevent.removed(theObject)
         return theObject
