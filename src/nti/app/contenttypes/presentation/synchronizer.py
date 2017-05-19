@@ -25,6 +25,8 @@ from zope.interface.interfaces import IMethod
 
 from zope.intid.interfaces import IIntIds
 
+from ZODB.interfaces import IConnection
+
 from nti.app.products.courseware.utils import transfer_resources_from_filer
 
 from nti.app.contenttypes.presentation.interfaces import IItemRefValidator
@@ -351,7 +353,8 @@ def _update_sync_results(lesson_ntiid, sync_results, lesson_locked):
 			sync_results.Lessons = lessons = CourseLessonSyncResults()
 		getattr(lessons, field).append(lesson_ntiid)
 
-def _update_asset_state(asset, parsed, course, source_filer=None, target_filer=None):
+def _update_asset_state(asset, parsed, course, source_filer=None, 
+						target_filer=None, connection=None):
 	"""
 	Finalize our lesson/asset state by setting locked and publication
 	state. We also transfer file docs/images into our course resources
@@ -381,6 +384,10 @@ def _update_asset_state(asset, parsed, course, source_filer=None, target_filer=N
 
 	ext_obj = parsed.get('PublicationConstraints')
 	if ext_obj:
+		# add asset to the connection since we need to get intids
+		# for the constraints
+		if connection is not None and IConnection(asset, None) is None:
+			connection.add(asset)
 		imported_constraints = find_factory_for(ext_obj)()
 		update_from_external_object(imported_constraints, ext_obj, notify=False)
 		constraints = ILessonPublicationConstraints(asset)
@@ -405,7 +412,7 @@ def _update_asset_state(asset, parsed, course, source_filer=None, target_filer=N
 										parsed.get( 'Items' ) or [] ):
 			if parsed_child:
 				_update_asset_state( child, parsed_child, course,
-									 source_filer, target_filer )
+									 source_filer, target_filer, connection)
 
 	if modified:
 		lifecycleevent.modified(asset)
@@ -429,7 +436,8 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 	if is_locked:
 		logger.info('Not syncing lesson (%s) (locked=%s)', overview.ntiid, locked_ntiids)
 		# We may update lesson/asset state even if locked...
-		_update_asset_state(existing_overview, source_data, course)
+		_update_asset_state(existing_overview, source_data, course, 
+							connection=connection)
 		return existing_overview, ()
 
 	# remove and register
@@ -562,7 +570,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 			if not IPackagePresentationAsset.providedBy(item):
 				item.__parent__ = group
 
-	_update_asset_state(overview, source_data, course)
+	_update_asset_state(overview, source_data, course, connection=connection)
 	return overview, removed
 
 def _copy_remove_transactions(items, registry=None):
