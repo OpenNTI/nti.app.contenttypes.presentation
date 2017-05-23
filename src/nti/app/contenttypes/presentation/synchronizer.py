@@ -388,10 +388,8 @@ def _update_asset_state(asset, parsed, course, source_filer=None,
 		# for the constraints
 		if connection is not None and IConnection(asset, None) is None:
 			connection.add(asset)
-		imported_constraints = find_factory_for(ext_obj)()
-		update_from_external_object(imported_constraints, ext_obj, notify=False)
 		constraints = ILessonPublicationConstraints(asset)
-		constraints.extend(imported_constraints.Items)
+		update_from_external_object(constraints, ext_obj, notify=False)
 		modified = True
 
 	# Now update our hrefs/icons, if necessary.
