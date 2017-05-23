@@ -353,7 +353,7 @@ def _update_sync_results(lesson_ntiid, sync_results, lesson_locked):
 			sync_results.Lessons = lessons = CourseLessonSyncResults()
 		getattr(lessons, field).append(lesson_ntiid)
 
-def _update_asset_state(asset, parsed, course, source_filer=None, 
+def _update_asset_state(asset, parsed, course, source_filer=None,
 						target_filer=None, connection=None):
 	"""
 	Finalize our lesson/asset state by setting locked and publication
@@ -428,6 +428,8 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 	jtext = _prepare_json_text(jtext)
 	json_data = simplejson.loads(jtext)
 	source_data = copy.deepcopy(json_data) # copy for tracking
+	# We'll handle this on update, manually.
+	json_data.pop('PublicationConstraints', None)
 	overview = create_lessonoverview_from_external(json_data, notify=False)
 
 	existing_overview = registry.queryUtility(INTILessonOverview, name=overview.ntiid)
@@ -436,7 +438,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 	if is_locked:
 		logger.info('Not syncing lesson (%s) (locked=%s)', overview.ntiid, locked_ntiids)
 		# We may update lesson/asset state even if locked...
-		_update_asset_state(existing_overview, source_data, course, 
+		_update_asset_state(existing_overview, source_data, course,
 							connection=connection)
 		return existing_overview, ()
 
