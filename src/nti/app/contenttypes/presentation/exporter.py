@@ -10,6 +10,7 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 from zope import interface
+from zope import component
 
 from nti.app.products.courseware.utils.exporter import save_resources_to_filer
 
@@ -97,7 +98,10 @@ class LessonOverviewsExporter(BaseSectionExporter):
                 else:
                     ntiids = ()
                 for i in range(len(ntiids or ())):
-                    ntiids[i] = self.hash_ntiid(ntiids[i], salt)
+                    evaluation = component.queryUtility(
+                        IQEvaluation, name=ntiids[i])
+                    if IQEditableEvaluation.providedBy(evaluation):
+                        ntiids[i] = self.hash_ntiid(ntiids[i], salt)
                 # remove ntiids
                 ext_constraint.pop(NTIID, None)
                 ext_constraint.pop(INTERNAL_NTIID, None)
@@ -120,7 +124,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
                 ext_obj.pop(NTIID, None)
                 ext_obj.pop(INTERNAL_NTIID, None)
             if      INTIMedia.providedBy(concrete) \
-                and not INTIMediaRoll.providedBy(asset.__parent__):
+                    and not INTIMediaRoll.providedBy(asset.__parent__):
                 for name in ('sources', 'transcripts'):
                     for item in ext_obj.get(name) or ():
                         item.pop(OID, None)
@@ -149,7 +153,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
                 asset_items = asset.Items if asset.Items is not None else ()
                 for item, item_ext in zip(asset_items, ext_items):
                     if     not item_ext.get(NTIID) \
-                        or not item_ext.get(INTERNAL_NTIID):  # check valid NTIID
+                            or not item_ext.get(INTERNAL_NTIID):  # check valid NTIID
                         item_ext.pop(NTIID, None)
                         item_ext.pop(INTERNAL_NTIID, None)
                     self._post_process_asset(asset=item,
@@ -158,14 +162,14 @@ class LessonOverviewsExporter(BaseSectionExporter):
                                              backup=backup,
                                              salt=salt)
         # check references to authored evaluations
-        elif    not backup \
-            and INTIAssessmentRef.providedBy(asset) \
-            and IQEditableEvaluation.providedBy(IQEvaluation(asset, None)):
+        if    not backup \
+                and INTIAssessmentRef.providedBy(asset) \
+                and IQEditableEvaluation.providedBy(IQEvaluation(asset, None)):
             ext_obj['target'] = self.hash_ntiid(asset.target, salt)
-        # process lesson contraints
-        elif    not backup \
-            and INTILessonOverview.providedBy(asset) \
-            and PUBLICATION_CONSTRAINTS in ext_obj:
+        # process lesson constraints
+        if      not backup \
+                and INTILessonOverview.providedBy(asset) \
+                and PUBLICATION_CONSTRAINTS in ext_obj:
             self._post_lesson_constraints(asset, ext_obj, salt)
 
         if not backup:  # don't leak internal OIDs
@@ -173,7 +177,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
                 value = ext_obj.get(name)
                 if      value \
                     and is_valid_ntiid_string(value) \
-                    and (   is_ntiid_of_type(value, TYPE_OID) \
+                    and (is_ntiid_of_type(value, TYPE_OID)
                          or is_ntiid_of_type(value, TYPE_UUID)):
                     ext_obj.pop(name, None)
 
