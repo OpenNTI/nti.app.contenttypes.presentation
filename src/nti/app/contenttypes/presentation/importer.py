@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -81,15 +81,12 @@ class LessonOverviewsImporter(BaseSectionImporter):
                                       concrete,
                                       source_filer,
                                       target_filer)
-
         # set creator
         concrete.creator = asset.creator = self.current_principal.id
-
         # mark as created
         interface.alsoProvides(asset, IUserCreatedAsset)
         if not IContentBackedPresentationAsset.providedBy(concrete):
             interface.alsoProvides(concrete, IUserCreatedAsset)
-
         # check 'children'
         if IItemAssetContainer.providedBy(asset):
             asset_items = asset.Items if asset.Items is not None else ()
@@ -115,7 +112,6 @@ class LessonOverviewsImporter(BaseSectionImporter):
             bucket = source_filer.get(self.__LESSONS__)
             with current_site(site):
                 registry = site.getSiteManager()
-
                 # clear assets - not merging
                 clear_course_assets(course)
                 clear_namespace_last_modified(course)
@@ -124,13 +120,12 @@ class LessonOverviewsImporter(BaseSectionImporter):
                                                  course=course,
                                                  sites=named_sites,
                                                  force=True)  # not merging
-
                 # load assets
                 lessons = synchronize_course_lesson_overview(course,
                                                              buckets=(bucket,))
                 for lesson in lessons or ():
-                    self._post_process_asset(lesson, 
-                                             source_filer, 
+                    self._post_process_asset(lesson,
+                                             source_filer,
                                              target_filer)
 
             # save sources in main course Lessos folder
