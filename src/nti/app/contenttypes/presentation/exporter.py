@@ -200,7 +200,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
                 name = self.hash_filename(name, salt)
             filer.save(name, source,
                        overwrite=True,
-                       bucket="Lessons",
+                       bucket=u"Lessons",
                        contentType=u"application/x-json")
 
     def export(self, context, filer, backup=True, salt=None):
