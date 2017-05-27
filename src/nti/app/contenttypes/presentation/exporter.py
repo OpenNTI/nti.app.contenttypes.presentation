@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -65,7 +65,6 @@ INTERNAL_CONTAINER_ID = StandardInternalFields.CONTAINER_ID
 
 def _outline_nodes(outline, seen):
     result = []
-
     def _recur(node):
         ntiid = node.LessonOverviewNTIID
         if ntiid and ntiid not in seen:
@@ -98,8 +97,8 @@ class LessonOverviewsExporter(BaseSectionExporter):
                 else:
                     ntiids = ()
                 for i in range(len(ntiids or ())):
-                    evaluation = component.queryUtility(
-                        IQEvaluation, name=ntiids[i])
+                    evaluation = component.queryUtility(IQEvaluation, 
+                                                        name=ntiids[i])
                     if IQEditableEvaluation.providedBy(evaluation):
                         ntiids[i] = self.hash_ntiid(ntiids[i], salt)
                 # remove ntiids
@@ -109,7 +108,6 @@ class LessonOverviewsExporter(BaseSectionExporter):
     def _post_process_asset(self, asset, ext_obj, filer, backup=True, salt=None):
         concrete = IConcreteAsset(asset, asset)
         provided = iface_of_asset(concrete)
-
         # remove unquired data if not backup mode
         ext_obj.pop(OID, None)
         ext_obj.pop(CONTAINER_ID, None)
@@ -124,7 +122,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
                 ext_obj.pop(NTIID, None)
                 ext_obj.pop(INTERNAL_NTIID, None)
             if      INTIMedia.providedBy(concrete) \
-                    and not INTIMediaRoll.providedBy(asset.__parent__):
+                and not INTIMediaRoll.providedBy(asset.__parent__):
                 for name in ('sources', 'transcripts'):
                     for item in ext_obj.get(name) or ():
                         item.pop(OID, None)
@@ -153,7 +151,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
                 asset_items = asset.Items if asset.Items is not None else ()
                 for item, item_ext in zip(asset_items, ext_items):
                     if     not item_ext.get(NTIID) \
-                            or not item_ext.get(INTERNAL_NTIID):  # check valid NTIID
+                        or not item_ext.get(INTERNAL_NTIID):  # check valid NTIID
                         item_ext.pop(NTIID, None)
                         item_ext.pop(INTERNAL_NTIID, None)
                     self._post_process_asset(asset=item,
@@ -162,14 +160,14 @@ class LessonOverviewsExporter(BaseSectionExporter):
                                              backup=backup,
                                              salt=salt)
         # check references to authored evaluations
-        if    not backup \
-                and INTIAssessmentRef.providedBy(asset) \
-                and IQEditableEvaluation.providedBy(IQEvaluation(asset, None)):
+        if      not backup \
+            and INTIAssessmentRef.providedBy(asset) \
+            and IQEditableEvaluation.providedBy(IQEvaluation(asset, None)):
             ext_obj['target'] = self.hash_ntiid(asset.target, salt)
         # process lesson constraints
         if      not backup \
-                and INTILessonOverview.providedBy(asset) \
-                and PUBLICATION_CONSTRAINTS in ext_obj:
+            and INTILessonOverview.providedBy(asset) \
+            and PUBLICATION_CONSTRAINTS in ext_obj:
             self._post_lesson_constraints(asset, ext_obj, salt)
 
         if not backup:  # don't leak internal OIDs
@@ -177,7 +175,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
                 value = ext_obj.get(name)
                 if      value \
                     and is_valid_ntiid_string(value) \
-                    and (is_ntiid_of_type(value, TYPE_OID)
+                    and (   is_ntiid_of_type(value, TYPE_OID)
                          or is_ntiid_of_type(value, TYPE_UUID)):
                     ext_obj.pop(name, None)
 
