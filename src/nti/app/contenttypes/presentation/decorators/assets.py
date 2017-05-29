@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -145,10 +145,10 @@ class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecor
         return False
 
     def _predicate(self, context, result):
-        return  self._acl_decoration \
-            and self._is_authenticated \
-            and not self._has_edit_link(result) \
-            and has_permission(ACT_CONTENT_EDIT, context, self.request)
+        return self._acl_decoration \
+           and self._is_authenticated \
+           and not self._has_edit_link(result) \
+           and has_permission(ACT_CONTENT_EDIT, context, self.request)
 
     def _do_decorate_external(self, context, result):
         _links = result.setdefault(LINKS, [])
@@ -169,9 +169,9 @@ class _PresentationAssetRequestDecorator(AbstractAuthenticatedRequestAwareDecora
         return result
 
     def _predicate(self, context, result):
-        return  self._acl_decoration \
-            and self._is_authenticated \
-            and has_permission(ACT_CONTENT_EDIT, context, self.request)
+        return self._acl_decoration \
+           and self._is_authenticated \
+           and has_permission(ACT_CONTENT_EDIT, context, self.request)
 
     def _do_containers(self, context, result):
         catalog = get_library_catalog()
@@ -180,7 +180,9 @@ class _PresentationAssetRequestDecorator(AbstractAuthenticatedRequestAwareDecora
 
     def _do_schema_link(self, context, result):
         _links = result.setdefault(LINKS, [])
-        link = Link(context, rel='schema', elements=('@@schema',))
+        link = Link(context, 
+                    rel='schema',
+                    elements=('@@schema',))
         interface.alsoProvides(link, ILocation)
         link.__name__ = ''
         link.__parent__ = context
@@ -355,7 +357,8 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
         if record.Scope == ES_ALL:
             return True
         course = record.CourseInstance
-        predicate = get_course_assessment_predicate_for_user(self.remoteUser, course)
+        predicate = get_course_assessment_predicate_for_user(self.remoteUser,
+                                                             course)
         result = predicate is not None and predicate(assg)
         return result
 
@@ -522,8 +525,8 @@ def _get_item_content_package(item, path):
 @interface.implementer(IExternalMappingDecorator)
 class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
-    CONTENT_MIME_TYPE = b'application/vnd.nextthought.content'
-    EXTERNAL_LINK_MIME_TYPE = b'application/vnd.nextthought.externallink'
+    CONTENT_MIME_TYPE = 'application/vnd.nextthought.content'
+    EXTERNAL_LINK_MIME_TYPE = 'application/vnd.nextthought.externallink'
 
     @Lazy
     def is_legacy_ipad(self):
@@ -534,7 +537,8 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
     def _should_process(self, obj):
         result = False
-        if INTITimeline.providedBy(obj) and not is_internal_file_link(obj.href or u''):
+        if      INTITimeline.providedBy(obj) \
+            and not is_internal_file_link(obj.href or ''):
             result = True
         elif    INTIRelatedWorkRef.providedBy(obj) \
             and obj.type in (self.EXTERNAL_LINK_MIME_TYPE, self.CONTENT_MIME_TYPE):
@@ -570,7 +574,7 @@ class _NTITranscriptURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
         package = find_interface(context, IContentPackage, strict=False)
         if package is not None:
             mapper = IContentUnitHrefMapper(package.key.bucket, None)
-            location = mapper.href if mapper is not None else u''
+            location = mapper.href if mapper is not None else ''
             for name in ('src', 'srcjsonp'):
                 value = getattr(context, name, None)
                 if value and not value.startswith('/') and '://' not in value:
@@ -634,7 +638,7 @@ class _BaseAssetDecorator(object):
         if 'ntiid' in external:
             external[NTIID] = external.pop('ntiid')
         if 'target' in external:
-            external[u'Target-NTIID'] = external.pop('target')
+            external['Target-NTIID'] = external.pop('target')
 
 
 @component.adapter(INTIQuestionRef)
@@ -668,7 +672,7 @@ class _BaseAssessmentRefDecorator(_BaseAssetDecorator):
         if target is not None:
             question_count = getattr(target, 'draw', None) \
                           or len(target.questions)
-        external[u'question-count'] = str(question_count)
+        external['question-count'] = str(question_count)
 
 
 @component.adapter(INTIQuestionSetRef)
@@ -692,7 +696,7 @@ class _NTIAssignmentRefDecorator(_BaseAssetDecorator):
     def decorateExternalObject(self, original, external):
         super(_NTIAssignmentRefDecorator, self).decorateExternalObject(original, external)
         if 'containerId' in external:
-            external[u'ContainerId'] = external.pop('containerId')
+            external['ContainerId'] = external.pop('containerId')
 
 
 @interface.implementer(IExternalMappingDecorator)
@@ -737,16 +741,17 @@ class _NTIRelatedWorkRefDecorator(object):
 
     def decorateExternalObject(self, original, external):
         if 'byline' in external:
-            external[u'creator'] = external['byline']  # legacy
+            external['creator'] = external['byline']  # legacy
         description = external.get('description')
         if description:
-            external[u'desc'] = external['description'] = description.strip()  # legacy
+            # legacy
+            external['desc'] = external['description'] = description.strip()
         if 'target' in external:
             # legacy
-            external[u'target-ntiid'] = external['target']
-            external[u'target-NTIID'] = external['target']
+            external['target-ntiid'] = external['target']
+            external['target-NTIID'] = external['target']
         if 'type' in external:
-            external[u'targetMimeType'] = external['type']
+            external['targetMimeType'] = external['type']
 
 
 @component.adapter(INTITimeline)
@@ -758,7 +763,7 @@ class _NTITimelineDecorator(_BaseAssetDecorator):
     def decorateExternalObject(self, original, external):
         super(_NTITimelineDecorator, self).decorateExternalObject(original, external)
         if 'description' in external:
-            external[u'desc'] = external['description']
+            external['desc'] = external['description']
         inline = external.pop('suggested_inline', None)
         if inline is not None:
             external['suggested-inline'] = inline
@@ -772,12 +777,12 @@ class _NTIBaseSlideDecorator(_BaseAssetDecorator):
     def decorateExternalObject(self, original, external):
         super(_NTIBaseSlideDecorator, self).decorateExternalObject(original, external)
         if 'byline' in external:
-            external[u'creator'] = external['byline']
+            external['creator'] = external['byline']
         if CLASS in external:
-            external[u'class'] = (external.get(CLASS) or u'').lower()  # legacy
+            external['class'] = (external.get(CLASS) or '').lower()  # legacy
         if 'description' in external and not external['description']:
             external.pop('description')
-        external[u'ntiid'] = external[NTIID] = original.ntiid
+        external['ntiid'] = external[NTIID] = original.ntiid
 
 
 @component.adapter(INTISlide)
@@ -803,7 +808,7 @@ class _NTISlideVideoDecorator(_NTIBaseSlideDecorator):
     def decorateExternalObject(self, original, external):
         super(_NTISlideVideoDecorator, self).decorateExternalObject(original, external)
         if 'video_ntiid' in external:
-            external[u'video-ntiid'] = external['video_ntiid']  # legacy
+            external['video-ntiid'] = external['video_ntiid']  # legacy
 
 
 @component.adapter(INTISlideDeck)
@@ -814,7 +819,7 @@ class _NTISlideDeckDecorator(_NTIBaseSlideDecorator):
 
     def decorateExternalObject(self, original, external):
         super(_NTISlideDeckDecorator, self).decorateExternalObject(original, external)
-        external[u'creator'] = original.byline
+        external['creator'] = original.byline
 
 
 @component.adapter(INTIAudioRef)
@@ -826,7 +831,7 @@ class _NTIAudioRefDecorator(_BaseAssetDecorator):
     def decorateExternalObject(self, original, external):
         super(_NTIAudioRefDecorator, self).decorateExternalObject(original, external)
         if MIMETYPE in external:
-            external[MIMETYPE] = u"application/vnd.nextthought.ntiaudio"
+            external[MIMETYPE] = "application/vnd.nextthought.ntiaudio"
 
 
 @component.adapter(INTIVideoRef)
@@ -838,7 +843,7 @@ class _NTIVideoRefDecorator(_BaseAssetDecorator):
     def decorateExternalObject(self, original, external):
         super(_NTIVideoRefDecorator, self).decorateExternalObject(original, external)
         if MIMETYPE in external:
-            external[MIMETYPE] = u"application/vnd.nextthought.ntivideo"
+            external[MIMETYPE] = "application/vnd.nextthought.ntivideo"
 
 
 @interface.implementer(IExternalObjectDecorator)
@@ -848,15 +853,16 @@ class _BaseMediaDecorator(object):
 
     def decorateExternalObject(self, original, external):
         if MIMETYPE in external:
-            external[StandardExternalFields.CTA_MIMETYPE] = external[MIMETYPE]  # legacy
+            # legacy
+            external[StandardExternalFields.CTA_MIMETYPE] = external[MIMETYPE]
 
         if 'byline' in external:
-            external[u'creator'] = external['byline']  # legacy
+            external['creator'] = external['byline']  # legacy
 
         if 'ntiid' in external and NTIID not in external:
             external[NTIID] = external['ntiid']  # alias
 
-        for name in (u'DCDescription', u'DCTitle'):
+        for name in ('DCDescription', 'DCTitle'):
             external.pop(name, None)
 
         for source in external.get('sources') or ():
@@ -877,7 +883,7 @@ class _NTIVideoDecorator(_BaseMediaDecorator):
     def decorateExternalObject(self, original, external):
         super(_NTIVideoDecorator, self).decorateExternalObject(original, external)
         if 'closed_caption' in external:
-            external[u'closedCaptions'] = external['closed_caption']  # legacy
+            external['closedCaptions'] = external['closed_caption']  # legacy
 
         for name in ('poster', 'label', 'subtitle'):
             if name in external and not external[name]:

@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -48,12 +48,12 @@ LEGACY_UAS_20 = ("NTIFoundation DataLoader NextThought/1.0",
                  "NTIFoundation DataLoader NextThought/1.2.")
 
 LEGACY_UAS_40 = LEGACY_UAS_20 + \
-                ("NTIFoundation DataLoader NextThought/1.3.",
-                 "NTIFoundation DataLoader NextThought/1.4.0")
+    ("NTIFoundation DataLoader NextThought/1.3.",
+     "NTIFoundation DataLoader NextThought/1.4.0")
 
 
 def is_legacy_uas(request, legacy_uas=LEGACY_UAS_40):
-    ua = request.environ.get(b'HTTP_USER_AGENT', '')
+    ua = request.environ.get('HTTP_USER_AGENT', '')
     if not ua:
         return False
     for lua in legacy_uas:
@@ -63,9 +63,9 @@ def is_legacy_uas(request, legacy_uas=LEGACY_UAS_40):
 
 
 def _is_visible(item, request, show_unpublished=True):
-    return     not IPublishable.providedBy(item) \
-            or item.is_published() \
-            or (show_unpublished and has_permission(ACT_CONTENT_EDIT, item, request))
+    return not IPublishable.providedBy(item) \
+        or item.is_published() \
+        or (show_unpublished and has_permission(ACT_CONTENT_EDIT, item, request))
 
 
 def get_omit_published(request):
