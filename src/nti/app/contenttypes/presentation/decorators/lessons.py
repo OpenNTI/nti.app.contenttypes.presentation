@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -37,13 +37,13 @@ LINKS = StandardExternalFields.LINKS
 class _LessonPublicationConstraintsLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
     def _predicate(self, context, result):
-        return  self._is_authenticated \
-            and (has_permission(ACT_CONTENT_EDIT, context, self.request))
+        return self._is_authenticated \
+           and has_permission(ACT_CONTENT_EDIT, context, self.request)
 
     def _do_decorate_external(self, context, result):
         _links = result.setdefault(LINKS, [])
         link = Link(context,
-                    rel='constraints', 
+                    rel='constraints',
                     elements=('PublicationConstraints',))
         interface.alsoProvides(link, ILocation)
         link.__name__ = ''
@@ -56,12 +56,13 @@ class _LessonPublicationConstraintsLinkDecorator(AbstractAuthenticatedRequestAwa
 class _LessonLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
     def _predicate(self, context, result):
-        return  self._is_authenticated \
-            and (has_permission(ACT_CONTENT_EDIT, context, self.request))
+        return self._is_authenticated \
+           and has_permission(ACT_CONTENT_EDIT, context, self.request)
 
     def _do_decorate_external(self, context, result):
         _links = result.setdefault(LINKS, [])
-        link = Link(context, rel=VIEW_LESSON_REMOVE_REFS,
+        link = Link(context, 
+                    rel=VIEW_LESSON_REMOVE_REFS,
                     elements=('@@%s' % VIEW_LESSON_REMOVE_REFS,),
                     method='DELETE')
         interface.alsoProvides(link, ILocation)

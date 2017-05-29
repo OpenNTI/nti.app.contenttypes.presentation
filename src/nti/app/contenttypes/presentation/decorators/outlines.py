@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -59,152 +59,161 @@ from nti.links.links import Link
 
 LINKS = StandardExternalFields.LINKS
 
+
 def _lesson_overview_links(context, request):
-	lesson = INTILessonOverview(context, None)
-	if lesson is not None and can_view_publishable(lesson, request):
-		result = []
-		omit_unpublished = get_omit_published(request)
-		for name in (VIEW_OVERVIEW_CONTENT, VIEW_OVERVIEW_SUMMARY):
-			link = Link(context, rel=name,
-						elements=('@@' + name,),
-						params={'omit_unpublished': omit_unpublished})
-			result.append(link)
-		return tuple(result)
-	return None
+    lesson = INTILessonOverview(context, None)
+    if lesson is not None and can_view_publishable(lesson, request):
+        result = []
+        omit_unpublished = get_omit_published(request)
+        for name in (VIEW_OVERVIEW_CONTENT, VIEW_OVERVIEW_SUMMARY):
+            link = Link(context, 
+                        rel=name,
+                        elements=('@@' + name,),
+                        params={'omit_unpublished': omit_unpublished})
+            result.append(link)
+        return tuple(result)
+    return None
+
 
 @component.adapter(ICourseOutline)
 @interface.implementer(IExternalMappingDecorator)
 class _CourseOutlineSharedDecorator(AbstractAuthenticatedRequestAwareDecorator):
-	"""
-	For course outline editors, display contextual information
-	if an outline is shared across multiple courses.
-	"""
-	@Lazy
-	def _acl_decoration(self):
-		request = get_current_request()
-		result = getattr(request, 'acl_decoration', True)
-		return result
+    """
+    For course outline editors, display contextual information
+    if an outline is shared across multiple courses.
+    """
 
-	def _predicate(self, context, result):
-		return 		self._acl_decoration \
-				and has_permission(ACT_CONTENT_EDIT, context, self.request)
+    @Lazy
+    def _acl_decoration(self):
+        request = get_current_request()
+        result = getattr(request, 'acl_decoration', True)
+        return result
 
-	def _do_decorate_external(self, context, result):
-		context_course = context.__parent__
-		possible_courses = get_course_hierarchy(context_course)
+    def _predicate(self, context, result):
+        return self._acl_decoration \
+           and has_permission(ACT_CONTENT_EDIT, context, self.request)
 
-		if len( possible_courses ) > 1:
-			matches = []
-			is_shared = False
-			our_outline = context_course.Outline
-			for course in possible_courses:
-				if context_course == course:
-					continue
+    def _do_decorate_external(self, context, result):
+        context_course = context.__parent__
+        possible_courses = get_course_hierarchy(context_course)
+        if len(possible_courses) > 1:
+            matches = []
+            is_shared = False
+            our_outline = context_course.Outline
+            for course in possible_courses:
+                if context_course == course:
+                    continue
+                if course.Outline == our_outline:
+                    is_shared = True
+                    catalog = ICourseCatalogEntry(course, None)
+                    if catalog is not None:
+                        matches.append(catalog.ntiid)
+            result['IsCourseOutlineShared'] = is_shared
+            result['CourseOutlineSharedEntries'] = matches
 
-				if course.Outline == our_outline:
-					is_shared = True
-					catalog = ICourseCatalogEntry(course, None)
-					if catalog is not None:
-						matches.append(catalog.ntiid)
-			result['IsCourseOutlineShared'] = is_shared
-			result['CourseOutlineSharedEntries'] = matches
 
 @component.adapter(ICourseOutline)
 @interface.implementer(IExternalMappingDecorator)
 class _CourseOutlineMoveLinkDecorator(_AbstractMoveLinkDecorator):
-	pass
+    pass
+
 
 @component.adapter(ICourseOutlineNode)
 @interface.implementer(IExternalMappingDecorator)
 class _CourseOutlineEditLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
-	@Lazy
-	def _acl_decoration(self):
-		result = getattr(self.request, 'acl_decoration', True)
-		return result
+    @Lazy
+    def _acl_decoration(self):
+        result = getattr(self.request, 'acl_decoration', True)
+        return result
 
-	def _predicate(self, context, result):
-		return		self._acl_decoration \
-				and self._is_authenticated \
-				and has_permission(ACT_CONTENT_EDIT, context, self.request)
+    def _predicate(self, context, result):
+        return self._acl_decoration \
+           and self._is_authenticated \
+           and has_permission(ACT_CONTENT_EDIT, context, self.request)
 
-	def _do_decorate_external(self, context, result):
-		links = result.setdefault(LINKS, [])
-		link = Link(context, rel=VIEW_ORDERED_CONTENTS, elements=('@@contents',))
-		interface.alsoProvides(link, ILocation)
-		link.__name__ = ''
-		link.__parent__ = context
-		links.append(link)
+    def _do_decorate_external(self, context, result):
+        links = result.setdefault(LINKS, [])
+        link = Link(context, rel=VIEW_ORDERED_CONTENTS,
+                    elements=('@@contents',))
+        interface.alsoProvides(link, ILocation)
+        link.__name__ = ''
+        link.__parent__ = context
+        links.append(link)
+
 
 @component.adapter(ICourseOutlineContentNode)
 @interface.implementer(IExternalMappingDecorator)
 class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
-	@Lazy
-	def _acl_decoration(self):
-		result = getattr(self.request, 'acl_decoration', True)
-		return result
+    @Lazy
+    def _acl_decoration(self):
+        result = getattr(self.request, 'acl_decoration', True)
+        return result
 
-	def _predicate(self, context, result):
-		return self._acl_decoration
+    def _predicate(self, context, result):
+        return self._acl_decoration
 
-	def _legacy_decorate_external(self, context, result):
-		# We want to decorate the old legacy content driven overviews
-		# with proper links. These objects do not have LessonOverviewNTIIDs.
-		if context.LessonOverviewNTIID is None:
-			library = component.queryUtility(IContentPackageLibrary)
-			paths = library.pathToNTIID(context.ContentNTIID) if library else ()
-			if paths:
-				href = IContentUnitHrefMapper(paths[-1].key).href
-				href = urljoin(href, context.src)
-				# set link for overview
-				links = result.setdefault(LINKS, [])
-				link = Link(href, rel=VIEW_OVERVIEW_CONTENT,
-							ignore_properties_of_target=True)
-				interface.alsoProvides(link, ILocation)
-				link.__name__ = ''
-				link.__parent__ = context
-				links.append(link)
-				return True
-		return False
+    def _legacy_decorate_external(self, context, result):
+        # We want to decorate the old legacy content driven overviews
+        # with proper links. These objects do not have LessonOverviewNTIIDs.
+        if context.LessonOverviewNTIID is None:
+            ntiid = context.ContentNTIID
+            library = component.queryUtility(IContentPackageLibrary)
+            paths = library.pathToNTIID(ntiid) if library else ()
+            if paths:
+                href = IContentUnitHrefMapper(paths[-1].key).href
+                href = urljoin(href, context.src)
+                # set link for overview
+                links = result.setdefault(LINKS, [])
+                link = Link(href, rel=VIEW_OVERVIEW_CONTENT,
+                            ignore_properties_of_target=True)
+                interface.alsoProvides(link, ILocation)
+                link.__name__ = ''
+                link.__parent__ = context
+                links.append(link)
+                return True
+        return False
 
-	def _overview_decorate_external(self, context, result):
-		overview_links = _lesson_overview_links(context, self.request)
-		if overview_links:
-			links = result.setdefault(LINKS, [])
-			links.extend(overview_links)
-			return True
-		return False
+    def _overview_decorate_external(self, context, result):
+        overview_links = _lesson_overview_links(context, self.request)
+        if overview_links:
+            links = result.setdefault(LINKS, [])
+            links.extend(overview_links)
+            return True
+        return False
 
-	def _do_decorate_external(self, context, result):
-		if not self._overview_decorate_external(context, result):
-			self._legacy_decorate_external(context, result)
+    def _do_decorate_external(self, context, result):
+        if not self._overview_decorate_external(context, result):
+            self._legacy_decorate_external(context, result)
+
 
 @component.adapter(ICourseOutlineContentNode)
 @interface.implementer(IExternalMappingDecorator)
 class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
-	def _predicate(self, context, result):
-		result = is_legacy_uas(self.request, LEGACY_UAS_20)
-		return result
+    def _predicate(self, context, result):
+        result = is_legacy_uas(self.request, LEGACY_UAS_20)
+        return result
 
-	def _overview_decorate_external(self, context, result):
-		try:
-			overview_links = _lesson_overview_links(context, self.request)
-			link = overview_links[0] if overview_links else None
-			if link is not None:
-				href = render_link(link)['href']
-				url = urljoin(self.request.host_url, href)
-				result['src'] = url
-				return True
-		except (KeyError, ValueError, AssertionError):
-			pass
-		return False
+    def _overview_decorate_external(self, context, result):
+        try:
+            overview_links = _lesson_overview_links(context, self.request)
+            link = overview_links[0] if overview_links else None
+            if link is not None:
+                href = render_link(link)['href']
+                url = urljoin(self.request.host_url, href)
+                result['src'] = url
+                return True
+        except (KeyError, ValueError, AssertionError):
+            pass
+        return False
 
-	def _do_decorate_external(self, context, result):
-		self._overview_decorate_external(context, result)
+    def _do_decorate_external(self, context, result):
+        self._overview_decorate_external(context, result)
+
 
 @component.adapter(ICourseOutlineNode)
 @interface.implementer(IExternalMappingDecorator)
 class OutlineNodeRecursiveAuditLogLinkDecorator(BaseRecursiveAuditLogLinkDecorator):
-	pass
+    pass
