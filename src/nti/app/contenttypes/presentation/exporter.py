@@ -65,6 +65,7 @@ INTERNAL_CONTAINER_ID = StandardInternalFields.CONTAINER_ID
 
 def _outline_nodes(outline, seen):
     result = []
+
     def _recur(node):
         ntiid = node.LessonOverviewNTIID
         if ntiid and ntiid not in seen:
@@ -96,9 +97,9 @@ class LessonOverviewsExporter(BaseSectionExporter):
                     ntiids = ext_constraint.get('assignments')
                 else:
                     ntiids = ()
-                for i in range(len(ntiids or ())):
-                    evaluation = component.queryUtility(IQEvaluation, 
-                                                        name=ntiids[i])
+                for i, ntiid in enumerate(ntiids or ()):
+                    evaluation = component.queryUtility(IQEvaluation, ntiid)
+                    # only hash ntiid if it's an authored evaluation
                     if IQEditableEvaluation.providedBy(evaluation):
                         ntiids[i] = self.hash_ntiid(ntiids[i], salt)
                 # remove ntiids
@@ -121,8 +122,8 @@ class LessonOverviewsExporter(BaseSectionExporter):
             if INTIMediaRoll.providedBy(asset.__parent__):
                 ext_obj.pop(NTIID, None)
                 ext_obj.pop(INTERNAL_NTIID, None)
-            if      INTIMedia.providedBy(concrete) \
-                and not INTIMediaRoll.providedBy(asset.__parent__):
+            if INTIMedia.providedBy(concrete) \
+                    and not INTIMediaRoll.providedBy(asset.__parent__):
                 for name in ('sources', 'transcripts'):
                     for item in ext_obj.get(name) or ():
                         item.pop(OID, None)
@@ -173,7 +174,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
         if not backup:  # don't leak internal OIDs
             for name in (NTIID, INTERNAL_NTIID, INTERNAL_CONTAINER_ID, 'target'):
                 value = ext_obj.get(name)
-                if      value \
+                if value \
                     and is_valid_ntiid_string(value) \
                     and (   is_ntiid_of_type(value, TYPE_OID)
                          or is_ntiid_of_type(value, TYPE_UUID)):
