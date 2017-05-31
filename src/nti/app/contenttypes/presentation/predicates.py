@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -48,9 +48,9 @@ from nti.dataserver.authorization import ACT_CONTENT_EDIT
 from nti.dataserver.interfaces import IUser
 from nti.dataserver.interfaces import ISystemUserPrincipal
 
-from nti.dataserver.users.users import User
+from nti.dataserver.metadata.predicates import BasePrincipalObjects
 
-from nti.metadata.predicates import BasePrincipalObjects
+from nti.dataserver.users.users import User
 
 from nti.publishing.interfaces import ICalendarPublishablePredicate
 
@@ -157,7 +157,8 @@ class SurveyCompletionConstraintChecker(object):
             survey = component.queryUtility(IQSurvey, name=survey_ntiid)
             if survey is None:
                 continue
-            due_date = get_available_for_submission_ending(survey, course) or now
+            due_date = get_available_for_submission_ending(
+                survey, course) or now
             if due_date >= now and not has_submitted_inquiry(course, user, survey):
                 return False
         return True

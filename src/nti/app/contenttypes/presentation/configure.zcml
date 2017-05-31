@@ -212,9 +212,7 @@
 	<include package=".decorators" />
 
 	<!-- Metadata -->
-	<configure zcml:condition="installed nti.metadata">
-		<subscriber	factory=".predicates._PresentationAssetObjects"
-					provides="nti.dataserver.interfaces.IPrincipalMetadataObjects" />
-	</configure>
+	<subscriber	factory=".predicates._PresentationAssetObjects"
+				provides="nti.dataserver.metadata.interfaces.IPrincipalMetadataObjects" />
 
 </configure>
