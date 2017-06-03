@@ -109,20 +109,20 @@ from nti.contenttypes.courses.utils import get_courses_for_packages
 
 from nti.contenttypes.presentation import iface_of_asset
 
-from nti.contenttypes.presentation import AUDIO_MIMETYES
-from nti.contenttypes.presentation import VIDEO_MIMETYES
-from nti.contenttypes.presentation import POLL_REF_MIMETYES
-from nti.contenttypes.presentation import TIMELINE_MIMETYES
-from nti.contenttypes.presentation import SURVEY_REF_MIMETYES
-from nti.contenttypes.presentation import TIMELINE_REF_MIMETYES
-from nti.contenttypes.presentation import ASSIGNMENT_REF_MIMETYES
-from nti.contenttypes.presentation import SLIDE_DECK_REF_MIMETYES
-from nti.contenttypes.presentation import LESSON_OVERVIEW_MIMETYES
-from nti.contenttypes.presentation import QUESTIONSET_REF_MIMETYES
+from nti.contenttypes.presentation import AUDIO_MIME_TYPES
+from nti.contenttypes.presentation import VIDEO_MIME_TYPES
+from nti.contenttypes.presentation import POLL_REF_MIME_TYPES
+from nti.contenttypes.presentation import TIMELINE_MIME_TYPES
+from nti.contenttypes.presentation import SURVEY_REF_MIME_TYPES
+from nti.contenttypes.presentation import TIMELINE_REF_MIME_TYPES
+from nti.contenttypes.presentation import ASSIGNMENT_REF_MIME_TYPES
+from nti.contenttypes.presentation import SLIDE_DECK_REF_MIME_TYPES
+from nti.contenttypes.presentation import LESSON_OVERVIEW_MIME_TYPES
+from nti.contenttypes.presentation import QUESTIONSET_REF_MIME_TYPES
 from nti.contenttypes.presentation import ALL_MEDIA_ROLL_MIME_TYPES
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
-from nti.contenttypes.presentation import COURSE_OVERVIEW_GROUP_MIMETYES
-from nti.contenttypes.presentation import RELATED_WORK_REF_POINTER_MIMETYES
+from nti.contenttypes.presentation import COURSE_OVERVIEW_GROUP_MIME_TYPES
+from nti.contenttypes.presentation import RELATED_WORK_REF_POINTER_MIME_TYPES
 
 from nti.contenttypes.presentation.discussion import is_nti_course_bundle
 
@@ -910,9 +910,9 @@ def preflight_input(externalValue):
 	mimeType = externalValue.get(MIMETYPE) or externalValue.get('mimeType')
 	if mimeType in ALL_MEDIA_ROLL_MIME_TYPES:
 		return preflight_mediaroll(externalValue)
-	elif mimeType in COURSE_OVERVIEW_GROUP_MIMETYES:
+	elif mimeType in COURSE_OVERVIEW_GROUP_MIME_TYPES:
 		return preflight_overview_group(externalValue)
-	elif mimeType in LESSON_OVERVIEW_MIMETYES:
+	elif mimeType in LESSON_OVERVIEW_MIME_TYPES:
 		return preflight_lesson_overview(externalValue)
 	_validate_input(externalValue)
 	return externalValue
@@ -1345,7 +1345,7 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 		# process input
 		externalValue = self.readInput() if not externalValue else externalValue
 		if MIMETYPE not in externalValue:
-			externalValue[MIMETYPE] = COURSE_OVERVIEW_GROUP_MIMETYES[0]
+			externalValue[MIMETYPE] = COURSE_OVERVIEW_GROUP_MIME_TYPES[0]
 		externalValue = preflight_input(externalValue)
 		result = copy.deepcopy(externalValue)  # return original input
 		# create object
@@ -1408,8 +1408,8 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
 		# Do not remove our media ntiids, these will be our ref targets.
 		# If we don't have a mimeType, we need the ntiid to fetch the (video) object.
 		mimeType = ext_obj.get(MIMETYPE) or ext_obj.get('mimeType')
-		is_media = bool(mimeType in VIDEO_MIMETYES or mimeType in AUDIO_MIMETYES)
-		if mimeType and not is_media and mimeType not in TIMELINE_MIMETYES:
+		is_media = bool(mimeType in VIDEO_MIME_TYPES or mimeType in AUDIO_MIME_TYPES)
+		if mimeType and not is_media and mimeType not in TIMELINE_MIME_TYPES:
 			super(CourseOverviewGroupInsertView, self)._remove_ntiids(ext_obj, do_remove)
 
 	def _do_preflight_input(self, externalValue):
@@ -1429,15 +1429,15 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
 
 			if 		INTISlideDeck.providedBy(resolved) \
 				or	INTISlideDeckRef.providedBy(resolved):
-				externalValue[MIMETYPE] = SLIDE_DECK_REF_MIMETYES[0]  # make a ref always
+				externalValue[MIMETYPE] = SLIDE_DECK_REF_MIME_TYPES[0]  # make a ref always
 			# timelines
 			elif 	INTITimeline.providedBy(resolved) \
 				or	INTITimelineRef.providedBy(resolved):
-				externalValue[MIMETYPE] = TIMELINE_REF_MIMETYES[0]  # make a ref always
+				externalValue[MIMETYPE] = TIMELINE_REF_MIME_TYPES[0]  # make a ref always
 			# relatedwork refs
 			elif 	INTIRelatedWorkRef.providedBy(resolved) \
 				or	INTIRelatedWorkRefPointer.providedBy(resolved):
-				externalValue[MIMETYPE] = RELATED_WORK_REF_POINTER_MIMETYES[0]  # make a ref always
+				externalValue[MIMETYPE] = RELATED_WORK_REF_POINTER_MIME_TYPES[0]  # make a ref always
 			# media objects
 			elif	INTIMedia.providedBy(resolved) \
 				or	INTIMediaRef.providedBy(resolved):
@@ -1445,26 +1445,26 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
 			# assignment objects
 			elif	IQAssignment.providedBy(resolved) \
 				or	INTIAssignmentRef.providedBy(resolved):
-				externalValue[MIMETYPE] = ASSIGNMENT_REF_MIMETYES[0]
+				externalValue[MIMETYPE] = ASSIGNMENT_REF_MIME_TYPES[0]
 			# poll objects
 			elif	IQPoll.providedBy(resolved) \
 				or	INTIPollRef.providedBy(resolved):
-				externalValue[MIMETYPE] = POLL_REF_MIMETYES[0]
+				externalValue[MIMETYPE] = POLL_REF_MIME_TYPES[0]
 			# survey objects
 			elif	IQSurvey.providedBy(resolved) \
 				or	INTISurveyRef.providedBy(resolved):
-				externalValue[MIMETYPE] = SURVEY_REF_MIMETYES[0]
+				externalValue[MIMETYPE] = SURVEY_REF_MIME_TYPES[0]
 			# question sets
 			elif	IQuestionSet.providedBy(resolved) \
 				or	INTIQuestionSetRef.providedBy(resolved):
-				externalValue[MIMETYPE] = QUESTIONSET_REF_MIMETYES[0]
+				externalValue[MIMETYPE] = QUESTIONSET_REF_MIME_TYPES[0]
 			else:
 				# We did not have a mimetype, and we have an ntiid the resolved
 				# into an unexpected type; blow chunks.
 				raise hexc.HTTPUnprocessableEntity(_('Invalid overview group item'))
 
 		mimeType = externalValue.get(MIMETYPE) or externalValue.get('mimeType')
-		if mimeType in VIDEO_MIMETYES or mimeType in AUDIO_MIMETYES:
+		if mimeType in VIDEO_MIME_TYPES or mimeType in AUDIO_MIME_TYPES:
 			if isinstance(externalValue, Mapping):
 				internalization_ntiaudioref_pre_hook(None, externalValue)
 				internalization_ntivideoref_pre_hook(None, externalValue)

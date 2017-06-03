@@ -90,20 +90,20 @@ from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.courses.interfaces import ES_ALL
 
-from nti.contenttypes.presentation import AUDIO_MIMETYES
-from nti.contenttypes.presentation import VIDEO_MIMETYES
-from nti.contenttypes.presentation import TIMELINE_MIMETYES
-from nti.contenttypes.presentation import VIDEO_REF_MIMETYES
-from nti.contenttypes.presentation import AUDIO_REF_MIMETYES
-from nti.contenttypes.presentation import AUDIO_ROLL_MIMETYES
-from nti.contenttypes.presentation import SLIDE_DECK_MIMETYES
-from nti.contenttypes.presentation import VIDEO_ROLL_MIMETYES
-from nti.contenttypes.presentation import TIMELINE_REF_MIMETYES
-from nti.contenttypes.presentation import SLIDE_DECK_REF_MIMETYES
-from nti.contenttypes.presentation import DISCUSSION_REF_MIMETYES
-from nti.contenttypes.presentation import ASSIGNMENT_REF_MIMETYES
-from nti.contenttypes.presentation import QUESTIONSET_REF_MIMETYES
-from nti.contenttypes.presentation import RELATED_WORK_REF_MIMETYES
+from nti.contenttypes.presentation import AUDIO_MIME_TYPES
+from nti.contenttypes.presentation import VIDEO_MIME_TYPES
+from nti.contenttypes.presentation import TIMELINE_MIME_TYPES
+from nti.contenttypes.presentation import VIDEO_REF_MIME_TYPES
+from nti.contenttypes.presentation import AUDIO_REF_MIME_TYPES
+from nti.contenttypes.presentation import AUDIO_ROLL_MIME_TYPES
+from nti.contenttypes.presentation import SLIDE_DECK_MIME_TYPES
+from nti.contenttypes.presentation import VIDEO_ROLL_MIME_TYPES
+from nti.contenttypes.presentation import TIMELINE_REF_MIME_TYPES
+from nti.contenttypes.presentation import SLIDE_DECK_REF_MIME_TYPES
+from nti.contenttypes.presentation import DISCUSSION_REF_MIME_TYPES
+from nti.contenttypes.presentation import ASSIGNMENT_REF_MIME_TYPES
+from nti.contenttypes.presentation import QUESTIONSET_REF_MIME_TYPES
+from nti.contenttypes.presentation import RELATED_WORK_REF_MIME_TYPES
 
 from nti.contenttypes.presentation import NTI_LESSON_OVERVIEW
 
@@ -551,32 +551,32 @@ def _get_group_accept_types(accept_types):
         return None
     result = set()
     for accept_type in accept_types:
-        if accept_type in AUDIO_MIMETYES:
-            result.update(AUDIO_MIMETYES)
-            result.update(AUDIO_REF_MIMETYES)
-            result.update(AUDIO_ROLL_MIMETYES)
-        elif accept_type in VIDEO_MIMETYES:
-            result.update(VIDEO_MIMETYES)
-            result.update(VIDEO_REF_MIMETYES)
-            result.update(VIDEO_ROLL_MIMETYES)
-        elif accept_type in RELATED_WORK_REF_MIMETYES:
-            result.update(RELATED_WORK_REF_MIMETYES)
-        elif accept_type in VIDEO_ROLL_MIMETYES:
-            result.update(VIDEO_ROLL_MIMETYES)
-        elif accept_type in AUDIO_ROLL_MIMETYES:
-            result.update(AUDIO_ROLL_MIMETYES)
-        elif accept_type in TIMELINE_MIMETYES:
-            result.update(TIMELINE_MIMETYES)
-            result.update(TIMELINE_REF_MIMETYES)
-        elif accept_type in SLIDE_DECK_MIMETYES:
-            result.update(SLIDE_DECK_MIMETYES)
-            result.update(SLIDE_DECK_REF_MIMETYES)
-        elif accept_type in DISCUSSION_REF_MIMETYES:
-            result.update(DISCUSSION_REF_MIMETYES)
-        elif accept_type in QUESTIONSET_REF_MIMETYES:
-            result.update(QUESTIONSET_REF_MIMETYES)
-        elif accept_type in ASSIGNMENT_REF_MIMETYES:
-            result.update(ASSIGNMENT_REF_MIMETYES)
+        if accept_type in AUDIO_MIME_TYPES:
+            result.update(AUDIO_MIME_TYPES)
+            result.update(AUDIO_REF_MIME_TYPES)
+            result.update(AUDIO_ROLL_MIME_TYPES)
+        elif accept_type in VIDEO_MIME_TYPES:
+            result.update(VIDEO_MIME_TYPES)
+            result.update(VIDEO_REF_MIME_TYPES)
+            result.update(VIDEO_ROLL_MIME_TYPES)
+        elif accept_type in RELATED_WORK_REF_MIME_TYPES:
+            result.update(RELATED_WORK_REF_MIME_TYPES)
+        elif accept_type in VIDEO_ROLL_MIME_TYPES:
+            result.update(VIDEO_ROLL_MIME_TYPES)
+        elif accept_type in AUDIO_ROLL_MIME_TYPES:
+            result.update(AUDIO_ROLL_MIME_TYPES)
+        elif accept_type in TIMELINE_MIME_TYPES:
+            result.update(TIMELINE_MIME_TYPES)
+            result.update(TIMELINE_REF_MIME_TYPES)
+        elif accept_type in SLIDE_DECK_MIME_TYPES:
+            result.update(SLIDE_DECK_MIME_TYPES)
+            result.update(SLIDE_DECK_REF_MIME_TYPES)
+        elif accept_type in DISCUSSION_REF_MIME_TYPES:
+            result.update(DISCUSSION_REF_MIME_TYPES)
+        elif accept_type in QUESTIONSET_REF_MIME_TYPES:
+            result.update(QUESTIONSET_REF_MIME_TYPES)
+        elif accept_type in ASSIGNMENT_REF_MIME_TYPES:
+            result.update(ASSIGNMENT_REF_MIME_TYPES)
     return result
 
 
