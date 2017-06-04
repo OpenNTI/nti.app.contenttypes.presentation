@@ -29,7 +29,7 @@ from nti.contenttypes.presentation.lesson import NTICourseOverViewSpacer
 
 from nti.contenttypes.presentation.utils import prepare_json_text
 from nti.contenttypes.presentation.utils import create_object_from_external
-from nti.contenttypes.presentation.utils import create_lessonoverview_from_external
+from nti.contenttypes.presentation.utils import create_ntilessonoverview_from_external
 
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.externalization import to_external_object
@@ -70,7 +70,7 @@ class TestLesson(unittest.TestCase):
 		with open(path, "r") as fp:
 			source = simplejson.loads(prepare_json_text(fp.read()))
 
-		lesson = create_lessonoverview_from_external(source)
+		lesson = create_ntilessonoverview_from_external(source)
 		assert_that(lesson, has_property('ntiid', is_(u'tag:nextthought.com,2011-10:OU-NTILessonOverview-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:11.06_LESSON')))
 		assert_that(lesson, has_property('lesson', is_(u'tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:11.06_LESSON')))
 		assert_that(lesson, has_property('Items', has_length(5)))
@@ -104,7 +104,7 @@ class TestLesson(unittest.TestCase):
 		with open(path, "r") as fp:
 			source = simplejson.loads(prepare_json_text(fp.read()))
 
-		lesson = create_lessonoverview_from_external(source)
+		lesson = create_ntilessonoverview_from_external(source)
 		ext_obj = to_external_object(lesson, name="exporter")
 		assert_that(ext_obj, has_key('Class'))
 		assert_that(ext_obj, has_entry('NTIID', is_(u"tag:nextthought.com,2011-10:OU-NTILessonOverview-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:11.06_LESSON")))

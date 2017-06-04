@@ -84,7 +84,7 @@ from nti.contenttypes.presentation.interfaces import IContentBackedPresentationA
 
 from nti.contenttypes.presentation.media import NTIVideoRoll
 
-from nti.contenttypes.presentation.utils import create_lessonoverview_from_external
+from nti.contenttypes.presentation.utils import create_ntilessonoverview_from_external
 
 from nti.externalization.externalization import to_external_object
 
@@ -427,7 +427,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 	source_data = copy.deepcopy(json_data) # copy for tracking
 	# We'll handle this on update, manually.
 	json_data.pop('PublicationConstraints', None)
-	overview = create_lessonoverview_from_external(json_data, notify=False)
+	overview = create_ntilessonoverview_from_external(json_data, notify=False)
 
 	existing_overview = registry.queryUtility(INTILessonOverview, name=overview.ntiid)
 	is_locked, locked_ntiids = _is_lesson_sync_locked(existing_overview)

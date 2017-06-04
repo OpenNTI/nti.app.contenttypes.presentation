@@ -31,7 +31,7 @@ from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.group import NTICourseOverViewGroup
 
 from nti.contenttypes.presentation.utils import prepare_json_text
-from nti.contenttypes.presentation.utils import create_courseoverview_from_external
+from nti.contenttypes.presentation.utils import create_nticourseoverviewgroup_from_external
 
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.externalization import to_external_object
@@ -63,7 +63,7 @@ class TestGroup(unittest.TestCase):
 			source = simplejson.loads(prepare_json_text(fp.read()))
 			original = copy.deepcopy(source)
 
-		group = create_courseoverview_from_external(source)
+		group = create_nticourseoverviewgroup_from_external(source)
 		assert_that(group, has_property('ntiid', is_not(none())))
 		assert_that(group, has_property('color', is_(u'f11824e')))
 		assert_that(group, has_property('title', is_(u'Required Resources')))
