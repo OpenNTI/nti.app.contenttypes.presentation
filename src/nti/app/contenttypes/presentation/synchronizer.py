@@ -122,7 +122,7 @@ from nti.traversal.traversal import find_interface
 ITEMS = StandardExternalFields.ITEMS
 
 def _prepare_json_text(s):
-	result = unicode(s, 'utf-8') if isinstance(s, bytes) else s
+	result = s.decode('utf-8') if isinstance(s, bytes) else s
 	return result
 prepare_json_text = _prepare_json_text
 
