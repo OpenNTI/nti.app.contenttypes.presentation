@@ -21,7 +21,7 @@ import unittest
 import simplejson
 
 from nti.contenttypes.presentation.utils import prepare_json_text
-from nti.contenttypes.presentation.utils import create_ntitimelime_from_external
+from nti.contenttypes.presentation.utils import create_ntitimeline_from_external
 
 from nti.externalization.externalization import to_external_object
 
@@ -43,7 +43,7 @@ class TestTimeline(unittest.TestCase):
             source = simplejson.loads(prepare_json_text(fp.read()))
             original = copy.deepcopy(source)
 
-        timeline = create_ntitimelime_from_external(source)
+        timeline = create_ntitimeline_from_external(source)
         assert_that(timeline, 
                     has_property('label', is_("Heading West")))
         assert_that(timeline, 
@@ -75,7 +75,7 @@ class TestTimeline(unittest.TestCase):
         assert_that(source, 
                     has_entry(MIMETYPE, is_('application/vnd.nextthought.ntitimeline')))
 
-        timeline = create_ntitimelime_from_external(source)
+        timeline = create_ntitimeline_from_external(source)
         assert_that(timeline, 
                     has_property('label', is_("Reconstruction and The New South")))
         assert_that(timeline,
