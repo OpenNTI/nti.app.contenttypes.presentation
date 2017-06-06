@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -62,7 +62,6 @@ class BasePresentationAssetACLProvider(object):
         courses = get_presentation_asset_courses(self.context)
         for course in courses or ():
             result.extend(IACLProvider(course).__acl__)
-
         # If legacy, let parent objects determine ACL.
         if not ILegacyPresentationAsset.providedBy(self.context):
             result.append(ACE_DENY_ALL)
