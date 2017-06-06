@@ -27,8 +27,8 @@
 	<adapter factory=".validators._SlideDeckRefValidator" />
 	<adapter factory=".validators._AssignmentRefValidator" />
 	<adapter factory=".validators._RelatedWorkRefPointerValidator" />
-	<adapter factory=".validators._AssignmentCompletionConstraintValidator" />
 	<adapter factory=".validators._SurveyCompletionConstraintValidator" />
+	<adapter factory=".validators._AssignmentCompletionConstraintValidator" />
 
 	<adapter factory=".adapters._pollref_to_poll" />
 	<adapter factory=".adapters._audioref_to_audio" />
@@ -214,5 +214,13 @@
 	<!-- Metadata -->
 	<subscriber	factory=".predicates._PresentationAssetObjects"
 				provides="nti.dataserver.metadata.interfaces.IPrincipalMetadataObjects" />
+
+	<!-- Catalog -->
+	<adapter factory=".catalog._asset_to_site" />
+	<adapter factory=".catalog._asset_to_ntiid" />
+	<adapter factory=".catalog._asset_to_target" />
+	<adapter factory=".catalog._asset_to_namespace" />
+	<adapter factory=".catalog._asset_to_containers" />
+	<adapter factory=".catalog._asset_to_contained_type" />
 
 </configure>

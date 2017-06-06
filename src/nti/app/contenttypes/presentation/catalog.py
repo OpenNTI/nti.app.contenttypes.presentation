@@ -43,6 +43,7 @@ from nti.site.interfaces import IHostPolicyFolder
 
 from nti.traversal.traversal import find_interface
 
+
 # Site
 
 
@@ -54,8 +55,8 @@ class _Site(object):
         self.site = site
 
 
-@component.adapter(IPresentationAsset)
 @interface.implementer(ISiteAdapter)
+@component.adapter(IPresentationAsset)
 def _asset_to_site(context):
     folder = find_interface(context, IHostPolicyFolder, strict=False)
     if folder is not None:
