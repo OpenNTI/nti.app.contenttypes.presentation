@@ -111,7 +111,7 @@ class AssignmentCompletionConstraintChecker(object):
         self.constraint = constraint
 
     def satisfied_time(self, user):
-        user = User.get_user(user)
+        user = get_user(user)
         course = ICourseInstance(self, None)
 
         # By default, unless we have relevant completed constraints,
