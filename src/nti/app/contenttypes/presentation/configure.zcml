@@ -72,11 +72,11 @@
 
 	<adapter factory=".predicates.AssignmentCompletionConstraintChecker"
 			 for="nti.contenttypes.presentation.interfaces.IAssignmentCompletionConstraint"
-			 provides=".interfaces.ILessonPublicationConstraintChecker" />
+			 provides="nti.contenttypes.presentation.interfaces.ILessonPublicationConstraintChecker" />
 
 	<adapter factory=".predicates.SurveyCompletionConstraintChecker"
 			 for="nti.contenttypes.presentation.interfaces.ISurveyCompletionConstraint"
-			 provides=".interfaces.ILessonPublicationConstraintChecker" />
+			 provides="nti.contenttypes.presentation.interfaces.ILessonPublicationConstraintChecker" />
 
     <adapter factory=".adapters._UserAssetVisibilityUtility"
              for="nti.dataserver.interfaces.IUser

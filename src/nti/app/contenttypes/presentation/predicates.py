@@ -26,7 +26,7 @@ from nti.app.assessment.common import get_available_for_submission_ending
 
 from nti.app.assessment.interfaces import IUsersCourseAssignmentHistory
 
-from nti.app.contenttypes.presentation.interfaces import ILessonPublicationConstraintChecker
+from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraintChecker
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 

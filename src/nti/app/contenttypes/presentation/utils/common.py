@@ -19,7 +19,6 @@ from zope.interface.adapter import _lookupAll as zopeLookupAll  # Private func
 from zope.intid.interfaces import IIntIds
 
 from nti.app.contenttypes.presentation.utils.asset import remove_presentation_asset
-from nti.app.contenttypes.presentation.interfaces import ILessonPublicationConstraintChecker
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
@@ -30,8 +29,6 @@ from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.presentation import COURSE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 from nti.contenttypes.presentation import iface_of_asset
-
-from nti.contenttypes.presentation.lesson import constraints_for_lesson
 
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
@@ -257,26 +254,3 @@ def remove_course_inaccessible_assets():
     result['Difference'] = sorted(master.difference(registered))
     result[ITEM_COUNT] = result[TOTAL] = len(items)
     return result
-
-
-def get_constraint_satisfied_time(user, lesson):
-    constraints = constraints_for_lesson(lesson, False)
-    if constraints is not None:
-        satisfied_time = 0
-        for constraint in constraints.Items:
-            checker = ILessonPublicationConstraintChecker(constraint, None)
-            constraint_satisfied_time = checker.satisfied_time(user)
-            if constraint_satisfied_time is not None:
-                satisfied_time = max(satisfied_time, constraint_satisfied_time)
-            else:
-                # If we have a constraint that does not return a time,
-                # it is not satisfied, and we should break out of the
-                # loop and return None because not all constraints have
-                # been satisfied for this lesson.
-                satisfied_time = None
-                break
-    else:
-        # If we have no constraints for this lesson, return None
-        satisfied_time = None
-
-    return satisfied_time
