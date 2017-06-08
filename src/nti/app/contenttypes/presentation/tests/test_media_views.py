@@ -30,6 +30,8 @@ class TestMediaViews(ApplicationLayerTest):
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_transcripts(self):
-        href = '/dataserver2/Objects/%s/@@transcripts' % self.video_ntiid
+        href = '/dataserver2/Objects/%s' % self.video_ntiid
+        res = self.testapp.get(href, status=200)
+        href = self.require_link_href_with_rel(res.json_body, 'transcripts')
         res = self.testapp.get(href, status=200)
         assert_that(res.json_body, has_entry('Items', has_length(1)))
