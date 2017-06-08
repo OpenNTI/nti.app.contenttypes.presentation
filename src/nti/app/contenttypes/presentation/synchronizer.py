@@ -29,6 +29,8 @@ from ZODB.interfaces import IConnection
 
 from nti.app.products.courseware.utils import transfer_resources_from_filer
 
+from nti.app.contentlibrary.subscribers import parse_embedded_transcripts
+
 from nti.app.contenttypes.presentation.interfaces import IItemRefValidator
 
 from nti.app.contenttypes.presentation.utils import db_connection
@@ -137,7 +139,7 @@ def _can_be_removed(registered, force=False):
 	return result
 can_be_removed = _can_be_removed
 
-def _unregister(registry, component=None, provided=None, name=None):
+def _unregister(registry, provided=None, name=None):
 	result = unregisterUtility(registry, provided=provided, name=name)
 	if not result and allowed_in_registry(provided):
 		logger.warn("Could not unregister (%s,%s) during sync, continuing...",
@@ -470,6 +472,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 		# canonicalize item refs
 		while idx < len(items):
 			item = items[idx]
+			json_item = json_items[idx]
 
 			if _is_auto_roll_coalesce(item):
 				# Ok, we have media that we want to auto-coalesce into a roll.
@@ -480,9 +483,9 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 
 				# coalesce into a media roll
 				while _is_auto_roll_coalesce(roll_item):
-
 					# It should be ok if this is called multiple times on object.
 					_, registered = _do_register(roll_item, registry)
+					parse_embedded_transcripts(registered, json_item)
 
 					# Transform any media to a media ref since media rolls
 					# only contain refs
@@ -499,6 +502,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 
 					roll_idx += 1
 					roll_item = items[roll_idx] if roll_idx < len(items) else None
+					json_item = json_items[roll_idx] if roll_idx < len(items) else None
 
 				# Must have at least two items in our auto-roll; otherwise continue on.
 				if len(media_roll) > 1:
