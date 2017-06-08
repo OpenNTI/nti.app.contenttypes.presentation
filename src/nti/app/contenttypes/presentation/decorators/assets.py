@@ -126,7 +126,7 @@ CREATED_TIME = StandardExternalFields.CREATED_TIME
 LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 
 #: Legacy ipad key for item video rolls
-COLLECTION_ITEMS = u'collectionItems'
+COLLECTION_ITEMS = 'collectionItems'
 
 
 @component.adapter(IPresentationAsset)
