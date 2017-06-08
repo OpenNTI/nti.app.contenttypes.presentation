@@ -28,6 +28,9 @@ VIEW_NODE_MOVE = 'move'
 #: View to fetch contents of a lesson.
 VIEW_CONTENTS = 'contents'
 
+# View to fetch transcript of a media object.
+VIEW_TRANSCRIPTS = 'transcripts'
+
 # View to fetch contents of a node.
 VIEW_NODE_CONTENTS = 'contents'
 

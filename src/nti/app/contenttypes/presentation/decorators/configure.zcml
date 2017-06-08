@@ -232,5 +232,11 @@
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"
 				for="nti.contenttypes.presentation.interfaces.INTILessonOverview
 					 pyramid.interfaces.IRequest" />
+					 
+	<!-- Media -->
+	<subscriber factory=".media._MediaLinkDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTIMedia
+					 pyramid.interfaces.IRequest" />
 
 </configure>
