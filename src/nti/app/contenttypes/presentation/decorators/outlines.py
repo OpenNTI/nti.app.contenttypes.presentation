@@ -86,8 +86,7 @@ class _CourseOutlineSharedDecorator(AbstractAuthenticatedRequestAwareDecorator):
     @Lazy
     def _acl_decoration(self):
         request = get_current_request()
-        result = getattr(request, 'acl_decoration', True)
-        return result
+        return getattr(request, 'acl_decoration', True)
 
     def _predicate(self, context, result):
         return self._acl_decoration \
@@ -124,8 +123,7 @@ class _CourseOutlineEditLinkDecorator(AbstractAuthenticatedRequestAwareDecorator
 
     @Lazy
     def _acl_decoration(self):
-        result = getattr(self.request, 'acl_decoration', True)
-        return result
+        return getattr(self.request, 'acl_decoration', True)
 
     def _predicate(self, context, result):
         return self._acl_decoration \
@@ -148,8 +146,7 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 
     @Lazy
     def _acl_decoration(self):
-        result = getattr(self.request, 'acl_decoration', True)
-        return result
+        return getattr(self.request, 'acl_decoration', True)
 
     def _predicate(self, context, result):
         return self._acl_decoration

@@ -40,8 +40,7 @@ class _MediaLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
     @Lazy
     def _acl_decoration(self):
-        result = getattr(self.request, 'acl_decoration', True)
-        return result
+        return getattr(self.request, 'acl_decoration', True)
 
     def _predicate(self, context, result):
         return self._acl_decoration \

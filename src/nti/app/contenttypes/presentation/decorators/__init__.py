@@ -49,8 +49,8 @@ LEGACY_UAS_20 = ("NTIFoundation DataLoader NextThought/1.0",
                  "NTIFoundation DataLoader NextThought/1.2.")
 
 LEGACY_UAS_40 = LEGACY_UAS_20 + \
-    ("NTIFoundation DataLoader NextThought/1.3.",
-     "NTIFoundation DataLoader NextThought/1.4.0")
+                ("NTIFoundation DataLoader NextThought/1.3.",
+                 "NTIFoundation DataLoader NextThought/1.4.0")
 
 
 def is_legacy_uas(request, legacy_uas=LEGACY_UAS_40):
@@ -92,8 +92,7 @@ class _AbstractMoveLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
     @Lazy
     def _acl_decoration(self):
-        result = getattr(self.request, 'acl_decoration', True)
-        return result
+        return getattr(self.request, 'acl_decoration', True)
 
     def _predicate(self, context, result):
         return (    self._acl_decoration
