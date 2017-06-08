@@ -60,8 +60,8 @@ class TestMedia(unittest.TestCase):
             original = copy.deepcopy(source)
 
         ntivideo = create_ntivideo_from_external(source)
-        assert_that(ntivideo, has_property('creator', is_('O')))
-        assert_that(ntivideo, has_property('byline', is_('O')))
+        assert_that(ntivideo, has_property('creator', is_('OU')))
+        assert_that(ntivideo, has_property('byline', is_('OU')))
         assert_that(ntivideo, has_property('title', is_("Andrew Johnson")))
         assert_that(ntivideo, 
 					has_property('mimeType', is_("application/vnd.nextthought.ntivideo")))
