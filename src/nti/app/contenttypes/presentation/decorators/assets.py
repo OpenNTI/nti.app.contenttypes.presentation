@@ -854,7 +854,7 @@ class _BaseMediaDecorator(object):
     def decorateExternalObject(self, original, external):
         if MIMETYPE in external:
             # legacy
-            external[StandardExternalFields.CTA_MIMETYPE] = external[MIMETYPE]
+            external['mimeType'] = external[MIMETYPE]
 
         if 'byline' in external:
             external['creator'] = external['byline']  # legacy
