@@ -568,7 +568,8 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 class _NTITranscriptURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
     def _predicate(self, context, result):
-        return self._is_authenticated
+        return self._is_authenticated \
+           and not context.is_source_attached()
 
     def _do_decorate_external(self, context, result):
         package = find_interface(context, IContentPackage, strict=False)
