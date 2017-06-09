@@ -33,6 +33,8 @@ from nti.app.contenttypes.presentation import MessageFactory as _
 
 from nti.base._compat import text_
 
+from nti.base.interfaces import IFile
+
 from nti.contentfile.model import ContentBlobFile
 
 from nti.contentindexing.media.interfaces import IVideoTranscriptParser
@@ -68,6 +70,41 @@ class MediaTranscriptsGetView(AbstractAuthenticatedView):
         return result
 
 
+def parse_transcript(self, content, name=TEXT_VTT):
+    parser = component.getUtility(IVideoTranscriptParser, name=name)
+    result = parser.parse(text_(content))
+    assert result, "Empty transcript"
+    return result
+
+
+def process_transcript_source(transcript, source, name=None, request=None):
+    old_src = transcript.src
+    content = text_(source.read())
+    try:
+        parse_transcript(content)
+    except Exception as e:
+        exc_info = sys.exc_info()
+        raise_json_error(request,
+                         hexc.HTTPUnprocessableEntity,
+                         {
+                             'message': _(u"Invalid transcript source."),
+                             'code': 'InvalidTranscript',
+                             'message': str(e)
+                         },
+                         exc_info[2])
+    # create new content source
+    source = ContentBlobFile(data=content,
+                             contentType=TEXT_VTT,
+                             filename=text_(name))
+    transcript.src = source
+    transcript.type = TEXT_VTT
+    transcript.srcjsonp = None
+    # clean up
+    if IFile.providedBy(old_src):
+        old_src.__parent__ = None
+    return transcript
+
+
 @view_config(context=INTITranscript)
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
@@ -101,25 +138,7 @@ class NTITranscriptPutView(AbstractAuthenticatedView,
         if sources:
             modified = True
             name, source = next(iter(sources.items()))
-            content = text_(source.read())
-            try:
-                self.parse_transcript(content)
-            except Exception as e:
-                exc_info = sys.exc_info()
-                raise_json_error(self.request,
-                                 hexc.HTTPUnprocessableEntity,
-                                 {
-                                     'message': _(u"Invalid transcript source."),
-                                     'code': 'InvalidTranscript',
-                                     'message': str(e)
-                                 },
-                                 exc_info[2])
-            source = ContentBlobFile(data=content,
-                                     contentType=TEXT_VTT,
-                                     filename=text_(name))
-            theObject.src = source
-            theObject.type = TEXT_VTT
-            theObject.srcjsonp = None
+            process_transcript_source(theObject, source, name, self.request)
         if modified:
             lifecycleevent.modified(theObject)
         return theObject
