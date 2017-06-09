@@ -53,6 +53,7 @@ TOTAL = StandardExternalFields.TOTAL
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
 TEXT_VTT = "text/vtt"
+DEFAULT_CONTENT_TYPE = 'application/octet-stream'
 
 
 @view_config(context=INTIMedia)
@@ -71,17 +72,21 @@ class MediaTranscriptsGetView(AbstractAuthenticatedView):
 
 
 def parse_transcript(content, name=TEXT_VTT):
-    parser = component.getUtility(IVideoTranscriptParser, name=name)
+    parser = component.queryUtility(IVideoTranscriptParser, name=name)
+    if parser is None:
+        raise ValueError(_(u"Cannot find transcript parser."))
     result = parser.parse(text_(content))
     assert result, "Empty transcript"
     return result
 
 
-def process_transcript_source(transcript, source, name=None, request=None):
+def process_transcript_source(transcript, source, name="transcript.vtt", request=None):
     old_src = transcript.src
     content = text_(source.read())
+    contentType = getattr(source, 'contentType', None) or TEXT_VTT
+    contentType = TEXT_VTT if contentType == DEFAULT_CONTENT_TYPE else contentType
     try:
-        parse_transcript(content)
+        parse_transcript(content, contentType)
     except Exception as e:
         exc_info = sys.exc_info()
         raise_json_error(request,
@@ -94,11 +99,11 @@ def process_transcript_source(transcript, source, name=None, request=None):
                          exc_info[2])
     # create new content source
     source = ContentBlobFile(data=content,
-                             contentType=TEXT_VTT,
-                             filename=text_(name))
+                             filename=text_(name),
+                             contentType=contentType)
     transcript.src = source
-    transcript.type = TEXT_VTT
     transcript.srcjsonp = None
+    transcript.type = contentType
     # clean up
     if IFile.providedBy(old_src):
         old_src.__parent__ = None
@@ -132,6 +137,7 @@ class NTITranscriptPutView(AbstractAuthenticatedView,
         if sources:
             modified = True
             name, source = next(iter(sources.items()))
+            name = getattr(source, 'filename', None) or name
             process_transcript_source(theObject, source, name, self.request)
         if modified:
             lifecycleevent.modified(theObject)
