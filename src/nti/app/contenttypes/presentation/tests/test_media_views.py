@@ -67,7 +67,9 @@ class TestMediaViews(ApplicationLayerTest):
             'purpose': 'normal', 
             'MimeType': 'application/vnd.nextthought.ntitranscript', 
         }
-        href = '/dataserver2/Objects/%s/@@transcript' % self.video_ntiid
+        href = '/dataserver2/Objects/%s' % self.video_ntiid
+        res = self.testapp.get(href, status=200)
+        href = self.require_link_href_with_rel(res.json_body, 'transcript')
         path = os.path.join(os.path.dirname(__file__), 'sample.vtt')
         with open(path, "r") as fp:
             source = fp.read()

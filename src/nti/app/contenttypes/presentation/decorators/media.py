@@ -49,10 +49,13 @@ class _MediaLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
     def _do_decorate_external(self, context, result):
         _links = result.setdefault(LINKS, [])
-        link = Link(context, 
-                    rel=VIEW_TRANSCRIPTS,
-                    elements=('@@transcripts',))
-        interface.alsoProvides(link, ILocation)
-        link.__name__ = ''
-        link.__parent__ = context
-        _links.append(link)
+        for name, method in ( (VIEW_TRANSCRIPTS, 'GET'),
+                              ('transcript', 'POST'), ):
+            link = Link(context, 
+                        rel=name,
+                        method=method,
+                        elements=('@@%s' % name,))
+            interface.alsoProvides(link, ILocation)
+            link.__name__ = ''
+            link.__parent__ = context
+            _links.append(link)
