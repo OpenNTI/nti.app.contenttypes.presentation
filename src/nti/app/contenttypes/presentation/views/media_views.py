@@ -70,7 +70,7 @@ class MediaTranscriptsGetView(AbstractAuthenticatedView):
         return result
 
 
-def parse_transcript(self, content, name=TEXT_VTT):
+def parse_transcript(content, name=TEXT_VTT):
     parser = component.getUtility(IVideoTranscriptParser, name=name)
     result = parser.parse(text_(content))
     assert result, "Empty transcript"
@@ -113,12 +113,6 @@ def process_transcript_source(transcript, source, name=None, request=None):
 class NTITranscriptPutView(AbstractAuthenticatedView,
                            ModeledContentEditRequestUtilsMixin,
                            ModeledContentUploadRequestUtilsMixin):
-
-    def parse_transcript(self, content, name=TEXT_VTT):
-        parser = component.getUtility(IVideoTranscriptParser, name=name)
-        transcript = parser.parse(text_(content))
-        assert transcript, "Empty transcript"
-        return transcript
 
     def __call__(self):
         modified = False
