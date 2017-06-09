@@ -53,7 +53,7 @@ TOTAL = StandardExternalFields.TOTAL
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
 TEXT_VTT = "text/vtt"
-DEFAULT_CONTENT_TYPE = 'application/octet-stream'
+OCTET_STREAM = 'application/octet-stream'
 
 
 @view_config(context=INTIMedia)
@@ -84,7 +84,7 @@ def process_transcript_source(transcript, source, name="transcript.vtt", request
     old_src = transcript.src
     content = text_(source.read())
     contentType = getattr(source, 'contentType', None) or TEXT_VTT
-    contentType = TEXT_VTT if contentType == DEFAULT_CONTENT_TYPE else contentType
+    contentType = TEXT_VTT if contentType == OCTET_STREAM else contentType
     try:
         parse_transcript(content, contentType)
     except Exception as e:
