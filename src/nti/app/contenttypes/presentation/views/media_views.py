@@ -33,6 +33,8 @@ from nti.app.contenttypes.presentation import MessageFactory as _
 
 from nti.base._compat import text_
 
+from nti.contentfile.model import ContentBlobFile
+
 from nti.contentindexing.media.interfaces import IVideoTranscriptParser
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
@@ -43,7 +45,6 @@ from nti.dataserver import authorization as nauth
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 
-from nti.namedfile.file import NamedBlobFile
 
 ITEMS = StandardExternalFields.ITEMS
 TOTAL = StandardExternalFields.TOTAL
@@ -83,27 +84,22 @@ class NTITranscriptPutView(AbstractAuthenticatedView,
         return transcript
 
     def __call__(self):
+        modified = False
         theObject = self.context
         self._check_object_exists(theObject)
         self._check_object_unmodified_since(theObject)
 
         externalValue = self.readInput()
         if externalValue:  # something to update
+            modified = True
             theObject = update_object_from_external_object(theObject,
                                                            externalValue,
                                                            notify=False,
                                                            request=self.request)
 
-        if not theObject.src:
-            sources = get_all_sources(self.request)
-            if not sources:
-                raise_json_error(self.request,
-                                 hexc.HTTPUnprocessableEntity,
-                                 {
-                                     'message': _(u"No transcript source was specified."),
-                                     'code': 'NoTranscriptSpecified',
-                                 },
-                                 None)
+        sources = get_all_sources(self.request)
+        if sources:
+            modified = True
             name, source = next(iter(sources.items()))
             content = text_(source.read())
             try:
@@ -118,9 +114,12 @@ class NTITranscriptPutView(AbstractAuthenticatedView,
                                      'message': str(e)
                                  },
                                  exc_info[2])
-            source = NamedBlobFile(data=content,
-                                   contentType=TEXT_VTT,
-                                   filename=name)
+            source = ContentBlobFile(data=content,
+                                     contentType=TEXT_VTT,
+                                     filename=text_(name))
             theObject.src = source
-        lifecycleevent.modified(theObject)
+            theObject.type = TEXT_VTT
+            theObject.srcjsonp = None
+        if modified:
+            lifecycleevent.modified(theObject)
         return theObject

@@ -7,11 +7,15 @@ __docformat__ = "restructuredtext en"
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
 
+from hamcrest import is_
+from hamcrest import none
 from hamcrest import is_not
 from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
 does_not = is_not
+
+import os
 
 from nti.app.products.courseware.tests import InstructedCourseApplicationTestLayer
 
@@ -36,3 +40,19 @@ class TestMediaViews(ApplicationLayerTest):
         href = self.require_link_href_with_rel(res.json_body, 'transcripts')
         res = self.testapp.get(href, status=200)
         assert_that(res.json_body, has_entry('Items', has_length(1)))
+
+    @WithSharedApplicationMockDS(testapp=True, users=True)
+    def test_put_transcript(self):
+        href = '/dataserver2/Objects/%s' % self.transcript_ntiid
+        path = os.path.join(os.path.dirname(__file__), 'sample.vtt')
+        with open(path, "r") as fp:
+            source = fp.read()
+        res = self.testapp.put(href,
+                               upload_files=[
+                                   ('sample', 'sample.vtt', source)
+                               ],
+                               status=200)
+        assert_that(res.json_body,
+                    has_entry('src', has_entry('Class', 'ContentBlobFile')))
+        assert_that(res.json_body,
+                    has_entry('srcjsonp', is_(none())))
