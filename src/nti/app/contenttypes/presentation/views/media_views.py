@@ -41,6 +41,7 @@ from nti.contentindexing.media.interfaces import IVideoTranscriptParser
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTITranscript
+from nti.contenttypes.presentation.interfaces import ITranscriptContainer
 
 from nti.dataserver import authorization as nauth
 
@@ -142,3 +143,39 @@ class NTITranscriptPutView(AbstractAuthenticatedView,
         if modified:
             lifecycleevent.modified(theObject)
         return theObject
+
+
+@view_config(context=INTIMedia)
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               name='transcript',
+               request_method='POST',
+               permission=nauth.ACT_UPDATE)
+class TranscriptUploadView(AbstractAuthenticatedView,
+                           ModeledContentEditRequestUtilsMixin,
+                           ModeledContentUploadRequestUtilsMixin):
+
+    content_predicate = INTITranscript
+
+    def _do_call(self):
+        self._check_object_exists(self.context)
+        self._check_object_unmodified_since(self.context)
+        transcript = self.readCreateUpdateContentObject(self.remoteUser)
+        sources = get_all_sources(self.request)
+        if not sources:
+            raise_json_error(self.request,
+                             hexc.HTTPUnprocessableEntity,
+                             {
+                                 'message': _(u"No transcript source."),
+                                 'code': 'NoTranscript',
+                             },
+                             None)
+        # parse transcript
+        name, source = next(iter(sources.items()))
+        name = getattr(source, 'filename', None) or name
+        process_transcript_source(transcript, source, name, self.request)
+        # update media
+        container = ITranscriptContainer(self.context)
+        container.clear()
+        container.add(transcript)
+        return transcript
