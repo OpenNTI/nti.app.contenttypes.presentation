@@ -49,7 +49,7 @@ class TestMediaViews(ApplicationLayerTest):
             source = fp.read()
         res = self.testapp.put(href,
                                upload_files=[
-                                   ('sample', 'sample.vtt', source)
+                                   ('sample.vtt', 'sample.vtt', source)
                                ],
                                status=200)
         assert_that(res.json_body,
