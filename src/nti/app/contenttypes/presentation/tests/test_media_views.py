@@ -27,6 +27,7 @@ class TestMediaViews(ApplicationLayerTest):
     default_origin = 'http://janux.ou.edu'
 
     video_ntiid = 'tag:nextthought.com,2011-10:OU-NTIVideo-CLC3403_LawAndJustice.ntivideo.video_17.02'
+    transcript_ntiid = 'tag:nextthought.com,2011-10:OU-NTITranscript-CLC3403_LawAndJustice.ntivideo.video_17.02.0'
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_transcripts(self):
