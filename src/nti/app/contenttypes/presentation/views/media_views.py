@@ -50,6 +50,7 @@ from nti.externalization.interfaces import StandardExternalFields
 
 
 ITEMS = StandardExternalFields.ITEMS
+NTIID = StandardExternalFields.NTIID
 TOTAL = StandardExternalFields.TOTAL
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
@@ -157,6 +158,12 @@ class TranscriptUploadView(AbstractAuthenticatedView,
 
     content_predicate = INTITranscript
 
+    def readInput(self, value=None):
+        result = ModeledContentUploadRequestUtilsMixin.readInput(self, value=value)
+        result.pop(NTIID, None)
+        result.pop('ntiid', None)
+        return result
+
     def _do_call(self):
         self._check_object_exists(self.context)
         self._check_object_unmodified_since(self.context)
@@ -178,4 +185,6 @@ class TranscriptUploadView(AbstractAuthenticatedView,
         container = ITranscriptContainer(self.context)
         container.clear()
         container.add(transcript)
+        lifecycleevent.created(transcript)
+        lifecycleevent.modified(self.context)
         return transcript

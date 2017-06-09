@@ -17,6 +17,8 @@ does_not = is_not
 
 import os
 
+from nti.externalization.representation import to_json_representation
+
 from nti.app.products.courseware.tests import InstructedCourseApplicationTestLayer
 
 from nti.app.testing.application_webtest import ApplicationLayerTest
@@ -52,6 +54,29 @@ class TestMediaViews(ApplicationLayerTest):
                                    ('sample.vtt', 'sample.vtt', source)
                                ],
                                status=200)
+        assert_that(res.json_body,
+                    has_entry('src', has_entry('Class', 'ContentBlobFile')))
+        assert_that(res.json_body,
+                    has_entry('srcjsonp', is_(none())))
+        
+    @WithSharedApplicationMockDS(testapp=True, users=True)
+    def test_post_transcript(self):
+        data = {
+            'lang': 'en',
+            'type': 'text/vtt',
+            'purpose': 'normal', 
+            'MimeType': 'application/vnd.nextthought.ntitranscript', 
+        }
+        href = '/dataserver2/Objects/%s/@@transcript' % self.video_ntiid
+        path = os.path.join(os.path.dirname(__file__), 'sample.vtt')
+        with open(path, "r") as fp:
+            source = fp.read()
+        data = {'__json__': to_json_representation(data)}
+        res = self.testapp.post(href, data,
+                                upload_files=[
+                                       ('sample.vtt', 'sample.vtt', source)
+                                ],
+                                status=200)
         assert_that(res.json_body,
                     has_entry('src', has_entry('Class', 'ContentBlobFile')))
         assert_that(res.json_body,
