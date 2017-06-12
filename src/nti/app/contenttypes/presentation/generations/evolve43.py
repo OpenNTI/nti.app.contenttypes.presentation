@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -54,7 +54,7 @@ class MockDataserver(object):
 def process_course(course, intids):
     result = 0
     catalog = get_library_catalog()
-    entry =  ICourseCatalogEntry(course)
+    entry = ICourseCatalogEntry(course)
     course_container = IPresentationAssetContainer(course)
     for package in get_course_packages(course):
         # only look at root
@@ -68,7 +68,7 @@ def process_course(course, intids):
                 elif asset.ntiid not in course_container:
                     asset.__parent__ = course
                     course_container.append(asset)
-                    catalog.update_containers(asset, 
+                    catalog.update_containers(asset,
                                               containers=(entry.ntiid,))
                     result += 1
     return result

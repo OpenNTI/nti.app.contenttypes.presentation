@@ -16,8 +16,6 @@ from zope import interface
 
 from zope.component.hooks import site as current_site
 
-from zope.intid.interfaces import IIntIds
-
 from ZODB.interfaces import IConnection
 
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -45,7 +43,7 @@ class MockDataserver(object):
         return None
 
 
-def _process_site(current, intids, seen):
+def _process_site(current, seen):
     result = 0
     with current_site(current):
         registry = component.getSiteManager()
@@ -83,10 +81,8 @@ def do_evolve(context, generation=generation):
                "Hooks not installed?"
 
         seen = set()
-        lsm = ds_folder.getSiteManager()
-        intids = lsm.getUtility(IIntIds)
         for current in get_all_host_sites():
-            _process_site(current, intids, seen)
+            _process_site(current, seen)
 
     component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
     logger.info('Evolution %s done.', generation)
