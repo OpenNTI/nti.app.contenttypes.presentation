@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -17,6 +17,8 @@ from zope import component
 
 from zope.component.hooks import getSite
 from zope.component.hooks import site as current_site
+
+from zope.intid.interfaces import IIntIds
 
 from zope.security.management import endInteraction
 from zope.security.management import restoreInteraction
@@ -60,7 +62,11 @@ from nti.contenttypes.courses.utils import get_course_hierarchy
 
 from nti.contenttypes.presentation import iface_of_asset
 
+from nti.contenttypes.presentation.index import get_assets_catalog
+from nti.contenttypes.presentation.index import create_assets_library_catalog
+
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
+from nti.contenttypes.presentation.interfaces import IPresentationAsset
 
 from nti.dataserver import authorization as nauth
 
@@ -76,6 +82,7 @@ from nti.recorder.record import remove_transaction_history
 from nti.site.interfaces import IHostPolicyFolder
 
 from nti.site.hostpolicy import get_host_site
+from nti.site.hostpolicy import get_all_host_sites
 
 from nti.traversal.traversal import find_interface
 
@@ -99,7 +106,6 @@ class ResetPresentationAssetsView(_AbstractSyncAllLibrariesView):
         with current_site(get_host_site(folder.__name__)):
             removed = []
             registry = folder.getSiteManager()
-
             # remove registered assets
             for name, item, container in course_assets(course):
                 provided = iface_of_asset(item)
@@ -109,14 +115,11 @@ class ResetPresentationAssetsView(_AbstractSyncAllLibrariesView):
                     removed.append(item)
                     remove_presentation_asset(item, registry, catalog,
                                               name=name, event=False)
-
             # remove last mod keys
             clear_namespace_last_modified(course, catalog)
-
             # remove all transactions
             for obj in removed:
                 remove_transaction_history(obj)
-
             # only return ntiids
             return [x.ntiid for x in removed]
 
@@ -184,6 +187,42 @@ class RemoveInvalidPresentationAssetsView(_AbstractSyncAllLibrariesView):
             result[ITEMS] = dict(remove_all_invalid_assets())
         finally:
             restoreInteraction()
+        return result
+
+
+@view_config(route_name='objects.generic.traversal',
+             renderer='rest',
+             request_method='POST',
+             permission=nauth.ACT_NTI_ADMIN,
+             context=IDataserverFolder,
+             name='RebuildPresentationAssetCatalog')
+class RebuildEvaluationCatalogView(AbstractAuthenticatedView):
+
+    def __call__(self):
+        intids = component.getUtility(IIntIds)
+        # remove indexes
+        catalog = get_assets_catalog()
+        for name, index in list(catalog.items()):
+            intids.unregister(index)
+            del catalog[name]
+        # recreate indexes
+        catalog = create_assets_library_catalog(catalog=catalog,
+                                                family=intids.family)
+        for index in catalog.values():
+            intids.register(index)
+        # reindex
+        seen = set()
+        for host_site in get_all_host_sites():  # check all sites
+            logger.info("Processing site %s", host_site.__name__)
+            with current_site(host_site):
+                for _, evaluation in list(component.getUtilitiesFor(IPresentationAsset)):
+                    doc_id = intids.queryId(evaluation)
+                    if doc_id is None or doc_id in seen:
+                        continue
+                    seen.add(doc_id)
+                    catalog.index_doc(doc_id, evaluation)
+        result = LocatedExternalDict()
+        result[ITEM_COUNT] = result[TOTAL] = len(seen)
         return result
 
 
