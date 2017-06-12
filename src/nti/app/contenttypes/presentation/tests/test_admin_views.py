@@ -11,7 +11,7 @@ from hamcrest import is_
 from hamcrest import is_not
 from hamcrest import assert_that
 from hamcrest import has_entries
-from hamcrest import greater_than_or_equal_to
+from hamcrest import greater_than
 does_not = is_not
 
 from nti.app.products.courseware.tests import InstructedCourseApplicationTestLayer
@@ -28,9 +28,9 @@ class TestAdminViews(ApplicationLayerTest):
     default_origin = 'http://janux.ou.edu'
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
-    def test_rebuild_eval_catalog(self):
+    def test_rebuild_asset_catalog(self):
         res = self.testapp.post('/dataserver2/@@RebuildPresentationAssetCatalog',
                                  status=200)
         assert_that(res.json_body,
-                    has_entries('Total', is_(greater_than_or_equal_to(0)),
-                                'ItemCount', is_(greater_than_or_equal_to(0))))
+                    has_entries('Total', is_(greater_than(0)),
+                                'ItemCount', is_(greater_than(0))))
