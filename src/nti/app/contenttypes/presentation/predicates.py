@@ -174,7 +174,7 @@ class AssignmentCompletionConstraintChecker(object):
             return False
         # allow editors and instructors
         if     is_course_instructor_or_editor(course, user) \
-                or has_permission(ACT_CONTENT_EDIT, course):
+            or has_permission(ACT_CONTENT_EDIT, course):
             return True
         # check assignment constraints
         for assignment_ntiid in constraint.assignments or ():
