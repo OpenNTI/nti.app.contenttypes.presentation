@@ -9,6 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from zope.component.hooks import getSite
+
 from pyramid import httpexceptions as hexc
 
 from pyramid.view import view_config
@@ -32,6 +34,8 @@ from nti.appserver.dataserver_pyramid_views import GenericGetView
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
+from nti.contenttypes.courses.utils import get_course_hierarchy
+
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
@@ -39,6 +43,15 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 
 from nti.dataserver import authorization as nauth
+
+from nti.externalization.interfaces import LocatedExternalDict
+from nti.externalization.interfaces import StandardExternalFields
+
+from nti.traversal.traversal import find_interface
+
+ITEMS = StandardExternalFields.ITEMS
+TOTAL = StandardExternalFields.TOTAL
+ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
 
 @view_config(context=IPresentationAsset)
@@ -128,4 +141,36 @@ class RecursiveCourseTransactionHistoryView(AbstractRecursiveTransactionHistoryV
     def _get_items(self):
         result = []
         self._accum_lesson_transactions(self.context, result)
+        return result
+
+
+@view_config(name="CourseResolver")
+@view_config(name="OutlineObjectCourseResolver")
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               context=IPresentationAsset,
+               permission=nauth.ACT_CONTENT_EDIT)
+class OutlineObjectCourseResolverView(AbstractAuthenticatedView):
+    """
+    A view to fetch the courses associated with a given
+    outline object (node/lesson/group/asset), given by an `ntiid`
+    param.
+    """
+
+    def _possible_courses(self, course):
+        return get_course_hierarchy(course)
+
+    def __call__(self):
+        result = LocatedExternalDict()
+        result[ITEMS] = items = []
+        course = find_interface(self.context, ICourseInstance, strict=False)
+        course = ICourseInstance(self.context, None) if course is None else course
+        if course is not None:
+            possible_courses = self._possible_courses(course)
+            our_outline = course.Outline
+            for course in possible_courses:
+                if course.Outline == our_outline:
+                    items.append(course)
+        result[TOTAL] = result[ITEM_COUNT] = len(items)
+        result['Site'] = result['SiteInfo'] = getSite().__name__
         return result
