@@ -20,7 +20,7 @@ import transaction
 
 from requests.structures import CaseInsensitiveDict
 
-from zope import interface, lifecycleevent
+from zope import lifecycleevent
 
 from zope.cachedescriptors.property import Lazy
 
@@ -34,8 +34,6 @@ from pyramid.view import view_config
 from pyramid.view import view_defaults
 
 from pyramid.threadlocal import get_current_request
-
-from nti.app.renderers.interfaces import INoHrefInResponse
 
 from nti.app.base.abstract_views import get_all_sources
 from nti.app.base.abstract_views import get_safe_source_filename
@@ -60,14 +58,11 @@ from nti.app.contenttypes.presentation.views import VIEW_NODE_MOVE
 from nti.app.contenttypes.presentation.views import VIEW_LESSON_REMOVE_REFS
 
 from nti.app.contenttypes.presentation.views.view_mixins import hexdigest
-from nti.app.contenttypes.presentation.views.view_mixins import PublishVisibilityMixin
+from nti.app.contenttypes.presentation.views.view_mixins import href_safe_to_external_object
 
 from nti.app.externalization.error import raise_json_error
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
-
-from nti.app.products.courseware import VIEW_RECURSIVE_AUDIT_LOG
-from nti.app.products.courseware import VIEW_RECURSIVE_TX_HISTORY
 
 from nti.app.products.courseware.resources.utils import get_course_filer
 from nti.app.products.courseware.resources.utils import is_internal_file_link
@@ -77,9 +72,6 @@ from nti.app.products.courseware.resources.utils import get_file_from_external_l
 from nti.app.products.courseware.views.view_mixins import IndexedRequestMixin
 from nti.app.products.courseware.views.view_mixins import DeleteChildViewMixin
 from nti.app.products.courseware.views.view_mixins import AbstractChildMoveView
-from nti.app.products.courseware.views.view_mixins import AbstractRecursiveTransactionHistoryView
-
-from nti.appserver.dataserver_pyramid_views import GenericGetView
 
 from nti.appserver.ugd_edit_views import UGDPutView
 from nti.appserver.ugd_edit_views import UGDDeleteView
@@ -170,14 +162,12 @@ from nti.contenttypes.presentation.internalization import internalization_ntivid
 from nti.contenttypes.presentation.utils import create_from_external
 from nti.contenttypes.presentation.utils import get_external_pre_hook
 
-
 from nti.coremetadata.utils import current_principal
 
 from nti.dataserver import authorization as nauth
 
 from nti.dataserver.contenttypes.forums.interfaces import ITopic
 
-from nti.externalization.externalization import to_external_object
 from nti.externalization.externalization import StandardExternalFields
 
 from nti.externalization.internalization import notify_modified
@@ -204,82 +194,6 @@ ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID
 MIMETYPE = StandardExternalFields.MIMETYPE
 
-# utils
-
-def href_safe_to_external_object(obj):
-	result = to_external_object(obj)
-	interface.alsoProvides(result, INoHrefInResponse)
-	return result
-
-# GET views
-
-@view_config(context=IPresentationAsset)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   permission=nauth.ACT_READ,
-			   request_method='GET')
-class PresentationAssetGetView(GenericGetView, PublishVisibilityMixin):
-
-	def __call__(self):
-		accept = self.request.headers.get(b'Accept') or u''
-		if accept == 'application/vnd.nextthought.pageinfo+json':
-			raise hexc.HTTPNotAcceptable()
-		if not self._is_visible(self.context):
-			raise hexc.HTTPForbidden(_("Item not visible."))
-		result = GenericGetView.__call__(self)
-		return result
-
-@view_config(context=INTITimeline)
-@view_config(context=INTIRelatedWorkRef)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   permission=nauth.ACT_READ,
-			   request_method='GET')
-class NoHrefAssetGetView(PresentationAssetGetView):
-
-	def __call__(self):
-		result = PresentationAssetGetView.__call__(self)
-		result = href_safe_to_external_object(result)
-		return result
-
-@view_config(context=INTIDiscussionRef)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   permission=nauth.ACT_READ,
-			   request_method='GET')
-class DiscussionRefGetView(AbstractAuthenticatedView, PublishVisibilityMixin):
-
-	def __call__(self):
-		accept = self.request.headers.get(b'Accept') or u''
-		if accept == 'application/vnd.nextthought.discussionref':
-			if not self._is_visible(self.context):
-				raise hexc.HTTPForbidden(_("Item not visible."))
-			return self.context
-		elif self.context.isCourseBundle():
-			course = ICourseInstance(self.context, None)
-			resolved = resolve_discussion_course_bundle(user=self.remoteUser,
-														item=self.context,
-														context=course)
-			if resolved is not None:
-				cdiss, topic = resolved
-				logger.debug('%s resolved to %s', self.context.id, cdiss)
-				return topic
-			else:
-				raise hexc.HTTPNotFound(_("Topic not found."))
-		else:
-			raise hexc.HTTPNotAcceptable()
-
-@view_config(context=IPresentationAsset)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   permission=nauth.ACT_READ,
-			   request_method='GET',
-			   name="schema")
-class PresentationAssetSchemaView(AbstractAuthenticatedView):
-
-	def __call__(self):
-		result = self.context.schema()
-		return result
 
 # POST/PUT views
 
@@ -1569,20 +1483,3 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
 		# We don't return refs in the overview group; so don't here either.
 		contentObject = IConcreteAsset(contentObject, contentObject)
 		return self.transformOutput(contentObject)
-
-@view_config(name=VIEW_RECURSIVE_AUDIT_LOG)
-@view_config(name=VIEW_RECURSIVE_TX_HISTORY)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   request_method='GET',
-			   permission=nauth.ACT_CONTENT_EDIT,
-			   context=INTILessonOverview)
-class RecursiveCourseTransactionHistoryView(AbstractRecursiveTransactionHistoryView):
-	"""
-	A batched view to get all edits that have occurred in the lesson, recursively.
-	"""
-
-	def _get_items(self):
-		result = []
-		self._accum_lesson_transactions(self.context, result)
-		return result

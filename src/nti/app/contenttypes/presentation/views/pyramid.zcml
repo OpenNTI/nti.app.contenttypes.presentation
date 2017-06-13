@@ -5,6 +5,7 @@
 
 	<include package="pyramid_zcml" />
 
+	<pyramid:scan package=".read_views" />
 	<pyramid:scan package=".admin_views" />
 	<pyramid:scan package=".asset_views" />
 	<pyramid:scan package=".media_views" />
