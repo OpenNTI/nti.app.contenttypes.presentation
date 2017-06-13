@@ -96,8 +96,8 @@ class LessonPublicationConstraintsPostView(UGDPostView):
             raise_json_error(self.request,
                              hexc.HTTPUnprocessableEntity,
                              {
-                                 u'message': str(e),
-                                 u'code': u'ConstraintValidationError',
+                                'message': str(e),
+                                'code': 'ConstraintValidationError',
                              },
                              None)
 
@@ -127,8 +127,8 @@ class LessonCompletionConstraintPutView(UGDPutView):
             raise_json_error(self.request,
                              hexc.HTTPUnprocessableEntity,
                              {
-                                 u'message': str(e),
-                                 u'code': u'ConstraintValidationError',
+                                'message': str(e),
+                                'code': 'ConstraintValidationError',
                              },
                              None)
         return result
