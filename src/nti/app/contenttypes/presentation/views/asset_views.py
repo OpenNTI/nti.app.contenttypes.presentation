@@ -912,7 +912,7 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 		if sources:
 			courses = get_presentation_asset_courses(self.context) or (self._course,)
 			validate_sources(self.remoteUser, result, sources)
-			_handle_multipart(courses.__iter__().next(),
+			_handle_multipart(next(iter(courses)),
 							  self.remoteUser,
 							  self.context,
 							  sources)
