@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -55,23 +55,22 @@ LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
                name=VIEW_ASSETS,
                request_method='GET',
                permission=nauth.ACT_CONTENT_EDIT)
-class CoursePresentationAssetsView(AbstractAuthenticatedView, 
-								   BatchingUtilsMixin):
+class CoursePresentationAssetsView(AbstractAuthenticatedView,
+                                   BatchingUtilsMixin):
 
     def _get_mimeTypes(self):
         params = CaseInsensitiveDict(self.request.params)
-        accept = params.get('accept') or params.get('mimeTypes') or u''
+        accept = params.get('accept') or params.get('mimeTypes') or ''
         accept = accept.split(',') if accept else ()
         if accept and '*/*' not in accept:
             accept = {e.strip().lower() for e in accept if e}
-            accept.discard(u'')
+            accept.discard('')
         else:
             accept = ()
         return accept
 
     def _pkg_containers(self, pacakge):
         result = []
-
         def recur(unit):
             for child in unit.children or ():
                 recur(child)
@@ -92,9 +91,9 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView,
             return True
         else:
             item = IContentTypeAware(item, item)
-            mt = getattr(item, 'mimeType', None) \
-              or getattr(item, 'mime_type', None)
-            if mt in mimeTypes:
+            mimeType = getattr(item, 'mimeType', None) \
+                    or getattr(item, 'mime_type', None)
+            if mimeType in mimeTypes:
                 return True
         return False
 
@@ -127,8 +126,8 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView,
         result[ITEMS] = items = []
         items.extend(x for x in self._yield_course_items(course, mimeTypes))
         items.sort()  # natural order
-        lastModified = reduce(lambda x, y: 
-							  max(x, getattr(y, 'lastModified', 0)), items, 0)
+        lastModified = reduce(lambda x, y: max(x, getattr(y, 'lastModified', 0)),
+                              items, 0)
 
         if batching:
             self._batch_items_iterable(result, items)
