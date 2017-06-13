@@ -28,8 +28,6 @@ from pyramid import httpexceptions as hexc
 from pyramid.view import view_config
 from pyramid.view import view_defaults
 
-from pyramid.threadlocal import get_current_request
-
 from nti.app.base.abstract_views import get_all_sources
 from nti.app.base.abstract_views import get_safe_source_filename
 from nti.app.base.abstract_views import AbstractAuthenticatedView
@@ -51,11 +49,13 @@ from nti.app.contenttypes.presentation.views import VIEW_ASSETS
 from nti.app.contenttypes.presentation.views import VIEW_CONTENTS
 
 from nti.app.contenttypes.presentation.views.view_mixins import hexdigest
+from nti.app.contenttypes.presentation.views.view_mixins import preflight_input
+from nti.app.contenttypes.presentation.views.view_mixins import preflight_mediaroll
+from nti.app.contenttypes.presentation.views.view_mixins import preflight_overview_group
+from nti.app.contenttypes.presentation.views.view_mixins import preflight_lesson_overview
 from nti.app.contenttypes.presentation.views.view_mixins import href_safe_to_external_object
 
 from nti.app.contenttypes.presentation.views.view_mixins import PresentationAssetMixin
-
-from nti.app.externalization.error import raise_json_error
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
@@ -101,9 +101,7 @@ from nti.contenttypes.presentation import SURVEY_REF_MIME_TYPES
 from nti.contenttypes.presentation import TIMELINE_REF_MIME_TYPES
 from nti.contenttypes.presentation import ASSIGNMENT_REF_MIME_TYPES
 from nti.contenttypes.presentation import SLIDE_DECK_REF_MIME_TYPES
-from nti.contenttypes.presentation import LESSON_OVERVIEW_MIME_TYPES
 from nti.contenttypes.presentation import QUESTIONSET_REF_MIME_TYPES
-from nti.contenttypes.presentation import ALL_MEDIA_ROLL_MIME_TYPES
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import COURSE_OVERVIEW_GROUP_MIME_TYPES
 from nti.contenttypes.presentation import RELATED_WORK_REF_POINTER_MIME_TYPES
@@ -631,107 +629,6 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 			result = obj
 		return result
 
-# preflight routines
-MAX_TITLE_LENGTH = 300
-
-def _validate_input(externalValue):
-	# Normally, we'd let our defined schema enforce limits,
-	# but old, unreasonable content makes us enforce some
-	# limits here, through the user API.
-	for attr in ('title', 'Title', 'label', 'Label'):
-		value = externalValue.get(attr)
-		if value and len(value) > MAX_TITLE_LENGTH:
-			# Mapping to what we do in nti.schema.field.
-			raise_json_error(get_current_request(),
-							 hexc.HTTPUnprocessableEntity,
-							 {
-							 	u'provided_size': len(value),
-							 	u'max_size': MAX_TITLE_LENGTH,
-								u'message': _('${field} is too long. ${max_size} character limit.',
-											mapping={'field': attr.capitalize(),
-													'max_size': MAX_TITLE_LENGTH}),
-								u'code': 'TooLong',
-								u'field': attr.capitalize()
-							 },
-							 None)
-
-def preflight_mediaroll(externalValue):
-	if not isinstance(externalValue, Mapping):
-		return externalValue
-
-	items = externalValue.get(ITEMS)
-
-	_validate_input(externalValue)
-	for idx, item in enumerate(items or ()):
-		if isinstance(item, six.string_types):
-			item = items[idx] = {'ntiid': item}
-		if isinstance(item, Mapping) and MIMETYPE not in item:
-			ntiid = item.get('ntiid') or item.get(NTIID)
-			__traceback_info__ = ntiid
-			if not ntiid:
-				raise hexc.HTTPUnprocessableEntity(_('Missing media roll item NTIID'))
-			resolved = find_object_with_ntiid(ntiid)
-			if resolved is None:
-				raise hexc.HTTPUnprocessableEntity(_('Missing media roll item'))
-			if (INTIMedia.providedBy(resolved) or INTIMediaRef.providedBy(resolved)):
-				item[MIMETYPE] = resolved.mimeType
-			else:
-				raise hexc.HTTPUnprocessableEntity(_('Invalid media roll item'))
-	# If they're editing a field, make sure we have a mimetype
-	# so our pre-hooks fire.
-	# TOOD: Do we need to do this elsewhere?
-	if MIMETYPE not in externalValue:
-		externalValue[MIMETYPE] = "application/vnd.nextthought.ntivideoroll"
-	return externalValue
-
-def preflight_overview_group(externalValue):
-	if not isinstance(externalValue, Mapping):
-		return externalValue
-
-	_validate_input(externalValue)
-	items = externalValue.get(ITEMS)
-	for idx, item in enumerate(items or ()):
-		if isinstance(item, six.string_types):
-			item = items[idx] = {'ntiid': item}
-		if isinstance(item, Mapping) and MIMETYPE not in item:
-			ntiid = item.get('ntiid') or item.get(NTIID)
-			__traceback_info__ = ntiid
-			if not ntiid:
-				raise hexc.HTTPUnprocessableEntity(_('Missing overview group item NTIID'))
-			resolved = find_object_with_ntiid(ntiid)
-			if resolved is None:
-				raise hexc.HTTPUnprocessableEntity(_('Missing overview group item'))
-			if not IGroupOverViewable.providedBy(resolved):
-				logger.warn("Coercing %s,%s into overview group", resolved.mimeType, ntiid)
-			item[MIMETYPE] = resolved.mimeType
-		else:
-			preflight_input(item)
-
-	return externalValue
-
-def preflight_lesson_overview(externalValue):
-	if not isinstance(externalValue, Mapping):
-		return externalValue
-
-	_validate_input(externalValue)
-	items = externalValue.get(ITEMS)
-	for item in items or ():
-		preflight_overview_group(item)
-	return externalValue
-
-def preflight_input(externalValue):
-	if not isinstance(externalValue, Mapping):
-		return externalValue
-
-	mimeType = externalValue.get(MIMETYPE) or externalValue.get('mimeType')
-	if mimeType in ALL_MEDIA_ROLL_MIME_TYPES:
-		return preflight_mediaroll(externalValue)
-	elif mimeType in COURSE_OVERVIEW_GROUP_MIME_TYPES:
-		return preflight_overview_group(externalValue)
-	elif mimeType in LESSON_OVERVIEW_MIME_TYPES:
-		return preflight_lesson_overview(externalValue)
-	_validate_input(externalValue)
-	return externalValue
 
 @view_config(context=ICourseInstance)
 @view_config(context=ICourseCatalogEntry)
@@ -761,7 +658,7 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 	def parseInput(self, creator, search_owner=False, externalValue=None):
 		# process input
 		externalValue = self.readInput() if not externalValue else externalValue
-		externalValue = preflight_input(externalValue)
+		externalValue = preflight_input(externalValue, self.request)
 		result = copy.deepcopy(externalValue)  # return original input
 		# create and validate
 		contentObject = create_from_external(externalValue, notify=False)
@@ -816,7 +713,7 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 							   UGDPutView):  # order matters
 
 	def preflight(self, contentObject, externalValue):
-		preflight_input(externalValue)
+		preflight_input(externalValue, self.request)
 
 	def postflight(self, updatedObject, externalValue, preflight=None):
 		return None
@@ -917,7 +814,7 @@ class CoursePresentationAssetPutView(PresentationAssetPutView):
 class LessonOverviewPutView(PresentationAssetPutView):
 
 	def preflight(self, contentObject, externalValue):
-		preflight_lesson_overview(externalValue)
+		preflight_lesson_overview(externalValue, self.request)
 		data = {x.ntiid:x for x in contentObject}  # save groups
 		return data
 
@@ -938,7 +835,7 @@ class LessonOverviewPutView(PresentationAssetPutView):
 class CourseOverviewGroupPutView(PresentationAssetPutView):
 
 	def preflight(self, contentObject, externalValue):
-		preflight_overview_group(externalValue)
+		preflight_overview_group(externalValue, self.request)
 		data = {x.ntiid:x for x in contentObject}
 		return data
 
@@ -963,7 +860,7 @@ class CourseOverviewGroupPutView(PresentationAssetPutView):
 class MediaRollPutView(PresentationAssetPutView):
 
 	def preflight(self, contentObject, externalValue):
-		preflight_mediaroll(externalValue)
+		preflight_mediaroll(externalValue, self.request)
 		data = {x.ntiid:x for x in contentObject}
 		return data
 
@@ -1002,7 +899,7 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 		externalValue = self.readInput() if not externalValue else externalValue
 		if MIMETYPE not in externalValue:
 			externalValue[MIMETYPE] = COURSE_OVERVIEW_GROUP_MIME_TYPES[0]
-		externalValue = preflight_input(externalValue)
+		externalValue = preflight_input(externalValue, self.request)
 		result = copy.deepcopy(externalValue)  # return original input
 		# create object
 		contentObject = create_from_external(externalValue, notify=False)
@@ -1124,7 +1021,7 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
 			if isinstance(externalValue, Mapping):
 				internalization_ntiaudioref_pre_hook(None, externalValue)
 				internalization_ntivideoref_pre_hook(None, externalValue)
-		return preflight_input(externalValue)
+		return preflight_input(externalValue, self.request)
 
 	def checkContentObject(self, contentObject, externalValue):
 		if contentObject is None or not self.content_predicate(contentObject):

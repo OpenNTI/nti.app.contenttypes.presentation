@@ -59,6 +59,9 @@ MIMETYPE = StandardExternalFields.MIMETYPE
 MAX_TITLE_LENGTH = 300
 
 
+# functions
+
+
 def hexdigest(data, hasher=None):
     hasher = hashlib.sha256() if hasher is None else hasher
     hasher.update(data)
@@ -202,6 +205,9 @@ def preflight_input(external_value, request=None):
         return preflight_lesson_overview(external_value, request)
     validate_input(external_value, request)
     return external_value
+
+
+# classes
 
 
 class PresentationAssetMixin(object):
