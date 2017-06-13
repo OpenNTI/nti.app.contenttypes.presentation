@@ -71,6 +71,8 @@ def do_evolve(context, generation=generation):
         lsm = ds_folder.getSiteManager()
         intids = lsm.getUtility(IIntIds)
         catalog = install_assets_library_catalog(ds_folder, intids)
+        for index in catalog.values():
+            index.clear()
         for current in get_all_host_sites():
             _process_site(current, catalog, intids, seen)
 
