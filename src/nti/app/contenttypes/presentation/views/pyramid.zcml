@@ -10,7 +10,8 @@
 	<pyramid:scan package=".asset_views" />
 	<pyramid:scan package=".media_views" />
 	<pyramid:scan package=".course_views" />
+	<pyramid:scan package=".delete_views" />
 	<pyramid:scan package=".lesson_views" />
 	<pyramid:scan package=".outline_views" />
-	
+
 </configure>

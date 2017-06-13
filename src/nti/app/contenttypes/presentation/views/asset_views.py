@@ -11,20 +11,15 @@ logger = __import__('logging').getLogger(__name__)
 
 import six
 import copy
-import uuid
 from itertools import chain
 from urlparse import urlparse
 from collections import Mapping
 
 import transaction
 
-from requests.structures import CaseInsensitiveDict
-
 from zope import lifecycleevent
 
 from zope.cachedescriptors.property import Lazy
-
-from zope.component.hooks import getSite
 
 from zope.event import notify as event_notify
 
@@ -55,10 +50,11 @@ from nti.app.contenttypes.presentation.utils import resolve_discussion_course_bu
 from nti.app.contenttypes.presentation.views import VIEW_ASSETS
 from nti.app.contenttypes.presentation.views import VIEW_CONTENTS
 from nti.app.contenttypes.presentation.views import VIEW_NODE_MOVE
-from nti.app.contenttypes.presentation.views import VIEW_LESSON_REMOVE_REFS
 
 from nti.app.contenttypes.presentation.views.view_mixins import hexdigest
 from nti.app.contenttypes.presentation.views.view_mixins import href_safe_to_external_object
+
+from nti.app.contenttypes.presentation.views.view_mixins import PresentationAssetMixin
 
 from nti.app.externalization.error import raise_json_error
 
@@ -70,11 +66,9 @@ from nti.app.products.courseware.resources.utils import to_external_file_link
 from nti.app.products.courseware.resources.utils import get_file_from_external_link
 
 from nti.app.products.courseware.views.view_mixins import IndexedRequestMixin
-from nti.app.products.courseware.views.view_mixins import DeleteChildViewMixin
 from nti.app.products.courseware.views.view_mixins import AbstractChildMoveView
 
 from nti.appserver.ugd_edit_views import UGDPutView
-from nti.appserver.ugd_edit_views import UGDDeleteView
 
 from nti.assessment.interfaces import IQPoll
 from nti.assessment.interfaces import IQSurvey
@@ -137,7 +131,6 @@ from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
 from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
-from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import IGroupOverViewable
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
@@ -148,13 +141,11 @@ from nti.contenttypes.presentation.interfaces import ICoursePresentationAsset
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
-from nti.contenttypes.presentation.interfaces import IContentBackedPresentationAsset
 
 from nti.contenttypes.presentation.interfaces import OverviewGroupMovedEvent
 from nti.contenttypes.presentation.interfaces import PresentationAssetMovedEvent
 from nti.contenttypes.presentation.interfaces import PresentationAssetCreatedEvent
 from nti.contenttypes.presentation.interfaces import WillUpdatePresentationAssetEvent
-from nti.contenttypes.presentation.interfaces import ItemRemovedFromItemAssetContainerEvent
 
 from nti.contenttypes.presentation.internalization import internalization_ntiaudioref_pre_hook
 from nti.contenttypes.presentation.internalization import internalization_ntivideoref_pre_hook
@@ -349,23 +340,6 @@ class LessonOverviewMoveView(AbstractChildMoveView):
 		self._set_notify_type(obj)
 		return obj
 
-class PresentationAssetMixin(object):
-
-	@Lazy
-	def _site_name(self):
-		return getSite().__name__
-
-	@Lazy
-	def _catalog(self):
-		return get_library_catalog()
-
-	@Lazy
-	def _extra(self):
-		return str(uuid.uuid4()).split('-')[0].upper()
-
-	@Lazy
-	def _registry(self):
-		return get_site_registry()
 
 class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 									   AbstractAuthenticatedView):
@@ -1072,168 +1046,8 @@ class MediaRollPutView(PresentationAssetPutView):
 				remove_presentation_asset(item, self._registry, self._catalog)
 
 
-# delete views
-
-
-@view_config(context=IPresentationAsset)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   request_method='DELETE',
-			   permission=nauth.ACT_CONTENT_EDIT)
-class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
-	
-	event = True
-	
-	@Lazy
-	def _site_name(self):
-		result = component_site(self.context,
-								iface_of_asset(self.context),
-								self.context.ntiid)
-		return result
-
-	@Lazy
-	def _registry(self):
-		return registry_by_name(self._site_name)
-
-	def _do_delete_object(self, theObject):
-		remove_presentation_asset(theObject, 
-								  self._registry,
-								  self._catalog,
-								  event=self.event)
-		return theObject
-
-@view_config(context=INTICourseOverviewGroup)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   request_method='DELETE',
-			   permission=nauth.ACT_CONTENT_EDIT)
-class CourseOverviewGroupDeleteView(PresentationAssetDeleteView):
-
-	event = True
-
-	def _do_delete_object(self, theObject):
-		# remove children first
-		for asset in theObject:
-			remove_presentation_asset(asset, 
-								  	  self._registry,
-								  	  self._catalog,
-								  	  event=False)
-		# ready to remove
-		remove_presentation_asset(theObject, 
-								  self._registry,
-								  self._catalog,
-								  event=self.event)
-		return theObject
-
-@view_config(context=INTILessonOverview)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   request_method='DELETE',
-			   permission=nauth.ACT_CONTENT_EDIT)
-class LessonOverviewDeleteView(PresentationAssetDeleteView):
-	event = False
-
-
-@view_config(context=INTILessonOverview)
-@view_config(context=INTICourseOverviewGroup)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   name=VIEW_CONTENTS,
-			   request_method='DELETE',
-			   permission=nauth.ACT_CONTENT_EDIT)
-class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
-	"""
-	A view to delete a child underneath the given context.
-
-	index
-		This param will be used to indicate which object should be
-		deleted. If the object described by `ntiid` is no longer at
-		this index, the object will still be deleted, as long as it
-		is unambiguous.
-
-	:raises HTTPConflict if state (index of object) has changed out
-	from underneath user
-	"""
-
-	def _is_target(self, obj, ntiid):
-		return 		ntiid == getattr(obj, 'target', '') \
-				or 	ntiid == getattr(obj, 'ntiid', '')
-
-	def _remove(self, item, index):
-		# We remove the item from our context and clean it
-		# up. We want to make sure we clean up the underlying asset.
-		# Safe if already gone.
-		if item is not None:
-			self.context.remove(item)
-			# remove concrete to avoid leaks
-			concrete = IConcreteAsset(item, item)
-			if 		concrete is not item \
-				and IUserCreatedAsset.providedBy(concrete) \
-				and not IContentBackedPresentationAsset.providedBy(concrete):
-				remove_presentation_asset(concrete)
-		else:
-			self.context.pop(index)
-		remove_presentation_asset(item)
-		event_notify(ItemRemovedFromItemAssetContainerEvent(self.context, item))
-
-@view_config(route_name='objects.generic.traversal',
-			 renderer='rest',
-			 name=VIEW_LESSON_REMOVE_REFS,
-			 context=INTILessonOverview,
-			 request_method='DELETE',
-			 permission=nauth.ACT_CONTENT_EDIT)
-class RemoveRefsView( AbstractAuthenticatedView ):
-	"""
-	Remove all refs underneath a lesson pointing at a given ntiid.
-
-	target
-		The ref target that will be used to find out which refs to
-		remove.
-	"""
-
-	def _is_target(self, obj, ntiid):
-		return ntiid == getattr(obj, 'target', '')
-
-	def _remove_from_group(self, item, group):
-		# We remove the item from our context and clean it
-		# up. We want to make sure we clean up the underlying asset.
-		# Safe if already gone.
-		group.remove(item)
-		# remove concrete to avoid leaks
-		concrete = IConcreteAsset(item, item)
-		if 		concrete is not item \
-			and IUserCreatedAsset.providedBy(concrete) \
-			and not IContentBackedPresentationAsset.providedBy(concrete):
-			remove_presentation_asset(concrete)
-		remove_presentation_asset(item)
-		event_notify(ItemRemovedFromItemAssetContainerEvent(group, item))
-		group.childOrderLock()
-
-	def _get_target_ntiid(self):
-		values = CaseInsensitiveDict(self.request.params)
-		target_ntiid = 	values.get('target') \
-					or 	values.get( 'target_ntiid' ) \
-					or 	values.get( 'ntiid' )
-		return target_ntiid
-
-	def __call__(self):
-		count = 0
-		target_ntiid = self._get_target_ntiid()
-
-		if target_ntiid is None:
-			raise hexc.HTTPUnprocessableEntity(_('No target NTIID given for reference removal.'))
-
-		for group in self.context.Items or ():
-			for item in list( group ) or ():
-				if self._is_target( item, target_ntiid ):
-					self._remove_from_group( item, group )
-					count += 1
-
-		logger.info( '%s refs removed from %s (target=%s)',
-					 count, self.context.ntiid, target_ntiid )
-		return hexc.HTTPOk()
-
 # ordered contents
+
 
 @view_config(context=INTILessonOverview)
 @view_defaults(route_name='objects.generic.traversal',

@@ -9,13 +9,20 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import uuid
 import hashlib
 
 from zope import interface
 
+from zope.cachedescriptors.property import Lazy
+
+from zope.component.hooks import getSite
+
 from nti.app.renderers.interfaces import INoHrefInResponse
 
 from nti.appserver.pyramid_authorization import has_permission
+
+from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.dataserver import authorization as nauth
 
@@ -35,6 +42,29 @@ def href_safe_to_external_object(obj):
     result = to_external_object(obj)
     interface.alsoProvides(result, INoHrefInResponse)
     return result
+
+
+class PresentationAssetMixin(object):
+
+    @Lazy
+    def site_name(self):
+        return getSite().__name__
+    _site_name = site_name
+
+    @Lazy
+    def catalog(self):
+        return get_library_catalog()
+    _catalog = catalog
+
+    @Lazy
+    def extra(self):
+        return str(uuid.uuid4()).split('-')[0].upper()
+    _extra = extra
+
+    @Lazy
+    def registry(self):
+        return getSite().getSiteManager()
+    _registry = registry
 
 
 class PublishVisibilityMixin(object):
