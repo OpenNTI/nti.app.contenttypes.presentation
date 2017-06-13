@@ -57,7 +57,6 @@ def do_evolve(context, generation=generation):
         intids = lsm.getUtility(IIntIds)
 
         install_assets_library_catalog(ds_folder, intids)
-        logger.info('Dataserver evolution %s done.', generation)
 
     component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
     logger.info('Dataserver evolution %s done.', generation)
