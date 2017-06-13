@@ -63,7 +63,6 @@ from nti.contenttypes.courses.utils import get_course_hierarchy
 from nti.contenttypes.presentation import iface_of_asset
 
 from nti.contenttypes.presentation.index import get_assets_catalog
-from nti.contenttypes.presentation.index import create_assets_library_catalog
 
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
@@ -200,16 +199,10 @@ class RebuildEvaluationCatalogView(AbstractAuthenticatedView):
 
     def __call__(self):
         intids = component.getUtility(IIntIds)
-        # remove indexes
+        # clear indexes
         catalog = get_assets_catalog()
-        for name, index in list(catalog.items()):
-            intids.unregister(index)
-            del catalog[name]
-        # recreate indexes
-        catalog = create_assets_library_catalog(catalog=catalog,
-                                                family=intids.family)
-        for index in catalog.values():
-            intids.register(index)
+        for index in list(catalog.values()):
+            index.clear()
         # reindex
         seen = set()
         for host_site in get_all_host_sites():  # check all sites
