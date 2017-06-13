@@ -49,7 +49,6 @@ from nti.app.contenttypes.presentation.utils import resolve_discussion_course_bu
 
 from nti.app.contenttypes.presentation.views import VIEW_ASSETS
 from nti.app.contenttypes.presentation.views import VIEW_CONTENTS
-from nti.app.contenttypes.presentation.views import VIEW_NODE_MOVE
 
 from nti.app.contenttypes.presentation.views.view_mixins import hexdigest
 from nti.app.contenttypes.presentation.views.view_mixins import href_safe_to_external_object
@@ -66,7 +65,6 @@ from nti.app.products.courseware.resources.utils import to_external_file_link
 from nti.app.products.courseware.resources.utils import get_file_from_external_link
 
 from nti.app.products.courseware.views.view_mixins import IndexedRequestMixin
-from nti.app.products.courseware.views.view_mixins import AbstractChildMoveView
 
 from nti.appserver.ugd_edit_views import UGDPutView
 
@@ -142,8 +140,6 @@ from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
-from nti.contenttypes.presentation.interfaces import OverviewGroupMovedEvent
-from nti.contenttypes.presentation.interfaces import PresentationAssetMovedEvent
 from nti.contenttypes.presentation.interfaces import PresentationAssetCreatedEvent
 from nti.contenttypes.presentation.interfaces import WillUpdatePresentationAssetEvent
 
@@ -271,74 +267,6 @@ def _handle_multipart(context, user, contentObject, sources, provided=None):
 								  structure=True,
 								  context=contentObject)
 			setattr(contentObject, name, location)
-
-@view_config(route_name='objects.generic.traversal',
-			 request_method='POST',
-			 context=INTILessonOverview,
-			 permission=nauth.ACT_CONTENT_EDIT,
-			 renderer='rest',
-			 name=VIEW_NODE_MOVE)
-class LessonOverviewMoveView(AbstractChildMoveView):
-	"""
-	Move the given object between lessons or overview groups. For
-	overview groups, we need to resolve the given ntiid as an
-	asset ref in the old parent (or new parent if moving internally).
-
-	:raises HTTPUnprocessableEntity if we do not find the given ntiid
-		underneath the old parent
-	"""
-
-	notify_type = None
-
-	def _get_context_ntiid(self):
-		return self.context.ntiid
-
-	def _remove_from_parent(self, parent, obj):
-		return parent.remove(obj)
-
-	def _get_children_ntiids(self, parent_ntiid):
-		result = set()
-		result.add(parent_ntiid)
-		def _recur(node):
-			val = getattr(node, 'ntiid', None)
-			if val:
-				result.add(val)
-			try:
-				for child in node.Items or ():
-					_recur(child)
-			except AttributeError:
-				pass
-
-		_recur(self.context)
-		return result
-
-	def _get_ref_in_parent(self, ntiid, parent):
-		# XXX: If the client were to pass us OIDs (to the refs),
-		# this code could disappear.
-		# Assuming one hit per parent...We actually ensure
-		# that in the group itself (only for videos).
-		for child in list(parent):
-			# We want to move the actual ref, but clients will
-			# only send target ntiids.
-			if 		ntiid == getattr(child, 'target', '') \
-				or 	ntiid == getattr(child, 'ntiid', ''):
-				return child
-		return None
-
-	def _set_notify_type(self, obj):
-		if INTICourseOverviewGroup.providedBy(obj):
-			self.notify_type = OverviewGroupMovedEvent
-		else:
-			self.notify_type = PresentationAssetMovedEvent
-
-	def _get_object_to_move(self, ntiid, old_parent=None):
-		if old_parent is not None:
-			# Need a to convert any non-ref into the ref.
-			obj = self._get_ref_in_parent(ntiid, old_parent)
-			if obj is None:
-				raise hexc.HTTPUnprocessableEntity(_('No ref found for given media ntiid.'))
-		self._set_notify_type(obj)
-		return obj
 
 
 class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
