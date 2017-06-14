@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-.. $Id$
+.. $Id: evolve46.py 114944 2017-06-13 14:29:46Z carlos.sanchez $
 """
 
 from __future__ import print_function, absolute_import, division
@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-generation = 46
+generation = 47
 
 from zope import component
 from zope import interface
@@ -19,11 +19,9 @@ from zope.component.hooks import site as current_site
 
 from zope.intid.interfaces import IIntIds
 
-from nti.contentlibrary.interfaces import IContentPackageLibrary
-from nti.contentlibrary.interfaces import IEditableContentPackage
+from nti.contenttypes.presentation.index import install_assets_library_catalog
 
-from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
-from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
+from nti.contenttypes.presentation.interfaces import IPresentationAsset
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
@@ -45,30 +43,14 @@ class MockDataserver(object):
         return None
 
 
-def _process_library(library, intids, seen):
-
-    def _recur(unit):
-        container = IPresentationAssetContainer(unit)
-        for asset in list(container.assets()):
-            if IUserCreatedAsset.providedBy(asset):
-                container.pop(asset.ntiid)
-        for child in unit.children or ():
-            _recur(child)
-
-    for package in library.contentPackages or ():
-        doc_id = intids.queryId(package)
-        if doc_id is None or doc_id in seen:
-            continue
-        seen.add(doc_id)
-        if not IEditableContentPackage.providedBy(package):
-            _recur(package)
-
-
-def _process_site(current, intids, seen):
+def _process_site(current, catalog, intids, seen):
     with current_site(current):
-        library = component.queryUtility(IContentPackageLibrary)
-        if library is not None:
-            _process_library(library, intids, seen)
+        for _, asset in list(component.getUtilitiesFor(IPresentationAsset)):
+            doc_id = intids.queryId(asset)
+            if doc_id is None or doc_id in seen:
+                continue
+            seen.add(doc_id)
+            catalog.index_doc(doc_id, asset)
 
 
 def do_evolve(context, generation=generation):
@@ -86,15 +68,13 @@ def do_evolve(context, generation=generation):
         assert component.getSiteManager() == ds_folder.getSiteManager(), \
                "Hooks not installed?"
 
-        library = component.queryUtility(IContentPackageLibrary)
-        if library is not None:
-            library.syncContentPackages()
-
         lsm = ds_folder.getSiteManager()
         intids = lsm.getUtility(IIntIds)
-
+        catalog = install_assets_library_catalog(ds_folder, intids)
+        for index in catalog.values():
+            index.clear()
         for current in get_all_host_sites():
-            _process_site(current, intids, seen)
+            _process_site(current, catalog, intids, seen)
 
     component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
     logger.info('Dataserver evolution %s done. %s assets(s) indexed',
@@ -103,6 +83,6 @@ def do_evolve(context, generation=generation):
 
 def evolve(context):
     """
-    Evolve to gen 46 to clean up all created assets from pkg containers
+    Evolve to gen 47 to index all assets
     """
-    do_evolve(context)
+    # do_evolve(context)  DON'T install yet

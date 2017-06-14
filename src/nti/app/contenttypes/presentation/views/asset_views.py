@@ -195,13 +195,6 @@ def _notify_created(item, principal=None, externalValue=None):
 	if IPublishable.providedBy(item) and item.is_published():
 		item.unpublish(event=False)
 
-def _add_2_packages(context, item):
-	result = []
-	for package in get_course_packages(context):
-		container = IPresentationAssetContainer(package)
-		container[item.ntiid] = item
-		result.append(package.ntiid)
-	return result
 
 def _add_2_course(context, item):
 	course = ICourseInstance(context, None)
@@ -214,11 +207,9 @@ def _add_2_courses(context, item):
 	for subinstance in get_course_subinstances(context):
 		_add_2_course(subinstance, item)
 
-def _add_2_container(context, item, packages=False):
+def _add_2_container(context, item):
 	result = []
 	_add_2_courses(context, item)
-	if packages:
-		result.extend(_add_2_packages(context, item))
 	entry = ICourseCatalogEntry(context, None)
 	if entry is not None:
 		result.append(entry.ntiid)
@@ -327,7 +318,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 			item.__parent__ = self._course
 
 		# Don't store in packages; this ensures we index underneath course
-		containers = _add_2_container(self._course, item, packages=False)
+		containers = _add_2_container(self._course, item)
 		namespace = containers[0] if containers else None
 		if provided == INTISlideDeck:
 			base = item.ntiid
@@ -342,7 +333,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 			# register in containers and index
 			for x in chain(item.Slides, item.Videos):
 				self._set_creator(x, creator)
-				_add_2_container(self._course, x, packages=False)
+				_add_2_container(self._course, x)
 				self._catalog.index(x, container_ntiids=item_extended,
 									namespace=namespace, sites=self._site_name)
 
@@ -420,7 +411,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		self._set_creator(item, creator)
 
 		# add to course container
-		containers = _add_2_container(self._course, item, packages=False)
+		containers = _add_2_container(self._course, item)
 
 		# register unique copies
 		_canonicalize(item.Items or (), creator, base=item.ntiid, registry=self._registry)
@@ -430,7 +421,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		item_extended = set(item_extended)
 		for x in item or ():
 			self._set_creator(x, creator)
-			_add_2_container(self._course, x, packages=False)
+			_add_2_container(self._course, x)
 			self._catalog.index(x, container_ntiids=item_extended, sites=self._site_name)
 
 		# index item
@@ -442,7 +433,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		self._set_creator(item, creator)
 
 		# add to course container
-		containers = _add_2_container(self._course, item, packages=False)
+		containers = _add_2_container(self._course, item)
 		item_extended = tuple(extended or ()) + tuple(containers or ())
 		self._catalog.index(item, container_ntiids=item_extended, sites=self._site_name)
 
@@ -487,7 +478,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		self._set_creator(group, creator)
 
 		# add to course container
-		containers = _add_2_container(self._course, group, packages=False)
+		containers = _add_2_container(self._course, group)
 
 		# have unique copies of group items
 		_canonicalize(group.Items, creator, registry=self._registry, base=group.ntiid)
@@ -516,7 +507,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		self._set_creator(lesson, creator)
 
 		# add to course container
-		containers = _add_2_container(self._course, lesson, packages=False)
+		containers = _add_2_container(self._course, lesson)
 
 		# Make sure we validate before canonicalize.
 		for item in lesson.Items or ():
@@ -547,7 +538,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 							namespace=namespace, sites=self._site_name)
 
 	def _handle_other_asset(self, provided, item, creator, extended=None):
-		containers = _add_2_container(self._course, item, packages=False)
+		containers = _add_2_container(self._course, item)
 		item_extended = tuple(extended or ()) + tuple(containers or ())
 		self._catalog.index(item, container_ntiids=item_extended, sites=self._site_name)
 
