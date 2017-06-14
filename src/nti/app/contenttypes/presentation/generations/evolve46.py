@@ -19,11 +19,14 @@ from zope.component.hooks import site as current_site
 
 from zope.intid.interfaces import IIntIds
 
+from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IEditableContentPackage
 
 from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
+
+from nti.contenttypes.courses.utils import get_courses_for_packages
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
@@ -47,13 +50,15 @@ class MockDataserver(object):
 
 def _process_library(library, intids, seen):
 
-    def _recur(unit):
+    def _recur(unit, courses):
         container = IPresentationAssetContainer(unit)
         for asset in list(container.assets()):
             if IUserCreatedAsset.providedBy(asset):
                 container.pop(asset.ntiid)
+                if IContentUnit.providedBy(asset.__parent__):
+                    asset.__parent__ = courses[0] # pick first
         for child in unit.children or ():
-            _recur(child)
+            _recur(child, courses)
 
     for package in library.contentPackages or ():
         doc_id = intids.queryId(package)
@@ -61,7 +66,9 @@ def _process_library(library, intids, seen):
             continue
         seen.add(doc_id)
         if not IEditableContentPackage.providedBy(package):
-            _recur(package)
+            courses = get_courses_for_packages(packages=package.ntiid, 
+                                               intids=intids)
+            _recur(package, courses)
 
 
 def _process_site(current, intids, seen):
