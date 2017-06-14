@@ -104,8 +104,7 @@ def do_evolve(context, generation=generation):
             _process_site(current, intids, seen)
 
     component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
-    logger.info('Dataserver evolution %s done. %s assets(s) indexed',
-                generation, len(seen))
+    logger.info('Dataserver evolution %s done.', generation)
 
 
 def evolve(context):
