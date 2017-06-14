@@ -321,13 +321,10 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 	def _handle_package_asset(self, provided, item, creator, extended=None):
 		self._set_creator(item, creator)
-		packages = list(get_course_packages(self._course))
 
-		# If we don't have parent, use package.
-		# TODO: Do we want to force all assets (non IAssetRef) to have package
-		# parents (updated on sync?) and all refs have group parent?
-		if item.__parent__ is None and packages:
-			item.__parent__ = packages[0]
+		# If we don't have parent, use course.
+		if item.__parent__ is None:
+			item.__parent__ = self._course
 
 		# Don't store in packages; this ensures we index underneath course
 		containers = _add_2_container(self._course, item, packages=False)
@@ -345,7 +342,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 			# register in containers and index
 			for x in chain(item.Slides, item.Videos):
 				self._set_creator(x, creator)
-				_add_2_container(self._course, x, packages=True)
+				_add_2_container(self._course, x, packages=False)
 				self._catalog.index(x, container_ntiids=item_extended,
 									namespace=namespace, sites=self._site_name)
 
