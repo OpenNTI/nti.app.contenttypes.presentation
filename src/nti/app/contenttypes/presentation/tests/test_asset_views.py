@@ -41,8 +41,6 @@ from nti.app.contenttypes.presentation import VIEW_LESSON_REMOVE_REFS
 
 from nti.app.products.courseware.resources.utils import is_internal_file_link
 
-from nti.contentlibrary.interfaces import IContentPackage
-
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -1092,7 +1090,7 @@ class TestAssetViews(ApplicationLayerTest):
             timeline = find_object_with_ntiid(timeline_ntiid)
             assert_that(timeline, not_none())
             assert_that(timeline.ntiid, is_(timeline_ntiid))
-            assert_that(timeline.__parent__, validly_provides(IContentPackage))
+            assert_that(timeline.__parent__, validly_provides(ICourseInstance))
 
             timeline_ref = component.queryUtility(INTITimelineRef,
                                                   name=timeline_ref.ntiid)
