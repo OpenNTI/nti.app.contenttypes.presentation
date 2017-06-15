@@ -203,7 +203,7 @@ class OutlineLessonOverviewView(AbstractAuthenticatedView,
              permission=nauth.ACT_READ,
              renderer='rest',
              name=VIEW_OVERVIEW_SUMMARY)
-class OutlineLessonOverviewSummaryView(RecursiveUGDView, 
+class OutlineLessonOverviewSummaryView(RecursiveUGDView,
                                        OutlineLessonOverviewMixin):
 
     _DEFAULT_BATCH_START = 0
@@ -1057,8 +1057,14 @@ class SyncLockOutlineView(AbstractAuthenticatedView,
 
     def _handle_asset(self, item):
         asset = IConcreteAsset(item, item)
-        self._handle_object(item)
-        lifecycleevent.modified(item)
+        try:
+            #INTIRelatedWorkRefPointer
+            self._handle_object(item)
+        except AttributeError:
+            pass
+        else:
+            lifecycleevent.modified(item)
+
         if asset != item:
             self._handle_object(asset)
             lifecycleevent.modified(asset)
