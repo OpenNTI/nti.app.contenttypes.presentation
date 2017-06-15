@@ -43,6 +43,8 @@ from nti.app.products.courseware.resources.utils import is_internal_file_link
 from nti.app.products.courseware.resources.utils import to_external_file_link
 from nti.app.products.courseware.resources.utils import get_file_from_external_link
 
+from nti.app.products.courseware.utils import get_content_related_work_refs
+
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQEvaluation
 from nti.assessment.interfaces import IQuestionSet
@@ -67,8 +69,6 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.courses.common import get_course_packages
-
-from nti.contenttypes.courses.utils import get_courses_for_packages
 
 from nti.contenttypes.presentation.interfaces import TRX_ASSET_MOVE_TYPE
 from nti.contenttypes.presentation.interfaces import TRX_OVERVIEW_GROUP_MOVE_TYPE
@@ -403,29 +403,8 @@ class _RelatedWorkRefContentUnitAssociations(object):
     def __init__(self, *args):
         pass
 
-    def _contains_unit(self, unit, ref):
-        return ref.target == unit.ntiid
-
-    def _get_course_refs(self, courses):
-        container_ntiids = [ICourseCatalogEntry(x).ntiid for x in courses]
-        catalog = get_library_catalog()
-        sites = get_component_hierarchy_names()
-        refs = tuple(catalog.search_objects(provided=INTIRelatedWorkRef,
-                                            container_ntiids=container_ntiids,
-                                            container_all_of=False,
-                                            sites=sites))
-        return refs
-
     def associations(self, context):
-        result = []
-        package = find_interface(context, IContentPackage, strict=False)
-        if package is not None:
-            courses = get_courses_for_packages(packages=(package.ntiid,))
-            if courses:
-                for ref in self._get_course_refs(courses):
-                    if self._contains_unit(context, ref):
-                        result.append(ref)
-        return result
+        return get_content_related_work_refs(context)
 
 
 def _get_ref_pointers(ref):
@@ -441,15 +420,13 @@ def _get_ref_pointers(ref):
 
 
 @component.adapter(IContentUnit, IContentUnitRemovedEvent)
-def _on_content_removed(unit, event, subscriber=None):
+def _on_content_removed(unit, event):
     """
     Remove related work refs pointing to deleted content.
     XXX: This must be a content removed event because
     we may churn intids during re-renders.
     """
-    if subscriber is None:
-        subscriber = _RelatedWorkRefContentUnitAssociations()
-    refs = subscriber.associations(unit)
+    refs = get_content_related_work_refs(unit)
     for ref in refs or ():
         ref_ntiid = ref.ntiid
         # Must get these before deleting ref.
@@ -483,7 +460,7 @@ def _on_package_removed(package, event):
     """
     logger.info('Removed related work refs on package deletion (%s)',
                 package.ntiid)
-    subscriber = _RelatedWorkRefContentUnitAssociations()
+    # XXX: Do we need to do unit, or can we just do by package?
     units = _get_content_units_for_package(package)
     for unit in units:
-        _on_content_removed(unit, event, subscriber=subscriber)
+        _on_content_removed(unit, event)
