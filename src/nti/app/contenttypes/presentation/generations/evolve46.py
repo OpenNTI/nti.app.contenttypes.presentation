@@ -52,9 +52,10 @@ def _process_library(library, intids, seen):
 
     def _recur(unit, courses):
         container = IPresentationAssetContainer(unit)
-        for asset in list(container.assets()):
+        for name, asset in list(container.items()):
             if IUserCreatedAsset.providedBy(asset):
-                container.pop(asset.ntiid)
+                container.pop(asset.ntiid, None)
+                container.pop(name, None)
                 if IContentUnit.providedBy(asset.__parent__):
                     asset.__parent__ = courses[0] # pick first
         for child in unit.children or ():
