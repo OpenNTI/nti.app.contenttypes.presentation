@@ -102,7 +102,8 @@ def get_user(user):
 
 
 @interface.implementer(ILessonPublicationConstraintChecker)
-class LessonPublicationConstraintChecker(object):
+@component.adapter(IAssignmentCompletionConstraint)
+class AssignmentCompletionConstraintChecker(object):
 
     constraint = None
 
@@ -111,7 +112,7 @@ class LessonPublicationConstraintChecker(object):
 
     def satisfied_time(self, user):
         user = get_user(user)
-        course = ICourseInstance(self.constraint, None)
+        course = ICourseInstance(self, None)
 
         # By default, unless we have relevant completed constraints,
         # we return 0.
@@ -124,18 +125,30 @@ class LessonPublicationConstraintChecker(object):
             histories = component.queryMultiAdapter((course, user),
                                                     IUsersCourseAssignmentHistory)
             if histories:
-                for item in self.get_constraint_items():
-
-                    if completed_time != 0:
-                        completed_time = max(
-                            self.check_time_constraint_item(item), completed_time)
+                for assignment in self.constraint.assignments:
+                    # for each assignment in the constraint, we want to use the time
+                    # that it was first completed.
+                    assignment_satisfied_time = 0
+                    # note that these are assignment ntiids, not assignment
+                    # objects
+                    submission = histories.get(assignment, None)
+                    if submission is not None:
+                        assignment_satisfied_time = submission.createdTime
+                        # We only want to update this for a submitted
+                        # assignment
+                        if completed_time != 0:
+                            completed_time = max(
+                                assignment_satisfied_time, completed_time)
+                        else:
+                            # Make sure to assign completed_time the first
+                            # time through the loop
+                            completed_time = assignment_satisfied_time
                     else:
-                        # Make sure to assign completed_time the first trip
-                        # through the loop
-                        completed_time = self.check_time_constraint_item(
-                            item, histories)
-
-                    if completed_time is None:
+                        # If an assignment for this constraint has not been
+                        # submitted, we don't care about checking the others;
+                        # we should just return None to indicate this constraint
+                        # has not been satisfied.
+                        completed_time = None
                         break
 
         # So we have 3 possible cases: Returning 0 if there are no
@@ -152,47 +165,118 @@ class LessonPublicationConstraintChecker(object):
         return completed_time
 
     def is_satisfied(self, constraint=None, principal=None):
-        return self.satisfied_time(principal) is not None
+        user = get_user(principal)
+        if user is None:
+            return False
+        constraint = self.constraint if constraint is None else constraint
+        course = ICourseInstance(constraint, None)
+        if course is None:
+            return False
+        # allow editors and instructors
+        if     is_course_instructor_or_editor(course, user) \
+            or has_permission(ACT_CONTENT_EDIT, course):
+            return True
+        # check assignment constraints
+        for assignment_ntiid in constraint.assignments or ():
+            assignment = component.queryUtility(IQAssignment,
+                                                name=assignment_ntiid)
+            if assignment is None:
+                continue
+            if not has_submitted_assigment(course, user, assignment):
+                return False
+        return True
 
 
-@component.adapter(IAssignmentCompletionConstraint)
-class AssignmentCompletionConstraintChecker(LessonPublicationConstraintChecker):
-
-    def get_constraint_items(self):
-        return self.constraint.assignments
-
-    def check_time_constraint_item(self, item_ntiid, histories):
-        # for each assignment in the constraint, we want to use the time
-        # that it was first completed.
-        item_satisfied_time = 0
-        submission = histories.get(item_ntiid, None)
-        if submission is not None:
-            completed_time = submission.createdTime
-        else:
-            completed_time = None
-
-        return completed_time
-
-
+@interface.implementer(ILessonPublicationConstraintChecker)
 @component.adapter(ISurveyCompletionConstraint)
-class SurveyCompletionConstraintChecker(LessonPublicationConstraintChecker):
+class SurveyCompletionConstraintChecker(object):
 
-    def get_constraint_items(self):
-        return self.constraint.surveys
+    constraint = None
 
-    def check_time_constraint_item(self, item_ntiid, histories):
-        # for each survey in the constraint, we want to use the time
-        # that it was first completed.
-        item_satisfied_time = 0
+    def __init__(self, constraint=None):
+        self.constraint = constraint
 
-        submission = histories.get(item_ntiid, None)
-        due_date = get_available_for_submission_ending(survey, course) or now
-        if submission is not None and due_date >= now:
-            completed_time = submission.createdTime
-        else:
-            completed_time = None
+    def satisfied_time(self, user):
+        user = User.get_user(user)
 
+        # If we don't have any completed surveys for this constraint,
+        # we return 0 so that caching doesn't need to reload the lesson
+        # outline.
+
+        user = User.get_user(user)
+        course = ICourseInstance(self, None)
+
+        # By default, unless we have relevant completed constraints,
+        # we return 0.
+        completed_time = 0
+
+        # Don't run through this for instructors or editors.
+
+        if not (is_course_instructor_or_editor(course, user)
+                or has_permission(ACT_CONTENT_EDIT, course)):
+
+            histories = component.queryMultiAdapter((course, user),
+                                                    IUsersCourseAssignmentHistory)
+            if histories:
+                for survey in self.constraint.surveys:
+                    # for each survey in the constraint, we want to use the time
+                    # that it was first completed.
+                    survey_satisfied_time = 0
+                    # note that these are survey ntiids, not survey objects
+                    submission = histories.get(survey, None)
+                    if submission is not None:
+                        survey_satisfied_time = submission.createdTime
+                        # We only want to update this for a submitted survey
+                        if completed_time != 0:
+                            completed_time = max(
+                                survey_satisfied_time, completed_time)
+                        else:
+                            # Make sure to assign completed_time the first
+                            # time through the loop
+                            completed_time = survey_satisfied_time
+                    else:
+                        # If an survey for this constraint has not been
+                        # submitted, we don't care about checking the others;
+                        # we should just return None to indicate this constraint
+                        # has not been satisfied.
+                        completed_time = None
+                        break
+
+        # So we have 3 possible cases: Returning 0 if there are no
+        # surveys on this constraint for some reason or if the user
+        # is an instructor or course editor or admin, returning
+        # the satisfied time if all surveys have been submitted,
+        # and returning None if some surveys have not yet been
+        # submitted.
+        #
+        # The time at which this constraint is satisfied is the most
+        # recent time at which all surveys have been submitted
+        # initially by the student, according to createdTime of
+        # each submission.
         return completed_time
+
+    def is_satisfied(self, constraint=None, principal=None):
+        user = get_user(principal)
+        if user is None:
+            return False
+        constraint = self.constraint if constraint is None else constraint
+        course = ICourseInstance(constraint, None)
+        if course is None:
+            return False
+        # always allow editors and instructors
+        if     is_course_instructor_or_editor(course, user) \
+                or has_permission(ACT_CONTENT_EDIT, course):
+            return True
+        now = datetime.utcnow()
+        for survey_ntiid in constraint.surveys:
+            survey = component.queryUtility(IQSurvey, name=survey_ntiid)
+            if survey is None:
+                continue
+            due_date = get_available_for_submission_ending(survey, course) \
+                or now
+            if due_date >= now and not has_submitted_inquiry(course, user, survey):
+                return False
+        return True
 
 
 @component.adapter(INTILessonOverview)
