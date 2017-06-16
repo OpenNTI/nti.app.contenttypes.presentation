@@ -7,20 +7,16 @@
 	<include package="zope.component" />
 
 	<!-- Adapters -->
-    <adapter factory=".package.PackageAssetProcessor"
-             for="nti.contenttypes.presentation.interfaces.IPackagePresentationAsset"
-             provides="..interfaces.IPresentationAssetProcessor" />
+    <adapter factory=".package.PackageAssetProcessor" />
+    <adapter factory=".package.NTISlideDeckProcessor" />
 
-    <adapter factory=".package.NTISlideDeckProcessor"
-             for="nti.contenttypes.presentation.interfaces.INTISlideDeck"
-             provides="..interfaces.IPresentationAssetProcessor" />
+    <adapter factory=".docket.DocketAssetProcessor" />
+    <adapter factory=".docket.RelatedWorkfRefProcessor" />
+       
+    <adapter factory=".media.MediaRollProcessor" />
 
-    <adapter factory=".docket.DocketAssetProcessor"
-             for="nti.contenttypes.presentation.interfaces.INTIDocketAsset"
-             provides="..interfaces.IPresentationAssetProcessor" />
-             
-    <adapter factory=".docket.RelatedWorkfRefProcessor"
-             for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef"
-             provides="..interfaces.IPresentationAssetProcessor" />
-             
+	<adapter factory=".group.AssessmentRefProcessor" />
+	<adapter factory=".group.DiscussionRefProcessor" />  
+    <adapter factory=".group.GroupOverViewableProcessor" />
+
 </configure>

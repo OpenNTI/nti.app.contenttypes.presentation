@@ -22,6 +22,8 @@ from nti.app.contenttypes.presentation.processors.mixins import set_creator
 from nti.app.contenttypes.presentation.processors.mixins import canonicalize
 from nti.app.contenttypes.presentation.processors.mixins import add_to_container
 from nti.app.contenttypes.presentation.processors.mixins import get_site_registry
+from nti.app.contenttypes.presentation.processors.mixins import get_context_registry
+
 
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
@@ -70,4 +72,5 @@ class NTISlideDeckProcessor(object):
     __slots__ = ()
 
     def handle(self, item, context, creator=None, request=None):
-        return handle_slide_deck(item, context, creator)
+        registry = get_context_registry(context)
+        return handle_slide_deck(item, context, creator, registry)

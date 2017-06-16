@@ -47,7 +47,11 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.publishing.interfaces import IPublishable
 
+from nti.site.interfaces import IHostPolicyFolder
+
 from nti.site.utils import registerUtility
+
+from nti.traversal.traversal import find_interface
 
 
 def hexdigest(data, hasher=None):
@@ -163,3 +167,12 @@ def get_content_file(value):
     if not IContentBaseFile.providedBy(result):
         result = None
     return result
+
+
+def get_context_site(context):
+    return find_interface(context, IHostPolicyFolder, strict=False)
+
+
+def get_context_registry(context):
+    folder = get_context_site(context)
+    return folder.getSiteManager() if folder is not None else None
