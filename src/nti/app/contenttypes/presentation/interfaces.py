@@ -12,6 +12,14 @@ from zope import interface
 from zope.deprecation import deprecated
 
 
+class IPresentationAssetProcessor(interface.Interface):
+
+    def handle():
+        """
+        Return whether or not the item reference is valid
+        """
+
+
 class IItemRefValidator(interface.Interface):
 
     def validate():

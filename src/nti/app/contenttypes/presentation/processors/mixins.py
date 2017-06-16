@@ -126,3 +126,11 @@ def handle_multipart(context, user, contentObject, sources, provided=None):
                                   structure=True,
                                   context=contentObject)
             setattr(contentObject, name, location)
+
+
+def set_creator(item, creator):
+    item_byline = getattr(item, 'byline', None)
+    item_creator = getattr(item, 'creator', None)
+    creator = getattr(creator, 'username', creator)
+    if not item_creator or item_creator == item_byline:
+        item.creator = creator
