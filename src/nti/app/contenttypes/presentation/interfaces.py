@@ -9,14 +9,20 @@ __docformat__ = "restructuredtext en"
 
 from zope import interface
 
-from zope.deprecation import deprecated
-
 
 class IPresentationAssetProcessor(interface.Interface):
+    """
+    Adapter to process and handle post/put operations of assets
+    """
 
-    def handle():
+    def handle(item, context, creator=None, request=None):
         """
-        Return whether or not the item reference is valid
+        Handle a particular asset
+
+        :param item: Presentation asset
+        :param context: Course instance
+        :param creator: Item creator
+        :param request: web request
         """
 
 
@@ -34,8 +40,3 @@ class ILessonPublicationConstraintValidator(interface.Interface):
         """
         Raise an exception if the contraint is not valid
         """
-
-
-deprecated('IPresentationAssetsIndex', 'Use lastest library implementation')
-class IPresentationAssetsIndex(interface.Interface):
-    pass

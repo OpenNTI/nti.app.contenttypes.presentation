@@ -15,4 +15,12 @@
              for="nti.contenttypes.presentation.interfaces.INTISlideDeck"
              provides="..interfaces.IPresentationAssetProcessor" />
 
+    <adapter factory=".docket.DocketAssetProcessor"
+             for="nti.contenttypes.presentation.interfaces.INTIDocketAsset"
+             provides="..interfaces.IPresentationAssetProcessor" />
+             
+    <adapter factory=".docket.RelatedWorkfRefProcessor"
+             for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef"
+             provides="..interfaces.IPresentationAssetProcessor" />
+             
 </configure>

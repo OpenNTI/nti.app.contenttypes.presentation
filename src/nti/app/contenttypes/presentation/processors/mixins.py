@@ -9,6 +9,9 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import six
+import hashlib
+
 from zope import component
 
 from zope.component.hooks import getSite
@@ -22,6 +25,9 @@ from nti.app.contenttypes.presentation.utils import make_asset_ntiid
 
 from nti.app.products.courseware.resources.utils import get_course_filer
 from nti.app.products.courseware.resources.utils import is_internal_file_link
+from nti.app.products.courseware.resources.utils import get_file_from_external_link
+
+from nti.contentfile.interfaces import IContentBaseFile
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
@@ -36,9 +42,19 @@ from nti.contenttypes.presentation.interfaces import PresentationAssetCreatedEve
 
 from nti.coremetadata.utils import current_principal
 
+from nti.ntiids.ntiids import is_valid_ntiid_string
+from nti.ntiids.ntiids import find_object_with_ntiid
+
 from nti.publishing.interfaces import IPublishable
 
 from nti.site.utils import registerUtility
+
+
+def hexdigest(data, hasher=None):
+    hasher = hashlib.sha256() if hasher is None else hasher
+    hasher.update(data)
+    result = hasher.hexdigest()
+    return result
 
 
 def principalId():
@@ -134,3 +150,16 @@ def set_creator(item, creator):
     creator = getattr(creator, 'username', creator)
     if not item_creator or item_creator == item_byline:
         item.creator = creator
+
+
+def get_content_file(value):
+    if not isinstance(value, six.string_types):
+        return None
+    result = None
+    if is_valid_ntiid_string(value):
+        result = find_object_with_ntiid(value)
+    elif is_internal_file_link(value):
+        result = get_file_from_external_link(value)
+    if not IContentBaseFile.providedBy(result):
+        result = None
+    return result

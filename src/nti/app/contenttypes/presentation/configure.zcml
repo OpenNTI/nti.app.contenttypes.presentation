@@ -211,6 +211,9 @@
 
 	<!-- Decorators -->
 	<include package=".decorators" />
+	
+	<!-- Processors -->
+	<include package=".processors" />
 
 	<!-- Metadata -->
 	<subscriber	factory=".predicates._PresentationAssetObjects"
