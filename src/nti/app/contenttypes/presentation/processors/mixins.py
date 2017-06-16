@@ -149,7 +149,7 @@ def set_creator(item, creator):
     item_creator = getattr(item, 'creator', None)
     creator = getattr(creator, 'username', creator)
     if not item_creator or item_creator == item_byline:
-        item.creator = creator
+        item.creator = creator or principalId()
 
 
 def get_content_file(value):
