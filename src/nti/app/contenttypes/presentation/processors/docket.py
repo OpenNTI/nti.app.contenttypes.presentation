@@ -59,6 +59,7 @@ def handle_docket_asset(item, context=None, creator=None):
             item.target = to_external_ntiid_oid(item)  # NTIID
             if INTIRelatedWorkRef.providedBy(item):
                 item.type = text_(content_file.contentType)
+    return item
 
 
 def handle_related_work(item, context, creator=None, request=None):
@@ -95,6 +96,7 @@ def handle_related_work(item, context, creator=None, request=None):
         item.type = contentType
     # handle common docket
     handle_docket_asset(item, context, creator)
+    return item
 
 
 @component.adapter(INTIDocketAsset)

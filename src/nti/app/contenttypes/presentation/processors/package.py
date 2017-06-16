@@ -34,6 +34,7 @@ def handle_package_asset(item, context, creator=None):
     if item.__parent__ is None:
         item.__parent__ = context
     add_to_container(context, item)
+    return item
 
 
 def handle_slide_deck(item, context, creator, registry=None):
@@ -49,6 +50,7 @@ def handle_slide_deck(item, context, creator, registry=None):
     for x in chain(item.Slides, item.Videos):
         set_creator(x, creator)
         add_to_container(context, x)
+    return item
 
 
 @component.adapter(IPackagePresentationAsset)
