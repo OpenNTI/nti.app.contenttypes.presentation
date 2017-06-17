@@ -12,7 +12,6 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 
 from zope.component.hooks import getSite
-from zope.component.hooks import site as current_site
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
@@ -29,10 +28,6 @@ from nti.contenttypes.courses.utils import get_user_or_instructor_enrollment_rec
 
 from nti.ntiids.ntiids import is_ntiid_of_type
 from nti.ntiids.ntiids import find_object_with_ntiid
-
-from nti.site.hostpolicy import get_host_site
-
-from nti.site.site import get_component_hierarchy_names
 
 # Rexport for BWC
 get_enrollment_record = get_user_or_instructor_enrollment_record
@@ -130,15 +125,12 @@ def find_course_by_parts(catalog, parts=()):
 
 
 def get_course_by_relative_path_parts(parts=()):
-    for site in get_component_hierarchy_names():
-        with current_site(get_host_site(site)):
-            context = component.queryUtility(IPersistentCourseCatalog)
-            if not context:
-                continue
-            result = find_course_by_parts(context, parts)
-            if result is not None:
-                return result
-
+    context = component.queryUtility(IPersistentCourseCatalog)
+    while context is not None:
+        result = find_course_by_parts(context, parts)
+        if result is not None:
+            return result
+        context = component.queryNextUtility(context, IPersistentCourseCatalog)
     logger.debug("Could not find a course for paths '%s' under site '%s'",
                  parts, getSite().__name__)
     return None
