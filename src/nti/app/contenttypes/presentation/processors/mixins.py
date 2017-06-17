@@ -51,8 +51,6 @@ from nti.site.interfaces import IHostPolicyFolder
 
 from nti.site.utils import registerUtility
 
-from nti.traversal.traversal import find_interface
-
 
 def hexdigest(data, hasher=None):
     hasher = hashlib.sha256() if hasher is None else hasher
@@ -87,11 +85,11 @@ def add_to_courses(context, item):
 
 
 def add_to_container(context, item):
-    result = []
+    result = None
     add_to_courses(context, item)
     entry = ICourseCatalogEntry(context, None)
     if entry is not None:
-        result.append(entry.ntiid)
+        result = entry.ntiid
     return result
 
 
@@ -170,7 +168,7 @@ def get_content_file(value):
 
 
 def get_context_site(context):
-    return find_interface(context, IHostPolicyFolder, strict=False)
+    return IHostPolicyFolder(context, None)
 
 
 def get_context_registry(context):

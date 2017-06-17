@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -127,11 +127,11 @@ class _AssignmentCompletionConstraintValidator(object):
         constraint = self.constraint if constraint is None else constraint
         assignments = constraint.assignments
         if not assignments:
-            raise ValueError(_("Assignment list cannot be empty."))
+            raise ValueError(_(u"Assignment list cannot be empty."))
 
         for ntiid in assignments:
             if component.queryUtility(IQAssignment, name=ntiid) is None:
-                msg = translate(_("Assigment ${ntiid} does not exist.",
+                msg = translate(_(u"Assigment ${ntiid} does not exist.",
                                   mapping={'ntiid': ntiid}))
                 raise ValueError(msg)
 
@@ -149,10 +149,10 @@ class _SurveyCompletionConstraintValidator(object):
         constraint = self.constraint if constraint is None else constraint
         surveys = constraint.surveys
         if not surveys:
-            raise ValueError(_("Survey list cannot be empty."))
+            raise ValueError(_(u"Survey list cannot be empty."))
 
         for ntiid in surveys:
             if component.queryUtility(IQSurvey, name=ntiid) is None:
-                msg = translate(_("Survey ${ntiid} does not exist.",
+                msg = translate(_(u"Survey ${ntiid} does not exist.",
                                   mapping={'ntiid': ntiid}))
                 raise ValueError(msg)

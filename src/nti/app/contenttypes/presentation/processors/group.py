@@ -9,8 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from zope import interface
 from zope import component
+from zope import interface
 
 from pyramid import httpexceptions as hexc
 
@@ -21,7 +21,9 @@ from nti.app.authentication import get_remote_user
 from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProcessor
 
 from nti.app.contenttypes.presentation.processors.mixins import set_creator
+from nti.app.contenttypes.presentation.processors.mixins import canonicalize
 from nti.app.contenttypes.presentation.processors.mixins import add_to_container
+from nti.app.contenttypes.presentation.processors.mixins import get_context_registry
 
 from nti.app.contenttypes.presentation.utils import resolve_discussion_course_bundle
 
@@ -39,6 +41,7 @@ from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import IGroupOverViewable
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
+from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.dataserver.contenttypes.forums.interfaces import ITopic
 
@@ -106,6 +109,22 @@ def handle_discussion_ref(item, context, creator=None, request=None):
     return item
 
 
+def handle_overview_group(group, context, creator=None, request=None):
+    # set creator
+    set_creator(group, creator)
+    # add to course container
+    add_to_container(context, group)
+    registry = get_context_registry(context)
+    # have unique copies of group items
+    canonicalize(group.Items, creator,
+                 registry=registry,
+                 base=group.ntiid)
+    # process group items
+    for item in group or ():
+        proc = IPresentationAssetProcessor(item)
+        proc.handle(item, context, creator, request)
+
+
 @component.adapter(IGroupOverViewable)
 @interface.implementer(IPresentationAssetProcessor)
 class GroupOverViewableProcessor(object):
@@ -134,3 +153,13 @@ class DiscussionRefProcessor(object):
 
     def handle(self, item, context, creator=None, request=None):
         return handle_discussion_ref(item, context, creator, request)
+
+
+@component.adapter(INTICourseOverviewGroup)
+@interface.implementer(IPresentationAssetProcessor)
+class CourseOverviewGroupProcessor(object):
+
+    __slots__ = ()
+
+    def handle(self, item, context, creator=None, request=None):
+        return handle_overview_group(item, context, creator, request)

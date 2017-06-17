@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -445,7 +445,7 @@ def _get_content_units_for_package(package):
     result = []
     def _recur(unit):
         result.append(unit)
-        for child in unit.children:
+        for child in unit.children or ():
             _recur(child)
     _recur(package)
     return result

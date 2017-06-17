@@ -11,8 +11,8 @@ logger = __import__('logging').getLogger(__name__)
 
 from urlparse import urlparse
 
-from zope import interface
 from zope import component
+from zope import interface
 from zope import lifecycleevent
 
 from pyramid.threadlocal import get_current_request
@@ -87,7 +87,7 @@ def handle_related_work(item, context, creator=None, request=None):
     # full url
     if ntiid is None and parsed is not None and (parsed.scheme or parsed.netloc):
         ntiid = make_ntiid(nttype=TYPE_UUID,
-                           provider='NTI',
+                           provider=u'NTI',
                            specific=hexdigest(href.lower()))
     # replace if needed
     if item.target != ntiid:

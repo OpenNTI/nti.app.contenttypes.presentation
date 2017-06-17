@@ -11,8 +11,8 @@ logger = __import__('logging').getLogger(__name__)
 
 from itertools import chain
 
-from zope import interface
 from zope import component
+from zope import interface
 
 from nti.app.authentication import get_remote_user
 
@@ -23,7 +23,6 @@ from nti.app.contenttypes.presentation.processors.mixins import canonicalize
 from nti.app.contenttypes.presentation.processors.mixins import add_to_container
 from nti.app.contenttypes.presentation.processors.mixins import get_site_registry
 from nti.app.contenttypes.presentation.processors.mixins import get_context_registry
-
 
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
