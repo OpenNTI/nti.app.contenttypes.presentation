@@ -14,7 +14,7 @@ from zope import interface
 
 from zope.cachedescriptors.property import Lazy
 
-from nti.app.contenttypes.presentation.utils import get_presentation_asset_courses
+from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_courses
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 

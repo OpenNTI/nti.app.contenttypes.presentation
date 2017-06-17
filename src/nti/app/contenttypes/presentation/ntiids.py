@@ -16,10 +16,10 @@ from zope import interface
 
 from nti.app.authentication import get_remote_user
 
-from nti.app.contenttypes.presentation.utils import resolve_discussion_course_bundle
-from nti.app.contenttypes.presentation.utils import get_course_by_relative_path_parts
+from nti.app.contenttypes.presentation.utils.course import get_course_by_relative_path_parts
 
 from nti.contenttypes.courses.discussions.utils import get_discussion_for_path
+from nti.contenttypes.courses.discussions.utils import resolve_discussion_course_bundle
 
 from nti.contenttypes.presentation import NTI_AUDIO
 from nti.contenttypes.presentation import NTI_VIDEO

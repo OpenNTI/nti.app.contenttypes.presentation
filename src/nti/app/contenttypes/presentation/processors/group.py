@@ -25,12 +25,12 @@ from nti.app.contenttypes.presentation.processors.mixins import canonicalize
 from nti.app.contenttypes.presentation.processors.mixins import add_to_container
 from nti.app.contenttypes.presentation.processors.mixins import get_context_registry
 
-from nti.app.contenttypes.presentation.utils import resolve_discussion_course_bundle
-
 from nti.app.externalization.error import raise_json_error
 
 from nti.assessment.interfaces import IQInquiry
 from nti.assessment.interfaces import IQAssessment
+
+from nti.contenttypes.courses.discussions.utils import resolve_discussion_course_bundle
 
 from nti.contenttypes.presentation.discussion import is_nti_course_bundle
 

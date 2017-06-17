@@ -35,7 +35,7 @@ from nti.app.contenttypes.presentation.synchronizer import can_be_removed
 from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
 from nti.app.contenttypes.presentation.synchronizer import synchronize_course_lesson_overview
 
-from nti.app.contenttypes.presentation.utils import remove_presentation_asset
+from nti.app.contenttypes.presentation.utils.asset import remove_presentation_asset
 
 from nti.app.contenttypes.presentation.utils.common import course_assets
 from nti.app.contenttypes.presentation.utils.common import remove_all_invalid_assets

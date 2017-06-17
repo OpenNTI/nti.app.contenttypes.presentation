@@ -17,9 +17,9 @@ from hamcrest import assert_that
 import unittest
 
 from nti.app.contenttypes.presentation.utils import VISIBILITY_SCOPE_MAP
-
-from nti.app.contenttypes.presentation.utils import make_asset_ntiid
 from nti.app.contenttypes.presentation.utils import get_visibility_for_scope
+
+from nti.app.contenttypes.presentation.utils.asset import make_asset_ntiid
 
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import ES_CREDIT

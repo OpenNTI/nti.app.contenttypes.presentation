@@ -20,8 +20,8 @@ from zope.event import notify as event_notify
 
 from nti.app.base.abstract_views import get_safe_source_filename
 
-from nti.app.contenttypes.presentation.utils import add_2_connection
-from nti.app.contenttypes.presentation.utils import make_asset_ntiid
+from nti.app.contenttypes.presentation.utils.asset import add_2_connection
+from nti.app.contenttypes.presentation.utils.asset import make_asset_ntiid
 
 from nti.app.products.courseware.resources.utils import get_course_filer
 from nti.app.products.courseware.resources.utils import is_internal_file_link

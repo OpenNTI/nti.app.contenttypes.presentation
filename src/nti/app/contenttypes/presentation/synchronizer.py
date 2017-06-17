@@ -33,12 +33,11 @@ from nti.app.contentlibrary.subscribers import parse_embedded_transcripts
 
 from nti.app.contenttypes.presentation.interfaces import IItemRefValidator
 
-from nti.app.contenttypes.presentation.utils import db_connection
-from nti.app.contenttypes.presentation.utils import add_2_connection
-from nti.app.contenttypes.presentation.utils import create_lesson_4_node
-
+from nti.app.contenttypes.presentation.utils.asset import db_connection
+from nti.app.contenttypes.presentation.utils.asset import add_2_connection
 from nti.app.contenttypes.presentation.utils.asset import allowed_in_registry
 from nti.app.contenttypes.presentation.utils.asset import check_docket_targets
+from nti.app.contenttypes.presentation.utils.asset import create_lesson_4_node
 from nti.app.contenttypes.presentation.utils.asset import remove_presentation_asset
 
 from nti.app.products.courseware.resources.utils import get_course_filer

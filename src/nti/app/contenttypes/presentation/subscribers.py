@@ -36,8 +36,9 @@ from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_
 from nti.app.contenttypes.presentation.synchronizer import remove_and_unindex_course_assets
 from nti.app.contenttypes.presentation.synchronizer import synchronize_course_lesson_overview
 
-from nti.app.contenttypes.presentation.utils import remove_presentation_asset
-from nti.app.contenttypes.presentation.utils import get_presentation_asset_containers
+from nti.app.contenttypes.presentation.utils.asset import remove_presentation_asset
+
+from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_containers
 
 from nti.app.products.courseware.resources.utils import is_internal_file_link
 from nti.app.products.courseware.resources.utils import to_external_file_link

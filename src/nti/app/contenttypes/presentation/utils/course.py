@@ -24,13 +24,9 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
 
 from nti.contenttypes.courses.utils import get_courses_for_packages
-from nti.contenttypes.courses.utils import get_user_or_instructor_enrollment_record
 
 from nti.ntiids.ntiids import is_ntiid_of_type
 from nti.ntiids.ntiids import find_object_with_ntiid
-
-# Rexport for BWC
-get_enrollment_record = get_user_or_instructor_enrollment_record
 
 
 def get_courses_for_pacakge(ntiid, sites=None):

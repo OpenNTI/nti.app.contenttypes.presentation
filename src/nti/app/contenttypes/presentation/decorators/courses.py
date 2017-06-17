@@ -17,8 +17,6 @@ from zope.location.interfaces import ILocation
 from nti.app.contenttypes.presentation.decorators import VIEW_ASSETS
 from nti.app.contenttypes.presentation.decorators import PreviewCourseAccessPredicateDecorator
 
-from nti.app.contenttypes.presentation.utils import resolve_discussion_course_bundle
-
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
 from nti.appserver.pyramid_authorization import has_permission
@@ -26,6 +24,7 @@ from nti.appserver.pyramid_authorization import has_permission
 from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussion
 
 from nti.contenttypes.courses.discussions.utils import is_nti_course_bundle
+from nti.contenttypes.courses.discussions.utils import resolve_discussion_course_bundle
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 

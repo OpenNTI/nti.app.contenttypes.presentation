@@ -24,8 +24,8 @@ from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.contenttypes.presentation import MessageFactory as _
 
-from nti.app.contenttypes.presentation.utils import registry_by_name
-from nti.app.contenttypes.presentation.utils import remove_presentation_asset
+from nti.app.contenttypes.presentation.utils.asset import registry_by_name
+from nti.app.contenttypes.presentation.utils.asset import remove_presentation_asset
 
 from nti.app.contenttypes.presentation.views import VIEW_CONTENTS
 from nti.app.contenttypes.presentation.views import VIEW_LESSON_REMOVE_REFS

@@ -33,8 +33,6 @@ from nti.app.contenttypes.presentation.decorators import can_view_publishable
 from nti.app.contenttypes.presentation.decorators import _AbstractMoveLinkDecorator
 
 from nti.app.contenttypes.presentation.utils import is_item_visible
-from nti.app.contenttypes.presentation.utils import resolve_discussion_course_bundle
-from nti.app.contenttypes.presentation.utils import get_enrollment_record as get_any_enrollment_record
 
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_TOPIC
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_SECTION_TOPIC
@@ -59,6 +57,8 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.common import get_course_packages
 
+from nti.contenttypes.courses.discussions.utils import resolve_discussion_course_bundle
+
 from nti.contenttypes.courses.interfaces import OPEN
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import IN_CLASS
@@ -70,6 +70,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_for_user
+
+from nti.contenttypes.courses.utils import get_user_or_instructor_enrollment_record as get_any_enrollment_record
 
 from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import IMediaRef

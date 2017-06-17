@@ -4,35 +4,12 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
 from zope.authentication.interfaces import IUnauthenticatedPrincipal
-
-# re-export
-from nti.app.contenttypes.presentation.utils.asset import db_connection
-from nti.app.contenttypes.presentation.utils.asset import component_site
-from nti.app.contenttypes.presentation.utils.asset import intid_register
-from nti.app.contenttypes.presentation.utils.asset import add_2_connection
-from nti.app.contenttypes.presentation.utils.asset import make_asset_ntiid
-from nti.app.contenttypes.presentation.utils.asset import registry_by_name
-from nti.app.contenttypes.presentation.utils.asset import component_registry
-from nti.app.contenttypes.presentation.utils.asset import create_lesson_4_node
-from nti.app.contenttypes.presentation.utils.asset import remove_presentation_asset
-from nti.app.contenttypes.presentation.utils.asset import notify_removed as notify_asset_removed
-
-# re-export
-from nti.app.contenttypes.presentation.utils.common import yield_sync_courses
-
-# re-export
-from nti.app.contenttypes.presentation.utils.course import get_courses
-from nti.app.contenttypes.presentation.utils.course import get_enrollment_record
-from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_courses
-from nti.app.contenttypes.presentation.utils.course import get_entry_by_relative_path_parts
-from nti.app.contenttypes.presentation.utils.course import get_course_by_relative_path_parts
-from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_containers
 
 from nti.appserver.pyramid_authorization import has_permission
 
@@ -42,20 +19,10 @@ from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ES_PURCHASED
 from nti.contenttypes.courses.interfaces import ES_CREDIT_DEGREE
 from nti.contenttypes.courses.interfaces import ES_CREDIT_NONDEGREE
-from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_MAP
-from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
 
-from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
-
-from nti.contenttypes.courses.discussions.utils import get_topic_key
-from nti.contenttypes.courses.discussions.utils import get_discussion_key
-from nti.contenttypes.courses.discussions.utils import get_course_for_discussion
-
-from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 
-# re-export
-from nti.contenttypes.courses.discussions.utils import resolve_discussion_course_bundle
+from nti.contenttypes.courses.utils import get_user_or_instructor_enrollment_record
 
 from nti.contenttypes.presentation.interfaces import PUBLIC
 from nti.contenttypes.presentation.interfaces import CREDIT
@@ -68,8 +35,6 @@ from nti.contenttypes.presentation.interfaces import IPresentationVisibility
 from nti.coremetadata.utils import current_principal
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
-
-from nti.ntiids.ntiids import make_specific_safe
 
 #: Visibility scope map
 VISIBILITY_SCOPE_MAP = {
@@ -99,7 +64,7 @@ def get_participation_principal():
 def _get_scope(user, context, record):
     if user is not None:
         if record is None:
-            record = get_enrollment_record(context, user)
+            record = get_user_or_instructor_enrollment_record(context, user)
     else:
         user = get_participation_principal()
 

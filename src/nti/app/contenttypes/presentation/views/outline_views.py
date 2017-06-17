@@ -40,11 +40,10 @@ from nti.app.contenttypes.presentation.views import VIEW_OVERVIEW_CONTENT
 from nti.app.contenttypes.presentation.views import VIEW_OVERVIEW_SUMMARY
 
 from nti.app.contenttypes.presentation.utils import is_item_visible
-from nti.app.contenttypes.presentation.utils import create_lesson_4_node
-from nti.app.contenttypes.presentation.utils import get_enrollment_record
-from nti.app.contenttypes.presentation.utils import remove_presentation_asset
 from nti.app.contenttypes.presentation.utils import get_participation_principal
-from nti.app.contenttypes.presentation.utils import get_enrollment_record as get_any_enrollment_record
+
+from nti.app.contenttypes.presentation.utils.asset import create_lesson_4_node
+from nti.app.contenttypes.presentation.utils.asset import remove_presentation_asset
 
 from nti.app.contenttypes.presentation.views.view_mixins import PublishVisibilityMixin
 
@@ -89,6 +88,8 @@ from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.courses.interfaces import ES_ALL
+
+from nti.contenttypes.courses.utils import get_user_or_instructor_enrollment_record as get_any_enrollment_record
 
 from nti.contenttypes.presentation import AUDIO_MIME_TYPES
 from nti.contenttypes.presentation import VIDEO_MIME_TYPES
@@ -784,7 +785,7 @@ class AssetByOutlineNodeView(AbstractAuthenticatedView):
 
     def __call__(self):
         course = self.course
-        record = get_enrollment_record(course, self.remoteUser) if self.remoteUser else None
+        record = get_any_enrollment_record(course, self.remoteUser) if self.remoteUser else None
         if not self._predicate(course, record):
             raise hexc.HTTPForbidden(_("Must be enrolled in a course."))
 
@@ -989,7 +990,7 @@ class MediaByOutlineNodeView(AssetByOutlineNodeView):
 
     def __call__(self):
         course = ICourseInstance(self.request.context)
-        record = get_enrollment_record(
+        record = get_any_enrollment_record(
             course, self.remoteUser) if self.remoteUser else None
         if not self._predicate(course, record):
             raise hexc.HTTPForbidden(_("Must be enrolled in a course."))

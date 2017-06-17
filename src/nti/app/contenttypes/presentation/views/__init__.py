@@ -9,7 +9,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-
 from nti.app.contenttypes.presentation import VIEW_ASSETS
 from nti.app.contenttypes.presentation import VIEW_CONTENTS
 from nti.app.contenttypes.presentation import VIEW_NODE_MOVE

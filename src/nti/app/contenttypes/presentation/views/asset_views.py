@@ -36,14 +36,14 @@ from nti.app.contentfile import validate_sources
 
 from nti.app.contenttypes.presentation import MessageFactory as _
 
-from nti.app.contenttypes.presentation.utils import component_site
-from nti.app.contenttypes.presentation.utils import intid_register
-from nti.app.contenttypes.presentation.utils import add_2_connection
-from nti.app.contenttypes.presentation.utils import make_asset_ntiid
-from nti.app.contenttypes.presentation.utils import registry_by_name
-from nti.app.contenttypes.presentation.utils import remove_presentation_asset
-from nti.app.contenttypes.presentation.utils import get_presentation_asset_courses
-from nti.app.contenttypes.presentation.utils import resolve_discussion_course_bundle
+from nti.app.contenttypes.presentation.utils.asset import component_site
+from nti.app.contenttypes.presentation.utils.asset import intid_register
+from nti.app.contenttypes.presentation.utils.asset import add_2_connection
+from nti.app.contenttypes.presentation.utils.asset import make_asset_ntiid
+from nti.app.contenttypes.presentation.utils.asset import registry_by_name
+from nti.app.contenttypes.presentation.utils.asset import remove_presentation_asset
+
+from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_courses
 
 from nti.app.contenttypes.presentation.views import VIEW_ASSETS
 from nti.app.contenttypes.presentation.views import VIEW_CONTENTS
@@ -87,6 +87,8 @@ from nti.contenttypes.courses.common import get_course_packages
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+
+from nti.contenttypes.courses.discussions.utils import resolve_discussion_course_bundle
 
 from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.courses.utils import get_courses_for_packages

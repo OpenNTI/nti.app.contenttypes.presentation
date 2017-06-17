@@ -20,8 +20,6 @@ from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.contenttypes.presentation import MessageFactory as _
 
-from nti.app.contenttypes.presentation.utils import resolve_discussion_course_bundle
-
 from nti.app.contenttypes.presentation.views.view_mixins import PublishVisibilityMixin
 from nti.app.contenttypes.presentation.views.view_mixins import href_safe_to_external_object
 
@@ -33,6 +31,8 @@ from nti.app.products.courseware.views.view_mixins import AbstractRecursiveTrans
 from nti.appserver.dataserver_pyramid_views import GenericGetView
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
+
+from nti.contenttypes.courses.discussions.utils import resolve_discussion_course_bundle
 
 from nti.contenttypes.courses.utils import get_course_hierarchy
 
