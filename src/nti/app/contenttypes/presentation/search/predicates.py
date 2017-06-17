@@ -4,8 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
-
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -70,7 +69,7 @@ class _LessonsSearchHitPredicate(DefaultSearchHitPredicate):
     def _is_published(self, lesson):
         return not IPublishable.providedBy(lesson) or lesson.is_published()
 
-    def allow(self, item, unused_score, query):
+    def allow(self, item, unused_score, unused_query=None):
         lessons = self._get_lessons_for_item(item)
         if not lessons:
             # If no lesson, we're allowed.
@@ -95,7 +94,7 @@ class _AssetVisibleSearchPredicate(DefaultSearchHitPredicate):
 
     __name__ = 'PresentationAssetVisible'
 
-    def allow(self, item, unused_score, query):
+    def allow(self, item, unused_score, unused_query=None):
         user = get_remote_user()
         if IVisible.providedBy(item):
             courses = get_presentation_asset_courses(item)
