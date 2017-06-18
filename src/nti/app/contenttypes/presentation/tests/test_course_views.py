@@ -14,8 +14,6 @@ from hamcrest import assert_that
 from hamcrest import greater_than
 does_not = is_not
 
-from nti.ntiids.ntiids import find_object_with_ntiid
-
 from nti.app.products.courseware.tests import PersistentInstructedCourseApplicationTestLayer
 
 from nti.app.testing.application_webtest import ApplicationLayerTest
@@ -29,10 +27,6 @@ class TestCourseViews(ApplicationLayerTest):
 
     default_origin = 'http://janux.ou.edu'
     entry_ntiid = 'tag:nextthought.com,2011-10:NTI-CourseInfo-Fall2015_CS_1323'
-
-    @classmethod
-    def course_entry(cls):
-        return find_object_with_ntiid(cls.entry_ntiid)
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_course_assets(self):
