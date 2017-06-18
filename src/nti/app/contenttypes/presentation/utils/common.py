@@ -225,6 +225,7 @@ def remove_course_inaccessible_assets(seen=None, master=None):
     registry = site.getSiteManager()
     for ntiid, asset in lookup_all_presentation_assets(registry).items():
         if not ICoursePresentationAsset.providedBy(asset):
+            registered.add(doc_id)
             continue
         doc_id = intids.queryId(asset)
         if doc_id is None or doc_id not in master:
