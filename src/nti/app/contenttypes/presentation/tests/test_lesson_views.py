@@ -49,16 +49,16 @@ class TestLessonViews(ApplicationLayerTest):
         enroll_url = '/dataserver2/CourseAdmin/UserCourseEnroll'
         data = {
             'username': STUDENT,
-            'ntiid': self.course_ntiid, 
+            'ntiid': self.course_ntiid,
             'scope': 'ForCredit'
         }
-        return self.testapp.post_json(enroll_url, 
-                                      data, 
+        return self.testapp.post_json(enroll_url,
+                                      data,
                                       status=201)
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
-    @fudge.patch('nti.app.contenttypes.presentation.predicates.has_submitted_assigment')
-    def test_assignment_completion_constraints(self, has_submitted_assignment):
+    @fudge.patch('nti.app.contenttypes.presentation.predicates.AssignmentCompletionConstraintChecker.check_time_constraint_item')
+    def test_assignment_completion_constraints(self, check_time_constraint_assignment):
 
         # create and enroll student
         with mock_dataserver.mock_db_trans(self.ds):
@@ -83,7 +83,7 @@ class TestLessonViews(ApplicationLayerTest):
             'assignments': [self.assignment]
         }
 
-        res = self.testapp.post_json(publication_constraints_link, 
+        res = self.testapp.post_json(publication_constraints_link,
                                      constraint, status=201)
         assert_that(res.json_body, has_entry('OID', is_not(none())))
         assert_that(res.json_body, has_entry('NTIID', is_not(none())))
@@ -97,11 +97,11 @@ class TestLessonViews(ApplicationLayerTest):
 
             student = User.get_user(STUDENT)
 
-            has_submitted_assignment.is_callable().returns(True)
+            check_time_constraint_assignment.is_callable().returns(123456789)
             result = lesson_object.is_published(principal=student)
             assert_that(result, is_(True))
 
-            has_submitted_assignment.is_callable().returns(False)
+            check_time_constraint_assignment.is_callable().returns(None)
             result = lesson_object.is_published(principal=student)
             assert_that(result, is_(False))
 
@@ -115,8 +115,8 @@ class TestLessonViews(ApplicationLayerTest):
         self.testapp.post_json(clear_constraints_link, status=200)
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
-    @fudge.patch('nti.app.contenttypes.presentation.predicates.has_submitted_inquiry')
-    def test_survey_completion_constraints(self, has_submitted_inquiry):
+    @fudge.patch('nti.app.contenttypes.presentation.predicates.SurveyCompletionConstraintChecker.check_time_constraint_item')
+    def test_survey_completion_constraints(self, check_time_constraint_survey):
 
         # create and enroll student
         with mock_dataserver.mock_db_trans(self.ds):
@@ -129,7 +129,7 @@ class TestLessonViews(ApplicationLayerTest):
 
         # grab first lesson and force-publish
         lesson = res.json_body['Items'][0]['ntiid']
- 
+
         lesson_link = '/dataserver2/Objects/' + lesson
         self.testapp.post(lesson_link + '/@@publish')
         res = self.testapp.get(lesson_link, status=200)
@@ -142,9 +142,9 @@ class TestLessonViews(ApplicationLayerTest):
             'surveys': [self.survey]
         }
 
-        res = self.testapp.post_json(publication_constraints_link, 
-									 constraint, 
-									 status=201)
+        res = self.testapp.post_json(publication_constraints_link,
+                                     constraint,
+                                     status=201)
         assert_that(res.json_body, has_entry('OID', is_not(none())))
         assert_that(res.json_body, has_entry('NTIID', is_not(none())))
         ntiid = res.json_body['NTIID']
@@ -157,11 +157,11 @@ class TestLessonViews(ApplicationLayerTest):
 
             student = User.get_user(STUDENT)
 
-            has_submitted_inquiry.is_callable().returns(True)
+            check_time_constraint_survey.is_callable().returns(123456789)
             result = lesson_object.is_published(principal=student)
             assert_that(result, is_(True))
 
-            has_submitted_inquiry.is_callable().returns(False)
+            check_time_constraint_survey.is_callable().returns(None)
             result = lesson_object.is_published(principal=student)
             assert_that(result, is_(False))
 
