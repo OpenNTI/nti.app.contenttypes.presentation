@@ -177,7 +177,7 @@ def get_ntiid(item):
 
 def check_exists(item, registry, request=None, extra=None):
     ntiid = get_ntiid(item)
-    provided  = iface_of_asset(item)
+    provided = iface_of_asset(item)
     if ntiid and INTITimeline.providedBy(item):
         # Timelines are the only item we allow to be placed as-is (non-ref).
         pass

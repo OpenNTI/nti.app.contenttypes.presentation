@@ -19,4 +19,6 @@
 	<adapter factory=".group.DiscussionRefProcessor" />  
     <adapter factory=".group.GroupOverViewableProcessor" />
 
+	<adapter factory=".group.LessonOverviewProcessor" />
+
 </configure>
