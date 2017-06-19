@@ -186,6 +186,8 @@ def check_asset_container(context, removed=None, master=None):
     master = set() if master is None else master
     removed = set() if removed is None else removed
     for ntiid, asset, container in context_assets(context):
+        if not ICoursePresentationAsset.providedBy(asset):
+            continue
         doc_id = intids.queryId(asset)
         if doc_id in master:
             continue
@@ -225,7 +227,6 @@ def remove_course_inaccessible_assets(seen=None, master=None):
     registry = site.getSiteManager()
     for ntiid, asset in lookup_all_presentation_assets(registry).items():
         if not ICoursePresentationAsset.providedBy(asset):
-            registered.add(doc_id)
             continue
         doc_id = intids.queryId(asset)
         if doc_id is None or doc_id not in master:
