@@ -18,10 +18,16 @@ from zope.component.hooks import getSite
 
 from zope.event import notify as event_notify
 
+from pyramid import httpexceptions as hexc
+
+from pyramid.threadlocal import get_current_request
+
 from nti.app.base.abstract_views import get_safe_source_filename
 
 from nti.app.contenttypes.presentation.utils.asset import add_2_connection
 from nti.app.contenttypes.presentation.utils.asset import make_asset_ntiid
+
+from nti.app.externalization.error import raise_json_error
 
 from nti.app.products.courseware.resources.utils import get_course_filer
 from nti.app.products.courseware.resources.utils import is_internal_file_link
@@ -36,12 +42,17 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation import iface_of_asset
 
+from nti.contenttypes.presentation.interfaces import IAssetRef
+from nti.contenttypes.presentation.interfaces import INTITimeline
+from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.contenttypes.presentation.interfaces import PresentationAssetCreatedEvent
 
 from nti.coremetadata.utils import current_principal
 
+from nti.ntiids.ntiids import TYPE_UUID
+from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -152,6 +163,36 @@ def set_creator(item, creator):
     creator = getattr(creator, 'username', creator)
     if not item_creator or item_creator == item_byline:
         item.creator = creator or principalId()
+
+
+def get_ntiid(item):
+    ntiid = item.ntiid
+    # Return None for auto-generate NTIIDs
+    if      ntiid \
+        and (INTICourseOverviewGroup.providedBy(item) or IAssetRef.providedBy(item)) \
+        and TYPE_UUID in get_specific(ntiid):
+        ntiid = None
+    return ntiid
+
+
+def check_exists(item, registry, request=None, extra=None):
+    ntiid = get_ntiid(item)
+    provided  = iface_of_asset(item)
+    if ntiid and INTITimeline.providedBy(item):
+        # Timelines are the only item we allow to be placed as-is (non-ref).
+        pass
+    elif ntiid:
+        if registry.queryUtility(provided, name=ntiid):
+            request = request or get_current_request()
+            raise_json_error(request,
+                             hexc.HTTPUnprocessableEntity,
+                             {
+                                'message': _(u'Asset already exists.'),
+                             },
+                             None)
+    else:
+        item.ntiid = make_asset_ntiid(provided, extra=extra)
+    return item
 
 
 def get_content_file(value):
