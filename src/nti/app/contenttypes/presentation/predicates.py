@@ -157,15 +157,15 @@ class AssignmentCompletionConstraintChecker(LessonPublicationConstraintChecker):
         # for each assignment in the constraint, we want to use the time
         # that it was first completed.
         user = get_user(user)
+        completed_time = None
         constraint = constraint or self.constraint
         course = ICourseInstance(constraint, None)
         histories = component.queryMultiAdapter((course, user),
                                                 IUsersCourseAssignmentHistory)
-        submission = histories.get(item_ntiid, None)
-        if submission is not None:
-            completed_time = submission.createdTime
-        else:
-            completed_time = None
+        if histories is not None:
+            submission = histories.get(item_ntiid, None)
+            if submission is not None:
+                completed_time = submission.createdTime
         return completed_time
 
 
@@ -180,19 +180,19 @@ class SurveyCompletionConstraintChecker(LessonPublicationConstraintChecker):
         # for each survey in the constraint, we want to use the time
         # that it was first completed.
         user = get_user(user)
+        completed_time = None
         constraint = constraint or self.constraint
         course = ICourseInstance(constraint, None)
         histories = component.queryMultiAdapter((course, user),
                                                 IUsersCourseInquiry)
-        survey = component.queryUtility(IQSurvey, name=item_ntiid)
-        now = datetime.utcnow()
-        submission = histories.get(item_ntiid, None)
-        due_date = get_available_for_submission_ending(survey, course)
-        due_date = due_date or now
-        if submission is not None and due_date >= now:
-            completed_time = submission.createdTime
-        else:
-            completed_time = None
+        if histories is not None:
+            current_time = datetime.utcnow()
+            survey = component.queryUtility(IQSurvey, name=item_ntiid)
+            submission = histories.get(item_ntiid, None)
+            due_date = get_available_for_submission_ending(survey, course)
+            due_date = due_date or current_time
+            if submission is not None and due_date >= current_time:
+                completed_time = submission.createdTime
         return completed_time
 
 
