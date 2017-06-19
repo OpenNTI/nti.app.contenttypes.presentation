@@ -14,9 +14,9 @@ from itertools import chain
 from zope import component
 from zope import interface
 
-from nti.app.authentication import get_remote_user
-
 from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProcessor
+
+from nti.app.contenttypes.presentation.processors.asset import handle_asset
 
 from nti.app.contenttypes.presentation.processors.mixins import set_creator
 from nti.app.contenttypes.presentation.processors.mixins import canonicalize
@@ -28,18 +28,8 @@ from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
 
 
-def handle_package_asset(item, context, creator=None):
-    creator = creator or get_remote_user()
-    set_creator(item, creator)
-    # If we don't have parent, use course.
-    if item.__parent__ is None:
-        item.__parent__ = context
-    add_to_container(context, item)
-    return item
-
-
 def handle_slide_deck(item, context, creator, registry=None):
-    handle_package_asset(item, context, creator)
+    handle_asset(item, context, creator)
     base = item.ntiid
     # register unique copies
     registry = get_site_registry(registry)
@@ -61,7 +51,7 @@ class PackageAssetProcessor(object):
     __slots__ = ()
 
     def handle(self, item, context, creator=None, request=None):
-        return handle_package_asset(item, context, creator)
+        return handle_asset(item, context, creator)
 
 
 @component.adapter(INTISlideDeck)

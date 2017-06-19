@@ -7,6 +7,8 @@
 	<include package="zope.component" />
 
 	<!-- Adapters -->
+	<adapter factory=".asset.PresentationAssetProcessor" />
+
     <adapter factory=".package.PackageAssetProcessor" />
     <adapter factory=".package.NTISlideDeckProcessor" />
 
@@ -19,6 +21,6 @@
 	<adapter factory=".group.DiscussionRefProcessor" />  
     <adapter factory=".group.GroupOverViewableProcessor" />
 
-	<adapter factory=".group.LessonOverviewProcessor" />
+	<adapter factory=".lesson.LessonOverviewProcessor" />
 
 </configure>

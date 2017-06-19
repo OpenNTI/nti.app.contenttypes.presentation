@@ -22,7 +22,7 @@ from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProce
 from nti.app.contenttypes.presentation.processors.mixins import hexdigest
 from nti.app.contenttypes.presentation.processors.mixins import get_content_file
 
-from nti.app.contenttypes.presentation.processors.package import handle_package_asset
+from nti.app.contenttypes.presentation.processors.asset import handle_asset
 
 from nti.app.products.courseware.resources.utils import get_course_filer
 from nti.app.products.courseware.resources.utils import is_internal_file_link
@@ -64,7 +64,7 @@ def handle_docket_asset(item, context=None, creator=None):
 
 def handle_related_work(item, context, creator=None, request=None):
     request = request or get_current_request()
-    handle_package_asset(item, context, creator)
+    handle_asset(item, context, creator)
     # capture updated/previous data
     ntiid, href = item.target, item.href
     contentType = item.type or u'application/octet-stream'  # default
@@ -106,7 +106,7 @@ class DocketAssetProcessor(object):
     __slots__ = ()
 
     def handle(self, item, context, creator=None, request=None):
-        handle_package_asset(item, context, creator)
+        handle_asset(item, context, creator)
         return handle_docket_asset(item, context, creator)
 
 
