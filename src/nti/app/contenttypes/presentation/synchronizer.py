@@ -471,7 +471,11 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 		# canonicalize item refs
 		while idx < len(items):
 			item = items[idx]
-			json_item = json_items[idx]
+			# there are cases where the internalization of the
+			# objects produces more than one object. (e.g. discussions
+			# with multiple ntiids). If that happens the source items
+			# do not line up with the input json.
+			json_item = json_items[idx] if idx < len(json_items) else None
 
 			if _is_auto_roll_coalesce(item):
 				# Ok, we have media that we want to auto-coalesce into a roll.
