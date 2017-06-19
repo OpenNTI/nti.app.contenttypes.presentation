@@ -20,13 +20,11 @@ from zope.interface.adapter import _lookupAll as zopeLookupAll  # Private func
 
 from zope.security.interfaces import IPrincipal
 
-from nti.app.assessment.common import has_submitted_inquiry
-from nti.app.assessment.common import has_submitted_assigment
-from nti.app.assessment.common import get_available_for_submission_ending
 from nti.app.assessment.common import get_user
+from nti.app.assessment.common import get_available_for_submission_ending
 
-from nti.app.assessment.interfaces import IUsersCourseAssignmentHistory
 from nti.app.assessment.interfaces import IUsersCourseInquiry
+from nti.app.assessment.interfaces import IUsersCourseAssignmentHistory
 
 from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraintChecker
 
@@ -45,7 +43,6 @@ from nti.contenttypes.presentation.lesson import constraints_for_lesson
 from nti.appserver.pyramid_authorization import has_permission
 
 from nti.assessment.interfaces import IQSurvey
-from nti.assessment.interfaces import IQAssignment
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
@@ -111,33 +108,27 @@ class LessonPublicationConstraintChecker(object):
     def __init__(self, constraint=None):
         self.constraint = constraint
 
-    def satisfied_time(self, user):
+    def satisfied_time(self, user, constraint=None):
         user = get_user(user)
-        course = ICourseInstance(self.constraint, None)
-
+        constraint = constraint or self.constraint
+        course = ICourseInstance(constraint, None)
         # By default, unless we have relevant completed constraints,
         # we return 0.
         completed_time = 0
-
         # Don't run through this for instructors or editors.
-        if not (is_course_instructor_or_editor(course, user)
+        if not (   is_course_instructor_or_editor(course, user)
                 or has_permission(ACT_CONTENT_EDIT, course)):
-
-            for item in self.get_constraint_items():
-
+            # check all item constraints
+            for item in self.get_constraint_items(constraint) or ():
                 if completed_time != 0:
-                    completed_time = max(
-                        self.check_time_constraint_item(item, user),
-                        completed_time)
+                    ct_item = self.check_time_constraint_item(item, user, constraint)
+                    completed_time = max(ct_item, completed_time)
                 else:
                     # Make sure to assign completed_time the first trip
                     # through the loop
-                    completed_time = self.check_time_constraint_item(
-                        item, user)
-
+                    completed_time = self.check_time_constraint_item(item, user, constraint)
                 if completed_time is None:
                     break
-
         # So we have 3 possible cases: Returning 0 if there are no
         # assignments on this constraint for some reason or if the user
         # is an instructor or course editor or admin, returning
@@ -151,21 +142,23 @@ class LessonPublicationConstraintChecker(object):
         # each submission.
         return completed_time
 
-    def is_satisfied(self, constraint=None, principal=None):
-        return self.satisfied_time(principal) is not None
+    def is_satisfied(self, principal=None, constraint=None):
+        return self.satisfied_time(principal, constraint) is not None
 
 
 @component.adapter(IAssignmentCompletionConstraint)
 class AssignmentCompletionConstraintChecker(LessonPublicationConstraintChecker):
 
-    def get_constraint_items(self):
-        return self.constraint.assignments
+    def get_constraint_items(self, constraint=None):
+        constraint = constraint or self.constraint
+        return constraint.assignments
 
-    def check_time_constraint_item(self, item_ntiid, user):
+    def check_time_constraint_item(self, item_ntiid, user, constraint=None):
         # for each assignment in the constraint, we want to use the time
         # that it was first completed.
         user = get_user(user)
-        course = ICourseInstance(self.constraint, None)
+        constraint = constraint or self.constraint
+        course = ICourseInstance(constraint, None)
         histories = component.queryMultiAdapter((course, user),
                                                 IUsersCourseAssignmentHistory)
         submission = histories.get(item_ntiid, None)
@@ -173,33 +166,33 @@ class AssignmentCompletionConstraintChecker(LessonPublicationConstraintChecker):
             completed_time = submission.createdTime
         else:
             completed_time = None
-
         return completed_time
 
 
 @component.adapter(ISurveyCompletionConstraint)
 class SurveyCompletionConstraintChecker(LessonPublicationConstraintChecker):
 
-    def get_constraint_items(self):
-        return self.constraint.surveys
+    def get_constraint_items(self, constraint=None):
+        constraint = constraint or self.constraint
+        return constraint.surveys
 
-    def check_time_constraint_item(self, item_ntiid, user):
+    def check_time_constraint_item(self, item_ntiid, user, constraint=None):
         # for each survey in the constraint, we want to use the time
         # that it was first completed.
         user = get_user(user)
-        course = ICourseInstance(self.constraint, None)
+        constraint = constraint or self.constraint
+        course = ICourseInstance(constraint, None)
         histories = component.queryMultiAdapter((course, user),
                                                 IUsersCourseInquiry)
         survey = component.queryUtility(IQSurvey, name=item_ntiid)
         now = datetime.utcnow()
         submission = histories.get(item_ntiid, None)
-        due_date = get_available_for_submission_ending(
-            survey, course) or now
+        due_date = get_available_for_submission_ending(survey, course)
+        due_date = due_date or now
         if submission is not None and due_date >= now:
             completed_time = submission.createdTime
         else:
             completed_time = None
-
         return completed_time
 
 
@@ -218,6 +211,6 @@ class LessonPublishablePredicate(object):
             for constraint in constraints.Items:
                 checker = ILessonPublicationConstraintChecker(constraint, None)
                 if      checker is not None \
-                        and not checker.is_satisfied(constraint, principal):
+                    and not checker.is_satisfied(principal, constraint):
                     return False
         return True
