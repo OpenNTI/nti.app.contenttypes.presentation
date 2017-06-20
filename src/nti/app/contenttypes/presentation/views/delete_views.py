@@ -181,7 +181,9 @@ class RemoveRefsView(AbstractAuthenticatedView):
     """
 
     def _is_target(self, obj, ntiid):
-        return ntiid == getattr(obj, 'target', '')
+        concrete = IConcreteAsset(obj, obj)
+        return ntiid == getattr(obj, 'target', '') \
+            or ntiid == getattr(concrete, 'target', '')
 
     def _remove_from_group(self, item, group):
         # We remove the item from our context and clean it
