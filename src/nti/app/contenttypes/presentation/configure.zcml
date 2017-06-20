@@ -195,6 +195,7 @@
 	<subscriber handler=".subscribers._on_assignment_removed" />
 	<subscriber handler=".subscribers._on_evaluation_modified" />
 	<subscriber handler=".subscribers._on_content_file_removed" />
+	<subscriber handler=".subscribers.update_course_asset_containers" />
 
 	<subscriber handler=".subscribers._clear_data_when_course_removed"
 				for="nti.contenttypes.courses.interfaces.ICourseInstance
@@ -212,7 +213,7 @@
 
 	<!-- Decorators -->
 	<include package=".decorators" />
-	
+
 	<!-- Processors -->
 	<include package=".processors" />
 
