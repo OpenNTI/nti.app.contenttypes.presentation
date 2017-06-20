@@ -56,7 +56,7 @@ def handle_docket_asset(item, context=None, creator=None):
         content_file.add_association(item)
         lifecycleevent.modified(content_file)
         if name == 'href':  # update target and type
-            item.target = to_external_ntiid_oid(item)  # NTIID
+            item.target = to_external_ntiid_oid(content_file)  # NTIID
             if INTIRelatedWorkRef.providedBy(item):
                 item.type = text_(content_file.contentType)
     return item
@@ -72,8 +72,8 @@ def handle_related_work(item, context, creator=None, request=None):
     if      request.POST \
         and 'href' in request.POST \
         and is_internal_file_link(href):
-        filer = get_course_filer(context)
-        named = filer.get(href) if href else None
+        course_filer = get_course_filer(context)
+        named = course_filer.get(href) if href else None
         if named is not None:
             ntiid = to_external_ntiid_oid(named)
             contentType = text_(named.contentType or '') or contentType
