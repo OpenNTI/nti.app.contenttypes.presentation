@@ -20,6 +20,8 @@ from nti.app.authentication import get_remote_user
 
 from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProcessor
 
+from nti.app.contenttypes.presentation.processors.asset import handle_asset
+
 from nti.app.contenttypes.presentation.processors.mixins import set_creator
 from nti.app.contenttypes.presentation.processors.mixins import canonicalize
 from nti.app.contenttypes.presentation.processors.mixins import add_to_container
@@ -48,16 +50,8 @@ from nti.dataserver.contenttypes.forums.interfaces import ITopic
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 
-def handle_overviewable(item, context, creator=None, request=None):
-    # set creator
-    set_creator(item, creator)
-    # add to course container
-    add_to_container(context, item)
-    return item
-
-
 def handle_assessment_ref(item, context, creator=None, request=None):
-    handle_overviewable(item, context, creator, request)
+    handle_asset(item, context, creator)
     # find the target
     if INTIInquiryRef.providedBy(item):
         reference = IQInquiry(item, None)
@@ -84,7 +78,7 @@ def handle_assessment_ref(item, context, creator=None, request=None):
 
 
 def handle_discussion_ref(item, context, creator=None, request=None):
-    handle_overviewable(item, context, creator, request)
+    handle_asset(item, context, creator)
     if is_nti_course_bundle(item.target):
         item.id = item.target
         item.target = None
@@ -134,7 +128,7 @@ class GroupOverViewableProcessor(object):
 
     def handle(self, item, context, creator=None, request=None):
         item = self.asset if item is None else item
-        return handle_overviewable(item, context, creator, request)
+        return handle_asset(item, context, creator)
 
 
 @component.adapter(INTIAssessmentRef)
