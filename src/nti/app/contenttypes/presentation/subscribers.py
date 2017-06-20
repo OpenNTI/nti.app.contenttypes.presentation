@@ -487,6 +487,7 @@ def update_course_asset_containers(course, event):
         removed_doc_ids = tuple(catalog.get_references(
                                             provided=PACKAGE_CONTAINER_INTERFACES,
                                             container_ntiids=event.removed_packages,
+                                            container_all_of=False,
                                             sites=sites))
         for doc_id in removed_doc_ids:
             catalog.remove_containers(doc_id, (entry.ntiid,))

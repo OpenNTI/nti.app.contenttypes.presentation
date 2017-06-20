@@ -800,6 +800,7 @@ def _index_pacakge_assets(course, catalog=None, sites=None):
 
 	for doc_id in catalog.get_references(provided=PACKAGE_CONTAINER_INTERFACES,
 									   	 container_ntiids=packs,
+									   	 container_all_of=False,
 									   	 sites=sites):
 		catalog.update_containers(doc_id, (entry.ntiid,))
 index_pacakge_assets = _index_pacakge_assets
