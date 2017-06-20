@@ -472,9 +472,9 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 		while idx < len(items):
 			item = items[idx]
 			# there are cases where the internalization of the
-			# objects produces more than one object. (e.g. discussions
-			# with multiple ntiids). If that happens the source items
-			# do not line up with the input json.
+			# asset produces more than one object. (e.g. discussions
+			# with multiple ntiids). If that happens, then the source
+			# items do not line up with the input json.
 			json_item = json_items[idx] if idx < len(json_items) else None
 
 			if _is_auto_roll_coalesce(item):
@@ -505,7 +505,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 
 					roll_idx += 1
 					roll_item = items[roll_idx] if roll_idx < len(items) else None
-					json_item = json_items[roll_idx] if roll_idx < len(items) else None
+					json_item = json_items[roll_idx] if roll_idx < len(json_items) else None
 
 				# Must have at least two items in our auto-roll; otherwise continue on.
 				if len(media_roll) > 1:
