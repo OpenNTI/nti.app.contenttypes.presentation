@@ -25,8 +25,12 @@ from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
 
 from nti.contenttypes.courses.utils import get_courses_for_packages
 
+from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
+
 from nti.ntiids.ntiids import is_ntiid_of_type
 from nti.ntiids.ntiids import find_object_with_ntiid
+
+from nti.site.site import get_component_hierarchy_names
 
 
 def get_courses_for_pacakge(ntiid, sites=None):
@@ -136,3 +140,25 @@ def get_entry_by_relative_path_parts(parts=()):
     course = get_course_by_relative_path_parts(parts)
     result = ICourseCatalogEntry(course, None)
     return result
+
+
+def remove_package_assets_from_course_container(package_ntiid, course):
+    """
+    Remove all assets from the given package ntiid from having
+    the given course as a container.
+    """
+    package_ntiids = (package_ntiid,)
+    entry = ICourseCatalogEntry(course)
+    logger.info("Removing referenced assets to course (course=%s) (packages=%s)",
+                entry.ntiid, package_ntiids)
+    catalog = get_library_catalog()
+    sites = get_component_hierarchy_names()
+    # We are assuming no assets can exist in multiple packages.
+    removed_doc_ids = tuple(catalog.get_references(
+                                        provided=PACKAGE_CONTAINER_INTERFACES,
+                                        container_ntiids=package_ntiids,
+                                        container_all_of=False,
+                                        sites=sites))
+    for doc_id in removed_doc_ids:
+        catalog.remove_containers(doc_id, (entry.ntiid,))
+    return len(removed_doc_ids)

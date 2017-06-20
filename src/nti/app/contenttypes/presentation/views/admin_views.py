@@ -11,6 +11,8 @@ logger = __import__('logging').getLogger(__name__)
 
 import time
 
+from requests.structures import CaseInsensitiveDict
+
 from zope import component
 
 from zope.component.hooks import site as current_site
@@ -19,6 +21,8 @@ from zope.intid.interfaces import IIntIds
 
 from zope.security.management import endInteraction
 from zope.security.management import restoreInteraction
+
+from pyramid import httpexceptions as hexc
 
 from pyramid.view import view_config
 from pyramid.view import view_defaults
@@ -40,6 +44,12 @@ from nti.app.contenttypes.presentation.utils.asset import remove_presentation_as
 from nti.app.contenttypes.presentation.utils.common import course_assets
 from nti.app.contenttypes.presentation.utils.common import remove_all_invalid_assets
 from nti.app.contenttypes.presentation.utils.common import remove_course_inaccessible_assets
+
+from nti.app.contenttypes.presentation.utils.course import remove_package_assets_from_course_container
+
+from nti.app.externalization.internalization import read_body_as_external_object
+
+from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
 from nti.app.products.courseware.views import CourseAdminPathAdapter
 
@@ -268,4 +278,45 @@ class FixImportCourseReferences(AbstractAuthenticatedView):
         entry_ntiid = ICourseCatalogEntry(course).ntiid
         logger.info('Asset/Discussion refs updated from disk (asset=%s) (discussion=%s) (course=%s)',
                     asset_change, disc_change, entry_ntiid)
+        return result
+
+
+@view_config(context=ICourseInstance)
+@view_config(context=ICourseCatalogEntry)
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               request_method='POST',
+               permission=nauth.ACT_NTI_ADMIN,
+               name='FixCourseAssetContainers')
+class FixCourseAssetContainersView(AbstractAuthenticatedView,
+                                   ModeledContentUploadRequestUtilsMixin):
+    """
+    Update the containers for course assts by removing all
+    assets given by `package` from the course containers.
+    """
+
+    def readInput(self):
+        if self.request.body:
+            values = read_body_as_external_object(self.request)
+        else:
+            values = self.request.params
+        result = CaseInsensitiveDict(values)
+        return result
+
+    def _get_package_ntiid(self):
+        params = self.readInput()
+        result =   params.get('package') \
+                or params.get('package_ntiid')
+        if result is None:
+            raise hexc.HTTPUnprocessableEntry(_("Must provide package ntiid"))
+        return result
+
+    def __call__(self):
+        result = LocatedExternalDict()
+        course = ICourseInstance(self.context)
+        package_ntiid = self._get_package_ntiid()
+        count = remove_package_assets_from_course_container(package_ntiid, course)
+        entry_ntiid = ICourseCatalogEntry(course).ntiid
+        logger.info('Removed %s package assets from course containers (%s) (%s)',
+                    count, package_ntiid, entry_ntiid)
         return result
