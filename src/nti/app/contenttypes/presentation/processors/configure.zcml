@@ -15,7 +15,9 @@
     <adapter factory=".docket.DocketAssetProcessor" />
     <adapter factory=".docket.RelatedWorkfRefProcessor" />
        
-    <adapter factory=".media.MediaRollProcessor" />
+    <adapter factory=".media.NTIVideoProcessor" />
+	<adapter factory=".media.MediaRollProcessor" />
+	<adapter factory=".media.NTIMediaRefRollProcessor" />
 
 	<adapter factory=".group.AssessmentRefProcessor" />
 	<adapter factory=".group.DiscussionRefProcessor" />  

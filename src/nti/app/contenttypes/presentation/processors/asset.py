@@ -25,7 +25,7 @@ from nti.contenttypes.presentation.interfaces import IPresentationAsset
 def handle_asset(item, context, creator=None):
     creator = creator or get_remote_user()
     set_creator(item, creator)
-    # If we don't have parent, use course.
+    # If we don't have parent, use context.
     if item.__parent__ is None:
         item.__parent__ = context
     add_to_container(context, item)
