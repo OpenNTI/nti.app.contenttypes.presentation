@@ -110,8 +110,8 @@ class LessonPublicationConstraintChecker(object):
 
     def satisfied_time(self, user, constraint=None):
         user = get_user(user)
-        constraint = constraint or self.constraint
-        course = ICourseInstance(constraint, None)
+        constraint = self.constraint if constraint is None else constraint
+        course = ICourseInstance(constraint, None) # lineage
         # By default, unless we have relevant completed constraints,
         # we return 0.
         completed_time = 0
@@ -150,7 +150,7 @@ class LessonPublicationConstraintChecker(object):
 class AssignmentCompletionConstraintChecker(LessonPublicationConstraintChecker):
 
     def get_constraint_items(self, constraint=None):
-        constraint = constraint or self.constraint
+        constraint = self.constraint if constraint is None else constraint
         return constraint.assignments
 
     def check_time_constraint_item(self, item_ntiid, user, constraint=None):
@@ -158,8 +158,8 @@ class AssignmentCompletionConstraintChecker(LessonPublicationConstraintChecker):
         # that it was first completed.
         user = get_user(user)
         completed_time = None
-        constraint = constraint or self.constraint
-        course = ICourseInstance(constraint, None)
+        constraint = self.constraint if constraint is None else constraint
+        course = ICourseInstance(constraint, None) # lineage
         histories = component.queryMultiAdapter((course, user),
                                                 IUsersCourseAssignmentHistory)
         if histories is not None:
@@ -173,7 +173,7 @@ class AssignmentCompletionConstraintChecker(LessonPublicationConstraintChecker):
 class SurveyCompletionConstraintChecker(LessonPublicationConstraintChecker):
 
     def get_constraint_items(self, constraint=None):
-        constraint = constraint or self.constraint
+        constraint = self.constraint if constraint is None else constraint
         return constraint.surveys
 
     def check_time_constraint_item(self, item_ntiid, user, constraint=None):
@@ -181,8 +181,8 @@ class SurveyCompletionConstraintChecker(LessonPublicationConstraintChecker):
         # that it was first completed.
         user = get_user(user)
         completed_time = None
-        constraint = constraint or self.constraint
-        course = ICourseInstance(constraint, None)
+        constraint = self.constraint if constraint is None else constraint
+        course = ICourseInstance(constraint, None) # lineage
         histories = component.queryMultiAdapter((course, user),
                                                 IUsersCourseInquiry)
         if histories is not None:

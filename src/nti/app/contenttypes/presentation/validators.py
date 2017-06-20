@@ -36,8 +36,8 @@ from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
-from nti.contenttypes.presentation.interfaces import IAssignmentCompletionConstraint
 from nti.contenttypes.presentation.interfaces import ISurveyCompletionConstraint
+from nti.contenttypes.presentation.interfaces import IAssignmentCompletionConstraint
 
 
 @interface.implementer(IItemRefValidator)
