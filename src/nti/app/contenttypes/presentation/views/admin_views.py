@@ -35,6 +35,8 @@ from nti.app.products.courseware.resources.utils import get_course_filer
 
 from nti.app.products.courseware.utils import transfer_resources_from_filer
 
+from nti.app.contenttypes.presentation import MessageFactory as _
+
 from nti.app.contenttypes.presentation.synchronizer import can_be_removed
 from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
 from nti.app.contenttypes.presentation.synchronizer import synchronize_course_lesson_overview
@@ -65,6 +67,8 @@ from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
+from nti.contenttypes.courses.utils import get_course_packages
+
 from nti.contenttypes.presentation import iface_of_asset
 
 from nti.contenttypes.presentation.index import get_assets_catalog
@@ -78,6 +82,8 @@ from nti.dataserver.interfaces import IDataserverFolder
 
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
+
+from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.recorder.record import remove_transaction_history
 
@@ -211,7 +217,7 @@ class RebuildEvaluationCatalogView(AbstractAuthenticatedView):
         for host_site in get_all_host_sites():  # check all sites
             logger.info("Processing site %s", host_site.__name__)
             with current_site(host_site):
-                for _, evaluation in list(component.getUtilitiesFor(IPresentationAsset)):
+                for unused_name, evaluation in list(component.getUtilitiesFor(IPresentationAsset)):
                     doc_id = intids.queryId(evaluation)
                     if doc_id is None or doc_id in seen:
                         continue
@@ -238,7 +244,7 @@ class FixImportCourseReferences(AbstractAuthenticatedView):
 
     def _update_assets(self, course, source_filer, course_filer):
         change_count = 0
-        for _, item, _ in course_assets(course):
+        for unused_key, item, unused_container in course_assets(course):
             asset = IConcreteAsset(item, item)
             transfer_result = transfer_resources_from_filer(iface_of_asset(asset),
                                                             asset,
@@ -293,6 +299,8 @@ class FixCourseAssetContainersView(AbstractAuthenticatedView,
     """
     Update the containers for course assts by removing all
     assets given by `package` from the course containers.
+
+    The package cannot currently be a course package.
     """
 
     def readInput(self, value=None):
@@ -303,18 +311,27 @@ class FixCourseAssetContainersView(AbstractAuthenticatedView,
         result = CaseInsensitiveDict(values)
         return result
 
-    def _get_package_ntiid(self):
+    def _get_package_ntiid(self, course):
         params = self.readInput()
         result =   params.get('ntiid') \
                 or params.get('package') \
                 or params.get('package_ntiid')
         if result is None:
-            msg =  _(u'Must provide package ntiid".')
             raise_json_error(self.request,
                              hexc.HTTPUnprocessableEntity,
                              {
-                                'message': msg,
+                                'message': _(u'Must provide package ntiid.'),
                                 'field': 'ntiid'
+                             },
+                             None)
+        package = find_object_with_ntiid(result)
+        packages = get_course_packages(course)
+        if package is not None and package in packages or ():
+            raise_json_error(self.request,
+                             hexc.HTTPUnprocessableEntity,
+                             {
+                                'message': _(u'Cannot remove package reference.'),
+                                'code': 'CannotRemovePackageReferenceError'
                              },
                              None)
         return result
@@ -322,9 +339,10 @@ class FixCourseAssetContainersView(AbstractAuthenticatedView,
     def __call__(self):
         result = LocatedExternalDict()
         course = ICourseInstance(self.context)
-        package_ntiid = self._get_package_ntiid()
+        package_ntiid = self._get_package_ntiid(course)
         count = remove_package_assets_from_course_container(package_ntiid, course)
         entry_ntiid = ICourseCatalogEntry(course).ntiid
         logger.info('Removed %s package assets from course containers (%s) (%s)',
                     count, package_ntiid, entry_ntiid)
+        result["RemovedCount"] = count
         return result
