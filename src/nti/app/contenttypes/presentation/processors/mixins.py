@@ -36,7 +36,6 @@ from nti.app.products.courseware.resources.utils import get_file_from_external_l
 from nti.contentfile.interfaces import IContentBaseFile
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
-from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.courses.utils import get_course_subinstances
 
@@ -96,12 +95,7 @@ def add_to_courses(context, item):
 
 
 def add_to_container(context, item):
-    result = None
     add_to_courses(context, item)
-    entry = ICourseCatalogEntry(context, None)
-    if entry is not None:
-        result = entry.ntiid
-    return result
 
 
 def register_utility(registry, item, provided, name=None):
