@@ -16,8 +16,6 @@ from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProce
 
 from nti.app.contenttypes.presentation.processors.asset import handle_asset
 
-from nti.app.contenttypes.presentation.processors.group import handle_overviewable
-
 from nti.app.contenttypes.presentation.processors.mixins import set_creator
 from nti.app.contenttypes.presentation.processors.mixins import canonicalize
 from nti.app.contenttypes.presentation.processors.mixins import add_to_container
@@ -72,7 +70,7 @@ def handle_video(item, context, creator, request=None):
         handle_asset(item, context, creator)
     else:
         # media refs need this path
-        handle_overviewable(item, context, creator, request)
+        handle_asset(item, context, creator)
 
 
 def handle_media_roll(item, context, creator, registry=None):
