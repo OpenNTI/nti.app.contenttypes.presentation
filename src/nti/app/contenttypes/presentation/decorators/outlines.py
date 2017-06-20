@@ -18,8 +18,6 @@ from zope.cachedescriptors.property import Lazy
 
 from zope.location.interfaces import ILocation
 
-from pyramid.threadlocal import get_current_request
-
 from nti.app.contenttypes.presentation.decorators import LEGACY_UAS_20
 from nti.app.contenttypes.presentation.decorators import VIEW_ORDERED_CONTENTS
 from nti.app.contenttypes.presentation.decorators import VIEW_OVERVIEW_CONTENT
@@ -85,8 +83,7 @@ class _CourseOutlineSharedDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
     @Lazy
     def _acl_decoration(self):
-        request = get_current_request()
-        return getattr(request, 'acl_decoration', True)
+        return getattr(self.request, 'acl_decoration', True)
 
     def _predicate(self, context, result):
         return self._acl_decoration \
@@ -190,8 +187,7 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
     def _predicate(self, context, result):
-        result = is_legacy_uas(self.request, LEGACY_UAS_20)
-        return result
+        return is_legacy_uas(self.request, LEGACY_UAS_20)
 
     def _overview_decorate_external(self, context, result):
         try:
