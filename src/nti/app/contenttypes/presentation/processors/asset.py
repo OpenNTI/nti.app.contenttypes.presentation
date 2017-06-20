@@ -22,7 +22,7 @@ from nti.app.contenttypes.presentation.processors.mixins import add_to_container
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 
 
-def handle_asset(item, context, creator=None):
+def handle_asset(item, context, creator=None, request=None):
     creator = creator or get_remote_user()
     set_creator(item, creator)
     # If we don't have parent, use context.
