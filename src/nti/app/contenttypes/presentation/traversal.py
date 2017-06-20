@@ -35,4 +35,4 @@ class _LessonOverviewTraversable(DefaultAdapterTraversable):
 class _LessonPublicationConstraintsTraversable(ContainerAdapterTraversable):
 
     def traverse(self, key, remaining_path):
-        return super(_LessonPublicationConstraintsTraversable, self).traverse(key, remaining_path)
+        return ContainerAdapterTraversable.traverse(self, key, remaining_path)
