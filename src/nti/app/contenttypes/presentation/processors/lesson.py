@@ -65,8 +65,10 @@ def handle_lesson_overview(lesson, context, creator, registry, request=None):
 @interface.implementer(IPresentationAssetProcessor)
 class LessonOverviewProcessor(object):
 
-    __slots__ = ()
+    def __init__(self, asset=None):
+        self.asset = asset
 
     def handle(self, item, context, creator=None, request=None):
         registry = get_context_registry(context)
+        item = self.asset if item is None else item
         return handle_lesson_overview(item, context, creator, registry, request)

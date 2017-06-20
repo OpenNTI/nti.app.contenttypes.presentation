@@ -92,10 +92,12 @@ def handle_media_roll(item, context, creator, registry=None):
 @interface.implementer(IPresentationAssetProcessor)
 class MediaRollProcessor(object):
 
-    __slots__ = ()
+    def __init__(self, asset=None):
+        self.asset = asset
 
     def handle(self, item, context, creator=None, request=None):
         registry = get_context_registry(context)
+        item = self.asset if item is None else item
         return handle_media_roll(item, context, creator, registry)
 
 
@@ -103,9 +105,11 @@ class MediaRollProcessor(object):
 @interface.implementer(IPresentationAssetProcessor)
 class NTIVideoProcessor(object):
 
-    __slots__ = ()
+    def __init__(self, asset=None):
+        self.asset = asset
 
     def handle(self, item, context, creator=None, request=None):
+        item = self.asset if item is None else item
         return handle_video(item, context, creator, request)
 
 
@@ -113,7 +117,9 @@ class NTIVideoProcessor(object):
 @interface.implementer(IPresentationAssetProcessor)
 class NTIMediaRefRollProcessor(object):
 
-    __slots__ = ()
+    def __init__(self, asset=None):
+        self.asset = asset
 
     def handle(self, item, context, creator=None, request=None):
+        item = self.asset if item is None else item
         return handle_video(item, context, creator, request)

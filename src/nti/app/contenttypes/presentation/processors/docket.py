@@ -103,9 +103,11 @@ def handle_related_work(item, context, creator=None, request=None):
 @interface.implementer(IPresentationAssetProcessor)
 class DocketAssetProcessor(object):
 
-    __slots__ = ()
+    def __init__(self, asset=None):
+        self.asset = asset
 
     def handle(self, item, context, creator=None, request=None):
+        item = self.asset if item is None else item
         handle_asset(item, context, creator)
         return handle_docket_asset(item, context, creator)
 
@@ -114,7 +116,9 @@ class DocketAssetProcessor(object):
 @interface.implementer(IPresentationAssetProcessor)
 class RelatedWorkfRefProcessor(object):
 
-    __slots__ = ()
+    def __init__(self, asset=None):
+        self.asset = asset
 
     def handle(self, item, context, creator=None, request=None):
+        item = self.asset if item is None else item
         return handle_related_work(item, context, creator, request)

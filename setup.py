@@ -37,6 +37,7 @@ setup(
     install_requires=[
         'setuptools',
         'nti.contentindexing',
+        'nti.contenttypes.courses',
         'nti.contenttypes.presentation',
     ],
     entry_points=entry_points

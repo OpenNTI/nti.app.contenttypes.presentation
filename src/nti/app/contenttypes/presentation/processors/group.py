@@ -129,9 +129,11 @@ def handle_overview_group(group, context, creator=None, request=None):
 @interface.implementer(IPresentationAssetProcessor)
 class GroupOverViewableProcessor(object):
 
-    __slots__ = ()
+    def __init__(self, asset=None):
+        self.asset = asset
 
     def handle(self, item, context, creator=None, request=None):
+        item = self.asset if item is None else item
         return handle_overviewable(item, context, creator, request)
 
 
@@ -139,9 +141,11 @@ class GroupOverViewableProcessor(object):
 @interface.implementer(IPresentationAssetProcessor)
 class AssessmentRefProcessor(object):
 
-    __slots__ = ()
+    def __init__(self, asset=None):
+        self.asset = asset
 
     def handle(self, item, context, creator=None, request=None):
+        item = self.asset if item is None else item
         return handle_assessment_ref(item, context, creator, request)
 
 
@@ -149,9 +153,11 @@ class AssessmentRefProcessor(object):
 @interface.implementer(IPresentationAssetProcessor)
 class DiscussionRefProcessor(object):
 
-    __slots__ = ()
+    def __init__(self, asset=None):
+        self.asset = asset
 
     def handle(self, item, context, creator=None, request=None):
+        item = self.asset if item is None else item
         return handle_discussion_ref(item, context, creator, request)
 
 
@@ -159,7 +165,9 @@ class DiscussionRefProcessor(object):
 @interface.implementer(IPresentationAssetProcessor)
 class CourseOverviewGroupProcessor(object):
 
-    __slots__ = ()
+    def __init__(self, asset=None):
+        self.asset = asset
 
     def handle(self, item, context, creator=None, request=None):
+        item = self.asset if item is None else item
         return handle_overview_group(item, context, creator, request)

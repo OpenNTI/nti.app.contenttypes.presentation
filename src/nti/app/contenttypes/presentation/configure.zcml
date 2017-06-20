@@ -9,6 +9,7 @@
 	<include package="zope.security" />
 
 	<include package="nti.contentindexing" />
+	<include package="nti.contenttypes.courses" />
 	<include package="nti.contenttypes.presentation" />
 
 	<!-- Database creation and migration -->

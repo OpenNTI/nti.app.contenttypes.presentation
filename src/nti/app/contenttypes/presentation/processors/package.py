@@ -48,9 +48,11 @@ def handle_slide_deck(item, context, creator, registry=None):
 @interface.implementer(IPresentationAssetProcessor)
 class PackageAssetProcessor(object):
 
-    __slots__ = ()
+    def __init__(self, asset=None):
+        self.asset = asset
 
     def handle(self, item, context, creator=None, request=None):
+        item = self.asset if item is None else item
         return handle_asset(item, context, creator)
 
 
@@ -58,8 +60,10 @@ class PackageAssetProcessor(object):
 @interface.implementer(IPresentationAssetProcessor)
 class NTISlideDeckProcessor(object):
 
-    __slots__ = ()
+    def __init__(self, asset=None):
+        self.asset = asset
 
     def handle(self, item, context, creator=None, request=None):
         registry = get_context_registry(context)
+        item = self.asset if item is None else item
         return handle_slide_deck(item, context, creator, registry)

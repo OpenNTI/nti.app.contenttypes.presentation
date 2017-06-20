@@ -36,7 +36,9 @@ def handle_asset(item, context, creator=None):
 @interface.implementer(IPresentationAssetProcessor)
 class PresentationAssetProcessor(object):
 
-    __slots__ = ()
+    def __init__(self, asset=None):
+        self.asset = asset
 
     def handle(self, item, context, creator=None, request=None):
+        item = self.asset if item is None else item
         return handle_asset(item, context, creator)
