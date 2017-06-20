@@ -65,12 +65,7 @@ def handle_video(item, context, creator, request=None):
     slide_deck = get_slide_deck_for_video(item, context)
     if slide_deck is not None:
         return handle_asset(slide_deck, context, creator)
-    # Just a video
-    if INTIVideo.providedBy(item):
-        handle_asset(item, context, creator)
-    else:
-        # media refs need this path
-        handle_asset(item, context, creator)
+    handle_asset(item, context, creator)
 
 
 def handle_media_roll(item, context, creator, registry=None):
