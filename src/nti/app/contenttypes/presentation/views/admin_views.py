@@ -47,7 +47,7 @@ from nti.app.contenttypes.presentation.utils.common import remove_course_inacces
 
 from nti.app.contenttypes.presentation.utils.course import remove_package_assets_from_course_container
 
-from nti.app.externalization.internalization import read_body_as_external_object
+from nti.app.externalization.error import raise_json_error
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
@@ -295,9 +295,9 @@ class FixCourseAssetContainersView(AbstractAuthenticatedView,
     assets given by `package` from the course containers.
     """
 
-    def readInput(self):
+    def readInput(self, value=None):
         if self.request.body:
-            values = read_body_as_external_object(self.request)
+            values = super(FixCourseAssetContainersView, self).readInput(value)
         else:
             values = self.request.params
         result = CaseInsensitiveDict(values)
@@ -305,10 +305,18 @@ class FixCourseAssetContainersView(AbstractAuthenticatedView,
 
     def _get_package_ntiid(self):
         params = self.readInput()
-        result =   params.get('package') \
+        result =   params.get('ntiid') \
+                or params.get('package') \
                 or params.get('package_ntiid')
         if result is None:
-            raise hexc.HTTPUnprocessableEntry(_("Must provide package ntiid"))
+            msg =  _(u'Must provide package ntiid".')
+            raise_json_error(self.request,
+                             hexc.HTTPUnprocessableEntity,
+                             {
+                                'message': msg,
+                                'field': 'ntiid'
+                             },
+                             None)
         return result
 
     def __call__(self):

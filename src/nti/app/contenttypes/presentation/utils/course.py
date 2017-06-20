@@ -154,11 +154,10 @@ def remove_package_assets_from_course_container(package_ntiid, course):
     catalog = get_library_catalog()
     sites = get_component_hierarchy_names()
     # We are assuming no assets can exist in multiple packages.
-    removed_doc_ids = tuple(catalog.get_references(
-                                        provided=PACKAGE_CONTAINER_INTERFACES,
-                                        container_ntiids=package_ntiids,
-                                        container_all_of=False,
-                                        sites=sites))
-    for doc_id in removed_doc_ids:
+    removed_doc_ids = catalog.get_references(provided=PACKAGE_CONTAINER_INTERFACES,
+                                             container_ntiids=package_ntiids,
+                                             container_all_of=False,
+                                             sites=sites)
+    for doc_id in removed_doc_ids or ():
         catalog.remove_containers(doc_id, (entry.ntiid,))
     return len(removed_doc_ids)
