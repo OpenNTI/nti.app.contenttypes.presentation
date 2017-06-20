@@ -65,11 +65,14 @@ from nti.contentlibrary.interfaces import IContentPackageRemovedEvent
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseBundleUpdatedEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.courses.common import get_course_packages
+
+from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
 from nti.contenttypes.presentation.interfaces import TRX_ASSET_MOVE_TYPE
 from nti.contenttypes.presentation.interfaces import TRX_OVERVIEW_GROUP_MOVE_TYPE
@@ -465,3 +468,25 @@ def _on_package_removed(package, event):
     units = _get_content_units_for_package(package)
     for unit in units:
         _on_content_removed(unit, event)
+
+
+@component.adapter(ICourseInstance, ICourseBundleUpdatedEvent)
+def update_course_asset_containers(course, event):
+    """
+    When a package is removed from a bundle, we need to remove any
+    reference to our course in the asset containers.
+    synchronizer.py handles linking package assets to our course.
+    """
+    if event.removed_packages:
+        entry = ICourseCatalogEntry(course)
+        logger.info("Removing referenced assets to course (course=%s) (packages=%s)",
+                    entry.ntiid, event.removed_packages)
+        catalog = get_library_catalog()
+        sites = get_component_hierarchy_names()
+        # We are assuming no assets can exist in multiple packages.
+        removed_doc_ids = tuple(catalog.get_references(
+                                            provided=PACKAGE_CONTAINER_INTERFACES,
+                                            container_ntiids=event.removed_packages,
+                                            sites=sites))
+        for doc_id in removed_doc_ids:
+            catalog.remove_containers(doc_id, (entry.ntiid,))
