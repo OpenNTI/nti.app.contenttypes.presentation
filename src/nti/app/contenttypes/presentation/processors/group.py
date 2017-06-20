@@ -22,9 +22,7 @@ from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProce
 
 from nti.app.contenttypes.presentation.processors.asset import handle_asset
 
-from nti.app.contenttypes.presentation.processors.mixins import set_creator
 from nti.app.contenttypes.presentation.processors.mixins import canonicalize
-from nti.app.contenttypes.presentation.processors.mixins import add_to_container
 from nti.app.contenttypes.presentation.processors.mixins import get_context_registry
 
 from nti.app.externalization.error import raise_json_error
@@ -104,10 +102,7 @@ def handle_discussion_ref(item, context, creator=None, request=None):
 
 
 def handle_overview_group(group, context, creator=None, request=None):
-    # set creator
-    set_creator(group, creator)
-    # add to course container
-    add_to_container(context, group)
+    handle_asset(group, context, creator, request)
     registry = get_context_registry(context)
     # have unique copies of group items
     canonicalize(group.Items, creator,

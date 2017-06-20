@@ -75,4 +75,4 @@ class TestDocket(ApplicationLayerTest):
                                        "target", is_(not_none())))
             container = IPresentationAssetContainer(course)
             assert_that(container,
-                        has_entry(workref.ntiid, workref))
+                        has_entry(workref.ntiid, is_(workref)))

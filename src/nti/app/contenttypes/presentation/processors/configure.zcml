@@ -22,6 +22,7 @@
 	<adapter factory=".group.AssessmentRefProcessor" />
 	<adapter factory=".group.DiscussionRefProcessor" />  
     <adapter factory=".group.GroupOverViewableProcessor" />
+    <adapter factory=".group.CourseOverviewGroupProcessor" />
 
 	<adapter factory=".lesson.LessonOverviewProcessor" />
 

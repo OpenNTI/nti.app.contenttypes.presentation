@@ -55,4 +55,4 @@ class TestAsset(ApplicationLayerTest):
                     has_property('creator', "ichigo"))
         container = IPresentationAssetContainer(context)
         assert_that(container,
-                    has_entry(ntiid, video))
+                    has_entry(ntiid, is_(video)))

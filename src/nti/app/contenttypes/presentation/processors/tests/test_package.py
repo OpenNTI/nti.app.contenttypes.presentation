@@ -12,10 +12,14 @@ from hamcrest import has_entry
 from hamcrest import assert_that
 from hamcrest import has_properties
 
+from zope import component
+
 from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProcessor
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
+from nti.contenttypes.presentation.interfaces import INTISlide
+from nti.contenttypes.presentation.interfaces import INTISlideVideo
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.contenttypes.presentation.slide import NTISlide
@@ -82,3 +86,9 @@ class TestPackage(ApplicationLayerTest):
                         has_entry(slide.ntiid, is_(slide)))
             assert_that(container,
                         has_entry(video.ntiid, is_(video)))
+            
+            reg = component.queryUtility(INTISlide, slide.ntiid)
+            assert_that(reg, is_(slide))
+            
+            reg = component.queryUtility(INTISlideVideo, video.ntiid)
+            assert_that(reg, is_(video))
