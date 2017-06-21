@@ -22,6 +22,8 @@ from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProce
 
 from nti.app.contenttypes.presentation.processors.asset import handle_asset
 
+from nti.app.contenttypes.presentation.processors.mixins import BaseAssetProcessor
+
 from nti.app.contenttypes.presentation.processors.mixins import canonicalize
 from nti.app.contenttypes.presentation.processors.mixins import get_context_registry
 
@@ -116,10 +118,7 @@ def handle_overview_group(group, context, creator=None, request=None):
 
 @component.adapter(IGroupOverViewable)
 @interface.implementer(IPresentationAssetProcessor)
-class GroupOverViewableProcessor(object):
-
-    def __init__(self, asset=None):
-        self.asset = asset
+class GroupOverViewableProcessor(BaseAssetProcessor):
 
     def handle(self, item, context, creator=None, request=None):
         item = self.asset if item is None else item
@@ -128,10 +127,7 @@ class GroupOverViewableProcessor(object):
 
 @component.adapter(INTIAssessmentRef)
 @interface.implementer(IPresentationAssetProcessor)
-class AssessmentRefProcessor(object):
-
-    def __init__(self, asset=None):
-        self.asset = asset
+class AssessmentRefProcessor(BaseAssetProcessor):
 
     def handle(self, item, context, creator=None, request=None):
         item = self.asset if item is None else item
@@ -140,10 +136,7 @@ class AssessmentRefProcessor(object):
 
 @component.adapter(INTIDiscussionRef)
 @interface.implementer(IPresentationAssetProcessor)
-class DiscussionRefProcessor(object):
-
-    def __init__(self, asset=None):
-        self.asset = asset
+class DiscussionRefProcessor(BaseAssetProcessor):
 
     def handle(self, item, context, creator=None, request=None):
         item = self.asset if item is None else item
@@ -152,10 +145,7 @@ class DiscussionRefProcessor(object):
 
 @component.adapter(INTICourseOverviewGroup)
 @interface.implementer(IPresentationAssetProcessor)
-class CourseOverviewGroupProcessor(object):
-
-    def __init__(self, asset=None):
-        self.asset = asset
+class CourseOverviewGroupProcessor(BaseAssetProcessor):
 
     def handle(self, item, context, creator=None, request=None):
         item = self.asset if item is None else item

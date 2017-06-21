@@ -13,6 +13,7 @@ import six
 import hashlib
 
 from zope import component
+from zope import interface
 
 from zope.component.hooks import getSite
 
@@ -23,6 +24,8 @@ from pyramid import httpexceptions as hexc
 from pyramid.threadlocal import get_current_request
 
 from nti.app.base.abstract_views import get_safe_source_filename
+
+from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProcessor
 
 from nti.app.contenttypes.presentation.utils.asset import add_2_connection
 from nti.app.contenttypes.presentation.utils.asset import make_asset_ntiid
@@ -60,6 +63,16 @@ from nti.publishing.interfaces import IPublishable
 from nti.site.interfaces import IHostPolicyFolder
 
 from nti.site.utils import registerUtility
+
+
+@interface.implementer(IPresentationAssetProcessor)
+class BaseAssetProcessor(object):
+
+    def __init__(self, asset=None):
+        self.asset = asset
+
+    def handle(self, item, context, creator=None, request=None):
+        raise NotImplementedError()
 
 
 def hexdigest(data, hasher=None):
@@ -162,9 +175,9 @@ def set_creator(item, creator):
 def get_ntiid(item):
     ntiid = item.ntiid
     # Return None for auto-generate NTIIDs
-    if      ntiid \
-        and (INTICourseOverviewGroup.providedBy(item) or IAssetRef.providedBy(item)) \
-        and TYPE_UUID in get_specific(ntiid):
+    if ntiid \
+            and (INTICourseOverviewGroup.providedBy(item) or IAssetRef.providedBy(item)) \
+            and TYPE_UUID in get_specific(ntiid):
         ntiid = None
     return ntiid
 
@@ -181,7 +194,7 @@ def check_exists(item, registry, request=None, extra=None):
             raise_json_error(request,
                              hexc.HTTPUnprocessableEntity,
                              {
-                                'message': _(u'Asset already exists.'),
+                                 'message': _(u'Asset already exists.'),
                              },
                              None)
     else:

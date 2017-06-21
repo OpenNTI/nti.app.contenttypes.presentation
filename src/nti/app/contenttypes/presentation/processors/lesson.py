@@ -22,6 +22,8 @@ from nti.app.externalization.error import raise_json_error
 
 from nti.app.contenttypes.presentation.processors.asset import handle_asset
 
+from nti.app.contenttypes.presentation.processors.mixins import BaseAssetProcessor
+
 from nti.app.contenttypes.presentation.processors.mixins import canonicalize
 from nti.app.contenttypes.presentation.processors.mixins import check_exists
 from nti.app.contenttypes.presentation.processors.mixins import get_context_registry
@@ -29,7 +31,8 @@ from nti.app.contenttypes.presentation.processors.mixins import get_context_regi
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 
 
-def handle_lesson_overview(lesson, context, creator, registry, request=None):
+def handle_lesson_overview(lesson, context, creator, request=None):
+    registry = get_context_registry(context)
     handle_asset(lesson, context, creator, request)
     # in case new NTIIDs are created
     extra = str(uuid.uuid4()).split('-')[0].upper()
@@ -60,12 +63,9 @@ def handle_lesson_overview(lesson, context, creator, registry, request=None):
 
 @component.adapter(INTILessonOverview)
 @interface.implementer(IPresentationAssetProcessor)
-class LessonOverviewProcessor(object):
-
-    def __init__(self, asset=None):
-        self.asset = asset
+class LessonOverviewProcessor(BaseAssetProcessor):
 
     def handle(self, item, context, creator=None, request=None):
-        registry = get_context_registry(context)
+
         item = self.asset if item is None else item
-        return handle_lesson_overview(item, context, creator, registry, request)
+        return handle_lesson_overview(item, context, creator, request)

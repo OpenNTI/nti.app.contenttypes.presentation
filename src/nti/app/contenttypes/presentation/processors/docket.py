@@ -19,6 +19,8 @@ from pyramid.threadlocal import get_current_request
 
 from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProcessor
 
+from nti.app.contenttypes.presentation.processors.mixins import BaseAssetProcessor
+
 from nti.app.contenttypes.presentation.processors.mixins import hexdigest
 from nti.app.contenttypes.presentation.processors.mixins import get_content_file
 
@@ -101,10 +103,7 @@ def handle_related_work(item, context, creator=None, request=None):
 
 @component.adapter(INTIDocketAsset)
 @interface.implementer(IPresentationAssetProcessor)
-class DocketAssetProcessor(object):
-
-    def __init__(self, asset=None):
-        self.asset = asset
+class DocketAssetProcessor(BaseAssetProcessor):
 
     def handle(self, item, context, creator=None, request=None):
         item = self.asset if item is None else item
@@ -114,10 +113,7 @@ class DocketAssetProcessor(object):
 
 @component.adapter(INTIRelatedWorkRef)
 @interface.implementer(IPresentationAssetProcessor)
-class RelatedWorkfRefProcessor(object):
-
-    def __init__(self, asset=None):
-        self.asset = asset
+class RelatedWorkfRefProcessor(BaseAssetProcessor):
 
     def handle(self, item, context, creator=None, request=None):
         item = self.asset if item is None else item

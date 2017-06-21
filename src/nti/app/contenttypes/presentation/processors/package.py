@@ -18,6 +18,8 @@ from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProce
 
 from nti.app.contenttypes.presentation.processors.asset import handle_asset
 
+from nti.app.contenttypes.presentation.processors.mixins import BaseAssetProcessor
+
 from nti.app.contenttypes.presentation.processors.mixins import canonicalize
 from nti.app.contenttypes.presentation.processors.mixins import get_context_registry
 
@@ -43,10 +45,7 @@ def handle_slide_deck(item, context, creator, request=None):
 
 @component.adapter(IPackagePresentationAsset)
 @interface.implementer(IPresentationAssetProcessor)
-class PackageAssetProcessor(object):
-
-    def __init__(self, asset=None):
-        self.asset = asset
+class PackageAssetProcessor(BaseAssetProcessor):
 
     def handle(self, item, context, creator=None, request=None):
         item = self.asset if item is None else item
@@ -55,10 +54,7 @@ class PackageAssetProcessor(object):
 
 @component.adapter(INTISlideDeck)
 @interface.implementer(IPresentationAssetProcessor)
-class NTISlideDeckProcessor(object):
-
-    def __init__(self, asset=None):
-        self.asset = asset
+class NTISlideDeckProcessor(BaseAssetProcessor):
 
     def handle(self, item, context, creator=None, request=None):
         item = self.asset if item is None else item

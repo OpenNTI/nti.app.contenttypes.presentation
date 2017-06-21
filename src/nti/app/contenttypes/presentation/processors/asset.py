@@ -16,6 +16,8 @@ from nti.app.authentication import get_remote_user
 
 from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProcessor
 
+from nti.app.contenttypes.presentation.processors.mixins import BaseAssetProcessor
+
 from nti.app.contenttypes.presentation.processors.mixins import set_creator
 from nti.app.contenttypes.presentation.processors.mixins import add_to_container
 
@@ -34,11 +36,8 @@ def handle_asset(item, context, creator=None, request=None):
 
 @component.adapter(IPresentationAsset)
 @interface.implementer(IPresentationAssetProcessor)
-class PresentationAssetProcessor(object):
-
-    def __init__(self, asset=None):
-        self.asset = asset
+class PresentationAssetProcessor(BaseAssetProcessor):
 
     def handle(self, item, context, creator=None, request=None):
         item = self.asset if item is None else item
-        return handle_asset(item, context, creator)
+        return handle_asset(item, context, creator, request)
