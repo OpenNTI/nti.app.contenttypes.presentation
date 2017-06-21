@@ -161,8 +161,12 @@ def remove_asset(item, registry=None, catalog=None, name=None, event=True):
 	name = item.ntiid or name
 	provided = iface_of_asset(item)
 	registry = get_registry_4_item(item, provided, name, registry=registry)
-	if name and not unregisterUtility(registry, provided=provided, name=name):
-		logger.warn("Could not unregister %s,%s from %s",
+	try:
+		if name and not unregisterUtility(registry, provided=provided, name=name):
+			logger.warn("Could not unregister %s,%s from %s",
+						provided.__name__, name, registry.__parent__)
+	except KeyError:
+		logger.warn("Asset %s,%s not in registry %s",
 					provided.__name__, name, registry.__parent__)
 	# unindex
 	catalog = get_library_catalog() if catalog is None else catalog
