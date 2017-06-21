@@ -5,6 +5,7 @@
 """
 
 from __future__ import print_function, absolute_import, division
+from nti.site.interfaces import IHostPolicyFolder
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -198,6 +199,12 @@ def _reference_to_concrete(context):
 def _outlinenode_to_lesson(context):
     ntiid = context.LessonOverviewNTIID
     return component.queryUtility(INTILessonOverview, name=ntiid or '')
+
+
+@component.adapter(IPresentationAsset)
+@interface.implementer(IHostPolicyFolder)
+def _asset_to_policy_folder(group):
+    return find_interface(group, IHostPolicyFolder, strict=False)
 
 
 @component.adapter(IPresentationAsset)
