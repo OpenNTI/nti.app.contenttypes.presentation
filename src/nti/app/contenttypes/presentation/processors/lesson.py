@@ -20,20 +20,17 @@ from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProce
 
 from nti.app.externalization.error import raise_json_error
 
-from nti.app.contenttypes.presentation.processors.mixins import set_creator
+from nti.app.contenttypes.presentation.processors.asset import handle_asset
+
 from nti.app.contenttypes.presentation.processors.mixins import canonicalize
 from nti.app.contenttypes.presentation.processors.mixins import check_exists
-from nti.app.contenttypes.presentation.processors.mixins import add_to_container
 from nti.app.contenttypes.presentation.processors.mixins import get_context_registry
 
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 
 
 def handle_lesson_overview(lesson, context, creator, registry, request=None):
-    # set creator
-    set_creator(lesson, creator)
-    # add to course container
-    add_to_container(context, lesson)
+    handle_asset(lesson, context, creator, request)
     # in case new NTIIDs are created
     extra = str(uuid.uuid4()).split('-')[0].upper()
     # Make sure we validate before canonicalize.
