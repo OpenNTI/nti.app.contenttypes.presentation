@@ -229,6 +229,8 @@
 	<adapter factory=".catalog._asset_to_target" />
 	<adapter factory=".catalog._asset_to_namespace" />
 	<adapter factory=".catalog._asset_to_containers" />
+	<adapter factory=".catalog._slide_to_containers" />
 	<adapter factory=".catalog._asset_to_contained_type" />
+	<adapter factory=".catalog._slide_video_to_containers" />
 
 </configure>

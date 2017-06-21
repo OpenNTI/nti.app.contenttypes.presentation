@@ -20,14 +20,19 @@ from nti.contentlibrary.interfaces import IContentPackage
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
-        
+
 from nti.contenttypes.courses.utils import get_course_subinstances
+from nti.contenttypes.courses.utils import get_courses_for_packages
 
 from nti.contenttypes.presentation import iface_of_asset
+
+from nti.contenttypes.presentation.index import get_assets_catalog
 
 from nti.contenttypes.presentation.interfaces import IPointer
 from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTISlide
+from nti.contenttypes.presentation.interfaces import INTIVideo
+from nti.contenttypes.presentation.interfaces import INTIVideoRef
 from nti.contenttypes.presentation.interfaces import ISiteAdapter
 from nti.contenttypes.presentation.interfaces import INTIIDAdapter
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
@@ -203,16 +208,57 @@ def _asset_to_containers(context):
         containers.update(_package_lineage_to_containers(context))
     else:  # course asset
         containers.update(_course_lineage_to_containers(context))
-
-    # check for slides and slidevideos
-    if (   INTISlide.providedBy(context)
-        or INTISlideVideo.providedBy(context)) \
-        and context.__parent__ is not None \
-        and context.__parent__.ntiid:
-        containers.add(context.__parent__.ntiid)
-
     containers.discard(None)
     containers.discard(context.ntiid)
+    return _Containers(tuple(containers))
+
+
+@component.adapter(INTISlideVideo)
+@interface.implementer(IContainersAdapter)
+def _slide_video_to_containers(context):
+    containers = _asset_to_containers(context)
+    containers = set(containers.containers or ())
+    package = find_interface(context, IContentPackage, strict=False)
+    if package is not None:
+        catalog = get_assets_catalog()
+        courses = get_courses_for_packages(packages=package.ntiid)
+        for course in courses or ():
+            entry = ICourseCatalogEntry(course, None)
+            if entry is None:
+                continue
+            # query all video and video refs in the course
+            site = IHostPolicyFolder(course)
+            refs = catalog.get_references(provided=INTIVideoRef,
+                                          target=context.video_ntiid,
+                                          container_ntiids=entry.ntiid,
+                                          container_all_of=False,
+                                          sites=site.__name__)
+            if refs:
+                containers.add(entry.ntiid)
+            else:
+                videos = catalog.get_references(provided=INTIVideo,
+                                                ntiid=context.video_ntiid,
+                                                container_ntiids=entry.ntiid,
+                                                container_all_of=False,
+                                                sites=site.__name__)
+                if videos:
+                    containers.add(entry.ntiid)
+
+    # include the parent slide deck
+    if      context.__parent__ is not None \
+        and context.__parent__.ntiid:
+        containers.add(context.__parent__.ntiid)
+    return _Containers(tuple(containers))
+
+
+@component.adapter(INTISlide)
+@interface.implementer(IContainersAdapter)
+def _slide_to_containers(context):
+    containers = _asset_to_containers(context)
+    containers = set(containers.containers or ())
+    if      context.__parent__ is not None \
+        and context.__parent__.ntiid:
+        containers.add(context.__parent__.ntiid)
     return _Containers(tuple(containers))
 
 
