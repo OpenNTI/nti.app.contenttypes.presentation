@@ -18,29 +18,26 @@ from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProce
 
 from nti.app.contenttypes.presentation.processors.asset import handle_asset
 
-from nti.app.contenttypes.presentation.processors.mixins import set_creator
 from nti.app.contenttypes.presentation.processors.mixins import canonicalize
-from nti.app.contenttypes.presentation.processors.mixins import add_to_container
-from nti.app.contenttypes.presentation.processors.mixins import get_site_registry
 from nti.app.contenttypes.presentation.processors.mixins import get_context_registry
 
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
 
 
-def handle_slide_deck(item, context, creator, registry=None):
+def handle_slide_deck(item, context, creator, request=None):
     handle_asset(item, context, creator)
     base = item.ntiid
     # register unique copies
-    registry = get_site_registry(registry)
+    registry = get_context_registry(context)
     canonicalize(item.Slides, creator, base=base,
                  registry=registry)
     canonicalize(item.Videos, creator, base=base,
                  registry=registry)
     # register in containers and index
     for x in chain(item.Slides, item.Videos):
-        set_creator(x, creator)
-        add_to_container(context, x)
+        proc = IPresentationAssetProcessor(x)
+        proc.handle(x, context, creator, request)
     return item
 
 
@@ -64,6 +61,5 @@ class NTISlideDeckProcessor(object):
         self.asset = asset
 
     def handle(self, item, context, creator=None, request=None):
-        registry = get_context_registry(context)
         item = self.asset if item is None else item
-        return handle_slide_deck(item, context, creator, registry)
+        return handle_slide_deck(item, context, creator, request)
