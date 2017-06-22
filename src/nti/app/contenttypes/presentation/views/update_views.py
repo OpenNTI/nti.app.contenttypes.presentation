@@ -188,7 +188,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
     @Lazy
     def container(self):
         result = find_interface(self.context, ICourseInstance, strict=False) \
-            or find_interface(self.context, IContentPackage, strict=False)
+              or find_interface(self.context, IContentPackage, strict=False)
         return result
 
     @Lazy
@@ -213,7 +213,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
     def handle_asset(self, item, creator=None):
         proc = IPresentationAssetProcessor(item)
-        proc.handle(item, self._course, creator, self.request)
+        proc.handle(item, self.container, creator, self.request)
         return item
 
     def remove_ntiids(self, ext_obj, do_remove):
@@ -359,48 +359,3 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
         result = UGDPutView.__call__(self)
         self.handle_asset(result, self.remoteUser())
         return self.transformOutput(result)
-#
-# @view_config(context=IPackagePresentationAsset)
-# @view_defaults(route_name='objects.generic.traversal',
-#                renderer='rest',
-#                request_method='PUT',
-#                permission=nauth.ACT_CONTENT_EDIT)
-# class PackagePresentationAssetPutView(PresentationAssetPutView):
-#
-#     @Lazy
-#     def _site_name(self):
-#         folder = find_interface(self.context, IHostPolicyFolder, strict=False)
-#         if folder is None:
-#             result = super(PackagePresentationAssetPutView, self)._site_name
-#         else:
-#             result = folder.__name__
-#         return result
-#
-#     @Lazy
-#     def _course(self):
-#         result = find_interface(self.context, ICourseInstance, strict=False)
-#         if result is not None:  # direct check in case course w/ no pkg
-#             return result
-#         package = find_interface(self.context, IContentPackage, strict=False)
-#         if package is not None:
-#             sites = get_component_hierarchy_names()  # check sites
-#             courses = get_courses_for_packages(sites, package.ntiid)
-#             result = courses[0] if courses else None  # should always find one
-#         return result
-#
-# @view_config(context=ICoursePresentationAsset)
-# @view_defaults(route_name='objects.generic.traversal',
-#                renderer='rest',
-#                request_method='PUT',
-#                permission=nauth.ACT_CONTENT_EDIT)
-# class CoursePresentationAssetPutView(PresentationAssetPutView):
-#
-#     @Lazy
-#     def _site_name(self):
-#         folder = find_interface(self.context, IHostPolicyFolder, strict=False)
-#         return folder.__name__
-#
-#     @Lazy
-#     def _course(self):
-#         course = find_interface(self.context, ICourseInstance, strict=False)
-#         return course
