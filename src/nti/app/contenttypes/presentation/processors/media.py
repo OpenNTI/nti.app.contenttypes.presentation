@@ -25,17 +25,17 @@ from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 
 
-def handle_media_roll(item, context, creator, request=None):
-    handle_asset(item, context, creator, request)
+def handle_media_roll(roll, context, creator, request=None):
+    handle_asset(roll, context, creator, request)
     # transform to refs
-    for idx, item in enumerate(item.Items or ()):
-        item.Items[idx] = IAssetRef(item, item)
+    for idx, item in enumerate(roll.Items or ()):
+        roll.Items[idx] = IAssetRef(item, item)
     # register unique copies
     registry = get_context_registry(context)
-    canonicalize(item.Items or (), creator,
+    canonicalize(roll.Items or (), creator,
                  base=item.ntiid,
                  registry=registry)
-    for x in item or ():
+    for x in roll or ():
         proc = IPresentationAssetProcessor(x)
         proc.handle(x, context, creator, request)
 
