@@ -188,7 +188,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
     @Lazy
     def container(self):
         result = find_interface(self.context, ICourseInstance, strict=False) \
-              or find_interface(self.context, IContentPackage, strict=False)
+            or find_interface(self.context, IContentPackage, strict=False)
         return result
 
     @Lazy
@@ -269,7 +269,7 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
         contentObject = create_from_external(externalValue, notify=False)
         contentObject = self.checkContentObject(contentObject, externalValue)
         # update with external
-        self.updateContentObject(contentObject, externalValue, 
+        self.updateContentObject(contentObject, externalValue,
                                  set_id=True, notify=False)
         return contentObject, result
 
@@ -289,10 +289,10 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 
         # process asset
         self.handle_asset(contentObject, creator)
-        
+
         # add to connection and register
         intid_register(contentObject, registry=self._registry)
-        register_utility(self.registry, contentObject, 
+        register_utility(self.registry, contentObject,
                          provided, contentObject.ntiid)
 
         # handle multi-part data
@@ -308,64 +308,57 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
         self.request.response.status_int = 201
         return self.transformOutput(contentObject)
 
-# # put views
-#
-# @view_config(context=IPresentationAsset)
-# @view_defaults(route_name='objects.generic.traversal',
-#                renderer='rest',
-#                request_method='PUT',
-#                permission=nauth.ACT_CONTENT_EDIT)
-# class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
-#                                UGDPutView):  # order matters
-#
-#     def preflight(self, contentObject, externalValue):
-#         preflight_input(externalValue, self.request)
-#
-#     def postflight(self, updatedObject, externalValue, preflight=None):
-#         return None
-#
-#     def updateContentObject(self, contentObject, externalValue, set_id=False, notify=True):
-#         data = self.preflight(contentObject, externalValue)
-#         originalSource = copy.deepcopy(externalValue)
-#         pre_hook = get_external_pre_hook(externalValue)
-#
-#         event_notify(WillUpdatePresentationAssetEvent(contentObject,
-#                                                       self.remoteUser,
-#                                                       externalValue))
-#
-#         result = UGDPutView.updateContentObject(self,
-#                                                 contentObject,
-#                                                 externalValue,
-#                                                 set_id=set_id,
-#                                                 notify=False,
-#                                                 pre_hook=pre_hook)
-#         sources = get_all_sources(self.request)
-#         if sources:
-#             courses = get_presentation_asset_courses(self.context) or (self._course,)
-#             validate_sources(self.remoteUser, result, sources)
-#             _handle_multipart(next(iter(courses)),
-#                               self.remoteUser,
-#                               self.context,
-#                               sources)
-#
-#         self.postflight(contentObject, externalValue, data)
-#         notify_modified(contentObject, originalSource)
-#         return result
-#
-#     def _get_containers(self):
-#         result = []
-#         for iface in (INTICourseOverviewGroup, INTILessonOverview):
-#             parent = find_interface(self.context, iface, strict=False)
-#             if parent is not None:
-#                 result.append(parent)
-#         return result
-#
-#     def __call__(self):
-#         result = UGDPutView.__call__(self)
-#         containers = self._get_containers()
-#         self._handle_asset(iface_of_asset(result), result,
-#                            result.creator, containers)
-#         return self.transformOutput(result)
+
+# PUT views
+
+
+@view_config(context=IPresentationAsset)
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               request_method='PUT',
+               permission=nauth.ACT_CONTENT_EDIT)
+class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
+                               UGDPutView):  # order matters
+
+    def preflight(self, contentObject, externalValue):
+        preflight_input(externalValue, self.request)
+
+    def postflight(self, *args, **kwargs):
+        return None
+
+    def updateContentObject(self, contentObject, externalValue, set_id=False, notify=False):
+        data = self.preflight(contentObject, externalValue)
+        originalSource = copy.deepcopy(externalValue)
+        pre_hook = get_external_pre_hook(externalValue)
+        # notify we are about to update asset
+        args = (contentObject, self.remoteUser,externalValue)
+        event_notify(WillUpdatePresentationAssetEvent(*args))
+        # update asset
+        result = UGDPutView.updateContentObject(self,
+                                                contentObject,
+                                                externalValue,
+                                                set_id=set_id,
+                                                notify=notify,
+                                                pre_hook=pre_hook)
+        # check any multipart upload
+        sources = get_all_sources(self.request)
+        if sources:
+            courses = get_presentation_asset_courses(self.context)
+            courses = courses or (self.container,)
+            validate_sources(self.remoteUser, result, sources)
+            handle_multipart(next(iter(courses)),
+                             self.remoteUser,
+                             self.context,
+                             sources)
+        # post process and notify
+        self.postflight(contentObject, externalValue, data)
+        notify_modified(contentObject, originalSource)
+        return result
+
+    def __call__(self):
+        result = UGDPutView.__call__(self)
+        self.handle_asset(result, self.remoteUser())
+        return self.transformOutput(result)
 #
 # @view_config(context=IPackagePresentationAsset)
 # @view_defaults(route_name='objects.generic.traversal',
