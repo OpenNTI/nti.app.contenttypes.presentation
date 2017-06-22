@@ -51,7 +51,7 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 
 
 def handle_assessment_ref(item, context, creator=None, request=None):
-    handle_asset(item, context, creator)
+    handle_asset(item, context, creator, request)
     # find the target
     if INTIInquiryRef.providedBy(item):
         reference = IQInquiry(item, None)
@@ -78,7 +78,7 @@ def handle_assessment_ref(item, context, creator=None, request=None):
 
 
 def handle_discussion_ref(item, context, creator=None, request=None):
-    handle_asset(item, context, creator)
+    handle_asset(item, context, creator, request)
     if is_nti_course_bundle(item.target):
         item.id = item.target
         item.target = None

@@ -28,7 +28,7 @@ from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
 
 
 def handle_slide_deck(item, context, creator, request=None):
-    handle_asset(item, context, creator)
+    handle_asset(item, context, creator, request)
     base = item.ntiid
     # register unique copies
     registry = get_context_registry(context)
