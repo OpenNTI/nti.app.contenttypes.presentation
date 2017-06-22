@@ -33,7 +33,7 @@ def handle_media_roll(item, context, creator, request=None):
                  registry=registry)
     for x in item or ():
         proc = IPresentationAssetProcessor(x)
-        proc.handle(item, context, creator, request)
+        proc.handle(x, context, creator, request)
 
 
 @component.adapter(INTIMediaRoll)
