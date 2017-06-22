@@ -36,6 +36,7 @@ from nti.contenttypes.courses.discussions.utils import resolve_discussion_course
 
 from nti.contenttypes.presentation.discussion import is_nti_course_bundle
 
+from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import INTIInquiryRef
 from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
@@ -106,6 +107,9 @@ def handle_discussion_ref(item, context, creator=None, request=None):
 def handle_overview_group(group, context, creator=None, request=None):
     handle_asset(group, context, creator, request)
     registry = get_context_registry(context)
+    # transform to refs
+    for idx, item in enumerate(group.Items or ()):
+        group.Items[idx] = IAssetRef(item, item)
     # have unique copies of group items
     canonicalize(group.Items, creator,
                  registry=registry,

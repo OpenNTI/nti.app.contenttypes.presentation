@@ -42,7 +42,6 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.presentation import iface_of_asset
 
 from nti.contenttypes.presentation.interfaces import IAssetRef
-from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
@@ -171,10 +170,7 @@ def get_ntiid(item):
 def check_exists(item, registry, request=None, extra=None):
     ntiid = get_ntiid(item)
     provided = iface_of_asset(item)
-    if ntiid and INTITimeline.providedBy(item):
-        # Timelines are the only item we allow to be placed as-is (non-ref).
-        pass
-    elif ntiid:
+    if ntiid:
         if registry.queryUtility(provided, name=ntiid):
             request = request or get_current_request()
             raise_json_error(request,
