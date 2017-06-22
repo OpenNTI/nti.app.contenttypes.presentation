@@ -92,17 +92,13 @@ def allowed_in_registry(provided):
 
 
 def get_db_connection(registry=None):
-    registry = get_site_registry(registry)
-    if registry == component.getGlobalSiteManager():
-        result = None
-    else:
-        result = IConnection(registry)
-    return result
+    registry = registry if registry is not None else component.getSiteManager()
+    return IConnection(registry, None)
 db_connection = get_db_connection
 
 
 def add_2_connection(item, registry=None, connection=None):
-    connection = get_db_connection(registry) if connection is None else connection
+    connection = db_connection(registry) if connection is None else connection
     if connection is not None and getattr(item, '_p_jar', None) is None:
         connection.add(item)
     return getattr(item, '_p_jar', None) is not None
@@ -268,8 +264,6 @@ def make_asset_ntiid(nttype, creator=SYSTEM_USER_NAME, base=None, extra=None, no
 
 def get_course_for_node(node):
     return find_interface(node, ICourseInstance, strict=False)
-
-
 course_for_node = get_course_for_node
 
 
