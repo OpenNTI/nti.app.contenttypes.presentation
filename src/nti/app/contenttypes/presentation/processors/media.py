@@ -21,11 +21,15 @@ from nti.app.contenttypes.presentation.processors.mixins import BaseAssetProcess
 from nti.app.contenttypes.presentation.processors.mixins import canonicalize
 from nti.app.contenttypes.presentation.processors.mixins import get_context_registry
 
+from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 
 
 def handle_media_roll(item, context, creator, request=None):
     handle_asset(item, context, creator, request)
+    # transform to refs
+    for idx, item in enumerate(item.Items or ()):
+        item.Items[idx] = IAssetRef(item, item)
     # register unique copies
     registry = get_context_registry(context)
     canonicalize(item.Items or (), creator,
