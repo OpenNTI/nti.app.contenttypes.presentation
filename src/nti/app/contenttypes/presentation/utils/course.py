@@ -30,7 +30,7 @@ from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.ntiids.ntiids import is_ntiid_of_type
 from nti.ntiids.ntiids import find_object_with_ntiid
 
-from nti.site.site import get_component_hierarchy_names
+from nti.site.interfaces import IHostPolicyFolder
 
 
 def get_courses_for_pacakge(ntiid, sites=None):
@@ -152,12 +152,12 @@ def remove_package_assets_from_course_container(package_ntiid, course):
     logger.info("Removing referenced assets to course (course=%s) (packages=%s)",
                 entry.ntiid, package_ntiids)
     catalog = get_library_catalog()
-    sites = get_component_hierarchy_names()
+    site = IHostPolicyFolder(course)
     # We are assuming no assets can exist in multiple packages.
     removed_doc_ids = catalog.get_references(provided=PACKAGE_CONTAINER_INTERFACES,
                                              container_ntiids=package_ntiids,
                                              container_all_of=False,
-                                             sites=sites)
+                                             sites=site.__name__)
     for doc_id in removed_doc_ids or ():
         catalog.remove_containers(doc_id, (entry.ntiid,))
     return len(removed_doc_ids)
