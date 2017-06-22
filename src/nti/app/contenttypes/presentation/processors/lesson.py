@@ -38,8 +38,8 @@ def handle_lesson_overview(lesson, context, creator, request=None):
     extra = str(uuid.uuid4()).split('-')[0].upper()
     # Make sure we validate before canonicalize.
     for item in lesson.Items or ():
-        # TODO: Why is this check here
-        check_exists(item, registry, request, extra)
+        if not request and request.method.lower() == 'post':
+            check_exists(item, registry, request, extra)
     # have unique copies of lesson groups
     canonicalize(lesson.Items, creator,
                  registry=registry,

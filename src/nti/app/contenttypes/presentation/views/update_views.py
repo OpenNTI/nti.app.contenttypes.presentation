@@ -41,6 +41,8 @@ from nti.app.contenttypes.presentation import MessageFactory as _
 from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProcessor
 
 from nti.app.contenttypes.presentation.processors.mixins import check_exists
+from nti.app.contenttypes.presentation.processors.mixins import notify_created
+from nti.app.contenttypes.presentation.processors.mixins import handle_multipart
 from nti.app.contenttypes.presentation.processors.mixins import register_utility
 
 from nti.app.contenttypes.presentation.utils.asset import intid_register
@@ -178,39 +180,6 @@ from nti.traversal.traversal import find_interface
 ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID
 MIMETYPE = StandardExternalFields.MIMETYPE
-
-
-def principalId():
-    try:
-        return current_principal(False).id
-    except AttributeError:
-        return None
-
-
-def notify_created(item, principal=None, externalValue=None):
-    add_2_connection(item)  # required
-    principal = principal or principalId()  # always get a principal
-    event_notify(PresentationAssetCreatedEvent(item, principal, externalValue))
-    if IPublishable.providedBy(item) and item.is_published():
-        item.unpublish(event=False)
-
-
-def handle_multipart(context, user, contentObject, sources, provided=None):
-    filer = get_course_filer(context, user)
-    provided = iface_of_asset(contentObject) if provided is None else provided
-    for name, source in sources.items():
-        if name in provided:
-            # remove existing
-            location = getattr(contentObject, name, None)
-            if location and is_internal_file_link(location):
-                filer.remove(location)
-            # save a in a new file
-            key = get_safe_source_filename(source, name)
-            location = filer.save(key, source,
-                                  overwrite=False,
-                                  structure=True,
-                                  context=contentObject)
-            setattr(contentObject, name, location)
 
 
 class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
