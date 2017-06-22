@@ -5,7 +5,6 @@
 """
 
 from __future__ import print_function, absolute_import, division
-from nti.site.interfaces import IHostPolicyFolder
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -73,6 +72,8 @@ from nti.dataserver.interfaces import IUser
 from nti.namedfile.constraints import FileConstraints
 
 from nti.schema.jsonschema import TAG_HIDDEN_IN_UI
+
+from nti.site.interfaces import IHostPolicyFolder
 
 from nti.traversal.traversal import find_interface
 
