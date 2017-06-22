@@ -15,8 +15,6 @@ import hashlib
 from zope import component
 from zope import interface
 
-from zope.component.hooks import getSite
-
 from zope.event import notify as event_notify
 
 from pyramid import httpexceptions as hexc
@@ -27,7 +25,6 @@ from nti.app.base.abstract_views import get_safe_source_filename
 
 from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProcessor
 
-from nti.app.contenttypes.presentation.utils.asset import add_2_connection
 from nti.app.contenttypes.presentation.utils.asset import make_asset_ntiid
 
 from nti.app.externalization.error import raise_json_error
@@ -87,7 +84,6 @@ def principalId():
 
 
 def notify_created(item, principal=None, externalValue=None):
-    add_2_connection(item)  # required
     principal = principal or principalId()  # always get a principal
     event_notify(PresentationAssetCreatedEvent(item, principal, externalValue))
     if IPublishable.providedBy(item) and item.is_published():
@@ -116,19 +112,9 @@ def register_utility(registry, item, provided, name=None):
     registerUtility(registry, item, provided, name=name)
 
 
-def get_site_registry(registry=None):
-    if registry is None:
-        site = getSite()
-        if site is None:
-            registry = component.getGlobalSiteManager()
-        else:
-            registry = component.getSiteManager()
-    return registry
-
-
 def canonicalize(items, creator, base=None, registry=None):
     result = []
-    registry = get_site_registry(registry)
+    registry = registry or component.getSiteManager()
     for idx, item in enumerate(items or ()):
         created = True
         provided = iface_of_asset(item)
@@ -175,9 +161,9 @@ def set_creator(item, creator):
 def get_ntiid(item):
     ntiid = item.ntiid
     # Return None for auto-generate NTIIDs
-    if ntiid \
-            and (INTICourseOverviewGroup.providedBy(item) or IAssetRef.providedBy(item)) \
-            and TYPE_UUID in get_specific(ntiid):
+    if      ntiid \
+        and (INTICourseOverviewGroup.providedBy(item) or IAssetRef.providedBy(item)) \
+        and TYPE_UUID in get_specific(ntiid):
         ntiid = None
     return ntiid
 
@@ -220,5 +206,5 @@ def get_context_site(context):
 
 
 def get_context_registry(context):
-    folder = get_context_site(context)
-    return folder.getSiteManager() if folder is not None else None
+    site = get_context_site(context)
+    return site.getSiteManager() if site is not None else None
