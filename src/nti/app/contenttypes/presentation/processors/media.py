@@ -24,10 +24,10 @@ from nti.app.contenttypes.presentation.processors.mixins import get_context_regi
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 
 
-def handle_media_roll(item, context, creator, request=None, registry=None):
-    handle_asset(item, context, creator)
+def handle_media_roll(item, context, creator, request=None):
+    handle_asset(item, context, creator, request)
     # register unique copies
-    registry = get_context_registry(registry)
+    registry = get_context_registry(context)
     canonicalize(item.Items or (), creator,
                  base=item.ntiid,
                  registry=registry)
