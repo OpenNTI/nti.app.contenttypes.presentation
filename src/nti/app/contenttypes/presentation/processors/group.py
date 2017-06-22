@@ -122,7 +122,7 @@ class GroupOverViewableProcessor(BaseAssetProcessor):
 
     def handle(self, item, context, creator=None, request=None):
         item = self.asset if item is None else item
-        return handle_asset(item, context, creator)
+        return handle_asset(item, context, creator, request)
 
 
 @component.adapter(INTIAssessmentRef)
