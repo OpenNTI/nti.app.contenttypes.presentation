@@ -187,7 +187,7 @@ def remove_mediaroll(item, registry=None, catalog=None, name=None, event=True):
     if item is None:
         return
     name = item.ntiid or name
-    registry = get_registry_4_item(item, INTIMediaRoll, name, 
+    registry = get_registry_4_item(item, INTIMediaRoll, name,
 								   registry=registry)
     catalog = get_library_catalog() if catalog is None else catalog
     # remove mediarefs first
@@ -203,7 +203,7 @@ def remove_group(group, registry=None, catalog=None, name=None, event=True):
     if group is None:
         return
     name = group.ntiid or name
-    registry = get_registry_4_item(group, INTICourseOverviewGroup, 
+    registry = get_registry_4_item(group, INTICourseOverviewGroup,
 								   name, registry=registry)
     catalog = get_library_catalog() if catalog is None else catalog
     # remove items first
@@ -222,7 +222,7 @@ def remove_lesson(item, registry=None, catalog=None, name=None, event=True):
     if item is None:
         return
     name = item.ntiid or name
-    registry = get_registry_4_item(item, INTILessonOverview, 
+    registry = get_registry_4_item(item, INTILessonOverview,
 								   name, registry=registry)
     catalog = get_library_catalog() if catalog is None else catalog
     # remove groups first

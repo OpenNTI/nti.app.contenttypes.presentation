@@ -687,7 +687,7 @@ class TestAssetViews(ApplicationLayerTest):
                                         container_ids=(ntiid,),
                                         course=False)
 
-        # Delete video from group; asset is deleted.
+        # Delete video from group; but asset still exists
         delete_suffix = self._get_delete_url_suffix(0, video_ntiid)
         self.testapp.delete(contents_url + delete_suffix)
         # No problem with multiple calls
@@ -696,7 +696,8 @@ class TestAssetViews(ApplicationLayerTest):
             obj = find_object_with_ntiid(ntiid)
             assert_that(obj, has_property('Items', has_length(1)))
             actual_video = find_object_with_ntiid(video_ntiid)
-            assert_that(actual_video, none())
+            assert_that(actual_video, not_none())
+            assert_that(actual_video.__parent__, not_none())
 
         # Insert at index 0
         res = self.testapp.post_json(contents_url + '/index/0',

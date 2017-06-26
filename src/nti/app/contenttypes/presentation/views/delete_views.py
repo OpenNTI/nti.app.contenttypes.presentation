@@ -38,6 +38,7 @@ from nti.app.products.courseware.views.view_mixins import DeleteChildViewMixin
 
 from nti.appserver.ugd_edit_views import UGDDeleteView
 
+from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -153,6 +154,7 @@ class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
             # remove concrete to avoid leaks
             concrete = IConcreteAsset(item, item)
             if      concrete is not item \
+                and not INTIVideo.providedBy(concrete) \
                 and IUserCreatedAsset.providedBy(concrete) \
                 and not IContentBackedPresentationAsset.providedBy(concrete):
                 remove_presentation_asset(concrete)
