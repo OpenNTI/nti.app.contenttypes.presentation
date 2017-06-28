@@ -17,6 +17,8 @@ from nti.app.products.courseware.utils.exporter import save_resources_to_filer
 from nti.assessment.interfaces import IQEvaluation
 from nti.assessment.interfaces import IQEditableEvaluation
 
+from nti.contentlibrary.interfaces import IEditableContentPackage
+
 from nti.contenttypes.courses.exporter import BaseSectionExporter
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -34,6 +36,7 @@ from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 from nti.contenttypes.presentation.interfaces import ISurveyCompletionConstraint
@@ -160,21 +163,28 @@ class LessonOverviewsExporter(BaseSectionExporter):
                                              filer=filer,
                                              backup=backup,
                                              salt=salt)
-        # check references to authored evaluations
-        if      not backup \
-            and INTIAssessmentRef.providedBy(asset) \
-            and IQEditableEvaluation.providedBy(IQEvaluation(asset, None)):
-            ext_obj['target'] = self.hash_ntiid(asset.target, salt)
-        # process lesson constraints
-        if      not backup \
-            and INTILessonOverview.providedBy(asset) \
-            and PUBLICATION_CONSTRAINTS in ext_obj:
-            self._post_lesson_constraints(asset, ext_obj, salt)
 
-        if not backup:  # don't leak internal OIDs
+        if not backup:
+            # check references to authored evaluations
+            if      INTIAssessmentRef.providedBy(asset) \
+                and IQEditableEvaluation.providedBy(IQEvaluation(asset, None)):
+                ext_obj['target'] = self.hash_ntiid(asset.target, salt)
+            # process lesson constraints
+            if      INTILessonOverview.providedBy(asset) \
+                and PUBLICATION_CONSTRAINTS in ext_obj:
+                self._post_lesson_constraints(asset, ext_obj, salt)
+            # update related work refs targets
+            if      INTIRelatedWorkRef.providedBy(concrete) \
+                and is_valid_ntiid_string(concrete.target):
+                target = find_object_with_ntiid(concrete.target)
+                if IEditableContentPackage.providedBy(target):
+                    for name in ('target', 'href'):
+                        ext_obj[name] = self.hash_ntiid(concrete.target, salt)
+
+            # don't leak internal OIDs
             for name in (NTIID, INTERNAL_NTIID, INTERNAL_CONTAINER_ID, 'target'):
                 value = ext_obj.get(name)
-                if value \
+                if      value \
                     and is_valid_ntiid_string(value) \
                     and (   is_ntiid_of_type(value, TYPE_OID)
                          or is_ntiid_of_type(value, TYPE_UUID)):
