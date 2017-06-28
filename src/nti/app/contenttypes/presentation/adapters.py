@@ -204,8 +204,8 @@ def _outlinenode_to_lesson(context):
 
 @component.adapter(IPresentationAsset)
 @interface.implementer(IHostPolicyFolder)
-def _asset_to_policy_folder(group):
-    return find_interface(group, IHostPolicyFolder, strict=False)
+def _asset_to_policy_folder(context):
+    return find_interface(context, IHostPolicyFolder, strict=False)
 
 
 @component.adapter(IPresentationAsset)
