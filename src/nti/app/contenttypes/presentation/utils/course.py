@@ -33,7 +33,7 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 from nti.site.interfaces import IHostPolicyFolder
 
 
-def get_courses_for_pacakge(ntiid, sites=None):
+def get_courses_for_package(ntiid, sites=None):
     result = get_courses_for_packages(sites, ntiid)
     return result
 
@@ -70,9 +70,9 @@ def get_courses(ntiids=()):
         for content_ntiid in content_ntiids:
             context = find_object_with_ntiid(content_ntiid)
             if IContentPackage.providedBy(context):
-                course = ICourseInstance(context, None)
-                if course is not None:
-                    result.add(course)
+                courses = get_courses_for_package(context.ntiid)
+                if courses:
+                    result.update(courses)
     return result
 
 
