@@ -17,7 +17,7 @@ from nti.app.products.courseware.utils.exporter import save_resources_to_filer
 from nti.assessment.interfaces import IQEvaluation
 from nti.assessment.interfaces import IQEditableEvaluation
 
-from nti.contentlibrary.interfaces import IEditableContentPackage
+from nti.contentlibrary.interfaces import IEditableContentUnit
 
 from nti.contenttypes.courses.exporter import BaseSectionExporter
 
@@ -125,8 +125,8 @@ class LessonOverviewsExporter(BaseSectionExporter):
             if INTIMediaRoll.providedBy(asset.__parent__):
                 ext_obj.pop(NTIID, None)
                 ext_obj.pop(INTERNAL_NTIID, None)
-            if INTIMedia.providedBy(concrete) \
-                    and not INTIMediaRoll.providedBy(asset.__parent__):
+            if      INTIMedia.providedBy(concrete) \
+                and not INTIMediaRoll.providedBy(asset.__parent__):
                 for name in ('sources', 'transcripts'):
                     for item in ext_obj.get(name) or ():
                         item.pop(OID, None)
@@ -177,7 +177,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
             if      INTIRelatedWorkRef.providedBy(concrete) \
                 and is_valid_ntiid_string(concrete.target):
                 target = find_object_with_ntiid(concrete.target)
-                if IEditableContentPackage.providedBy(target):
+                if IEditableContentUnit.providedBy(target):
                     for name in ('target', 'href'):
                         ext_obj[name] = self.hash_ntiid(concrete.target, salt)
 
