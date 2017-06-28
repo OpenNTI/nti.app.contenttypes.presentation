@@ -112,23 +112,16 @@ class LessonPublicationConstraintChecker(object):
         user = get_user(user)
         constraint = self.constraint if constraint is None else constraint
         course = ICourseInstance(constraint, None) # lineage
-        # By default, unless we have relevant completed constraints,
-        # we return 0.
         completed_time = 0
         # Don't run through this for instructors or editors.
         if not (   is_course_instructor_or_editor(course, user)
                 or has_permission(ACT_CONTENT_EDIT, course)):
-            # check all item constraints
             for item in self.get_constraint_items(constraint) or ():
-                if completed_time != 0:
-                    ct_item = self.check_time_constraint_item(item, user, constraint)
-                    completed_time = max(ct_item, completed_time)
-                else:
-                    # Make sure to assign completed_time the first trip
-                    # through the loop
-                    completed_time = self.check_time_constraint_item(item, user, constraint)
-                if completed_time is None:
-                    break
+                item_time = self.check_time_constraint_item(item, user, constraint)
+                if item_time is None:
+                    # Constraint failed, bail.
+                    return None
+                completed_time = max(item_time, completed_time)
         # So we have 3 possible cases: Returning 0 if there are no
         # assignments on this constraint for some reason or if the user
         # is an instructor or course editor or admin, returning
