@@ -29,7 +29,7 @@ from ZODB.interfaces import IConnection
 
 from nti.app.products.courseware.utils import transfer_resources_from_filer
 
-from nti.app.contentlibrary.subscribers import parse_embedded_transcripts
+from nti.app.contentlibrary.synchronize.subscribers import parse_embedded_transcripts
 
 from nti.app.contenttypes.presentation.interfaces import IItemRefValidator
 
