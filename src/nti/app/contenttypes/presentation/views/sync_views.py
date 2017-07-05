@@ -33,6 +33,7 @@ from nti.app.contenttypes.presentation.utils.asset import remove_presentation_as
 
 from nti.app.contenttypes.presentation.utils.common import course_assets
 from nti.app.contenttypes.presentation.utils.common import remove_all_invalid_assets
+from nti.app.contenttypes.presentation.utils.common import fix_all_inaccessible_assets
 from nti.app.contenttypes.presentation.utils.common import remove_course_inaccessible_assets
 
 from nti.app.products.courseware.views import CourseAdminPathAdapter
@@ -160,6 +161,24 @@ class RemoveInvalidPresentationAssetsView(_AbstractSyncAllLibrariesView):
         endInteraction()
         try:
             result[ITEMS] = dict(remove_all_invalid_assets())
+        finally:
+            restoreInteraction()
+        return result
+
+
+@view_config(context=IDataserverFolder)
+@view_config(context=CourseAdminPathAdapter)
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               permission=nauth.ACT_SYNC_LIBRARY,
+               name='FixInaccessiblePresentationAssets')
+class FixInaccessiblePresentationAssetsView(_AbstractSyncAllLibrariesView):
+
+    def _do_call(self):
+        result = LocatedExternalDict()
+        endInteraction()
+        try:
+            result[ITEMS] = dict(fix_all_inaccessible_assets())
         finally:
             restoreInteraction()
         return result
