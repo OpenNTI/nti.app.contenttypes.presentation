@@ -178,6 +178,11 @@ def remove_all_invalid_assets():
 # remove inaccessible assets
 
 
+def context_site(context):
+    site = IHostPolicyFolder(context, None)
+    return site if site is not None else getSite()
+
+
 def context_assets(context):
     container = IPresentationAssetContainer(context)
     if getattr(container, '__parent__', None) is None:
@@ -193,8 +198,8 @@ def check_asset_container(context, removed=None, master=None):
     don't have an intid or cannot be found in the registry
     or don't have proper lineage
     """
+    site = context_site(context)
     catalog = get_library_catalog()
-    site = IHostPolicyFolder(context)
     registry = site.getSiteManager()
     intids = component.getUtility(IIntIds)
     master = set() if master is None else master
@@ -343,7 +348,7 @@ def fix_inaccessible_assets(seen=None):
         else:
             entry = ICourseCatalogEntry(parent)
             namespace = entry.ntiid
-        site = IHostPolicyFolder(parent)
+        site = context_site(parent)
         doc_id = intids.queryId(item)
         provided = iface_of_asset(item)
         # check registration
