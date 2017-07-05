@@ -19,13 +19,9 @@ from zope.component.hooks import site as current_site
 
 from zope.intid.interfaces import IIntIds
 
-from nti.app.contentlibrary.utils import yield_content_packages
+from nti.contenttypes.presentation.index import install_assets_library_catalog
 
-from nti.app.contenttypes.presentation.utils.common import yield_sync_courses
-
-from nti.contentlibrary.interfaces import IContentPackageLibrary
-
-from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
+from nti.contenttypes.presentation.interfaces import IPresentationAsset
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
@@ -47,33 +43,14 @@ class MockDataserver(object):
         return None
 
 
-def _process_site(intids, seen):
-    # process courses
-    for course in yield_sync_courses():
-        doc_id = intids.queryId(course)
-        if doc_id is None or doc_id in seen:
-            continue
-        seen.add(doc_id)
-        container = IPresentationAssetContainer(course)
-        if getattr(container, '__parent__', None) is None:
-            container.__parent__ = course
-
-    # process content pkgs
-    def _recur(context):
-        doc_id = intids.queryId(context)
-        if doc_id is None or doc_id in seen:
-            return
-        seen.add(doc_id)
-        # fix container
-        container = IPresentationAssetContainer(context)
-        if getattr(container, '__parent__', None) is None:
-            container.__parent__ = context
-        # examine children
-        for child in context.children or ():
-            _recur(child)
-
-    for package in yield_content_packages():
-        _recur(package)
+def _process_site(current, catalog, intids, seen):
+    with current_site(current):
+        for _, asset in list(component.getUtilitiesFor(IPresentationAsset)):
+            doc_id = intids.queryId(asset)
+            if doc_id is None or doc_id in seen:
+                continue
+            seen.add(doc_id)
+            catalog.index_doc(doc_id, asset)
 
 
 def do_evolve(context, generation=generation):
@@ -93,14 +70,11 @@ def do_evolve(context, generation=generation):
 
         lsm = ds_folder.getSiteManager()
         intids = lsm.getUtility(IIntIds)
-
-        library = component.queryUtility(IContentPackageLibrary)
-        if library is not None:
-            library.syncContentPackages()
-
+        catalog = install_assets_library_catalog(ds_folder, intids)
+        for index in catalog.values():
+            index.clear()
         for current in get_all_host_sites():
-            with current_site(current):
-                _process_site(intids, seen)
+            _process_site(current, catalog, intids, seen)
 
     component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
     logger.info('Dataserver evolution %s done. %s assets(s) indexed',
@@ -109,6 +83,6 @@ def do_evolve(context, generation=generation):
 
 def evolve(context):
     """
-    Evolve to gen 47 to fix asset container lineage
+    Evolve to gen 48 to index all assets
     """
-    do_evolve(context)
+    # do_evolve(context)  DON'T install yet

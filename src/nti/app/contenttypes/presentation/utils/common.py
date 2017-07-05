@@ -188,8 +188,6 @@ def context_assets(context):
         container.__parent__ = context
     for key, value in list(container.items()):  # snapshot
         yield key, value, container
-
-
 course_assets = context_assets  # BWC
 
 
