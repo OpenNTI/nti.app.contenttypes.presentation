@@ -65,7 +65,6 @@ class TestSyncViews(ApplicationLayerTest):
                                 'TotalContainedAssets', greater_than(100),
                                 'TotalRegisteredAssets', greater_than(100)))
 
-
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_fix_all_inaccessible_assets(self):
 
@@ -89,5 +88,5 @@ class TestSyncViews(ApplicationLayerTest):
         res = self.testapp.post('/dataserver2/@@FixInaccessiblePresentationAssets',
                                 status=200)
         assert_that(res.json_body,
-                    has_entry('Items', 
+                    has_entry('Items',
                               has_entry('platform.ou.edu', has_length(2))))
