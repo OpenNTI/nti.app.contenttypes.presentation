@@ -34,9 +34,7 @@ from nti.app.contenttypes.presentation.utils.asset import remove_presentation_as
 from nti.app.contenttypes.presentation.utils.common import course_assets
 from nti.app.contenttypes.presentation.utils.common import remove_all_invalid_assets
 from nti.app.contenttypes.presentation.utils.common import fix_all_inaccessible_assets
-from nti.app.contenttypes.presentation.utils.common import remove_course_inaccessible_assets
-
-from nti.app.products.courseware.views import CourseAdminPathAdapter
+from nti.app.contenttypes.presentation.utils.common import remove_all_inaccessible_assets
 
 from nti.common.string import is_true
 
@@ -131,54 +129,55 @@ class SyncPresentationAssetsView(_AbstractSyncAllLibrariesView):
         return result
 
 
-@view_config(context=IDataserverFolder)
-@view_config(context=CourseAdminPathAdapter)
+@view_config(name='RemoveInaccessibleAssets')
+@view_config(name='RemoveInaccessiblePresentationAssets')
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
-               permission=nauth.ACT_SYNC_LIBRARY,
-               name='RemoveCourseInaccessibleAssets')
-class RemoveCourseInaccessibleAssetsView(AbstractAuthenticatedView):
+               context=IDataserverFolder,
+               permission=nauth.ACT_SYNC_LIBRARY )
+class RemoveInaccessibleAssetsView(AbstractAuthenticatedView):
 
     def __call__(self):
+        result = LocatedExternalDict()
         endInteraction()
         try:
-            result = remove_course_inaccessible_assets()
+            result[ITEMS] = remove_all_inaccessible_assets()
         finally:
             restoreInteraction()
         return result
 
 
-@view_config(context=IDataserverFolder)
-@view_config(context=CourseAdminPathAdapter)
+@view_config(name='RemoveInvalidAssets')
+@view_config(name='RemoveInvalidPresentationAssets')
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
-               permission=nauth.ACT_SYNC_LIBRARY,
-               name='RemoveInvalidPresentationAssets')
+               context=IDataserverFolder,
+               permission=nauth.ACT_SYNC_LIBRARY,)
 class RemoveInvalidPresentationAssetsView(_AbstractSyncAllLibrariesView):
 
     def _do_call(self):
         result = LocatedExternalDict()
         endInteraction()
         try:
-            result[ITEMS] = dict(remove_all_invalid_assets())
+            result[ITEMS] = remove_all_invalid_assets()
         finally:
             restoreInteraction()
         return result
 
 
-@view_config(context=IDataserverFolder)
-@view_config(context=CourseAdminPathAdapter)
+@view_config(name='FixInaccessibleAssets')
+@view_config(name='FixInaccessiblePresentationAssets')
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
-               permission=nauth.ACT_SYNC_LIBRARY,
-               name='FixInaccessiblePresentationAssets')
+               context=IDataserverFolder,
+               permission=nauth.ACT_SYNC_LIBRARY)
 class FixInaccessiblePresentationAssetsView(_AbstractSyncAllLibrariesView):
 
     def _do_call(self):
         result = LocatedExternalDict()
         endInteraction()
         try:
-            result[ITEMS] = dict(fix_all_inaccessible_assets())
+            result[ITEMS] = fix_all_inaccessible_assets()
         finally:
             restoreInteraction()
         return result

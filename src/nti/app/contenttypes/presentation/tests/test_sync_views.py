@@ -52,18 +52,20 @@ class TestSyncViews(ApplicationLayerTest):
         res = self.testapp.post('/dataserver2/@@RemoveInvalidPresentationAssets',
                                 status=200)
         assert_that(res.json_body,
-                    has_entry('Items', has_length(greater_than(0))))
+                    has_entry('Items', 
+                              has_entry('platform.ou.edu', has_length(0))))
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_remove_inaccessible_assets(self):
-        res = self.testapp.post('/dataserver2/@@RemoveCourseInaccessibleAssets',
+        res = self.testapp.post('/dataserver2/@@RemoveInaccessibleAssets',
                                 status=200)
         assert_that(res.json_body,
-                    has_entries('Difference', is_([]),
-                                'Removed', has_length(0),
-                                'Site', 'platform.ou.edu',
-                                'TotalContainedAssets', greater_than(100),
-                                'TotalRegisteredAssets', greater_than(100)))
+                    has_entry('Items', 
+                              has_entry('platform.ou.edu',
+                                        has_entries('Difference', is_([]),
+                                                    'Removed', has_length(0),
+                                                    'TotalContainedAssets', greater_than(100),
+                                                    'TotalRegisteredAssets', greater_than(100)))))
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_fix_all_inaccessible_assets(self):

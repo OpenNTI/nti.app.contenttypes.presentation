@@ -9,8 +9,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from collections import OrderedDict
-
 from zope import component
 from zope import lifecycleevent
 
@@ -34,7 +32,6 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
-from nti.contenttypes.presentation import COURSE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.contenttypes.presentation import iface_of_asset
@@ -43,7 +40,6 @@ from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
-from nti.contenttypes.presentation.interfaces import ICoursePresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
@@ -146,17 +142,17 @@ def remove_invalid_assets(removed=None, seen=None):
             remove_asset(ntiid, item, registry, catalog=catalog)
             continue
         # check unreachable asset
-        if IItemAssetContainer.providedBy(item) \
-                and not has_a_valid_parent(item, intids):
+        if      IItemAssetContainer.providedBy(item) \
+            and not has_a_valid_parent(item, intids):
             logger.warn("Removing unreachable (%s,%s) from site %s",
                         provided.__name__, ntiid, site_name)
             removed.add(ntiid)
             remove_asset(ntiid, item, registry, catalog=catalog)
             continue
         # check asset references
-        if IAssetRef.providedBy(item) \
-                and not INTIDiscussionRef.providedBy(item) \
-                and find_object_with_ntiid(item.target or '') is None:
+        if      IAssetRef.providedBy(item) \
+            and not INTIDiscussionRef.providedBy(item) \
+            and find_object_with_ntiid(item.target or '') is None:
             logger.warn("Removing invalid asset ref (%s to %s) from site %s",
                         ntiid, item.target, site_name)
             removed.add(ntiid)
@@ -170,7 +166,7 @@ def remove_invalid_assets(removed=None, seen=None):
 
 def remove_all_invalid_assets():
     seen = set()
-    result = OrderedDict()
+    result = LocatedExternalDict()
     for current in get_all_host_sites():
         removed = set()
         with current_site(current):
@@ -204,8 +200,6 @@ def check_asset_container(context, removed=None, master=None):
     master = set() if master is None else master
     removed = set() if removed is None else removed
     for ntiid, asset, container in context_assets(context):
-        if not ICoursePresentationAsset.providedBy(asset):
-            continue
         doc_id = intids.queryId(asset)
         if doc_id in master:
             continue
@@ -224,7 +218,7 @@ def check_asset_container(context, removed=None, master=None):
     return master
 
 
-def remove_course_inaccessible_assets(seen=None, master=None):
+def remove_inaccessible_assets(seen=None, master=None):
     removed = set()
     catalog = get_library_catalog()
     intids = component.getUtility(IIntIds)
@@ -238,14 +232,23 @@ def remove_course_inaccessible_assets(seen=None, master=None):
             continue
         seen.add(doc_id)
         check_asset_container(course, removed, master)
-    # unregister those utilities that cannot be found in the
-    # course containers
+    # look all content units and check their
+    # asset containers
+    def _recur(context):
+        doc_id = intids.queryId(context)
+        if doc_id is None or doc_id in seen:
+            return
+        seen.add(doc_id)
+        check_asset_container(context, removed, master)
+        for child in context.children or ():
+            _recur(child)
+    for package in yield_content_packages():
+        _recur(package)
+    # unregister those utilities that cannot be found in the containers
     site = getSite()
     registered = set()
     registry = site.getSiteManager()
     for ntiid, asset in lookup_all_presentation_assets(registry).items():
-        if not ICoursePresentationAsset.providedBy(asset):
-            continue
         doc_id = intids.queryId(asset)
         if doc_id is None or doc_id not in master:
             remove_asset(ntiid, asset, registry, catalog=catalog)
@@ -253,8 +256,7 @@ def remove_course_inaccessible_assets(seen=None, master=None):
         else:
             registered.add(doc_id)
     # unindex invalid entries in catalog
-    references = catalog.get_references(sites=site.__name__,
-                                        provided=COURSE_CONTAINER_INTERFACES)
+    references = catalog.get_references(sites=site.__name__)
     for uid in references or ():
         asset = intids.queryObject(uid)
         if asset is None or not IPresentationAsset.providedBy(asset):
@@ -267,11 +269,21 @@ def remove_course_inaccessible_assets(seen=None, master=None):
                 removed.add(ntiid)
     # prepare result
     result = LocatedExternalDict()
-    result['Site'] = site.__name__
     result['Removed'] = sorted(removed)
     result['TotalContainedAssets'] = len(master)
     result['TotalRegisteredAssets'] = len(registered)
     result['Difference'] = sorted(master.difference(registered))
+    return result
+
+
+def remove_all_inaccessible_assets():
+    seen = set()
+    master = set()
+    result = LocatedExternalDict()
+    for current in get_all_host_sites():
+        with current_site(current):
+            removed = remove_inaccessible_assets(seen, master)
+            result[current.__name__] = removed
     return result
 
 
@@ -281,7 +293,6 @@ def remove_course_inaccessible_assets(seen=None, master=None):
 def fix_inaccessible_assets(seen=None):
     result = set()
     catalog = get_library_catalog()
-
     # gather all site registered assets
     registry = component.getSiteManager()
     site_assets = lookup_all_presentation_assets(registry)
@@ -399,7 +410,7 @@ def fix_inaccessible_assets(seen=None):
 
 def fix_all_inaccessible_assets():
     seen = set()
-    result = dict()
+    result = LocatedExternalDict()
     for current in get_all_host_sites():
         with current_site(current):
             fixed = fix_inaccessible_assets(seen)
