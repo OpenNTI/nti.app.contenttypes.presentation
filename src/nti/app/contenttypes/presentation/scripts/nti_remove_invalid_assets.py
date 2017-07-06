@@ -11,6 +11,7 @@ logger = __import__('logging').getLogger(__name__)
 
 import os
 import sys
+import pprint
 import argparse
 
 from zope import component
@@ -30,9 +31,13 @@ def _load_library():
         library.syncContentPackages()
 
 
-def _process_args():
+def _process_args(args):
     _load_library()
-    remove_all_invalid_assets()
+    result = remove_all_invalid_assets()
+    if args.verbose:
+        print()
+        pprint.pprint(result)
+        print()
 
 
 def main():
@@ -54,7 +59,7 @@ def main():
                         context=context,
                         minimal_ds=True,
                         xmlconfig_packages=conf_packages,
-                        function=lambda: _process_args())
+                        function=lambda: _process_args(args))
     sys.exit(0)
 
 
