@@ -25,7 +25,7 @@ from nti.traversal.traversal import ContainerAdapterTraversable
 @component.adapter(INTILessonOverview, IRequest)
 class _LessonOverviewTraversable(DefaultAdapterTraversable):
 
-    def traverse(self, key, remaining_path):
+    def traverse(self, key, _):
         if key == 'PublicationConstraints':
             return ILessonPublicationConstraints(self.context)
         raise LocationError(key)
