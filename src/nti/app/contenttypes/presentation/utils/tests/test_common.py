@@ -22,7 +22,7 @@ from zope.intid.interfaces import IIntIds
 from nti.app.contenttypes.presentation.utils.asset import make_asset_ntiid
 
 from nti.app.contenttypes.presentation.utils.common import remove_invalid_assets
-from nti.app.contenttypes.presentation.utils.common import remove_course_inaccessible_assets
+from nti.app.contenttypes.presentation.utils.common import remove_inaccessible_assets
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
@@ -137,10 +137,9 @@ class TestCommon(ApplicationLayerTest):
             catalog.index(asset, sites='platform.ou.edu')
 
         with mock_dataserver.mock_db_trans(self.ds, site_name='platform.ou.edu'):
-            result = remove_course_inaccessible_assets()
+            result = remove_inaccessible_assets()
             assert_that(result,
                         has_entries('Difference', is_([]),
                                     'Removed', has_length(5),
-                                    'Site', 'platform.ou.edu',
                                     'TotalContainedAssets', greater_than(100),
                                     'TotalRegisteredAssets', greater_than(100)))
