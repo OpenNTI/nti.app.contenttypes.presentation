@@ -46,8 +46,7 @@ def handle_lesson_overview(lesson, context, creator, request=None):
                  base=lesson.ntiid)
     # process lesson groups
     for group in lesson or ():
-        if      group.__parent__ is not None \
-            and INTILessonOverview.providedBy(group.__parent__) \
+        if      INTILessonOverview.providedBy(group.__parent__) \
             and group.__parent__ != lesson:
             raise_json_error(request,
                              hexc.HTTPUnprocessableEntity,
