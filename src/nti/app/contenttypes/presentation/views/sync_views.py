@@ -56,10 +56,6 @@ from nti.recorder.record import remove_transaction_history
 
 from nti.site.interfaces import IHostPolicyFolder
 
-from nti.site.hostpolicy import get_host_site
-
-from nti.traversal.traversal import find_interface
-
 ITEMS = StandardExternalFields.ITEMS
 TOTAL = StandardExternalFields.TOTAL
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
@@ -76,8 +72,8 @@ class ResetPresentationAssetsView(_AbstractSyncAllLibrariesView):
     def _process_course(self, context, force=False):
         catalog = get_library_catalog()
         course = ICourseInstance(context)
-        folder = find_interface(course, IHostPolicyFolder, strict=False)
-        with current_site(get_host_site(folder.__name__)):
+        folder = IHostPolicyFolder(course)
+        with current_site(folder):
             removed = []
             registry = folder.getSiteManager()
             # remove registered assets
@@ -116,8 +112,8 @@ class SyncPresentationAssetsView(_AbstractSyncAllLibrariesView):
 
     def _process_course(self, context):
         course = ICourseInstance(context)
-        folder = find_interface(course, IHostPolicyFolder, strict=False)
-        with current_site(get_host_site(folder.__name__)):
+        folder = IHostPolicyFolder(course)
+        with current_site(folder):
             return synchronize_course_lesson_overview(course)
 
     def _do_call(self):

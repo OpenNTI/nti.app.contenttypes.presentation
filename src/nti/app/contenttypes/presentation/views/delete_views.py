@@ -24,7 +24,6 @@ from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.contenttypes.presentation import MessageFactory as _
 
-from nti.app.contenttypes.presentation.utils.asset import registry_by_name
 from nti.app.contenttypes.presentation.utils.asset import remove_presentation_asset
 
 from nti.app.contenttypes.presentation.views import VIEW_CONTENTS
@@ -71,13 +70,9 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
     event = True
 
     @Lazy
-    def _site_name(self):
-        folder = find_interface(self.context, IHostPolicyFolder, strict=False)
-        return folder.__name__
-
-    @Lazy
     def _registry(self):
-        return registry_by_name(self._site_name)
+        folder = find_interface(self.context, IHostPolicyFolder, strict=False)
+        return folder.getSiteManager()
 
     def _do_delete_object(self, theObject):
         remove_presentation_asset(theObject,
@@ -141,6 +136,11 @@ class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
     from underneath user
     """
 
+    @Lazy
+    def _registry(self):
+        folder = find_interface(self.context, IHostPolicyFolder, strict=False)
+        return folder.getSiteManager() if folder is not None else None
+
     def _is_target(self, obj, ntiid):
         return ntiid == getattr(obj, 'target', '') \
             or ntiid == getattr(obj, 'ntiid', '')
@@ -157,11 +157,11 @@ class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
                 and not INTIVideo.providedBy(concrete) \
                 and IUserCreatedAsset.providedBy(concrete) \
                 and not IContentBackedPresentationAsset.providedBy(concrete):
-                remove_presentation_asset(concrete)
+                remove_presentation_asset(concrete, self._registry)
         else:
             self.context.pop(index)
         # remove
-        remove_presentation_asset(item)
+        remove_presentation_asset(item, self._registry)
         # broadcast container removal
         event = ItemRemovedFromItemAssetContainerEvent(self.context, item)
         event_notify(event)
@@ -182,6 +182,11 @@ class RemoveRefsView(AbstractAuthenticatedView):
             remove.
     """
 
+    @Lazy
+    def _registry(self):
+        folder = find_interface(self.context, IHostPolicyFolder, strict=False)
+        return folder.getSiteManager() if folder is not None else None
+
     def _is_target(self, obj, ntiid):
         concrete = IConcreteAsset(obj, obj)
         return ntiid == getattr(obj, 'target', '') \
@@ -197,9 +202,9 @@ class RemoveRefsView(AbstractAuthenticatedView):
         if      concrete is not item \
             and IUserCreatedAsset.providedBy(concrete) \
             and not IContentBackedPresentationAsset.providedBy(concrete):
-            remove_presentation_asset(concrete)
+            remove_presentation_asset(concrete, self._registry)
         # remove
-        remove_presentation_asset(item)
+        remove_presentation_asset(item, self._registry)
         # broadcast container removal
         event_notify(ItemRemovedFromItemAssetContainerEvent(group, item))
         group.childOrderLock()

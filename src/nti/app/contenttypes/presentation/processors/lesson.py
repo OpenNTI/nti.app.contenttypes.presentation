@@ -35,7 +35,7 @@ def handle_lesson_overview(lesson, context, creator, request=None):
     registry = get_context_registry(context)
     handle_asset(lesson, context, creator, request)
     # in case new NTIIDs are created
-    extra = str(uuid.uuid4()).split('-')[0].upper()
+    extra = str(uuid.uuid4().get_time_low())
     # Make sure we validate before canonicalize.
     for item in lesson.Items or ():
         if not request or request.method.lower() == 'post':
@@ -66,6 +66,5 @@ def handle_lesson_overview(lesson, context, creator, request=None):
 class LessonOverviewProcessor(BaseAssetProcessor):
 
     def handle(self, item, context, creator=None, request=None):
-
         item = self.asset if item is None else item
         return handle_lesson_overview(item, context, creator, request)
