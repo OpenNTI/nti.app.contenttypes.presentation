@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -46,6 +46,8 @@ from nti.app.contenttypes.presentation.utils.asset import create_lesson_4_node
 from nti.app.contenttypes.presentation.utils.asset import remove_presentation_asset
 
 from nti.app.contenttypes.presentation.views.view_mixins import PublishVisibilityMixin
+
+from nti.app.externalization.error import raise_json_error
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
@@ -167,7 +169,12 @@ class OutlineLessonOverviewMixin(object):
         context = self.request.context
         lesson = INTILessonOverview(context, None)
         if lesson is None:
-            raise hexc.HTTPUnprocessableEntity(_("Cannot find lesson overview."))
+            raise_json_error(self.request,
+                             hexc.HTTPUnprocessableEntity,
+                             {
+                                 'message': _(u"Cannot find lesson overview."),
+                             },
+                             None)
         return lesson
 
     def _can_edit_lesson(self, lesson=None):
@@ -280,18 +287,19 @@ class OutlineNodeInsertView(AbstractAuthenticatedView,
     We could generalize this and the index views for
     all IOrderedContainers.
     """
+    
+    @Lazy
+    def _site(self):
+        folder = find_interface(self.context, IHostPolicyFolder, strict=False)
+        return folder if folder is not None else getSite()
 
     @Lazy
     def _site_name(self):
-        folder = find_interface(self.context, IHostPolicyFolder, strict=False)
-        result = folder.__name__ if folder is not None else getSite().__name__
-        return result
+        return self._site.__name__
 
     @Lazy
     def _registry(self):
-        folder = find_interface(self.context, IHostPolicyFolder, strict=False)
-        result = folder.getSiteManager() if folder is not None else None
-        return result if result is not None else component.getSiteManager()
+        return self._site.getSiteManager()
 
     def _get_catalog_entry(self, outline):
         course = find_interface(outline, ICourseInstance, strict=False)
@@ -312,14 +320,14 @@ class OutlineNodeInsertView(AbstractAuthenticatedView,
             entry = self._get_catalog_entry(parent)
             base = entry.ntiid if entry is not None else None
 
-        provider = get_provider(base) or 'NTI'
+        provider = get_provider(base) or u'NTI'
         current_time = time_to_64bit_int(time.time())
-        specific_base = '%s.%s.%s' % (get_specific(base),
-                                      self.remoteUser.username,
-                                      current_time)
+        specific_base = u'%s.%s.%s' % (get_specific(base),
+                                       self.remoteUser.username,
+                                       current_time)
         idx = 0
         while True:
-            specific = specific_base + ".%s" % idx
+            specific = specific_base + u".%s" % idx
             specific = make_specific_safe(specific)
             ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
                                base=base,
@@ -430,10 +438,13 @@ class OutlineNodeMoveView(AbstractChildMoveView,
 class OutlineNodeDeleteMixin(AbstractAuthenticatedView, NTIIDPathMixin):
 
     @Lazy
-    def _registry(self):
+    def _site(self):
         folder = find_interface(self.context, IHostPolicyFolder, strict=False)
-        result = folder.getSiteManager() if folder is not None else None
-        return result if result is not None else component.getSiteManager()
+        return folder if folder is not None else getSite()
+
+    @Lazy
+    def _registry(self):
+        return self._site.getSiteManager()
 
     def _remove_lesson(self, ntiid):
         lesson = component.queryUtility(INTILessonOverview, name=ntiid)
@@ -839,8 +850,7 @@ class MediaByOutlineNodeView(AssetByOutlineNodeView):
             if not sibling_key:
                 continue
             else:
-                index_text = package.read_contents_of_sibling_entry(
-                    index_filename)
+                index_text = package.read_contents_of_sibling_entry(index_filename)
                 if isinstance(index_text, bytes):
                     index_text = index_text.decode('utf-8')
                 result = simplejson.loads(index_text)
