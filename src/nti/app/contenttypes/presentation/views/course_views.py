@@ -33,7 +33,7 @@ from nti.contenttypes.courses.common import get_course_packages
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
-from nti.contenttypes.courses.utils import get_course_subinstances
+from nti.contenttypes.courses.utils import get_parent_course
 
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
@@ -82,8 +82,8 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView,
 
     def _course_containers(self, course):
         result = set()
-        courses = {course}
-        courses.union(get_course_subinstances(course))
+        courses = {course, get_parent_course(course)}
+        courses.discard(None)
         for _course in courses:
             entry = ICourseCatalogEntry(_course)
             for package in get_course_packages(_course):
