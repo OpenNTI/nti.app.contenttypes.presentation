@@ -14,6 +14,8 @@ import sys
 from zope import component
 from zope import lifecycleevent
 
+from zope.file.file import File
+
 from pyramid import httpexceptions as hexc
 
 from pyramid.view import view_config
@@ -35,8 +37,6 @@ from nti.base._compat import text_
 
 from nti.base.interfaces import IFile
 
-from nti.contentfile.model import ContentBlobFile
-
 from nti.contentindexing.media.interfaces import IVideoTranscriptParser
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
@@ -47,7 +47,6 @@ from nti.dataserver import authorization as nauth
 
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
-
 
 ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID
@@ -100,9 +99,9 @@ def process_transcript_source(transcript, source, name="transcript.vtt", request
                          },
                          exc_info[2])
     # create new content source
-    source = ContentBlobFile(data=content,
-                             filename=text_(name),
-                             contentType=contentType)
+    source = File(mimeType=contentType)
+    with source.open("w") as fp:
+        fp.write(content)
     transcript.src = source
     transcript.srcjsonp = None
     transcript.type = contentType

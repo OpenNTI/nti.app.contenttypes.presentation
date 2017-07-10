@@ -574,21 +574,26 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 class _NTITranscriptURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
     def _predicate(self, context, result):
-        return self._is_authenticated \
-           and not context.is_source_attached()
+        return self._is_authenticated
+
+    def _package_bucket(self, context):
+        package = find_interface(context, IContentPackage, strict=False)
+        try:
+            return package.key.bucket
+        except AttributeError:
+            return None
 
     def _do_decorate_external(self, context, result):
-        package = find_interface(context, IContentPackage, strict=False)
-        if package is not None:
-            mapper = IContentUnitHrefMapper(package.key.bucket, None)
-            location = mapper.href if mapper is not None else ''
-            for name in ('src', 'srcjsonp'):
-                value = getattr(context, name, None)
-                if IFile.providedBy(value):
-                    result[name] = to_external_file_link(value)
-                elif value and not value.startswith('/') and '://' not in value:
-                    value = urljoin(location, value)
-                    result[name] = value
+        bucket = self._package_bucket(context)
+        mapper = IContentUnitHrefMapper(bucket, None)
+        location = mapper.href if mapper is not None else ''
+        for name in ('src', 'srcjsonp'):
+            value = getattr(context, name, None)
+            if IFile.providedBy(value):
+                result[name] = to_external_file_link(value, True)
+            elif location and value and not value.startswith('/') and '://' not in value:
+                value = urljoin(location, value)
+                result[name] = value
 
 
 @component.adapter(INTITimeline, IRequest)
@@ -893,11 +898,11 @@ class _NTIVideoDecorator(_BaseMediaDecorator):
         super(_NTIVideoDecorator, self).decorateExternalObject(original, external)
         if 'closed_caption' in external:
             external['closedCaptions'] = external['closed_caption']  # legacy
-
+        # remove empty
         for name in ('poster', 'label', 'subtitle'):
             if name in external and not external[name]:
                 del external[name]
-
+        # copy label
         title = external.get('title')
         if title and not external.get('label'):
             external['label'] = title

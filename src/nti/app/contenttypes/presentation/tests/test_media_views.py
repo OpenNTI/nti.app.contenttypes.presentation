@@ -13,6 +13,7 @@ from hamcrest import is_not
 from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
+from hamcrest import starts_with
 does_not = is_not
 
 import os
@@ -55,7 +56,7 @@ class TestMediaViews(ApplicationLayerTest):
                                ],
                                status=200)
         assert_that(res.json_body,
-                    has_entry('src', has_entry('Class', 'ContentBlobFile')))
+                    has_entry('src', starts_with('/dataserver2/')))
         assert_that(res.json_body,
                     has_entry('srcjsonp', is_(none())))
         
@@ -80,6 +81,6 @@ class TestMediaViews(ApplicationLayerTest):
                                 ],
                                 status=200)
         assert_that(res.json_body,
-                    has_entry('src', has_entry('Class', 'ContentBlobFile')))
+                    has_entry('src', starts_with('/dataserver2/')))
         assert_that(res.json_body,
                     has_entry('srcjsonp', is_(none())))
