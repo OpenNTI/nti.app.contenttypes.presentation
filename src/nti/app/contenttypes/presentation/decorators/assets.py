@@ -40,6 +40,7 @@ from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_SECTION_TOP
 from nti.app.products.courseware.decorators import BaseRecursiveAuditLogLinkDecorator
 
 from nti.app.products.courseware.resources.utils import is_internal_file_link
+from nti.app.products.courseware.resources.utils import to_external_file_link
 from nti.app.products.courseware.resources.utils import get_file_from_external_link
 
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
@@ -48,6 +49,8 @@ from nti.appserver.pyramid_authorization import has_permission
 
 from nti.assessment.interfaces import IQSurvey
 from nti.assessment.interfaces import IQAssignment
+
+from nti.base.interfaces import IFile
 
 from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackage
@@ -581,7 +584,9 @@ class _NTITranscriptURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
             location = mapper.href if mapper is not None else ''
             for name in ('src', 'srcjsonp'):
                 value = getattr(context, name, None)
-                if value and not value.startswith('/') and '://' not in value:
+                if IFile.providedBy(value):
+                    result[name] = to_external_file_link(value)
+                elif value and not value.startswith('/') and '://' not in value:
                     value = urljoin(location, value)
                     result[name] = value
 
