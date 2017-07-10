@@ -33,7 +33,7 @@ from nti.contenttypes.courses.common import get_course_packages
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
-from nti.contenttypes.courses.utils import get_course_hierarchy
+from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
@@ -73,7 +73,6 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView,
 
     def _pkg_containers(self, pacakge):
         result = []
-
         def recur(unit):
             for child in unit.children or ():
                 recur(child)
@@ -83,7 +82,8 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView,
 
     def _course_containers(self, course):
         result = set()
-        courses = get_course_hierarchy(course)
+        courses = {course}
+        courses.union(get_course_subinstances(course))
         for _course in courses:
             entry = ICourseCatalogEntry(_course)
             for package in get_course_packages(_course):
@@ -97,7 +97,7 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView,
         else:
             item = IContentTypeAware(item, item)
             mimeType = getattr(item, 'mimeType', None) \
-                or getattr(item, 'mime_type', None)
+                    or getattr(item, 'mime_type', None)
             if mimeType in mimeTypes:
                 return True
         return False
