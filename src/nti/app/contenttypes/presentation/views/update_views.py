@@ -256,12 +256,14 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
                              self.remoteUser,
                              self.context,
                              sources)
-        # post process and notify
+        # post process
         self.postflight(contentObject, externalValue, data)
+        # handle asset in processor
+        self.handle_asset(result, self.remoteUser)
+        # notify
         notify_modified(contentObject, originalSource)
         return result
 
     def __call__(self):
         result = UGDPutView.__call__(self)
-        self.handle_asset(result, self.remoteUser)
         return self.transformOutput(result)
