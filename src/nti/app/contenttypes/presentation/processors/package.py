@@ -38,6 +38,7 @@ def handle_slide_deck(item, context, creator, request=None):
                  registry=registry)
     # register in containers and index
     for x in chain(item.Slides, item.Videos):
+        x.__parent__ = item  # take ownership
         proc = IPresentationAssetProcessor(x)
         proc.handle(x, context, creator, request)
     return item

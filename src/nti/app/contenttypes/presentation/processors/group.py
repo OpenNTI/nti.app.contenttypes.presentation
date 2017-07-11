@@ -116,6 +116,7 @@ def handle_overview_group(group, context, creator=None, request=None):
                  base=group.ntiid)
     # process group items
     for item in group or ():
+        item.__parent__ = group  # take ownership
         proc = IPresentationAssetProcessor(item)
         proc.handle(item, context, creator, request)
 

@@ -9,15 +9,9 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-import six
 import copy
-from itertools import chain
-from urlparse import urlparse
-from collections import Mapping
 
 import transaction
-
-from zope import lifecycleevent
 
 from zope.cachedescriptors.property import Lazy
 
@@ -31,7 +25,6 @@ from pyramid.view import view_config
 from pyramid.view import view_defaults
 
 from nti.app.base.abstract_views import get_all_sources
-from nti.app.base.abstract_views import get_safe_source_filename
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.contentfile import validate_sources
@@ -46,7 +39,6 @@ from nti.app.contenttypes.presentation.processors.mixins import handle_multipart
 from nti.app.contenttypes.presentation.processors.mixins import register_utility
 
 from nti.app.contenttypes.presentation.utils.asset import intid_register
-from nti.app.contenttypes.presentation.utils.asset import add_2_connection
 
 from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_courses
 
@@ -61,119 +53,29 @@ from nti.app.externalization.error import raise_json_error
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
-from nti.app.products.courseware.resources.utils import get_course_filer
-from nti.app.products.courseware.resources.utils import is_internal_file_link
-from nti.app.products.courseware.resources.utils import to_external_file_link
-from nti.app.products.courseware.resources.utils import get_file_from_external_link
-
 from nti.appserver.ugd_edit_views import UGDPutView
 
-from nti.assessment.interfaces import IQPoll
-from nti.assessment.interfaces import IQSurvey
-from nti.assessment.interfaces import IQInquiry
-from nti.assessment.interfaces import IQAssessment
-from nti.assessment.interfaces import IQAssignment
-from nti.assessment.interfaces import IQuestionSet
-
-from nti.contentfile.interfaces import IContentBaseFile
-
-from nti.contentlibrary.indexed_data import get_site_registry
-from nti.contentlibrary.indexed_data import get_library_catalog
-
-from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackage
-
-from nti.contenttypes.courses.common import get_course_packages
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
-from nti.contenttypes.courses.discussions.utils import resolve_discussion_course_bundle
-
-from nti.contenttypes.courses.utils import get_course_subinstances
-from nti.contenttypes.courses.utils import get_courses_for_packages
-
 from nti.contenttypes.presentation import iface_of_asset
 
-from nti.contenttypes.presentation import AUDIO_MIME_TYPES
-from nti.contenttypes.presentation import VIDEO_MIME_TYPES
-from nti.contenttypes.presentation import POLL_REF_MIME_TYPES
-from nti.contenttypes.presentation import TIMELINE_MIME_TYPES
-from nti.contenttypes.presentation import SURVEY_REF_MIME_TYPES
-from nti.contenttypes.presentation import TIMELINE_REF_MIME_TYPES
-from nti.contenttypes.presentation import ASSIGNMENT_REF_MIME_TYPES
-from nti.contenttypes.presentation import SLIDE_DECK_REF_MIME_TYPES
-from nti.contenttypes.presentation import QUESTIONSET_REF_MIME_TYPES
-from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
-from nti.contenttypes.presentation import COURSE_OVERVIEW_GROUP_MIME_TYPES
-from nti.contenttypes.presentation import RELATED_WORK_REF_POINTER_MIME_TYPES
-
-from nti.contenttypes.presentation.discussion import is_nti_course_bundle
-
-from nti.contenttypes.presentation.interfaces import IAssetRef
-from nti.contenttypes.presentation.interfaces import INTIMedia
-from nti.contenttypes.presentation.interfaces import INTIVideo
-from nti.contenttypes.presentation.interfaces import INTIPollRef
-from nti.contenttypes.presentation.interfaces import INTIMediaRef
-from nti.contenttypes.presentation.interfaces import INTIVideoRef
-from nti.contenttypes.presentation.interfaces import INTITimeline
-from nti.contenttypes.presentation.interfaces import INTIAudioRoll
-from nti.contenttypes.presentation.interfaces import INTIMediaRoll
-from nti.contenttypes.presentation.interfaces import INTISlideDeck
-from nti.contenttypes.presentation.interfaces import INTISurveyRef
-from nti.contenttypes.presentation.interfaces import INTIVideoRoll
-from nti.contenttypes.presentation.interfaces import IConcreteAsset
-from nti.contenttypes.presentation.interfaces import INTIInquiryRef
-from nti.contenttypes.presentation.interfaces import INTITimelineRef
-from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
-from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
-from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
-from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
-from nti.contenttypes.presentation.interfaces import IGroupOverViewable
-from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
-from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
-from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
-from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
-from nti.contenttypes.presentation.interfaces import ICoursePresentationAsset
-from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
-from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
-from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
-from nti.contenttypes.presentation.interfaces import PresentationAssetCreatedEvent
 from nti.contenttypes.presentation.interfaces import WillUpdatePresentationAssetEvent
-
-from nti.contenttypes.presentation.internalization import internalization_ntiaudioref_pre_hook
-from nti.contenttypes.presentation.internalization import internalization_ntivideoref_pre_hook
 
 from nti.contenttypes.presentation.utils import create_from_external
 from nti.contenttypes.presentation.utils import get_external_pre_hook
 
-from nti.coremetadata.utils import current_principal
-
 from nti.dataserver import authorization as nauth
-
-from nti.dataserver.contenttypes.forums.interfaces import ITopic
 
 from nti.externalization.externalization import StandardExternalFields
 
 from nti.externalization.internalization import notify_modified
 
-from nti.externalization.oids import to_external_ntiid_oid
-
-from nti.ntiids.ntiids import TYPE_UUID
-from nti.ntiids.ntiids import make_ntiid
-from nti.ntiids.ntiids import get_specific
-from nti.ntiids.ntiids import is_valid_ntiid_string
-from nti.ntiids.ntiids import find_object_with_ntiid
-
-from nti.publishing.interfaces import IPublishable
-
 from nti.site.interfaces import IHostPolicyFolder
-
-from nti.site.site import get_component_hierarchy_names
-
-from nti.site.utils import registerUtility
 
 from nti.traversal.traversal import find_interface
 
@@ -211,9 +113,10 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
     def entry(self):
         return ICourseCatalogEntry(self.course, None)
 
-    def handle_asset(self, item, creator=None):
+    def handle_asset(self, item, creator=None, container=None):
         proc = IPresentationAssetProcessor(item)
-        proc.handle(item, self.container, creator, self.request)
+        container = container if container is not None else self.container
+        proc.handle(item, container, creator, self.request)
         return item
 
     def remove_ntiids(self, ext_obj, do_remove):
@@ -235,6 +138,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
         return result
 
 
+@view_config(context=IContentPackage)
 @view_config(context=ICourseInstance)
 @view_config(context=ICourseCatalogEntry)
 @view_defaults(route_name='objects.generic.traversal',
@@ -288,7 +192,7 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
         check_exists(contentObject, self.registry, self.request, self._extra)
 
         # process asset
-        self.handle_asset(contentObject, creator)
+        self.handle_asset(contentObject, creator,)
 
         # add to connection and register
         intid_register(contentObject, registry=self._registry)
@@ -331,7 +235,7 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
         originalSource = copy.deepcopy(externalValue)
         pre_hook = get_external_pre_hook(externalValue)
         # notify we are about to update asset
-        args = (contentObject, self.remoteUser,externalValue)
+        args = (contentObject, self.remoteUser, externalValue)
         event_notify(WillUpdatePresentationAssetEvent(*args))
         # update asset
         result = UGDPutView.updateContentObject(self,
@@ -343,10 +247,12 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
         # check any multipart upload
         sources = get_all_sources(self.request)
         if sources:
-            courses = get_presentation_asset_courses(self.context)
-            courses = courses or (self.container,)
+            if self.container is None:
+                courses = get_presentation_asset_courses(self.context)
+            else:
+                courses = (self.container,)
             validate_sources(self.remoteUser, result, sources)
-            handle_multipart(next(iter(courses)),
+            handle_multipart(next(iter(courses)), # pick first
                              self.remoteUser,
                              self.context,
                              sources)
@@ -357,5 +263,5 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 
     def __call__(self):
         result = UGDPutView.__call__(self)
-        self.handle_asset(result, self.remoteUser())
+        self.handle_asset(result, self.remoteUser)
         return self.transformOutput(result)

@@ -35,9 +35,10 @@ def handle_media_roll(roll, context, creator, request=None):
     canonicalize(roll.Items or (), creator,
                  base=item.ntiid,
                  registry=registry)
-    for x in roll or ():
-        proc = IPresentationAssetProcessor(x)
-        proc.handle(x, context, creator, request)
+    for item in roll or ():
+        item.__parent__ = roll  # take ownership
+        proc = IPresentationAssetProcessor(item)
+        proc.handle(item, context, creator, request)
 
 
 @component.adapter(INTIMediaRoll)
