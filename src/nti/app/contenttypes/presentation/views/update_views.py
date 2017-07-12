@@ -10,6 +10,7 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 import copy
+from collections import Mapping
 
 import transaction
 
@@ -34,7 +35,6 @@ from nti.app.contenttypes.presentation import MessageFactory as _
 from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProcessor
 
 from nti.app.contenttypes.presentation.processors.mixins import check_exists
-from nti.app.contenttypes.presentation.processors.mixins import remove_ntiids
 from nti.app.contenttypes.presentation.processors.mixins import notify_created
 from nti.app.contenttypes.presentation.processors.mixins import handle_multipart
 from nti.app.contenttypes.presentation.processors.mixins import register_utility
@@ -104,6 +104,9 @@ from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 
 from nti.contenttypes.presentation.interfaces import WillUpdatePresentationAssetEvent
 
+from nti.contenttypes.presentation.internalization import internalization_ntiaudioref_pre_hook
+from nti.contenttypes.presentation.internalization import internalization_ntivideoref_pre_hook
+
 from nti.contenttypes.presentation.utils import is_media_mimeType
 from nti.contenttypes.presentation.utils import create_from_external
 from nti.contenttypes.presentation.utils import is_timeline_mimeType
@@ -114,6 +117,8 @@ from nti.dataserver import authorization as nauth
 from nti.externalization.externalization import StandardExternalFields
 
 from nti.externalization.internalization import notify_modified
+
+from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.site.interfaces import IHostPolicyFolder
 
@@ -166,7 +171,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
     def readInput(self, no_ntiids=True):
         result = super(PresentationAssetSubmitViewMixin, self).readInput()
-        self._remove_ntiids(result, no_ntiids)
+        self.remove_ntiids(result, no_ntiids)
         return result
 
     def transformOutput(self, obj):
@@ -449,13 +454,13 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
 
     content_predicate = IGroupOverViewable.providedBy
 
-    def _remove_ntiids(self, ext_obj, do_remove):
+    def remove_ntiids(self, ext_obj, do_remove):
         # Do not remove our media ntiids, these will be our ref targets.
         # If we don't have a mimeType, we need the ntiid to fetch the (video)
         # object.
         mimeType = ext_obj.get(MIMETYPE) or ext_obj.get('mimeType')
         if mimeType and not is_media_mimeType(mimeType) and not is_timeline_mimeType(mimeType):
-            remove_ntiids(ext_obj, do_remove)
+            super(CourseOverviewGroupInsertView, self).remove_ntiids(ext_obj, do_remove)
 
     def _overviewable_mimeType(self, obj):
         if INTISlideDeck.providedBy(obj) or INTISlideDeckRef.providedBy(obj):
@@ -484,3 +489,58 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
         else:
             result = None
         return result
+
+    def _do_preflight_input(self, externalValue):
+        """
+        Swizzle media into refs for overview groups. If we're missing a mimetype, the given
+        ntiid *must* resolve to a video/timeline. All other types should be fully defined (ref) objects.
+        """
+        if isinstance(externalValue, Mapping) and MIMETYPE not in externalValue:
+            ntiid = externalValue.get('ntiid') or externalValue.get(NTIID)
+            if not ntiid:
+                raise_json_error(self.request,
+                                 hexc.HTTPUnprocessableEntity,
+                                 {
+                                     'message': _(u'Missing overview group item NTIID.'),
+                                 },
+                                 None)
+
+            resolved = find_object_with_ntiid(ntiid)
+            if resolved is None:
+                raise_json_error(self.request,
+                                 hexc.HTTPUnprocessableEntity,
+                                 {
+                                     'message': _(u'Missing overview group item.'),
+                                 },
+                                 None)
+
+            mimeType = self._overviewable_mimeType(resolved)
+            if not mimeType:
+                # We did not have a mimetype, and we have an ntiid the resolved
+                # into an unexpected type; blow chunks.
+                raise_json_error(self.request,
+                                 hexc.HTTPUnprocessableEntity,
+                                 {
+                                     'message': _(u'Invalid overview group item.'),
+                                 },
+                                 None)
+
+        if isinstance(externalValue, Mapping):
+            mimeType = externalValue.get(MIMETYPE) or externalValue.get('mimeType')
+            if is_media_mimeType(mimeType):
+                internalization_ntiaudioref_pre_hook(None, externalValue)
+                internalization_ntivideoref_pre_hook(None, externalValue)
+        return preflight_input(externalValue, self.request)
+
+    def checkContentObject(self, contentObject, externalValue):
+        if contentObject is None or not self.content_predicate(contentObject):
+            transaction.doom()
+            logger.debug("Failing to POST: input of unsupported/missing Class: %s => %s",
+                         externalValue, contentObject)
+            raise_json_error(self.request,
+                             hexc.HTTPUnprocessableEntity,
+                             {
+                                 'message': _(u'Unsupported/missing Class.'),
+                             },
+                             None)
+        return contentObject
