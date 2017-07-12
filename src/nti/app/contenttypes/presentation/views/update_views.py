@@ -91,6 +91,7 @@ from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
+from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
@@ -460,7 +461,8 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
         # object.
         mimeType = ext_obj.get(MIMETYPE) or ext_obj.get('mimeType')
         if mimeType and not is_media_mimeType(mimeType) and not is_timeline_mimeType(mimeType):
-            super(CourseOverviewGroupInsertView, self).remove_ntiids(ext_obj, do_remove)
+            super(CourseOverviewGroupInsertView,
+                  self).remove_ntiids(ext_obj, do_remove)
 
     def _overviewable_mimeType(self, obj):
         if INTISlideDeck.providedBy(obj) or INTISlideDeckRef.providedBy(obj):
@@ -526,7 +528,8 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
                                  None)
 
         if isinstance(externalValue, Mapping):
-            mimeType = externalValue.get(MIMETYPE) or externalValue.get('mimeType')
+            mimeType = externalValue.get(
+                MIMETYPE) or externalValue.get('mimeType')
             if is_media_mimeType(mimeType):
                 internalization_ntiaudioref_pre_hook(None, externalValue)
                 internalization_ntivideoref_pre_hook(None, externalValue)
@@ -544,3 +547,103 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
                              },
                              None)
         return contentObject
+
+    def parseInput(self, creator, search_owner=False, externalValue=None):
+        external_input = self.readInput() if not externalValue else externalValue
+        externalValue = self._do_preflight_input(external_input)
+        external_input = copy.deepcopy(external_input)  # return original input
+        if isinstance(externalValue, Mapping):
+            contentObject = create_from_external(externalValue, notify=False)
+            contentObject = self.checkContentObject(
+                contentObject, externalValue)
+        else:
+            contentObject = externalValue
+        return contentObject, external_input
+
+    def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
+        contentObject, externalValue = self.parseInput(
+            creator, search_owner, externalValue)
+        return contentObject, externalValue
+
+    def _finish_creating_object(self, obj, creator, provided, externalValue):
+        """
+        Finish creating our object by firing events, registering, etc.
+        """
+        register_utility(self.registry, obj, provided, obj.ntiid)
+        self.handle_asset(obj, creator)
+        notify_created(obj, creator, externalValue)
+
+    def _convert_timeline_to_timelineref(self, timeline, creator, externalValue):
+        """
+        Convert and create a timeline ref that can be stored in our overview group.
+        """
+        timeline_ref = INTITimelineRef(timeline)
+        self._finish_creating_object(timeline_ref, 
+                                     creator, 
+                                     INTITimelineRef, 
+                                     externalValue)
+        return timeline_ref
+
+    def _convert_relatedwork_to_pointer(self, relatedwork, creator, externalValue):
+        """
+        Convert and create a relatedwork ref that can be stored in our overview group.
+        """
+        asset_ref = INTIRelatedWorkRefPointer(relatedwork)
+        self._finish_creating_object(asset_ref, 
+                                     creator, 
+                                     INTIRelatedWorkRefPointer, 
+                                     externalValue)
+        return asset_ref
+
+    def _do_call(self):
+        index = self._get_index()
+        creator = self.remoteUser
+        contentObject, externalValue = self.readCreateUpdateContentObject(creator)
+        provided = iface_of_asset(contentObject)
+
+        # check item does not exists
+        check_exists(contentObject, self.registry, self.request, self.extra)
+        self._finish_creating_object(contentObject, 
+                                     creator, 
+                                     provided,
+                                     externalValue)
+
+        # save reference
+        result = contentObject
+
+        if INTITimeline.providedBy(contentObject):
+            result = self._convert_timeline_to_timelineref(result, 
+                                                           creator, 
+                                                           externalValue)
+        elif INTIRelatedWorkRef.providedBy(contentObject):
+            result = self._convert_relatedwork_to_pointer(result, 
+                                                          creator, 
+                                                          externalValue)
+
+        # insert in group
+        self.context.insert(index, result)
+
+        # intid registration
+        intid_register(result, registry=self.registry)
+        if result is not contentObject:
+            # set lineage
+            parent = self.container if self.container is not None else self.context
+            contentObject.__parent__ = parent
+            intid_register(contentObject, registry=self.registry)
+
+        # Multi-part data must be done after the object has been registered
+        # with the intid facility. Use original object
+        sources = get_all_sources(self.request)
+        if sources:  # multi-part data
+            validate_sources(self.remoteUser, contentObject, sources)
+            handle_multipart(self.container, self.remoteUser,
+                             contentObject, sources)
+
+        # notify and lock
+        notify_modified(self.context, externalValue, external_keys=(ITEMS,))
+        self.request.response.status_int = 201
+        self.context.childOrderLock()
+
+        # We don't return refs in the overview group; so don't here either.
+        result = IConcreteAsset(result, result)
+        return self.transformOutput(result)
