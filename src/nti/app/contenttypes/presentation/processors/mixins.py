@@ -49,6 +49,8 @@ from nti.contenttypes.presentation.interfaces import PresentationAssetCreatedEve
 
 from nti.coremetadata.utils import current_principal
 
+from nti.externalization.interfaces import StandardExternalFields
+
 from nti.ntiids.ntiids import TYPE_UUID
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import is_valid_ntiid_string
@@ -59,6 +61,8 @@ from nti.publishing.interfaces import IPublishable
 from nti.site.interfaces import IHostPolicyFolder
 
 from nti.site.utils import registerUtility
+
+NTIID = StandardExternalFields.NTIID
 
 
 @interface.implementer(IPresentationAssetProcessor)
@@ -165,6 +169,12 @@ def get_ntiid(item):
         and TYPE_UUID in get_specific(ntiid):
         ntiid = None
     return ntiid
+
+
+def remove_ntiids(data, remove=True):
+    if remove:
+        data.pop('ntiid', None)
+        data.pop(NTIID, None) 
 
 
 def check_exists(item, registry, request=None, extra=None):

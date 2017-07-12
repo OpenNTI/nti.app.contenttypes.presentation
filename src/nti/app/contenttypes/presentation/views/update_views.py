@@ -34,6 +34,7 @@ from nti.app.contenttypes.presentation import MessageFactory as _
 from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProcessor
 
 from nti.app.contenttypes.presentation.processors.mixins import check_exists
+from nti.app.contenttypes.presentation.processors.mixins import remove_ntiids
 from nti.app.contenttypes.presentation.processors.mixins import notify_created
 from nti.app.contenttypes.presentation.processors.mixins import handle_multipart
 from nti.app.contenttypes.presentation.processors.mixins import register_utility
@@ -62,6 +63,11 @@ from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtils
 
 from nti.appserver.ugd_edit_views import UGDPutView
 
+from nti.assessment.interfaces import IQPoll
+from nti.assessment.interfaces import IQSurvey
+from nti.assessment.interfaces import IQAssignment
+from nti.assessment.interfaces import IQuestionSet
+
 from nti.contentlibrary.interfaces import IContentPackage
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -69,16 +75,38 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.presentation import iface_of_asset
 
+from nti.contenttypes.presentation import POLL_REF_MIME_TYPES
+from nti.contenttypes.presentation import SURVEY_REF_MIME_TYPES
+from nti.contenttypes.presentation import TIMELINE_REF_MIME_TYPES
+from nti.contenttypes.presentation import ASSIGNMENT_REF_MIME_TYPES
+from nti.contenttypes.presentation import SLIDE_DECK_REF_MIME_TYPES
+from nti.contenttypes.presentation import QUESTIONSET_REF_MIME_TYPES
 from nti.contenttypes.presentation import COURSE_OVERVIEW_GROUP_MIME_TYPES
+from nti.contenttypes.presentation import RELATED_WORK_REF_POINTER_MIME_TYPES
 
+from nti.contenttypes.presentation.interfaces import INTIMedia
+from nti.contenttypes.presentation.interfaces import INTIPollRef
+from nti.contenttypes.presentation.interfaces import INTIMediaRef
+from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
+from nti.contenttypes.presentation.interfaces import INTISlideDeck
+from nti.contenttypes.presentation.interfaces import INTISurveyRef
+from nti.contenttypes.presentation.interfaces import INTITimelineRef
+from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
+from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
+from nti.contenttypes.presentation.interfaces import IGroupOverViewable
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 
 from nti.contenttypes.presentation.interfaces import WillUpdatePresentationAssetEvent
 
+from nti.contenttypes.presentation.utils import is_media_mimeType
 from nti.contenttypes.presentation.utils import create_from_external
+from nti.contenttypes.presentation.utils import is_timeline_mimeType
 from nti.contenttypes.presentation.utils import get_external_pre_hook
 
 from nti.dataserver import authorization as nauth
@@ -402,3 +430,57 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
         # return
         self.request.response.status_int = 201
         return contentObject
+
+
+@view_config(context=INTICourseOverviewGroup)
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               request_method='POST',
+               name=VIEW_CONTENTS,
+               permission=nauth.ACT_CONTENT_EDIT)
+class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
+                                    ModeledContentUploadRequestUtilsMixin,
+                                    IndexedRequestMixin):  # order matters
+    """
+    We accept asset items by index here. We handle two types specially here:
+
+    We turn media, timeline, and slidedecks into refs here, given an NTIID.
+    """
+
+    content_predicate = IGroupOverViewable.providedBy
+
+    def _remove_ntiids(self, ext_obj, do_remove):
+        # Do not remove our media ntiids, these will be our ref targets.
+        # If we don't have a mimeType, we need the ntiid to fetch the (video)
+        # object.
+        mimeType = ext_obj.get(MIMETYPE) or ext_obj.get('mimeType')
+        if mimeType and not is_media_mimeType(mimeType) and not is_timeline_mimeType(mimeType):
+            remove_ntiids(ext_obj, do_remove)
+
+    def _overviewable_mimeType(self, obj):
+        if INTISlideDeck.providedBy(obj) or INTISlideDeckRef.providedBy(obj):
+            result = SLIDE_DECK_REF_MIME_TYPES[0]
+        # timelines
+        elif INTITimeline.providedBy(obj) or INTITimelineRef.providedBy(obj):
+            result = TIMELINE_REF_MIME_TYPES[0]
+        # relatedwork refs
+        elif INTIRelatedWorkRef.providedBy(obj) or INTIRelatedWorkRefPointer.providedBy(obj):
+            result = RELATED_WORK_REF_POINTER_MIME_TYPES[0]
+        # media objects
+        elif INTIMedia.providedBy(obj) or INTIMediaRef.providedBy(obj):
+            result = obj.mimeType
+        # assignment objects
+        elif IQAssignment.providedBy(obj) or INTIAssignmentRef.providedBy(obj):
+            result = ASSIGNMENT_REF_MIME_TYPES[0]
+        # poll objects
+        elif IQPoll.providedBy(obj) or INTIPollRef.providedBy(obj):
+            result = POLL_REF_MIME_TYPES[0]
+        # survey objects
+        elif IQSurvey.providedBy(obj) or INTISurveyRef.providedBy(obj):
+            result = SURVEY_REF_MIME_TYPES[0]
+        # question sets
+        elif IQuestionSet.providedBy(obj) or INTIQuestionSetRef.providedBy(obj):
+            result = QUESTIONSET_REF_MIME_TYPES[0]
+        else:
+            result = None
+        return result
