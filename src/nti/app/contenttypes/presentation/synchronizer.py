@@ -240,7 +240,7 @@ def _remove_registered_course_overview(name=None, registry=None, course=None, fo
 
 	# unregister child elements
 	for item in group:
-		if not IPackagePresentationAsset.providedBy(item):
+		if not IContentBackedPresentationAsset.providedBy(item):
 			_do_remove(item)
 
 	return result
@@ -574,7 +574,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 		for item in items or ():
 			# Register here before updating asset state
 			_intid_register(item, intids, connection=connection)
-			if not IPackagePresentationAsset.providedBy(item):
+			if not IContentBackedPresentationAsset.providedBy(item):
 				item.__parent__ = group
 
 	_update_asset_state(overview, source_data, course, connection=connection)
