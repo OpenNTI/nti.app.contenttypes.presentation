@@ -44,6 +44,7 @@ from nti.app.contenttypes.presentation.utils.asset import remove_presentation_as
 from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_courses
 
 from nti.app.contenttypes.presentation.views import VIEW_ASSETS
+from nti.app.contenttypes.presentation.views import VIEW_CONTENTS
 
 from nti.app.contenttypes.presentation.views.view_mixins import preflight_input
 from nti.app.contenttypes.presentation.views.view_mixins import preflight_mediaroll
@@ -52,6 +53,8 @@ from nti.app.contenttypes.presentation.views.view_mixins import preflight_lesson
 from nti.app.contenttypes.presentation.views.view_mixins import href_safe_to_external_object
 
 from nti.app.contenttypes.presentation.views.view_mixins import PresentationAssetMixin
+
+from nti.app.products.courseware.views.view_mixins import IndexedRequestMixin
 
 from nti.app.externalization.error import raise_json_error
 
@@ -65,6 +68,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.presentation import iface_of_asset
+
+from nti.contenttypes.presentation import COURSE_OVERVIEW_GROUP_MIME_TYPES
 
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
@@ -97,7 +102,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
     @Lazy
     def container(self):
         result = find_interface(self.context, ICourseInstance, strict=False) \
-              or find_interface(self.context, IContentPackage, strict=False)
+            or find_interface(self.context, IContentPackage, strict=False)
         return result
 
     @Lazy
@@ -259,7 +264,7 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
             else:
                 courses = (self.container,)
             validate_sources(self.remoteUser, result, sources)
-            handle_multipart(next(iter(courses)), # pick first
+            handle_multipart(next(iter(courses)),  # pick first
                              self.remoteUser,
                              self.context,
                              sources)
@@ -285,7 +290,7 @@ class LessonOverviewPutView(PresentationAssetPutView):
 
     def preflight(self, contentObject, externalValue):
         preflight_lesson_overview(externalValue, self.request)
-        return {x.ntiid:x for x in contentObject}  # save groups
+        return {x.ntiid: x for x in contentObject}  # save groups
 
     def postflight(self, contentObject, externalValue, preflight):
         updated = {x.ntiid for x in contentObject}
@@ -303,7 +308,7 @@ class CourseOverviewGroupPutView(PresentationAssetPutView):
 
     def preflight(self, contentObject, externalValue):
         preflight_overview_group(externalValue, self.request)
-        return {x.ntiid:x for x in contentObject}
+        return {x.ntiid: x for x in contentObject}
 
     def postflight(self, contentObject, externalValue, preflight):
         updated = {x.ntiid for x in contentObject}
@@ -321,10 +326,79 @@ class MediaRollPutView(PresentationAssetPutView):
 
     def preflight(self, contentObject, externalValue):
         preflight_mediaroll(externalValue, self.request)
-        return {x.ntiid:x for x in contentObject}
+        return {x.ntiid: x for x in contentObject}
 
     def postflight(self, contentObject, externalValue, preflight):
         updated = {x.ntiid for x in contentObject}
         for ntiid, item in preflight.items():
             if ntiid not in updated:  # ref removed
                 remove_presentation_asset(item, self.registry, self._catalog)
+
+
+@view_config(context=INTILessonOverview)
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               request_method='POST',
+               name=VIEW_CONTENTS,
+               permission=nauth.ACT_CONTENT_EDIT)
+class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
+                                        ModeledContentUploadRequestUtilsMixin,
+                                        IndexedRequestMixin):  # order matters
+
+    content_predicate = INTICourseOverviewGroup.providedBy
+
+    def checkContentObject(self, contentObject, externalValue):
+        if contentObject is None or not self.content_predicate(contentObject):
+            transaction.doom()
+            logger.debug("Failing to POST: input of unsupported/missing Class: %s => %s",
+                         externalValue, contentObject)
+            raise_json_error(self.request,
+                             hexc.HTTPUnprocessableEntity,
+                             {
+                                 'message': _(u'Unsupported/missing Class.'),
+                             },
+                             None)
+        return contentObject
+
+    def readCreateUpdateContentObject(self, creator, search_owner=False, externalValue=None):
+        # process input
+        externalValue = self.readInput() if not externalValue else externalValue
+        if MIMETYPE not in externalValue:
+            externalValue[MIMETYPE] = COURSE_OVERVIEW_GROUP_MIME_TYPES[0]
+        externalValue = preflight_input(externalValue, self.request)
+        result = copy.deepcopy(externalValue)  # return original input
+        # create object
+        contentObject = create_from_external(externalValue, notify=False)
+        contentObject = self.checkContentObject(contentObject, externalValue)
+        return contentObject, result
+
+    def _do_call(self):
+        index = self._get_index()
+        creator = self.remoteUser
+        contentObject, external = self.readCreateUpdateContentObject(creator)
+
+        # take ownership
+        contentObject.__parent__ = self.context
+
+        # check item does not exists and notify
+        check_exists(contentObject, self.registry, self.request, self.extra)
+
+        # handle asset in processor
+        self.handle_asset(contentObject, self.remoteUser)
+
+        # add to connection and register
+        intid_register(contentObject, registry=self._registry)
+        register_utility(self.registry, contentObject,
+                         INTICourseOverviewGroup, contentObject.ntiid)
+
+        # notify when object is ready
+        notify_created(contentObject, self.remoteUser.username, external)
+
+        # insert in context, lock and notify
+        self.context.insert(index, contentObject)
+        self.context.childOrderLock()
+        notify_modified(self.context, external, external_keys=(ITEMS,))
+
+        # return
+        self.request.response.status_int = 201
+        return contentObject
