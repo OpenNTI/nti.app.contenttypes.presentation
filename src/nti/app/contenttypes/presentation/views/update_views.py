@@ -461,8 +461,7 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
         # object.
         mimeType = ext_obj.get(MIMETYPE) or ext_obj.get('mimeType')
         if mimeType and not is_media_mimeType(mimeType) and not is_timeline_mimeType(mimeType):
-            super(CourseOverviewGroupInsertView,
-                  self).remove_ntiids(ext_obj, do_remove)
+            super(CourseOverviewGroupInsertView, self).remove_ntiids(ext_obj, do_remove)
 
     def _overviewable_mimeType(self, obj):
         if INTISlideDeck.providedBy(obj) or INTISlideDeckRef.providedBy(obj):
@@ -528,8 +527,7 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
                                  None)
 
         if isinstance(externalValue, Mapping):
-            mimeType = externalValue.get(
-                MIMETYPE) or externalValue.get('mimeType')
+            mimeType = externalValue.get(MIMETYPE) or externalValue.get('mimeType')
             if is_media_mimeType(mimeType):
                 internalization_ntiaudioref_pre_hook(None, externalValue)
                 internalization_ntivideoref_pre_hook(None, externalValue)
