@@ -39,12 +39,16 @@ from nti.app.contenttypes.presentation.processors.mixins import handle_multipart
 from nti.app.contenttypes.presentation.processors.mixins import register_utility
 
 from nti.app.contenttypes.presentation.utils.asset import intid_register
+from nti.app.contenttypes.presentation.utils.asset import remove_presentation_asset
 
 from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_courses
 
 from nti.app.contenttypes.presentation.views import VIEW_ASSETS
 
 from nti.app.contenttypes.presentation.views.view_mixins import preflight_input
+from nti.app.contenttypes.presentation.views.view_mixins import preflight_mediaroll
+from nti.app.contenttypes.presentation.views.view_mixins import preflight_overview_group
+from nti.app.contenttypes.presentation.views.view_mixins import preflight_lesson_overview
 from nti.app.contenttypes.presentation.views.view_mixins import href_safe_to_external_object
 
 from nti.app.contenttypes.presentation.views.view_mixins import PresentationAssetMixin
@@ -62,7 +66,10 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.presentation import iface_of_asset
 
+from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
+from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.contenttypes.presentation.interfaces import WillUpdatePresentationAssetEvent
 
@@ -267,3 +274,57 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
     def __call__(self):
         result = UGDPutView.__call__(self)
         return self.transformOutput(result)
+
+
+@view_config(context=INTILessonOverview)
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               request_method='PUT',
+               permission=nauth.ACT_CONTENT_EDIT)
+class LessonOverviewPutView(PresentationAssetPutView):
+
+    def preflight(self, contentObject, externalValue):
+        preflight_lesson_overview(externalValue, self.request)
+        return {x.ntiid:x for x in contentObject}  # save groups
+
+    def postflight(self, contentObject, externalValue, preflight):
+        updated = {x.ntiid for x in contentObject}
+        for ntiid, group in preflight.items():
+            if ntiid not in updated:  # group removed
+                remove_presentation_asset(group, self.registry, self._catalog)
+
+
+@view_config(context=INTICourseOverviewGroup)
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               request_method='PUT',
+               permission=nauth.ACT_CONTENT_EDIT)
+class CourseOverviewGroupPutView(PresentationAssetPutView):
+
+    def preflight(self, contentObject, externalValue):
+        preflight_overview_group(externalValue, self.request)
+        return {x.ntiid:x for x in contentObject}
+
+    def postflight(self, contentObject, externalValue, preflight):
+        updated = {x.ntiid for x in contentObject}
+        for ntiid, item in preflight.items():
+            if ntiid not in updated:  # ref removed
+                remove_presentation_asset(item, self.registry, self._catalog)
+
+
+@view_config(context=INTIMediaRoll)
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               request_method='PUT',
+               permission=nauth.ACT_CONTENT_EDIT)
+class MediaRollPutView(PresentationAssetPutView):
+
+    def preflight(self, contentObject, externalValue):
+        preflight_mediaroll(externalValue, self.request)
+        return {x.ntiid:x for x in contentObject}
+
+    def postflight(self, contentObject, externalValue, preflight):
+        updated = {x.ntiid for x in contentObject}
+        for ntiid, item in preflight.items():
+            if ntiid not in updated:  # ref removed
+                remove_presentation_asset(item, self.registry, self._catalog)
