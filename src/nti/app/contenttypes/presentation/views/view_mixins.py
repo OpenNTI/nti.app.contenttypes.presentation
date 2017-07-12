@@ -224,7 +224,7 @@ class PresentationAssetMixin(object):
 
     @Lazy
     def _extra(self):
-        return str(uuid.uuid4()).split('-')[0].upper()
+        return str(uuid.uuid4().get_time_low())
     extra = _extra
 
     @Lazy
