@@ -39,6 +39,8 @@ from nti.base.interfaces import IFile
 
 from nti.contentindexing.media.interfaces import IVideoTranscriptParser
 
+from nti.contenttypes.presentation import NTI_TRANSCRIPT_MIMETYPE
+
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTITranscript
 from nti.contenttypes.presentation.interfaces import ITranscriptContainer
@@ -51,6 +53,7 @@ from nti.externalization.interfaces import StandardExternalFields
 ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID
 TOTAL = StandardExternalFields.TOTAL
+MIMETYPE = StandardExternalFields.MIMETYPE
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
 TEXT_VTT = "text/vtt"
@@ -159,8 +162,10 @@ class TranscriptUploadView(AbstractAuthenticatedView,
 
     def readInput(self, value=None):
         result = ModeledContentUploadRequestUtilsMixin.readInput(self, value=value)
-        result.pop(NTIID, None)
-        result.pop('ntiid', None)
+        if MIMETYPE not in result:
+            result[MIMETYPE] = NTI_TRANSCRIPT_MIMETYPE
+        for name in (NTIID, 'ntiid'):
+            result.pop(name, None)
         return result
 
     def _do_call(self):
