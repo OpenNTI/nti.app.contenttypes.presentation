@@ -57,7 +57,7 @@ class TestLessonViews(ApplicationLayerTest):
                                       status=201)
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
-    @fudge.patch('nti.app.contenttypes.presentation.predicates.AssignmentCompletionConstraintChecker.check_time_constraint_item')
+    @fudge.patch('nti.app.contenttypes.presentation.constraints.AssignmentCompletionConstraintChecker.check_time_constraint_item')
     def test_assignment_completion_constraints(self, check_time_constraint_assignment):
 
         # create and enroll student
@@ -115,7 +115,7 @@ class TestLessonViews(ApplicationLayerTest):
         self.testapp.post_json(clear_constraints_link, status=200)
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
-    @fudge.patch('nti.app.contenttypes.presentation.predicates.SurveyCompletionConstraintChecker.check_time_constraint_item')
+    @fudge.patch('nti.app.contenttypes.presentation.constraints.SurveyCompletionConstraintChecker.check_time_constraint_item')
     def test_survey_completion_constraints(self, check_time_constraint_survey):
 
         # create and enroll student

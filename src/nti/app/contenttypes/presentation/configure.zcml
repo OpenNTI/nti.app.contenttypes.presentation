@@ -74,21 +74,21 @@
 			 for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef"
 			 provides="nti.namedfile.interfaces.IFileConstraints" />
 
-	<adapter factory=".predicates.AssignmentCompletionConstraintChecker"
-			 for="nti.contenttypes.presentation.interfaces.IAssignmentCompletionConstraint"
-			 provides="nti.contenttypes.presentation.interfaces.ILessonPublicationConstraintChecker" />
-
-	<adapter factory=".predicates.SurveyCompletionConstraintChecker"
-			 for="nti.contenttypes.presentation.interfaces.ISurveyCompletionConstraint"
-			 provides="nti.contenttypes.presentation.interfaces.ILessonPublicationConstraintChecker" />
-
     <adapter factory=".adapters._UserAssetVisibilityUtility"
              for="nti.dataserver.interfaces.IUser
                   nti.contenttypes.courses.interfaces.ICourseInstance"
              provides="nti.contenttypes.presentation.interfaces.IUserAssetVisibilityUtility" />
 
-	<!-- Subscribers -->
-	<subscriber factory=".predicates.LessonPublishablePredicate"
+	<!-- Constraints -->
+	<adapter factory=".constraints.AssignmentCompletionConstraintChecker"
+			 for="nti.contenttypes.presentation.interfaces.IAssignmentCompletionConstraint"
+			 provides="nti.contenttypes.presentation.interfaces.ILessonPublicationConstraintChecker" />
+
+	<adapter factory=".constraints.SurveyCompletionConstraintChecker"
+			 for="nti.contenttypes.presentation.interfaces.ISurveyCompletionConstraint"
+			 provides="nti.contenttypes.presentation.interfaces.ILessonPublicationConstraintChecker" />
+
+	<subscriber factory=".constraints.LessonPublishablePredicate"
 				provides="nti.publishing.interfaces.ICalendarPublishablePredicate" />
 
 	<!-- Search filters -->
@@ -220,7 +220,10 @@
 	<include package=".processors" />
 
 	<!-- Metadata -->
-	<subscriber	factory=".predicates._PresentationAssetObjects"
+	<subscriber	factory=".predicates._SystemPresentationAssets"
+				provides="nti.dataserver.metadata.interfaces.IPrincipalMetadataObjects" />
+
+	<subscriber	factory=".predicates._UserPresentationAssets"
 				provides="nti.dataserver.metadata.interfaces.IPrincipalMetadataObjects" />
 
 	<!-- Catalog -->
