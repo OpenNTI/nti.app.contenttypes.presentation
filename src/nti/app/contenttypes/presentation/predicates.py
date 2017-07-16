@@ -14,10 +14,6 @@ from datetime import datetime
 from zope import component
 from zope import interface
 
-from zope.component.hooks import site as current_site
-
-from zope.interface.adapter import _lookupAll as zopeLookupAll  # Private func
-
 from zope.security.interfaces import IPrincipal
 
 from nti.app.assessment.common import get_user
@@ -26,23 +22,22 @@ from nti.app.assessment.common import get_available_for_submission_ending
 from nti.app.assessment.interfaces import IUsersCourseInquiry
 from nti.app.assessment.interfaces import IUsersCourseAssignmentHistory
 
+from nti.appserver.pyramid_authorization import has_permission
+
+from nti.assessment.interfaces import IQSurvey
+
+from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraintChecker
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.courses.utils import is_course_instructor_or_editor
 
-from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
-
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import ISurveyCompletionConstraint
 from nti.contenttypes.presentation.interfaces import IAssignmentCompletionConstraint
 
 from nti.contenttypes.presentation.lesson import constraints_for_lesson
-
-from nti.appserver.pyramid_authorization import has_permission
-
-from nti.assessment.interfaces import IQSurvey
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
@@ -55,38 +50,41 @@ from nti.dataserver.users.users import User
 
 from nti.publishing.interfaces import ICalendarPublishablePredicate
 
-from nti.site.hostpolicy import get_all_host_sites
-
 
 # metadata
 
 
-def lookup_all_presentation_assets(site_registry):
-    result = {}
-    required = ()
-    order = len(required)
-    for registry in site_registry.utilities.ro:  # must keep order
-        byorder = registry._adapters
-        if order >= len(byorder):
-            continue
-        components = byorder[order]
-        extendors = ALL_PRESENTATION_ASSETS_INTERFACES
-        zopeLookupAll(components, required, extendors, result, 0, order)
-        break  # break on first
-    return result
+def yield_lesson_constraints(asset):
+    constraints = constraints_for_lesson(asset, False)
+    if constraints is not None:
+        for obj in constraints.values():
+            yield obj
 
 
 @component.adapter(ISystemUserPrincipal)
 class _PresentationAssetObjects(BasePrincipalObjects):
 
     def iter_objects(self):
-        result = []
-        for site in get_all_host_sites():
-            with current_site(site):
-                registry = site.getSiteManager()
-                site_components = lookup_all_presentation_assets(registry)
-                result.extend(site_components.values())
-        return result
+        for asset in component.getUtilitiesFor(IPresentationAsset):
+            if self.is_system_username(self.creator(asset)):
+                if INTILessonOverview.providedBy(asset):
+                    for item in yield_lesson_constraints(asset):
+                        if self.is_system_username(self.creator(item)):
+                            yield item
+                yield asset
+
+
+@component.adapter(IUser)
+class _UserPresentationAssetObjects(BasePrincipalObjects):
+
+    def iter_objects(self):
+        for asset in component.getUtilitiesFor(IPresentationAsset):
+            if self.creator(asset) == self.username:
+                if INTILessonOverview.providedBy(asset):
+                    for item in yield_lesson_constraints(asset):
+                        if self.creator(item) == self.username:
+                            yield item
+                yield asset
 
 
 # lesson constraints
