@@ -33,7 +33,7 @@ def yield_lesson_constraints(asset):
 class _SystemPresentationAssets(BasePrincipalObjects):
 
     def iter_objects(self):
-        for asset in component.getUtilitiesFor(IPresentationAsset):
+        for _, asset in component.getUtilitiesFor(IPresentationAsset):
             if self.is_system_username(self.creator(asset)):
                 if INTILessonOverview.providedBy(asset):
                     for item in yield_lesson_constraints(asset):
@@ -46,7 +46,7 @@ class _SystemPresentationAssets(BasePrincipalObjects):
 class _UserPresentationAssets(BasePrincipalObjects):
 
     def iter_objects(self):
-        for asset in component.getUtilitiesFor(IPresentationAsset):
+        for _, asset in component.getUtilitiesFor(IPresentationAsset):
             if self.creator(asset) == self.username:
                 if INTILessonOverview.providedBy(asset):
                     for item in yield_lesson_constraints(asset):
