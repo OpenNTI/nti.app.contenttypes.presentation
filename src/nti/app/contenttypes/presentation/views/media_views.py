@@ -12,6 +12,7 @@ logger = __import__('logging').getLogger(__name__)
 import sys
 
 from zope import component
+from zope import interface
 from zope import lifecycleevent
 
 from zope.file.file import File
@@ -44,6 +45,7 @@ from nti.contenttypes.presentation import NTI_TRANSCRIPT_MIMETYPE
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTITranscript
 from nti.contenttypes.presentation.interfaces import ITranscriptContainer
+from nti.contenttypes.presentation.interfaces import IUserCreatedTranscript
 
 from nti.dataserver import authorization as nauth
 
@@ -148,6 +150,21 @@ class NTITranscriptPutView(AbstractAuthenticatedView,
         return theObject
 
 
+@view_config(context=INTITranscript)
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               request_method='DELETE',
+               permission=nauth.ACT_DELETE)
+class NTITranscriptDeleteView(AbstractAuthenticatedView):
+
+    def __call__(self):
+        media = self.context.__parent__
+        container = ITranscriptContainer(media)
+        container.remove(self.context)
+        lifecycleevent.modified(media)
+        return media
+
+
 @view_config(context=INTIMedia)
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
@@ -186,8 +203,8 @@ class TranscriptUploadView(AbstractAuthenticatedView,
         name = getattr(source, 'filename', None) or name
         process_transcript_source(transcript, source, name, self.request)
         # update media
+        interface.alsoProvides(transcript, IUserCreatedTranscript)
         container = ITranscriptContainer(self.context)
-        container.clear()
         container.add(transcript)
         lifecycleevent.created(transcript)
         lifecycleevent.modified(self.context)

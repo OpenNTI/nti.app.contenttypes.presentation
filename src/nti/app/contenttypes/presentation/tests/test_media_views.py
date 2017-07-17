@@ -61,7 +61,7 @@ class TestMediaViews(ApplicationLayerTest):
                     has_entry('srcjsonp', is_(none())))
         
     @WithSharedApplicationMockDS(testapp=True, users=True)
-    def test_post_transcript(self):
+    def test_post_delete_transcript(self):
         data = {
             'lang': 'en',
             'type': 'text/vtt',
@@ -84,3 +84,7 @@ class TestMediaViews(ApplicationLayerTest):
                     has_entry('src', starts_with('/dataserver2/')))
         assert_that(res.json_body,
                     has_entry('srcjsonp', is_(none())))
+        
+        ntiid = res.json_body['NTIID']
+        href = '/dataserver2/Objects/%s' % ntiid
+        self.testapp.delete(href, status=200)
