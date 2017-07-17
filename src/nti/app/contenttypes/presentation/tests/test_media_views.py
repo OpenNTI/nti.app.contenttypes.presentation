@@ -70,6 +70,7 @@ class TestMediaViews(ApplicationLayerTest):
         }
         href = '/dataserver2/Objects/%s' % self.video_ntiid
         res = self.testapp.get(href, status=200)
+        assert_that(res.json_body, has_entry('transcripts', has_length(1)))
         href = self.require_link_href_with_rel(res.json_body, 'transcript')
         path = os.path.join(os.path.dirname(__file__), 'sample.vtt')
         with open(path, "r") as fp:
@@ -86,5 +87,14 @@ class TestMediaViews(ApplicationLayerTest):
                     has_entry('srcjsonp', is_(none())))
         
         ntiid = res.json_body['NTIID']
+        
+        href = '/dataserver2/Objects/%s' % self.video_ntiid
+        res = self.testapp.get(href, status=200)
+        assert_that(res.json_body, has_entry('transcripts', has_length(2)))
+        
         href = '/dataserver2/Objects/%s' % ntiid
         self.testapp.delete(href, status=200)
+        
+        href = '/dataserver2/Objects/%s' % self.video_ntiid
+        res = self.testapp.get(href, status=200)
+        assert_that(res.json_body, has_entry('transcripts', has_length(1)))
