@@ -161,6 +161,7 @@ class NTITranscriptDeleteView(AbstractAuthenticatedView):
         media = self.context.__parent__
         container = ITranscriptContainer(media)
         container.remove(self.context)
+        self.context.__parent__ = None
         if self.context.is_source_attached():
             self.context.src.__parent__ = None
         lifecycleevent.modified(media)
