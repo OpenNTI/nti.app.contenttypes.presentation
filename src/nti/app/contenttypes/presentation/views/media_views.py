@@ -146,6 +146,7 @@ class NTITranscriptPutView(AbstractAuthenticatedView,
             name = getattr(source, 'filename', None) or name
             process_transcript_source(theObject, source, name, self.request)
         if modified:
+            theObject.updateLastMod()
             lifecycleevent.modified(theObject)
         return theObject
 
@@ -207,7 +208,6 @@ class TranscriptUploadView(AbstractAuthenticatedView,
         process_transcript_source(transcript, source, name, self.request)
         # set creator
         transcript.creator = self.remoteUser.username
-        transcript.updateLastMod()
         # mark with interface
         interface.alsoProvides(transcript, IUserCreatedTranscript)
         # add to container

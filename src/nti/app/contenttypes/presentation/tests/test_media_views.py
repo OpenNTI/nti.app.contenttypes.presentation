@@ -85,6 +85,10 @@ class TestMediaViews(ApplicationLayerTest):
                     has_entry('src', starts_with('/dataserver2/')))
         assert_that(res.json_body,
                     has_entry('srcjsonp', is_(none())))
+        assert_that(res.json_body,
+                    has_entry('CreatedTime', is_not(none())))
+        assert_that(res.json_body,
+                    has_entry('Last Modified', is_not(none())))
         
         ntiid = res.json_body['NTIID']
         
