@@ -37,7 +37,7 @@ from nti.app.contenttypes.presentation import MessageFactory as _
 from nti.base._compat import text_
 
 from nti.base.interfaces import IFile
-
+ 
 from nti.contentindexing.media.interfaces import IVideoTranscriptParser
 
 from nti.contenttypes.presentation import NTI_TRANSCRIPT_MIMETYPE
@@ -205,10 +205,14 @@ class TranscriptUploadView(AbstractAuthenticatedView,
         name, source = next(iter(sources.items()))
         name = getattr(source, 'filename', None) or name
         process_transcript_source(transcript, source, name, self.request)
-        # update media
+        # set creator
+        transcript.creator = self.remoteUser.username
+        transcript.updateLastMod()
+        # mark with interface
         interface.alsoProvides(transcript, IUserCreatedTranscript)
+        # add to container
         container = ITranscriptContainer(self.context)
         container.add(transcript)
+        # notify
         lifecycleevent.created(transcript)
-        lifecycleevent.modified(self.context)
         return transcript
