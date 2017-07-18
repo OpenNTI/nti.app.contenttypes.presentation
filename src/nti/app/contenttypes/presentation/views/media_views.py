@@ -165,6 +165,7 @@ class NTITranscriptDeleteView(AbstractAuthenticatedView):
         self.context.__parent__ = None
         if self.context.is_source_attached():
             self.context.src.__parent__ = None
+        lifecycleevent.removed(self.context, media, self.context.ntiid)
         lifecycleevent.modified(media)
         return media
 
@@ -215,4 +216,5 @@ class TranscriptUploadView(AbstractAuthenticatedView,
         container.add(transcript)
         # notify
         lifecycleevent.created(transcript)
+        lifecycleevent.added(transcript)
         return transcript
