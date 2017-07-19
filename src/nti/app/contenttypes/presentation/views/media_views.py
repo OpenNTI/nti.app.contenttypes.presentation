@@ -166,16 +166,54 @@ class NTITranscriptPutView(AbstractAuthenticatedView,
                permission=nauth.ACT_DELETE)
 class NTITranscriptDeleteView(AbstractAuthenticatedView):
 
-    def __call__(self):
-        media = self.context.__parent__
+    def _do_remove(self, context):
+        media = context.__parent__
         container = ITranscriptContainer(media)
-        container.remove(self.context)
-        self.context.__parent__ = None
-        if self.context.is_source_attached():
-            self.context.src.__parent__ = None
-        lifecycleevent.removed(self.context, media, self.context.ntiid)
+        container.remove(context)
+        context.__parent__ = None
+        if context.is_source_attached():
+            context.src.__parent__ = None
+        lifecycleevent.removed(context, media, context.ntiid)
+        return media
+
+    def __call__(self):
+        if not IUserCreatedTranscript.providedBy(self.context):
+            raise_json_error(self.request,
+                             hexc.HTTPForbidden,
+                             {
+                                'message': _(u"Cannot delete a legacy transcript."),
+                             },
+                             None)
+        media = self._do_remove(self.context)
+        media.updateLastMod()
         lifecycleevent.modified(media)
         return media
+
+
+@view_config(context=INTIMedia)
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               request_method='POST',
+               name='clear_transcripts',
+               permission=nauth.ACT_UPDATE)
+class ClearTranscriptsView(NTITranscriptDeleteView):
+
+    def __call__(self):
+        result = LocatedExternalDict()
+        items = result[ITEMS] = []
+        container = ITranscriptContainer(self.context)
+        for transcript in list(container):
+            if IUserCreatedTranscript.providedBy(transcript):
+                self._do_remove(transcript)
+        result[ITEM_COUNT] = result[TOTAL] = len(items)
+        if items:
+            # lock if required
+            if      not IUserCreatedAsset.providedBy(self.context) \
+                and not self.context.isLocked():
+                self.context.lock()
+            self.context.updateLastMod()
+            lifecycleevent.modified(self.context)
+        return result
 
 
 @view_config(context=INTIMedia)
@@ -233,5 +271,6 @@ class TranscriptUploadView(AbstractAuthenticatedView,
         if      not IUserCreatedAsset.providedBy(self.context) \
             and not self.context.isLocked():
             self.context.lock()
+            self.context.updateLastMod()
             lifecycleevent.modified(self.context)
         return transcript

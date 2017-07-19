@@ -44,24 +44,23 @@ class TestMediaViews(ApplicationLayerTest):
         res = self.testapp.get(href, status=200)
         assert_that(res.json_body, has_entry('Items', has_length(1)))
 
-    @WithSharedApplicationMockDS(testapp=True, users=True)
-    def test_put_transcript(self):
-        href = '/dataserver2/Objects/%s' % self.transcript_ntiid
+    def get_source(self):
         path = os.path.join(os.path.dirname(__file__), 'sample.vtt')
         with open(path, "r") as fp:
             source = fp.read()
-        res = self.testapp.put(href,
-                               upload_files=[
-                                   ('sample.vtt', 'sample.vtt', source)
-                               ],
-                               status=200)
-        assert_that(res.json_body,
-                    has_entry('src', starts_with('/dataserver2/')))
-        assert_that(res.json_body,
-                    has_entry('srcjsonp', is_(none())))
+        return source
+
+    @WithSharedApplicationMockDS(testapp=True, users=True)
+    def test_put_transcript_403(self):
+        href = '/dataserver2/Objects/%s' % self.transcript_ntiid
+        self.testapp.put(href,
+                         upload_files=[
+                            ('sample.vtt', 'sample.vtt', self.get_source())
+                         ],
+                        status=403)
         
     @WithSharedApplicationMockDS(testapp=True, users=True)
-    def test_post_delete_transcript(self):
+    def test_post_put_delete_transcript(self):
         data = {
             'lang': 'en',
             'type': 'text/vtt',
@@ -72,13 +71,10 @@ class TestMediaViews(ApplicationLayerTest):
         res = self.testapp.get(href, status=200)
         assert_that(res.json_body, has_entry('transcripts', has_length(1)))
         href = self.require_link_href_with_rel(res.json_body, 'transcript')
-        path = os.path.join(os.path.dirname(__file__), 'sample.vtt')
-        with open(path, "r") as fp:
-            source = fp.read()
         data = {'__json__': to_json_representation(data)}
         res = self.testapp.post(href, data,
                                 upload_files=[
-                                       ('sample.vtt', 'sample.vtt', source)
+                                       ('sample.vtt', 'sample.vtt', self.get_source())
                                 ],
                                 status=200)
         assert_that(res.json_body,
@@ -90,9 +86,17 @@ class TestMediaViews(ApplicationLayerTest):
         assert_that(res.json_body,
                     has_entry('Last Modified', is_not(none())))
         assert_that(res.json_body,
-                    has_entry('Creator', is_not(none())))
-        
+                    has_entry('Creator', is_not(none())))        
         ntiid = res.json_body['NTIID']
+        
+        # update
+        href = '/dataserver2/Objects/%s' % ntiid
+        self.testapp.put(href,
+                         upload_files=[
+                            ('sample.vtt', 'sample.vtt', self.get_source())
+                         ],
+                         status=200)
+
         
         href = '/dataserver2/Objects/%s' % self.video_ntiid
         res = self.testapp.get(href, status=200)
