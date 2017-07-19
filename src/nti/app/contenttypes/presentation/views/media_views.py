@@ -44,6 +44,7 @@ from nti.contenttypes.presentation import NTI_TRANSCRIPT_MIMETYPE
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTITranscript
+from nti.contenttypes.presentation.interfaces import IUserCreatedAsset 
 from nti.contenttypes.presentation.interfaces import ITranscriptContainer
 from nti.contenttypes.presentation.interfaces import IUserCreatedTranscript
 
@@ -94,14 +95,13 @@ def process_transcript_source(transcript, source, name=None, request=None):
     contentType = TEXT_VTT if contentType == OCTET_STREAM else contentType
     try:
         parse_transcript(content, contentType)
-    except Exception as e:
+    except Exception:
         exc_info = sys.exc_info()
         raise_json_error(request,
                          hexc.HTTPUnprocessableEntity,
                          {
-                             'message': _(u"Invalid transcript source."),
-                             'code': 'InvalidTranscript',
-                             'message': str(e)
+                            'message': _(u"Invalid transcript source."),
+                            'code': 'InvalidTranscript',
                          },
                          exc_info[2])
     # create new content source
@@ -128,6 +128,13 @@ class NTITranscriptPutView(AbstractAuthenticatedView,
                            ModeledContentUploadRequestUtilsMixin):
 
     def __call__(self):
+        if not IUserCreatedTranscript.providedBy(self.context):
+            raise_json_error(self.request,
+                             hexc.HTTPForbidden,
+                             {
+                                'message': _(u"Cannot update legacy transcript."),
+                             },
+                             None)
         modified = False
         theObject = self.context
         self._check_object_exists(theObject)
@@ -218,4 +225,9 @@ class TranscriptUploadView(AbstractAuthenticatedView,
         # notify
         lifecycleevent.created(transcript)
         lifecycleevent.added(transcript)
+        # lock
+        if      not IUserCreatedAsset.providedBy(self.context) \
+            and not self.context.isLocked():
+            self.context.lock()
+            lifecycleevent.modified(self.context)
         return transcript
