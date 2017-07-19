@@ -29,8 +29,6 @@ from ZODB.interfaces import IConnection
 
 from nti.app.products.courseware.utils import transfer_resources_from_filer
 
-from nti.app.contentlibrary.synchronize.subscribers import parse_embedded_transcripts
-
 from nti.app.contenttypes.presentation.interfaces import IItemRefValidator
 
 from nti.app.contenttypes.presentation.utils.asset import db_connection
@@ -476,8 +474,6 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 			# asset produces more than one object. (e.g. discussions
 			# with multiple ntiids). If that happens, then the source
 			# items do not line up with the input json.
-			json_item = json_items[idx] if idx < len(json_items) else None
-
 			if _is_auto_roll_coalesce(item):
 				# Ok, we have media that we want to auto-coalesce into a roll.
 				roll_idx = idx
@@ -489,7 +485,6 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 				while _is_auto_roll_coalesce(roll_item):
 					# It should be ok if this is called multiple times on object.
 					_, registered = _do_register(roll_item, registry)
-					parse_embedded_transcripts(registered, json_item)
 
 					# Transform any media to a media ref since media rolls
 					# only contain refs
@@ -506,7 +501,6 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 
 					roll_idx += 1
 					roll_item = items[roll_idx] if roll_idx < len(items) else None
-					json_item = json_items[roll_idx] if roll_idx < len(json_items) else None
 
 				# Must have at least two items in our auto-roll; otherwise continue on.
 				if len(media_roll) > 1:
