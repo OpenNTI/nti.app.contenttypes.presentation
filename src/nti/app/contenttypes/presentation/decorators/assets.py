@@ -104,6 +104,7 @@ from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
+from nti.dataserver.authorization import ACT_READ
 
 from nti.externalization.externalization import to_external_object
 
@@ -311,9 +312,12 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
         nttype = get_type(item.target)
         return nttype in (NTIID_TYPE_COURSE_TOPIC, NTIID_TYPE_COURSE_SECTION_TOPIC)
 
-    def _discussion_exists(self, item):
+    def _is_viewable_discussion(self, item):
         target_discussion = find_object_with_ntiid(item.target)
-        return target_discussion is not None
+        # This will return a denied permission if the target_discussion
+        # does not exist, or if the user from the request does not
+        # have permission to read it.
+        return has_permission(ACT_READ, target_discussion, self.request)
 
     @Lazy
     def _is_editor(self):
@@ -429,7 +433,7 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
                         removal.add(idx)
                 elif self._is_legacy_discussion(item):
                     discussions.append(idx)
-                elif not self._discussion_exists(item):
+                elif not self._is_viewable_discussion(item):
                     removal.add(idx)
             elif IMediaRef.providedBy(item):
                 self._handle_media_ref(items, item, idx)
