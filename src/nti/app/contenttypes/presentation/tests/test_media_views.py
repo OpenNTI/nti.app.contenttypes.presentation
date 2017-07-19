@@ -26,21 +26,25 @@ from nti.app.testing.application_webtest import ApplicationLayerTest
 
 from nti.app.testing.decorators import WithSharedApplicationMockDS
 
+from nti.dataserver.tests import mock_dataserver
 
+        
 class TestMediaViews(ApplicationLayerTest):
 
     layer = InstructedCourseApplicationTestLayer
 
     default_origin = 'http://janux.ou.edu'
 
-    video_ntiid_02 = 'tag:nextthought.com,2011-10:OU-NTIVideo-CLC3403_LawAndJustice.ntivideo.video_17.02'
-    legacy_transcript_ntiid = 'tag:nextthought.com,2011-10:OU-NTITranscript-CLC3403_LawAndJustice.ntivideo.video_17.02.0'
+    course_ntiid = 'tag:nextthought.com,2011-10:NTI-CourseInfo-Fall2015_CS_1323'
+    course_url = '/dataserver2/%2B%2Betc%2B%2Bhostsites/platform.ou.edu/%2B%2Betc%2B%2Bsite/Courses/Fall2015/CS%201323'
 
-    video_ntiid_03 = 'tag:nextthought.com,2011-10:OU-NTIVideo-CLC3403_LawAndJustice.ntivideo.video_17.03'
+    video_ntiid_cell = 'tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_02.02.04_Cell'
+    transcript_ntiid = 'tag:nextthought.com,2011-10:OU-NTITranscript-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_02.02.04_Cell.0'
+    video_ntiid_frogger = 'tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_05.01.02_Frogger_1'
     
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_transcripts(self):
-        href = '/dataserver2/Objects/%s' % self.video_ntiid_02
+        href = '/dataserver2/Objects/%s' % self.video_ntiid_cell
         res = self.testapp.get(href, status=200)
         href = self.require_link_href_with_rel(res.json_body, 'transcripts')
         res = self.testapp.get(href, status=200)
@@ -54,7 +58,7 @@ class TestMediaViews(ApplicationLayerTest):
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_put_transcript_403(self):
-        href = '/dataserver2/Objects/%s' % self.legacy_transcript_ntiid
+        href = '/dataserver2/Objects/%s' % self.transcript_ntiid
         self.testapp.put(href,
                          upload_files=[
                             ('sample.vtt', 'sample.vtt', self.get_source())
@@ -68,7 +72,7 @@ class TestMediaViews(ApplicationLayerTest):
             'purpose': 'normal', 
             'MimeType': 'application/vnd.nextthought.ntitranscript', 
         }
-        video_ntiid = video_ntiid or self.video_ntiid_02
+        video_ntiid = video_ntiid or self.video_ntiid_cell
         href = '/dataserver2/Objects/%s' % video_ntiid
         video_res = self.testapp.get(href, status=200)
         assert_that(video_res.json_body, has_entry('transcripts', has_length(1)))
@@ -81,6 +85,17 @@ class TestMediaViews(ApplicationLayerTest):
                                        ],
                                        status=200)
         return video_res, upload_res
+
+    def _do_enroll(self, student='ichigo'):
+        enroll_url = '/dataserver2/CourseAdmin/UserCourseEnroll'
+        data = {
+            'username': student,
+            'ntiid': self.course_ntiid,
+            'scope': 'ForCredit'
+        }
+        return self.testapp.post_json(enroll_url,
+                                      data,
+                                      status=201)
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_post_put_delete_transcript(self):
@@ -97,6 +112,18 @@ class TestMediaViews(ApplicationLayerTest):
                     has_entry('Creator', is_not(none())))        
         ntiid = res.json_body['NTIID']
         
+        # get contents
+        href = res.json_body['src']
+        res = self.testapp.get(href, status=200)
+        
+        student = 'ichigo'
+        with mock_dataserver.mock_db_trans(self.ds):
+            self._create_user(student)
+        self._do_enroll(student)
+        
+        student_environ = self._make_extra_environ(username=student)
+        self.testapp.get(href, status=200, extra_environ=student_environ)
+         
         # update
         href = '/dataserver2/Objects/%s' % ntiid
         self.testapp.put(href,
@@ -106,20 +133,20 @@ class TestMediaViews(ApplicationLayerTest):
                          status=200)
 
         
-        href = '/dataserver2/Objects/%s' % self.video_ntiid_02
+        href = '/dataserver2/Objects/%s' % self.video_ntiid_cell
         res = self.testapp.get(href, status=200)
         assert_that(res.json_body, has_entry('transcripts', has_length(2)))
         
         href = '/dataserver2/Objects/%s' % ntiid
         self.testapp.delete(href, status=200)
         
-        href = '/dataserver2/Objects/%s' % self.video_ntiid_02
+        href = '/dataserver2/Objects/%s' % self.video_ntiid_cell
         res = self.testapp.get(href, status=200)
         assert_that(res.json_body, has_entry('transcripts', has_length(1)))
         
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_clear_transcripts(self):
-        res, _ = self.upload_transcript(self.video_ntiid_03)
+        res, _ = self.upload_transcript(self.video_ntiid_frogger)
         href = self.require_link_href_with_rel(res.json_body, 'clear_transcripts')        
         res = self.testapp.post(href, status=200)
         assert_that(res.json_body, has_entry('Items', has_length(1)))
