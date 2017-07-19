@@ -15,8 +15,6 @@ from zope import component
 from zope import interface
 from zope import lifecycleevent
 
-from zope.file.file import File
-
 from pyramid import httpexceptions as hexc
 
 from pyramid.view import view_config
@@ -47,6 +45,8 @@ from nti.contenttypes.presentation.interfaces import INTITranscript
 from nti.contenttypes.presentation.interfaces import IUserCreatedAsset 
 from nti.contenttypes.presentation.interfaces import ITranscriptContainer
 from nti.contenttypes.presentation.interfaces import IUserCreatedTranscript
+
+from nti.contenttypes.presentation.media import NTITranscriptFile
 
 from nti.dataserver import authorization as nauth
 
@@ -105,7 +105,7 @@ def process_transcript_source(transcript, source, name=None, request=None):
                          },
                          exc_info[2])
     # create new content source
-    source = File(mimeType=contentType)
+    source = NTITranscriptFile(contentType)
     source.name = source.filename = name # save filename
     with source.open("w") as fp:
         fp.write(content)
