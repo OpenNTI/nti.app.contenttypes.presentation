@@ -86,9 +86,10 @@ def parse_transcript(content, name=TEXT_VTT):
     return result
 
 
-def process_transcript_source(transcript, source, name="transcript.vtt", request=None):
+def process_transcript_source(transcript, source, name=None, request=None):
     old_src = transcript.src
     content = text_(source.read())
+    name = name or "transcript.vtt"
     contentType = getattr(source, 'contentType', None) or TEXT_VTT
     contentType = TEXT_VTT if contentType == OCTET_STREAM else contentType
     try:
@@ -105,6 +106,7 @@ def process_transcript_source(transcript, source, name="transcript.vtt", request
                          exc_info[2])
     # create new content source
     source = File(mimeType=contentType)
+    source.name = source.filename = name # save filename
     with source.open("w") as fp:
         fp.write(content)
     transcript.src = source
@@ -143,7 +145,6 @@ class NTITranscriptPutView(AbstractAuthenticatedView,
         if sources:
             modified = True
             name, source = next(iter(sources.items()))
-            name = getattr(source, 'filename', None) or name
             process_transcript_source(theObject, source, name, self.request)
         if modified:
             theObject.updateLastMod()
