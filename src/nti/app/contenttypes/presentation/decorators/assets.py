@@ -151,9 +151,9 @@ class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecor
 
     def _predicate(self, context, result):
         return self._acl_decoration \
-           and self._is_authenticated \
-           and not self._has_edit_link(result) \
-           and has_permission(ACT_CONTENT_EDIT, context, self.request)
+            and self._is_authenticated \
+            and not self._has_edit_link(result) \
+            and has_permission(ACT_CONTENT_EDIT, context, self.request)
 
     def _do_decorate_external(self, context, result):
         _links = result.setdefault(LINKS, [])
@@ -175,8 +175,8 @@ class _PresentationAssetRequestDecorator(AbstractAuthenticatedRequestAwareDecora
 
     def _predicate(self, context, result):
         return self._acl_decoration \
-           and self._is_authenticated \
-           and has_permission(ACT_CONTENT_EDIT, context, self.request)
+            and self._is_authenticated \
+            and has_permission(ACT_CONTENT_EDIT, context, self.request)
 
     def _do_containers(self, context, result):
         catalog = get_library_catalog()
@@ -185,7 +185,7 @@ class _PresentationAssetRequestDecorator(AbstractAuthenticatedRequestAwareDecora
 
     def _do_schema_link(self, context, result):
         _links = result.setdefault(LINKS, [])
-        link = Link(context, 
+        link = Link(context,
                     rel='schema',
                     elements=('@@schema',))
         interface.alsoProvides(link, ILocation)
@@ -310,6 +310,12 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
         nttype = get_type(item.target)
         return nttype in (NTIID_TYPE_COURSE_TOPIC, NTIID_TYPE_COURSE_SECTION_TOPIC)
 
+    def _discussion_exists(self, item):
+        target_discussion = find_object_with_ntiid(item.target)
+        if target_discussion is not None:
+            return True
+        return False
+
     @Lazy
     def _is_editor(self):
         return has_permission(ACT_CONTENT_EDIT, self.request.context)
@@ -329,7 +335,8 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
                 item = items[idx]
                 specific = get_specific(item.target)
                 scopes[idx] = ES_PUBLIC if OPEN in specific else None
-                scopes[idx] = ES_CREDIT if IN_CLASS_SAFE in specific else scopes[idx]
+                scopes[idx] = ES_CREDIT if IN_CLASS_SAFE in specific else scopes[
+                    idx]
                 has_credit = has_credit or scopes[idx] == ES_CREDIT
 
             m_scope = m_scope[0]  # pick first
@@ -401,8 +408,8 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
     def _handle_relatedworkref_pointer(self, context, items, item, idx):
         source = INTIRelatedWorkRef(item, None)
         if      source is not None \
-            and self._allow_visible(context, source) \
-            and self._can_view_ref_target(source):
+                and self._allow_visible(context, source) \
+                and self._can_view_ref_target(source):
             items[idx] = to_external_object(source)
             return True
         return False
@@ -420,26 +427,28 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
             elif INTIDiscussionRef.providedBy(item):
                 if item.isCourseBundle():
                     if      not self._is_editor \
-                        and not self._allow_discussion_course_bundle(context, item):
+                            and not self._allow_discussion_course_bundle(context, item):
                         removal.add(idx)
                 elif self._is_legacy_discussion(item):
                     discussions.append(idx)
+                elif not self._discussion_exists(item):
+                    removal.add(idx)
             elif IMediaRef.providedBy(item):
                 self._handle_media_ref(items, item, idx)
             elif    INTISlideDeckRef.providedBy(item) \
-                and not self._handle_slidedeck_ref(items, item, idx):
+                    and not self._handle_slidedeck_ref(items, item, idx):
                 removal.add(idx)
             elif    INTITimelineRef.providedBy(item) \
-                and not self._handle_timeline_ref(items, item, idx):
+                    and not self._handle_timeline_ref(items, item, idx):
                 removal.add(idx)
             elif    INTIRelatedWorkRefPointer.providedBy(item) \
-                and not self._handle_relatedworkref_pointer(context, items, item, idx):
+                    and not self._handle_relatedworkref_pointer(context, items, item, idx):
                 removal.add(idx)
             elif    INTIAssignmentRef.providedBy(item) \
-                and not self.allow_assignmentref(context, item):
+                    and not self.allow_assignmentref(context, item):
                 removal.add(idx)
             elif    INTISurveyRef.providedBy(item) \
-                and not self.allow_surveyref(context, item):
+                    and not self.allow_surveyref(context, item):
                 removal.add(idx)
             elif INTIMediaRoll.providedBy(item) and not self.allow_mediaroll(items[idx]):
                 removal.add(idx)
@@ -544,10 +553,10 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
     def _should_process(self, obj):
         result = False
         if      INTITimeline.providedBy(obj) \
-            and not is_internal_file_link(obj.href or ''):
+                and not is_internal_file_link(obj.href or ''):
             result = True
         elif    INTIRelatedWorkRef.providedBy(obj) \
-            and obj.type in (self.EXTERNAL_LINK_MIME_TYPE, self.CONTENT_MIME_TYPE):
+                and obj.type in (self.EXTERNAL_LINK_MIME_TYPE, self.CONTENT_MIME_TYPE):
             result = True
         return result
 
@@ -557,7 +566,7 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
             value = getattr(context, name, None)
             if value and not value.startswith('/') and '://' not in value:
                 if     package is None \
-                    or not _path_exists_in_package(value, package):
+                        or not _path_exists_in_package(value, package):
                     # We make sure each url is in the correct package.
                     package = _get_item_content_package(context, value)
                 if package is not None:
@@ -622,7 +631,8 @@ class _IPADLegacyReferenceDecorator(AbstractAuthenticatedRequestAwareDecorator):
     def _do_decorate_external(self, context, result_map):
         if INTIAssignmentRef.providedBy(context):
             result_map[CLASS] = 'Assignment'
-            result_map[MIMETYPE] = 'application/vnd.nextthought.assessment.assignment'
+            result_map[
+                MIMETYPE] = 'application/vnd.nextthought.assessment.assignment'
         elif INTIQuestionSetRef.providedBy(context):
             result_map[CLASS] = 'QuestionSet'
             result_map[MIMETYPE] = 'application/vnd.nextthought.naquestionset'
@@ -679,13 +689,14 @@ class _BaseAssessmentRefDecorator(_BaseAssetDecorator):
     __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
-        super(_BaseAssessmentRefDecorator, self).decorateExternalObject(original, external)
+        super(_BaseAssessmentRefDecorator, self).decorateExternalObject(
+            original, external)
         # Always pass through to our target.
         question_count = external.pop('question_count', None)
         target = find_object_with_ntiid(original.target)
         if target is not None:
             question_count = getattr(target, 'draw', None) \
-                          or len(target.questions)
+                or len(target.questions)
         external['question-count'] = str(question_count)
 
 
@@ -708,7 +719,8 @@ class _NTIAssignmentRefDecorator(_BaseAssetDecorator):
     __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
-        super(_NTIAssignmentRefDecorator, self).decorateExternalObject(original, external)
+        super(_NTIAssignmentRefDecorator, self).decorateExternalObject(
+            original, external)
         if 'containerId' in external:
             external['ContainerId'] = external.pop('containerId')
 
@@ -740,7 +752,8 @@ class _NTIDiscussionRefDecorator(_BaseAssetDecorator):
     __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
-        super(_NTIDiscussionRefDecorator, self).decorateExternalObject(original, external)
+        super(_NTIDiscussionRefDecorator, self).decorateExternalObject(
+            original, external)
         if 'target' in external:
             external['Target-NTIID'] = external.pop('target')
         if 'Target-NTIID' in external and not original.isCourseBundle():
@@ -775,7 +788,8 @@ class _NTITimelineDecorator(_BaseAssetDecorator):
     __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
-        super(_NTITimelineDecorator, self).decorateExternalObject(original, external)
+        super(_NTITimelineDecorator, self).decorateExternalObject(
+            original, external)
         if 'description' in external:
             external['desc'] = external['description']
         inline = external.pop('suggested_inline', None)
@@ -789,7 +803,8 @@ class _NTIBaseSlideDecorator(_BaseAssetDecorator):
     __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
-        super(_NTIBaseSlideDecorator, self).decorateExternalObject(original, external)
+        super(_NTIBaseSlideDecorator, self).decorateExternalObject(
+            original, external)
         if 'byline' in external:
             external['creator'] = external['byline']
         if CLASS in external:
@@ -806,7 +821,8 @@ class _NTISlideDecorator(_NTIBaseSlideDecorator):
     __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
-        super(_NTISlideDecorator, self).decorateExternalObject(original, external)
+        super(_NTISlideDecorator, self).decorateExternalObject(
+            original, external)
         for name in ("slidevideostart", "slidevideoend", "slidenumber"):
             value = external.get(name)
             if value is not None and not isinstance(value, six.string_types):
@@ -820,7 +836,8 @@ class _NTISlideVideoDecorator(_NTIBaseSlideDecorator):
     __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
-        super(_NTISlideVideoDecorator, self).decorateExternalObject(original, external)
+        super(_NTISlideVideoDecorator, self).decorateExternalObject(
+            original, external)
         if 'video_ntiid' in external:
             external['video-ntiid'] = external['video_ntiid']  # legacy
 
@@ -832,7 +849,8 @@ class _NTISlideDeckDecorator(_NTIBaseSlideDecorator):
     __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
-        super(_NTISlideDeckDecorator, self).decorateExternalObject(original, external)
+        super(_NTISlideDeckDecorator, self).decorateExternalObject(
+            original, external)
         external['creator'] = original.byline
 
 
@@ -843,7 +861,8 @@ class _NTIAudioRefDecorator(_BaseAssetDecorator):
     __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
-        super(_NTIAudioRefDecorator, self).decorateExternalObject(original, external)
+        super(_NTIAudioRefDecorator, self).decorateExternalObject(
+            original, external)
         if MIMETYPE in external:
             external[MIMETYPE] = "application/vnd.nextthought.ntiaudio"
 
@@ -855,7 +874,8 @@ class _NTIVideoRefDecorator(_BaseAssetDecorator):
     __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
-        super(_NTIVideoRefDecorator, self).decorateExternalObject(original, external)
+        super(_NTIVideoRefDecorator, self).decorateExternalObject(
+            original, external)
         if MIMETYPE in external:
             external[MIMETYPE] = "application/vnd.nextthought.ntivideo"
 
@@ -895,7 +915,8 @@ class _NTIVideoDecorator(_BaseMediaDecorator):
     __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
-        super(_NTIVideoDecorator, self).decorateExternalObject(original, external)
+        super(_NTIVideoDecorator, self).decorateExternalObject(
+            original, external)
         if 'closed_caption' in external:
             external['closedCaptions'] = external['closed_caption']  # legacy
         # remove empty
