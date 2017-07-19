@@ -222,6 +222,10 @@ class TranscriptUploadView(AbstractAuthenticatedView,
         # add to container
         container = ITranscriptContainer(self.context)
         container.add(transcript)
+        # make sure all of the transcripts have an ntiid, 
+        # they are lazy property
+        for obj in container:
+            str(obj.ntiid)
         # notify
         lifecycleevent.created(transcript)
         lifecycleevent.added(transcript)
