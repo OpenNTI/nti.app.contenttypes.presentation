@@ -14,6 +14,8 @@ from zope import interface
 
 from zope.cachedescriptors.property import Lazy
 
+from zope.security.interfaces import IPrincipal
+
 from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_courses
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -30,6 +32,7 @@ from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import IUserCreatedTranscript
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import ILegacyPresentationAsset
 from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraint
@@ -171,7 +174,15 @@ class AdminEditorParentObjectACLProvider(object):
 
 @component.adapter(INTITranscript)
 class NTITranscriptACLProvider(AdminEditorParentObjectACLProvider):
-    pass
+    
+    @Lazy
+    def __acl__(self):
+        result = super(NTITranscriptACLProvider, self).__acl__
+        if IUserCreatedTranscript.providedBy(self.context):
+            creator = IPrincipal(self.context.creator)
+            result.append(ace_allowing(creator, ALL_PERMISSIONS, type(self)))
+            result.append(ACE_DENY_ALL) # let parent objects determine ACL.
+        return result
 
 
 @component.adapter(ILessonPublicationConstraint)
