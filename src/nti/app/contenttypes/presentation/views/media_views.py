@@ -205,6 +205,7 @@ class ClearTranscriptsView(NTITranscriptDeleteView):
         for transcript in list(container):
             if IUserCreatedTranscript.providedBy(transcript):
                 self._do_remove(transcript)
+                items.append(transcript)
         result[ITEM_COUNT] = result[TOTAL] = len(items)
         if items:
             # lock if required
@@ -245,8 +246,8 @@ class TranscriptUploadView(AbstractAuthenticatedView,
             raise_json_error(self.request,
                              hexc.HTTPUnprocessableEntity,
                              {
-                                 'message': _(u"No transcript source."),
-                                 'code': 'NoTranscript',
+                                'message': _(u"No transcript source."),
+                                'code': 'NoTranscript',
                              },
                              None)
         # parse transcript
@@ -261,7 +262,7 @@ class TranscriptUploadView(AbstractAuthenticatedView,
         container = ITranscriptContainer(self.context)
         container.add(transcript)
         # make sure all of the transcripts have an ntiid, 
-        # they are lazy property
+        # they are lazy properties
         for obj in container:
             str(obj.ntiid)
         # notify
