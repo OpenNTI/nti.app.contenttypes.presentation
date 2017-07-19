@@ -18,6 +18,8 @@ from zope.security.interfaces import IPrincipal
 
 from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_courses
 
+from nti.app.contentfile.acl import ContentBaseFileACLProvider
+
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.presentation.interfaces import INTIAudio
@@ -32,6 +34,7 @@ from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import INTITranscriptFile
 from nti.contenttypes.presentation.interfaces import IUserCreatedTranscript
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import ILegacyPresentationAsset
@@ -172,6 +175,11 @@ class AdminEditorParentObjectACLProvider(object):
         return result
 
 
+@component.adapter(INTITranscriptFile)
+class NTITranscriptFileACLProvider(ContentBaseFileACLProvider):
+    pass
+
+
 @component.adapter(INTITranscript)
 class NTITranscriptACLProvider(AdminEditorParentObjectACLProvider):
     
@@ -179,9 +187,9 @@ class NTITranscriptACLProvider(AdminEditorParentObjectACLProvider):
     def __acl__(self):
         result = super(NTITranscriptACLProvider, self).__acl__
         if IUserCreatedTranscript.providedBy(self.context):
-            creator = IPrincipal(self.context.creator)
-            result.append(ace_allowing(creator, ALL_PERMISSIONS, type(self)))
-            result.append(ACE_DENY_ALL) # let parent objects determine ACL.
+            creator = IPrincipal(self.context.creator, None)
+            if creator is not None:
+                result.append(ace_allowing(creator, ALL_PERMISSIONS, type(self)))
         return result
 
 

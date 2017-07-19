@@ -107,6 +107,7 @@
 	<adapter factory=".acl.NTIRelatedWorkRefACLProvider" />
 	<adapter factory=".acl.NTILessonOverviewACLProvider" />
 	<adapter factory=".acl.PresentationAssetACLProvider" />
+	<adapter factory=".acl.NTITranscriptFileACLProvider" />
 	<adapter factory=".acl.NTICourseOverviewGroupACLProvider" />
 	<adapter factory=".acl.LessonPublicationConstraintACLProvider" />
 	<adapter factory=".acl.LessonPublicationConstraintsACLProvider" />
