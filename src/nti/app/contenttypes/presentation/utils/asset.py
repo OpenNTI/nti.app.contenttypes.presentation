@@ -30,7 +30,7 @@ from plone.namedfile.interfaces import INamed as IPloneNamed
 from nti.app.products.courseware.resources.utils import is_internal_file_link
 from nti.app.products.courseware.resources.utils import get_file_from_external_link
 
-from nti.base._compat import to_unicode
+from nti.base._compat import text_
 
 from nti.common.random import generate_random_hex_string
 
@@ -333,14 +333,14 @@ def check_docket_targets(asset):
         if IPloneNamed.providedBy(href):
             asset.target = to_external_ntiid_oid(href)
             asset_type = getattr(href, 'contentType', None) or asset.type
-            asset.type = to_unicode(asset_type) if asset_type else None
+            asset.type = text_(asset_type) if asset_type else None
         elif is_valid_ntiid_string(href):
             asset.target = href
         elif is_internal_file_link(href):
             ext = get_file_from_external_link(href)
             asset.target = to_external_ntiid_oid(ext)
             asset_type = getattr(ext, 'contentType', None) or asset.type
-            asset.type = to_unicode(asset_type) if asset_type else None
+            asset.type = text_(asset_type) if asset_type else None
         return True
     return False
 check_related_work_target = check_docket_targets  # BWC

@@ -75,6 +75,8 @@ from nti.assessment.interfaces import IQAssessment
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQuestionSet
 
+from nti.base._compat import text_
+
 from nti.contentfile.interfaces import IContentBaseFile
 
 from nti.contentlibrary.indexed_data import get_site_registry
@@ -364,7 +366,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 				if name == 'href':  # update target and type
 					item.target = to_external_ntiid_oid(item)  # NTIID
 					if INTIRelatedWorkRef.providedBy(item):
-						item.type = unicode(content_file.contentType)
+						item.type = text_(content_file.contentType)
 
 	def _handle_related_work(self, provided, item, creator, extended=None):
 		self._handle_package_asset(provided, item, creator, extended)
@@ -381,7 +383,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 			named = filer.get(href) if href else None
 			if named is not None:
 				ntiid = to_external_ntiid_oid(named)
-				contentType = unicode(named.contentType or u'') or contentType
+				contentType = text_(named.contentType or u'') or contentType
 
 		# If we do not have a target, and we have a ContentUnit href, use it.
 		if ntiid is None and is_valid_ntiid_string(item.href):
