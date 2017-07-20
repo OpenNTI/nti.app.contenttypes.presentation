@@ -315,6 +315,19 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
         return self.transformOutput(result)
 
 
+@view_config(context=INTIMedia)
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               request_method='PUT',
+               permission=nauth.ACT_CONTENT_EDIT)
+class MediaAssetPutView(PresentationAssetPutView):
+
+    def readInput(self, no_ntiids=True):
+        result = PresentationAssetPutView.readInput(self, no_ntiids)
+        result.pop('transcripts', None)
+        return result
+
+
 @view_config(context=INTILessonOverview)
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',

@@ -779,6 +779,20 @@ class PackagePresentationAssetPutView(PresentationAssetPutView):
 			result = courses[0] if courses else None  # should always find one
 		return result
 
+
+@view_config(context=INTIMedia)
+@view_defaults(route_name='objects.generic.traversal',
+			   renderer='rest',
+			   request_method='PUT',
+			   permission=nauth.ACT_CONTENT_EDIT)
+class MediaAssetPutView(PackagePresentationAssetPutView):
+
+	def readInput(self, no_ntiids=True):
+		result = PackagePresentationAssetPutView.readInput(self, no_ntiids)
+		result.pop('transcripts', None)
+		return result
+
+
 @view_config(context=ICoursePresentationAsset)
 @view_defaults(route_name='objects.generic.traversal',
 			   renderer='rest',
