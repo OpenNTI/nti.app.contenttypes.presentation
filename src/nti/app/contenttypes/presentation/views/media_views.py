@@ -12,7 +12,6 @@ logger = __import__('logging').getLogger(__name__)
 import sys
 
 from zope import component
-from zope import interface
 from zope import lifecycleevent
 
 from pyramid import httpexceptions as hexc
@@ -111,6 +110,7 @@ def process_transcript_source(transcript, source, name=None, request=None):
     parse_embedded_transcript(transcript, parsed, encoded=False)
     if IFile.providedBy(old_src):
         old_src.__parent__ = None
+    transcript._p_changed = True
     return transcript
 
 
@@ -250,20 +250,18 @@ class TranscriptUploadView(AbstractAuthenticatedView,
         name, source = next(iter(sources.items()))
         name = getattr(source, 'filename', None) or name
         process_transcript_source(transcript, source, name, self.request)
+        lifecycleevent.created(transcript)
         # set creator
         transcript.creator = self.remoteUser.username
-        # mark with interface
-        interface.alsoProvides(transcript, IUserCreatedTranscript)
         # add to container
         container = ITranscriptContainer(self.context)
         container.add(transcript)
         # make sure all of the transcripts have an ntiid, 
         # they are lazy properties
-        for obj in container:
-            str(obj.ntiid)
+        [obj.ntiid for obj in container]
         # notify
-        lifecycleevent.created(transcript)
         lifecycleevent.added(transcript)
+        assert IUserCreatedTranscript.providedBy(transcript)
         # lock
         if      not IUserCreatedAsset.providedBy(self.context) \
             and not self.context.isLocked():
