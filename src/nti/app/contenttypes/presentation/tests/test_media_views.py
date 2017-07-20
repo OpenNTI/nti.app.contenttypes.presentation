@@ -17,8 +17,11 @@ from hamcrest import starts_with
 does_not = is_not
 
 import os
+import simplejson
 
 from nti.contenttypes.presentation.interfaces import IUserCreatedTranscript
+
+from nti.contenttypes.presentation.utils import prepare_json_text
 
 from nti.externalization.representation import to_json_representation
 
@@ -41,7 +44,8 @@ class TestMediaViews(ApplicationLayerTest):
 
     course_ntiid = 'tag:nextthought.com,2011-10:NTI-CourseInfo-Fall2015_CS_1323'
     course_url = '/dataserver2/%2B%2Betc%2B%2Bhostsites/platform.ou.edu/%2B%2Betc%2B%2Bsite/Courses/Fall2015/CS%201323'
-
+    assets_url = course_url + '/assets'
+    
     video_ntiid_cell = 'tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_02.02.04_Cell'
     transcript_ntiid = 'tag:nextthought.com,2011-10:OU-NTITranscript-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_02.02.04_Cell.0'
     video_ntiid_frogger = 'tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_05.01.02_Frogger_1'
@@ -54,10 +58,16 @@ class TestMediaViews(ApplicationLayerTest):
         res = self.testapp.get(href, status=200)
         assert_that(res.json_body, has_entry('Items', has_length(1)))
 
-    def get_source(self):
+    def get_vtt_source(self):
         path = os.path.join(os.path.dirname(__file__), 'sample.vtt')
         with open(path, "r") as fp:
             source = fp.read()
+        return source
+
+    def _load_resource(self, name):
+        path = os.path.join(os.path.dirname(__file__), name)
+        with open(path, "r") as fp:
+            source = simplejson.loads(prepare_json_text(fp.read()))
         return source
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
@@ -65,11 +75,11 @@ class TestMediaViews(ApplicationLayerTest):
         href = '/dataserver2/Objects/%s' % self.transcript_ntiid
         self.testapp.put(href,
                          upload_files=[
-                            ('sample.vtt', 'sample.vtt', self.get_source())
+                            ('sample.vtt', 'sample.vtt', self.get_vtt_source())
                          ],
                         status=403)
         
-    def upload_transcript(self, video_ntiid=None):
+    def upload_transcript(self, video_ntiid=None, check=True):
         data = {
             'lang': 'en',
             'type': 'text/vtt',
@@ -79,13 +89,15 @@ class TestMediaViews(ApplicationLayerTest):
         video_ntiid = video_ntiid or self.video_ntiid_cell
         href = '/dataserver2/Objects/%s' % video_ntiid
         video_res = self.testapp.get(href, status=200)
-        assert_that(video_res.json_body, has_entry('transcripts', has_length(1)))
+        if check:
+            assert_that(video_res.json_body, 
+                        has_entry('transcripts', has_length(1)))
         
         href = self.require_link_href_with_rel(video_res.json_body, 'transcript')
         data = {'__json__': to_json_representation(data)}
         upload_res = self.testapp.post(href, data,
                                        upload_files=[
-                                            ('sample.vtt', 'sample.vtt', self.get_source())
+                                            ('sample.vtt', 'sample.vtt', self.get_vtt_source())
                                        ],
                                        status=200)
         return video_res, upload_res
@@ -137,7 +149,7 @@ class TestMediaViews(ApplicationLayerTest):
         href = '/dataserver2/Objects/%s' % ntiid
         self.testapp.put(href,
                          upload_files=[
-                            ('sample.vtt', 'sample.vtt', self.get_source())
+                            ('sample.vtt', 'sample.vtt', self.get_vtt_source())
                          ],
                          status=200)
 
@@ -159,3 +171,20 @@ class TestMediaViews(ApplicationLayerTest):
         href = self.require_link_href_with_rel(res.json_body, 'clear_transcripts')        
         res = self.testapp.post(href, status=200)
         assert_that(res.json_body, has_entry('Items', has_length(1)))
+        
+    @WithSharedApplicationMockDS(testapp=True, users=True)
+    def test_create_video(self):
+        video = self._load_resource("ntivideo.json")
+        for name in ('NTIID', 'ntiid', 'transcripts'):
+            video.pop(name, None)
+        res = self.testapp.post_json(self.assets_url,
+                                     video,
+                                     status=201)
+        ntiid = res.json_body['ntiid']
+        _, res = self.upload_transcript(ntiid, False)
+
+        ntiid = res.json_body['NTIID']
+        with mock_dataserver.mock_db_trans(self.ds, site_name='janux.ou.edu'):
+            transcript = find_object_with_ntiid(ntiid)
+            assert_that(IUserCreatedTranscript.providedBy(transcript),
+                        is_(True))
