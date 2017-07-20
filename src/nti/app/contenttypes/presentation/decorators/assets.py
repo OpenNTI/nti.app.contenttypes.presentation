@@ -749,8 +749,7 @@ class _NTIDiscussionRefDecorator(_BaseAssetDecorator):
     __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
-        super(_NTIDiscussionRefDecorator, self).decorateExternalObject(
-            original, external)
+        super(_NTIDiscussionRefDecorator, self).decorateExternalObject(original, external)
         if 'target' in external:
             external['Target-NTIID'] = external.pop('target')
         if 'Target-NTIID' in external and not original.isCourseBundle():
@@ -799,8 +798,7 @@ class _NTIBaseSlideDecorator(_BaseAssetDecorator):
     __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
-        super(_NTIBaseSlideDecorator, self).decorateExternalObject(
-            original, external)
+        super(_NTIBaseSlideDecorator, self).decorateExternalObject(original, external)
         if 'byline' in external:
             external['creator'] = external['byline']
         if CLASS in external:
