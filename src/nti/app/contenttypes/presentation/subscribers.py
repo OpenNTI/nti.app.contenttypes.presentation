@@ -81,7 +81,6 @@ from nti.contenttypes.presentation.interfaces import IOverviewGroupMovedEvent
 from nti.contenttypes.presentation.interfaces import IPresentationAssetMovedEvent
 from nti.contenttypes.presentation.interfaces import IWillUpdatePresentationAssetEvent
 
-from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIPollRef
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
@@ -93,7 +92,6 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
-from nti.contenttypes.presentation.interfaces import IUserCreatedTranscript
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
@@ -366,16 +364,6 @@ def _on_assignment_removed(assignment, event):
     if count:
         logger.info('Removed assignment (%s) from %s overview group(s)',
                     ntiid, count)
-
-
-@component.adapter(INTIMedia, IBeforeIdRemovedEvent)
-def _on_media_removed(media, _):
-    """
-    Notify removal of user created transcripts
-    """
-    for transcript in getattr(media ,'transcripts', None) or ():
-        if IUserCreatedTranscript.providedBy(transcript):
-            lifecycleevent.removed(transcript)
 
 
 @component.adapter(IQEvaluation, IObjectModifiedEvent)
