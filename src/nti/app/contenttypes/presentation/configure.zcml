@@ -57,7 +57,7 @@
 	<adapter factory=".adapters._publication_constraint_to_lesson" />
 
 	<adapter factory=".adapters._asset_to_policy_folder" />
-	
+
 	<adapter factory="nti.app.contentlibrary.adapters.presentation_asset_items_factory"
 			 for="nti.contenttypes.courses.interfaces.ICourseInstance"
 			 provides="nti.contenttypes.presentation.interfaces.IPresentationAssetContainer" />
@@ -184,6 +184,9 @@
 
 	<subscriber handler=".subscribers._on_asset_moved" />
 	<subscriber handler=".subscribers._on_group_moved" />
+	<subscriber handler=".subscribers._on_topic_removed" />
+    <subscriber handler=".subscribers._on_audio_removed" />
+    <subscriber handler=".subscribers._on_video_removed" />
 	<subscriber handler=".subscribers._on_asset_modified" />
 	<subscriber handler=".subscribers._on_asset_registered" />
 	<subscriber handler=".subscribers._on_docket_asset_removed" />

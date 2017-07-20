@@ -162,6 +162,7 @@ registry4 = get_registry_4_item
 
 def remove_asset(item, registry=None, catalog=None, name=None, event=True):
     if event:
+        # This removes from container
         notify(WillRemovePresentationAssetEvent(item))
     # remove utility
     name = item.ntiid or name

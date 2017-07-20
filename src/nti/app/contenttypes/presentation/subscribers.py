@@ -77,14 +77,15 @@ from nti.contenttypes.presentation.interfaces import TRX_ASSET_MOVE_TYPE
 from nti.contenttypes.presentation.interfaces import TRX_OVERVIEW_GROUP_MOVE_TYPE
 from nti.contenttypes.presentation.interfaces import TRX_ASSET_REMOVED_FROM_ITEM_ASSET_CONTAINER
 
-from nti.contenttypes.presentation.interfaces import IOverviewGroupMovedEvent
-from nti.contenttypes.presentation.interfaces import IPresentationAssetMovedEvent
-from nti.contenttypes.presentation.interfaces import IWillUpdatePresentationAssetEvent
-
+from nti.contenttypes.presentation.interfaces import INTIAudio
+from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTIPollRef
+from nti.contenttypes.presentation.interfaces import INTIAudioRef
+from nti.contenttypes.presentation.interfaces import INTIVideoRef
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import INTIDocketAsset
+from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
@@ -93,14 +94,19 @@ from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
+from nti.contenttypes.presentation.interfaces import IOverviewGroupMovedEvent
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
+from nti.contenttypes.presentation.interfaces import IPresentationAssetMovedEvent
 from nti.contenttypes.presentation.interfaces import IPresentationAssetCreatedEvent
+from nti.contenttypes.presentation.interfaces import IWillUpdatePresentationAssetEvent
 from nti.contenttypes.presentation.interfaces import IWillRemovePresentationAssetEvent
 from nti.contenttypes.presentation.interfaces import ItemRemovedFromItemAssetContainerEvent
 from nti.contenttypes.presentation.interfaces import IItemRemovedFromItemAssetContainerEvent
 
 from nti.coremetadata.utils import current_principal as core_current_principal
+
+from nti.dataserver.contenttypes.forums.interfaces import ITopic
 
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IObjectModifiedFromExternalEvent
@@ -410,24 +416,61 @@ class _RelatedWorkRefContentUnitAssociations(object):
         return get_content_related_work_refs(context)
 
 
+def _get_target_refs(target_ntiid, provided_interface):
+    """
+    For a target_ntiid and interface, get all references.
+    """
+    catalog = get_library_catalog()
+    sites = get_component_hierarchy_names()
+    pointers = tuple(catalog.search_objects(provided=provided_interface,
+                                            target=target_ntiid,
+                                            sites=sites))
+    return pointers
+
+
 def _get_ref_pointers(ref):
     """
     For a related work ref, find all pointers to it.
     """
-    catalog = get_library_catalog()
-    sites = get_component_hierarchy_names()
-    pointers = tuple(catalog.search_objects(provided=INTIRelatedWorkRefPointer,
-                                            target=ref.ntiid,
-                                            sites=sites))
-    return pointers
+    return _get_target_refs(ref.ntiid, INTIRelatedWorkRefPointer)
+
+
+@component.adapter(ITopic, IBeforeIdRemovedEvent)
+def _on_topic_removed(topic, event):
+    """
+    When an :class:`ITopic` is deleted, clean up any refs pointing to it.
+    """
+    pointers = _get_target_refs(topic.NTIID, INTIDiscussionRef)
+    for pointer in pointers:
+        remove_presentation_asset(pointer)
+
+
+@component.adapter(INTIVideo, IBeforeIdRemovedEvent)
+def _on_video_removed(video, event):
+    """
+     When an :class:`INTIVideo` is deleted, clean up any refs pointing to it.
+    """
+    pointers = _get_target_refs(video.ntiid, INTIVideoRef)
+    for pointer in pointers:
+        remove_presentation_asset(pointer)
+
+
+@component.adapter(INTIAudio, IBeforeIdRemovedEvent)
+def _on_audio_removed(audio, event):
+    """
+     When an :class:`INTIAudio` is deleted, clean up any refs pointing to it.
+    """
+    pointers = _get_target_refs(audio.ntiid, INTIAudioRef)
+    for pointer in pointers:
+        remove_presentation_asset(pointer)
 
 
 @component.adapter(IContentUnit, IContentUnitRemovedEvent)
 def _on_content_removed(unit, event):
     """
     Remove related work refs pointing to deleted content.
-    XXX: This must be a content removed event because
-    we may churn intids during re-renders.
+    XXX: This must be a content removed event because we may churn intids
+    during re-renders.
     """
     refs = get_content_related_work_refs(unit)
     for ref in refs or ():
