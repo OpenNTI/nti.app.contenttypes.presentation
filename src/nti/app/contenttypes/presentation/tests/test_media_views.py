@@ -18,7 +18,11 @@ does_not = is_not
 
 import os
 
+from nti.contenttypes.presentation.interfaces import IUserCreatedTranscript
+
 from nti.externalization.representation import to_json_representation
+
+from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.app.products.courseware.tests import InstructedCourseApplicationTestLayer
 
@@ -112,6 +116,11 @@ class TestMediaViews(ApplicationLayerTest):
                     has_entry('Creator', is_not(none())))        
         ntiid = res.json_body['NTIID']
         
+        with mock_dataserver.mock_db_trans(self.ds, site_name='janux.ou.edu'):
+            transcript = find_object_with_ntiid(ntiid)
+            assert_that(IUserCreatedTranscript.providedBy(transcript),
+                        is_(True))
+            
         # get contents
         href = res.json_body['src']
         res = self.testapp.get(href, status=200)
