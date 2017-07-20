@@ -46,7 +46,7 @@ from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import ITranscriptContainer
 from nti.contenttypes.presentation.interfaces import IUserCreatedTranscript
 
-from nti.contenttypes.presentation.media import NTITranscriptFile
+from nti.contenttypes.presentation.internalization import parse_embedded_transcript
 
 from nti.dataserver import authorization as nauth
 
@@ -78,7 +78,7 @@ class MediaTranscriptsGetView(AbstractAuthenticatedView):
         return result
 
 
-def parse_transcript(content, name=TEXT_VTT):
+def validate_transcript(content, name=TEXT_VTT):
     parser = component.queryUtility(IVideoTranscriptParser, name=name)
     if parser is None:
         raise ValueError(_(u"Cannot find transcript parser."))
@@ -90,11 +90,15 @@ def parse_transcript(content, name=TEXT_VTT):
 def process_transcript_source(transcript, source, name=None, request=None):
     old_src = transcript.src
     content = text_(source.read())
-    name = name or "transcript.vtt"
     contentType = getattr(source, 'contentType', None) or TEXT_VTT
     contentType = TEXT_VTT if contentType == OCTET_STREAM else contentType
+    parsed = {
+        'filename': name,
+        'contents': content,
+        'contentType': getattr(source, 'contentType', None)
+    }
     try:
-        parse_transcript(content, contentType)
+        validate_transcript(content, contentType)
     except Exception:
         exc_info = sys.exc_info()
         raise_json_error(request,
@@ -104,15 +108,7 @@ def process_transcript_source(transcript, source, name=None, request=None):
                             'code': 'InvalidTranscript',
                          },
                          exc_info[2])
-    # create new content source
-    source = NTITranscriptFile(contentType)
-    source.name = source.filename = name # save filename
-    with source.open("w") as fp:
-        fp.write(content)
-    transcript.src = source
-    transcript.srcjsonp = None
-    transcript.type = contentType
-    # clean up
+    parse_embedded_transcript(transcript, parsed, encoded=False)
     if IFile.providedBy(old_src):
         old_src.__parent__ = None
     return transcript
