@@ -175,16 +175,27 @@ class TestMediaViews(ApplicationLayerTest):
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_create_video(self):
         video = self._load_resource("ntivideo.json")
-        for name in ('NTIID', 'ntiid', 'transcripts'):
+        transcripts = video.pop('transcripts', None)
+        for name in ('NTIID', 'ntiid',):
             video.pop(name, None)
         res = self.testapp.post_json(self.assets_url,
                                      video,
                                      status=201)
         ntiid = res.json_body['ntiid']
-        _, res = self.upload_transcript(ntiid, False)
+        
+        # transcripts cannot be put
+        video.pop('sources', None)
+        video['transcripts'] = transcripts
+        href = '/dataserver2/Objects/%s' % ntiid
+        video_res = self.testapp.put_json(href, video, status=200)
+        assert_that(video_res.json_body, 
+                    has_entry('transcripts', is_(none())))
 
-        ntiid = res.json_body['NTIID']
+        _, res = self.upload_transcript(ntiid, False)
+        transcript_ntiid = res.json_body['NTIID']
         with mock_dataserver.mock_db_trans(self.ds, site_name='janux.ou.edu'):
-            transcript = find_object_with_ntiid(ntiid)
+            transcript = find_object_with_ntiid(transcript_ntiid)
             assert_that(IUserCreatedTranscript.providedBy(transcript),
                         is_(True))
+
+        
