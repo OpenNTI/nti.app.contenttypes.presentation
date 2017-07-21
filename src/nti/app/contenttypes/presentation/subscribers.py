@@ -450,9 +450,10 @@ def _on_video_removed(video, event):
     """
      When an :class:`INTIVideo` is deleted, clean up any refs pointing to it.
     """
-    pointers = _get_target_refs(video.ntiid, INTIVideoRef)
-    for pointer in pointers:
-        remove_presentation_asset(pointer)
+    if IUserCreatedAsset.providedBy(video):
+        pointers = _get_target_refs(video.ntiid, INTIVideoRef)
+        for pointer in pointers:
+            remove_presentation_asset(pointer)
 
 
 @component.adapter(INTIAudio, IBeforeIdRemovedEvent)
@@ -460,9 +461,10 @@ def _on_audio_removed(audio, event):
     """
      When an :class:`INTIAudio` is deleted, clean up any refs pointing to it.
     """
-    pointers = _get_target_refs(audio.ntiid, INTIAudioRef)
-    for pointer in pointers:
-        remove_presentation_asset(pointer)
+    if IUserCreatedAsset.providedBy(audio):
+        pointers = _get_target_refs(audio.ntiid, INTIAudioRef)
+        for pointer in pointers:
+            remove_presentation_asset(pointer)
 
 
 @component.adapter(IContentUnit, IContentUnitRemovedEvent)
