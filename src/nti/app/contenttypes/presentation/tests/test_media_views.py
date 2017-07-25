@@ -199,5 +199,3 @@ class TestMediaViews(ApplicationLayerTest):
             transcript = find_object_with_ntiid(transcript_ntiid)
             assert_that(IUserCreatedTranscript.providedBy(transcript),
                         is_(True))
-
-        
