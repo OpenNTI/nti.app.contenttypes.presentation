@@ -128,6 +128,8 @@ class TestMediaViews(ApplicationLayerTest):
                     has_entry('Creator', is_not(none())))        
         ntiid = res.json_body['NTIID']
         
+        self.require_link_href_with_rel(res.json_body, 'edit')
+
         with mock_dataserver.mock_db_trans(self.ds, site_name='janux.ou.edu'):
             transcript = find_object_with_ntiid(ntiid)
             assert_that(IUserCreatedTranscript.providedBy(transcript),

@@ -23,6 +23,8 @@ from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecora
 from nti.appserver.pyramid_authorization import has_permission
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
+from nti.contenttypes.presentation.interfaces import INTITranscript
+from nti.contenttypes.presentation.interfaces import IUserCreatedTranscript
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
@@ -42,7 +44,7 @@ class _MediaLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
     def _acl_decoration(self):
         return getattr(self.request, 'acl_decoration', True)
 
-    def _predicate(self, context, result):
+    def _predicate(self, context, unused_result):
         return self._acl_decoration \
            and self._is_authenticated \
            and has_permission(ACT_CONTENT_EDIT, context, self.request)
@@ -56,6 +58,29 @@ class _MediaLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
                         rel=name,
                         method=method,
                         elements=('@@%s' % name,))
+            interface.alsoProvides(link, ILocation)
+            link.__name__ = ''
+            link.__parent__ = context
+            _links.append(link)
+
+
+@component.adapter(INTITranscript)
+@interface.implementer(IExternalObjectDecorator)
+class _TranscriptLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
+
+    @Lazy
+    def _acl_decoration(self):
+        return getattr(self.request, 'acl_decoration', True)
+
+    def _predicate(self, context, unused_result):
+        return self._acl_decoration \
+           and self._is_authenticated \
+           and has_permission(ACT_CONTENT_EDIT, context, self.request)
+
+    def _do_decorate_external(self, context, result):
+        if IUserCreatedTranscript.providedBy(context):
+            _links = result.setdefault(LINKS, [])
+            link = Link(context, rel='edit', method='PUT')
             interface.alsoProvides(link, ILocation)
             link.__name__ = ''
             link.__parent__ = context
