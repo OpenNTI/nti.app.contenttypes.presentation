@@ -31,8 +31,6 @@ from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtils
 
 from nti.app.contenttypes.presentation import MessageFactory as _
 
-from nti.base._compat import text_
-
 from nti.base.interfaces import IFile
  
 from nti.contentindexing.media.interfaces import IVideoTranscriptParser
@@ -81,20 +79,20 @@ def validate_transcript(content, name=TEXT_VTT):
     parser = component.queryUtility(IVideoTranscriptParser, name=name)
     if parser is None:
         raise ValueError(_(u"Cannot find transcript parser."))
-    result = parser.parse(text_(content))
+    result = parser.parse(content)
     assert result, "Empty transcript"
     return result
 
 
 def process_transcript_source(transcript, source, name=None, request=None):
     old_src = transcript.src
-    content = text_(source.read())
+    content = source.read()
     contentType = getattr(source, 'contentType', None) or TEXT_VTT
     contentType = TEXT_VTT if contentType == OCTET_STREAM else contentType
     parsed = {
         'filename': name,
         'contents': content,
-        'contentType': getattr(source, 'contentType', None)
+        'contentType': contentType
     }
     try:
         validate_transcript(content, contentType)
@@ -103,8 +101,8 @@ def process_transcript_source(transcript, source, name=None, request=None):
         raise_json_error(request,
                          hexc.HTTPUnprocessableEntity,
                          {
-                            'message': _(u"Invalid transcript source."),
-                            'code': 'InvalidTranscript',
+                             'message': _(u"Invalid transcript source."),
+                             'code': 'InvalidTranscript',
                          },
                          exc_info[2])
     parse_embedded_transcript(transcript, parsed, encoded=False)
@@ -128,7 +126,7 @@ class NTITranscriptPutView(AbstractAuthenticatedView,
             raise_json_error(self.request,
                              hexc.HTTPForbidden,
                              {
-                                'message': _(u"Cannot update legacy transcript."),
+                                 'message': _(u"Cannot update legacy transcript."),
                              },
                              None)
         modified = False
@@ -177,7 +175,7 @@ class NTITranscriptDeleteView(AbstractAuthenticatedView):
             raise_json_error(self.request,
                              hexc.HTTPForbidden,
                              {
-                                'message': _(u"Cannot delete a legacy transcript."),
+                                 'message': _(u"Cannot delete a legacy transcript."),
                              },
                              None)
         media = self._do_remove(self.context)
@@ -242,8 +240,8 @@ class TranscriptUploadView(AbstractAuthenticatedView,
             raise_json_error(self.request,
                              hexc.HTTPUnprocessableEntity,
                              {
-                                'message': _(u"No transcript source."),
-                                'code': 'NoTranscript',
+                                 'message': _(u"No transcript source."),
+                                 'code': 'NoTranscript',
                              },
                              None)
         # parse transcript
