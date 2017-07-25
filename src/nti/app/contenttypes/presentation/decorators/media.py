@@ -64,7 +64,7 @@ class _MediaLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
             link.__parent__ = context
             _links.append(link)
         if IUserCreatedAsset.providedBy(context):
-            link = Link(context, rel='Delete', method='DELETE')
+            link = Link(context, rel='delete', method='DELETE')
             interface.alsoProvides(link, ILocation)
             link.__name__ = ''
             link.__parent__ = context
