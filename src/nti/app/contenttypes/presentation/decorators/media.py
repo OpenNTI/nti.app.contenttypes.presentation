@@ -24,6 +24,7 @@ from nti.appserver.pyramid_authorization import has_permission
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTITranscript
+from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import IUserCreatedTranscript
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
@@ -54,10 +55,16 @@ class _MediaLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
         for name, method in ( (VIEW_TRANSCRIPTS, 'GET'),
                               ('transcript', 'POST'),
                               ('clear_transcripts', 'POST'), ):
-            link = Link(context, 
+            link = Link(context,
                         rel=name,
                         method=method,
                         elements=('@@%s' % name,))
+            interface.alsoProvides(link, ILocation)
+            link.__name__ = ''
+            link.__parent__ = context
+            _links.append(link)
+        if IUserCreatedAsset.providedBy(context):
+            link = Link(context, rel='Delete', method='DELETE')
             interface.alsoProvides(link, ILocation)
             link.__name__ = ''
             link.__parent__ = context
