@@ -16,8 +16,8 @@ from zope import interface
 
 from zope.security.interfaces import IPrincipal
 
-from nti.app.assessment.common import get_user
-from nti.app.assessment.common import get_available_for_submission_ending
+from nti.app.assessment.common.utils import get_user
+from nti.app.assessment.common.utils import get_available_for_submission_ending
 
 from nti.app.assessment.interfaces import IUsersCourseInquiry
 from nti.app.assessment.interfaces import IUsersCourseAssignmentHistory
