@@ -29,7 +29,7 @@ from zope.security.management import queryInteraction
 from zc.intid.interfaces import IAfterIdAddedEvent
 from zc.intid.interfaces import IBeforeIdRemovedEvent
 
-from nti.app.assessment.common import get_evaluation_courses
+from nti.app.assessment.common.evaluations import get_evaluation_courses
 
 from nti.app.contenttypes.presentation.synchronizer import clear_course_assets
 from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
