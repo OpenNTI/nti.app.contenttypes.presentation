@@ -14,6 +14,7 @@ from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import starts_with
+from hamcrest import has_property
 does_not = is_not
 
 import os
@@ -138,7 +139,8 @@ class TestMediaViews(ApplicationLayerTest):
         # get contents
         href = res.json_body['src']
         res = self.testapp.get(href, status=200)
-
+        assert_that(res, has_property('content_length', is_(704)))
+        
         student = 'ichigo'
         with mock_dataserver.mock_db_trans(self.ds):
             self._create_user(student)
