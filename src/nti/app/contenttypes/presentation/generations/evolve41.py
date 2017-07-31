@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -88,8 +88,8 @@ def do_evolve(context, generation=generation):
     component.provideUtility(mock_ds, IDataserver)
 
     with current_site(ds_folder):
-        assert  component.getSiteManager() == ds_folder.getSiteManager(), \
-                "Hooks not installed?"
+        assert component.getSiteManager() == ds_folder.getSiteManager(), \
+               "Hooks not installed?"
 
         seen = set()
         lsm = ds_folder.getSiteManager()

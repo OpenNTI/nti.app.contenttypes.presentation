@@ -45,7 +45,7 @@ from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 
-def handle_docket_asset(item, context=None, creator=None):
+def handle_docket_asset(item, *unused_args, **unused_kwargs):
     # check for contentfiles in icon and href
     for name in ('href', 'icon'):
         name = str(name)
@@ -66,7 +66,7 @@ def handle_docket_asset(item, context=None, creator=None):
 
 def handle_related_work(item, context, creator=None, request=None):
     request = request or get_current_request()
-    handle_asset(item, context, creator)
+    handle_asset(item, context, creator, request)
     # capture updated/previous data
     ntiid, href = item.target, item.href
     contentType = item.type or u'application/octet-stream'  # default
@@ -97,7 +97,7 @@ def handle_related_work(item, context, creator=None, request=None):
     if item.type != contentType:
         item.type = contentType
     # handle common docket
-    handle_docket_asset(item, context, creator)
+    handle_docket_asset(item, context, creator, request)
     return item
 
 
@@ -108,7 +108,7 @@ class DocketAssetProcessor(BaseAssetProcessor):
     def handle(self, item, context, creator=None, request=None):
         item = self.asset if item is None else item
         handle_asset(item, context, creator)
-        return handle_docket_asset(item, context, creator)
+        return handle_docket_asset(item, context, creator, request)
 
 
 @component.adapter(INTIRelatedWorkRef)
