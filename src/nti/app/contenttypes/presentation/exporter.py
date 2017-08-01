@@ -53,7 +53,7 @@ from nti.namedfile.file import safe_filename
 
 from nti.ntiids.ntiids import TYPE_OID
 from nti.ntiids.ntiids import TYPE_UUID
-from nti.ntiids.ntiids import is_ntiid_of_type
+from nti.ntiids.ntiids import is_ntiid_of_types
 from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -68,7 +68,6 @@ INTERNAL_CONTAINER_ID = StandardInternalFields.CONTAINER_ID
 
 def _outline_nodes(outline, seen):
     result = []
-
     def _recur(node):
         ntiid = node.LessonOverviewNTIID
         if ntiid and ntiid not in seen:
@@ -186,8 +185,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
                 value = ext_obj.get(name)
                 if      value \
                     and is_valid_ntiid_string(value) \
-                    and (   is_ntiid_of_type(value, TYPE_OID)
-                         or is_ntiid_of_type(value, TYPE_UUID)):
+                    and is_ntiid_of_types(value, (TYPE_OID, TYPE_UUID)):
                     ext_obj.pop(name, None)
 
         # save asset/concrete resources
