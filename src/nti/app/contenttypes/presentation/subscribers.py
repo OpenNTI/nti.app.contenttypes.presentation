@@ -158,7 +158,7 @@ def _on_course_instance_available(course, event):
 
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
-def _clear_data_when_course_removed(course, event):
+def _clear_data_when_course_removed(course, _):
     catalog = get_library_catalog()
     if catalog is None or ILegacyCourseInstance.providedBy(course):
         return
@@ -183,14 +183,12 @@ def _clear_data_when_course_removed(course, event):
 
 
 @component.adapter(ICourseOutlineNode, IUnregistered)
-def _on_outlinenode_unregistered(node, event):
+def _on_outlinenode_unregistered(node, _):
     lesson = INTILessonOverview(node, None)
     if lesson is None:
         return
-
     # ground lesson
     lesson.__parent__ = None
-
     # unregister empty lesson overviews to avoid leaking
     registry = get_site_registry()
     if not lesson.Items and registry != component.getGlobalSiteManager():
@@ -200,14 +198,14 @@ def _on_outlinenode_unregistered(node, event):
 
 
 @component.adapter(INTICourseOverviewGroup, IWillRemovePresentationAssetEvent)
-def _on_will_remove_course_overview_group(group, event):
+def _on_will_remove_course_overview_group(group, _):
     lesson = group.__parent__
     if INTILessonOverview.providedBy(lesson):
         lesson.remove(group)
 
 
 @component.adapter(IItemAssetContainer, IItemRemovedFromItemAssetContainerEvent)
-def _on_item_asset_containter_modified(container, event):
+def _on_item_asset_containter_modified(container, _):
     principal = current_principal()
     if principal is not None and IRecordable.providedBy(container):
         record_transaction(container, principal=principal, descriptions=(ITEMS,),
@@ -246,13 +244,13 @@ def _on_asset_moved(asset, event):
 
 
 @component.adapter(IPresentationAsset, IIntIdAddedEvent)
-def _on_asset_registered(asset, event):
+def _on_asset_registered(asset, _):
     if queryInteraction() is not None:
         interface.alsoProvides(asset, IUserCreatedAsset)
 
 
 @component.adapter(IPresentationAsset, IObjectModifiedFromExternalEvent)
-def _on_asset_modified(asset, event):
+def _on_asset_modified(asset, _):
     if current_principal() is not None:
         catalog = get_library_catalog()
         containers = catalog.get_containers(asset)
@@ -263,7 +261,7 @@ def _on_asset_modified(asset, event):
 
 
 @component.adapter(IPresentationAsset, IWillRemovePresentationAssetEvent)
-def _on_will_remove_presentation_asset(asset, event):
+def _on_will_remove_presentation_asset(asset, _):
     # remove from containers
     for context in get_presentation_asset_containers(asset):
         if ICourseInstance.providedBy(context):
@@ -294,7 +292,7 @@ def _on_will_update_presentation_asset(asset, event):
 
 
 @component.adapter(INTIDocketAsset, IBeforeIdRemovedEvent)
-def _on_docket_asset_removed(asset, event):
+def _on_docket_asset_removed(asset, _):
     for name in ('href', 'icon'):
         value = getattr(asset, name, None)
         if value and is_internal_file_link(value):
@@ -305,7 +303,7 @@ def _on_docket_asset_removed(asset, event):
 
 
 @component.adapter(INTICourseOverviewGroup, IAfterIdAddedEvent)
-def _on_course_overview_registered(group, event):
+def _on_course_overview_registered(group, _):
     # TODO: Execute only if there is an interaction
     parent = group.__parent__
     catalog = get_library_catalog()
@@ -317,12 +315,12 @@ def _on_course_overview_registered(group, event):
 
 
 @component.adapter(INTICourseOverviewGroup, IObjectModifiedEvent)
-def _on_course_overview_modified(group, event):
+def _on_course_overview_modified(group, _):
     _on_course_overview_registered(group, None)
 
 
 @component.adapter(IContentBaseFile, IBeforeIdRemovedEvent)
-def _on_content_file_removed(context, event):
+def _on_content_file_removed(context, _):
     if not context.has_associations():
         return
     oid = to_external_ntiid_oid(context)
@@ -338,7 +336,7 @@ def _on_content_file_removed(context, event):
 
 
 @component.adapter(IQAssignment, IBeforeIdRemovedEvent)
-def _on_assignment_removed(assignment, event):
+def _on_assignment_removed(assignment, _):
     """
     Remove deleted assignment from all overview groups referencing it.
     """
@@ -373,7 +371,7 @@ def _on_assignment_removed(assignment, event):
 
 
 @component.adapter(IQEvaluation, IObjectModifiedEvent)
-def _on_evaluation_modified(evaluation, event):
+def _on_evaluation_modified(evaluation, _):
     ntiid = getattr(evaluation, 'ntiid', None)
     course = find_interface(evaluation, ICourseInstance, strict=False)
     if not ntiid \
@@ -436,7 +434,7 @@ def _get_ref_pointers(ref):
 
 
 @component.adapter(ITopic, IBeforeIdRemovedEvent)
-def _on_topic_removed(topic, event):
+def _on_topic_removed(topic, _):
     """
     When an :class:`ITopic` is deleted, clean up any refs pointing to it.
     """
@@ -446,7 +444,7 @@ def _on_topic_removed(topic, event):
 
 
 @component.adapter(INTIVideo, IBeforeIdRemovedEvent)
-def _on_video_removed(video, event):
+def _on_video_removed(video, _):
     """
      When an :class:`INTIVideo` is deleted, clean up any refs pointing to it.
     """
@@ -457,7 +455,7 @@ def _on_video_removed(video, event):
 
 
 @component.adapter(INTIAudio, IBeforeIdRemovedEvent)
-def _on_audio_removed(audio, event):
+def _on_audio_removed(audio, _):
     """
      When an :class:`INTIAudio` is deleted, clean up any refs pointing to it.
     """
@@ -468,7 +466,7 @@ def _on_audio_removed(audio, event):
 
 
 @component.adapter(IContentUnit, IContentUnitRemovedEvent)
-def _on_content_removed(unit, event):
+def _on_content_removed(unit, _):
     """
     Remove related work refs pointing to deleted content.
     XXX: This must be a content removed event because we may churn intids
@@ -489,7 +487,7 @@ def _on_content_removed(unit, event):
                     len(pointers))
 
 
-def _get_content_units_for_package(package):
+def get_content_units_for_package(package):
     result = []
     def _recur(unit):
         result.append(unit)
@@ -497,6 +495,7 @@ def _get_content_units_for_package(package):
             _recur(child)
     _recur(package)
     return result
+_get_content_units_for_package = get_content_units_for_package
 
 
 @component.adapter(IContentPackage, IContentPackageRemovedEvent)
@@ -509,7 +508,7 @@ def _on_package_removed(package, event):
     logger.info('Removed related work refs on package deletion (%s)',
                 package.ntiid)
     # XXX: Do we need to do unit, or can we just do by package?
-    units = _get_content_units_for_package(package)
+    units = get_content_units_for_package(package)
     for unit in units:
         _on_content_removed(unit, event)
 
