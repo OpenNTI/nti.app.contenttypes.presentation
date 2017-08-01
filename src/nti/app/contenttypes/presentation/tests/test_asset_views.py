@@ -296,7 +296,7 @@ class TestAssetViews(ApplicationLayerTest):
         video_source['ntiid'] = video_ntiid
         res = self.testapp.post_json(contents_link + '/index/0',
                                      video_source,
-                                    status=201)
+                                     status=201)
         res = res.json_body
         assert_that(res.get('MimeType'),
                     is_('application/vnd.nextthought.ntivideo'))
@@ -795,7 +795,7 @@ class TestAssetViews(ApplicationLayerTest):
         # Permissions
         non_perm_env = self._get_non_perm_environ()
         self.testapp.get(lesson_href,
-                        extra_environ=non_perm_env, status=403)
+                         extra_environ=non_perm_env, status=403)
 
         # remove ntiid to fake a new group
         source['Items'][0].pop('ntiid', None)
@@ -835,8 +835,8 @@ class TestAssetViews(ApplicationLayerTest):
 
         # Insert group at index 0
         res = self.testapp.post_json(contents_link + '/index/0',
-                                    source,
-                                    status=201)
+                                     source,
+                                     status=201)
         with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
             obj = find_object_with_ntiid(lesson_ntiid)
             group_ntiid = res.json_body['ntiid']
@@ -1111,8 +1111,9 @@ class TestAssetViews(ApplicationLayerTest):
         assert_that(group_items, has_length(1))
         assert_that(group_items[0].get('NTIID'), is_not(timeline_ntiid))
 
+        # The asset should still exist even though its ref has been deleted
         self.testapp.get('/dataserver2/Objects/%s' %
-                         timeline_ntiid, status=404)
+                         timeline_ntiid)
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_moves(self):
@@ -1340,7 +1341,8 @@ class TestAssetViews(ApplicationLayerTest):
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_removing_refs(self):
         assignment_ntiid = "tag:nextthought.com,2011-10:OU-NAQ-CS1323_F_2015_Intro_to_Computer_Programming.naq.asg.assignment:iClicker_8_26"
-        admin_environ = self._make_extra_environ(username=self.default_username)
+        admin_environ = self._make_extra_environ(
+            username=self.default_username)
 
         source = self._load_resource('ntilessonoverview.json')
         source.pop('NTIID', None)
@@ -1419,3 +1421,25 @@ class TestAssetViews(ApplicationLayerTest):
         # Again with no hits works.
         self.testapp.delete('%s?target=%s' % (remove_refs_link, assignment_ntiid),
                             extra_environ=admin_environ)
+
+        # Post two duplicate refs to group 3. We should be able
+        # to delete one without any errors. This tests the case where
+        # we have multiple matches for an ntiid, in which case we
+        # just delete the one with the matching index.
+        self.testapp.post_json(g3_contents_link, ref, status=201)
+        self.testapp.post_json(g3_contents_link, ref, status=201)
+
+        lesson = self.testapp.get(lesson_href, status=200)
+        lesson = lesson.json_body
+        groups = lesson.get('Items')
+        assert_that(groups[3].get('Items'), has_length(3))
+
+        # If we have a mismatch between the index and ntiid, we
+        # should detect the conflict.
+        self.testapp.delete(
+            g3_contents_link + '/ntiid/' + assignment_ntiid + '?index=0', status=409)
+
+        # Both indices 1 and 2 should match this ntiid, so we
+        # just delete the second one.
+        self.testapp.delete(
+            g3_contents_link + '/ntiid/' + assignment_ntiid + '?index=2')
