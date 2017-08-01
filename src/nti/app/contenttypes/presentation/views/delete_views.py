@@ -154,12 +154,12 @@ class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
             # remove concrete to avoid leaks
             concrete = IConcreteAsset(item, item)
             if      concrete is not item \
-                and not INTIVideo.providedBy(concrete) \
-                and IUserCreatedAsset.providedBy(concrete) \
-                and not IContentBackedPresentationAsset.providedBy(concrete):
+                    and not INTIVideo.providedBy(concrete) \
+                    and IUserCreatedAsset.providedBy(concrete) \
+                    and not IContentBackedPresentationAsset.providedBy(concrete):
                 remove_presentation_asset(concrete, self._registry)
         else:
-            self.context.pop(index)
+            item = self.context.pop(index)
         # remove
         remove_presentation_asset(item, self._registry)
         # broadcast container removal
@@ -200,8 +200,8 @@ class RemoveRefsView(AbstractAuthenticatedView):
         # remove concrete to avoid leaks
         concrete = IConcreteAsset(item, item)
         if      concrete is not item \
-            and IUserCreatedAsset.providedBy(concrete) \
-            and not IContentBackedPresentationAsset.providedBy(concrete):
+                and IUserCreatedAsset.providedBy(concrete) \
+                and not IContentBackedPresentationAsset.providedBy(concrete):
             remove_presentation_asset(concrete, self._registry)
         # remove
         remove_presentation_asset(item, self._registry)
@@ -212,8 +212,8 @@ class RemoveRefsView(AbstractAuthenticatedView):
     def _get_target_ntiid(self):
         values = CaseInsensitiveDict(self.request.params)
         target_ntiid = values.get('target') \
-                    or values.get('target_ntiid') \
-                    or values.get('ntiid')
+            or values.get('target_ntiid') \
+            or values.get('ntiid')
         return target_ntiid
 
     def __call__(self):
@@ -221,12 +221,12 @@ class RemoveRefsView(AbstractAuthenticatedView):
         target_ntiid = self._get_target_ntiid()
 
         if target_ntiid is None:
-            msg =  _(u'No target NTIID given for reference removal.')
+            msg = _(u'No target NTIID given for reference removal.')
             raise_json_error(self.request,
                              hexc.HTTPUnprocessableEntity,
                              {
-                                'message': msg,
-                                'code': 'NoTargetNTIID'
+                                 'message': msg,
+                                 'code': 'NoTargetNTIID'
                              },
                              None)
 
