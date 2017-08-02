@@ -290,7 +290,7 @@ def fix_inaccessible_assets(seen=None):
     catalog = get_library_catalog()
     # gather all site registered assets
     registry = component.getSiteManager()
-    for ntiid, asset in list(presentation_assets()):
+    for ntiid, asset in presentation_assets():
         site_assets[ntiid] = asset
 
     containers = {}
