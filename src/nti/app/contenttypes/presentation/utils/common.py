@@ -120,7 +120,7 @@ def remove_invalid_assets(removed=None, seen=None):
         doc_id = intids.queryId(item)
         if doc_id in seen:
             continue
-        count += 0
+        count += 1
         # check invalid registration
         if doc_id is None:
             logger.warn("Removing invalid registration (%s,%s) from site %s",
