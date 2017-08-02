@@ -1464,10 +1464,10 @@ class TestAssetViews(ApplicationLayerTest):
 
         # now if we delete without the index, there is no ambiguity.
         self.testapp.delete(
-            g3_contents_link + '/ntiid/' + assignment_ntiid)
+            g1_contents_link + '/ntiid/' + assignment_ntiid)
 
         # The same is true if we include an empty index param;
         # it is treated as if it was not included.
         self.testapp.post_json(g1_contents_link, ref, status=201)
         self.testapp.delete(
-            g3_contents_link + '/ntiid/' + assignment_ntiid + '?index=')
+            g1_contents_link + '/ntiid/' + assignment_ntiid + '?index=')
