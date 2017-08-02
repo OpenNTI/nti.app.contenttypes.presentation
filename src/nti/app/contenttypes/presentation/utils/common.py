@@ -36,6 +36,7 @@ from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
+from nti.contenttypes.presentation.interfaces import ILegacyPresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
@@ -85,6 +86,12 @@ def has_a_valid_parent(item, intids):
     return parent is not None and doc_id is not None
 
 
+def presentation_assets(registry=component):
+    for ntiid, item in registry.getUtilitiesFor(IPresentationAsset):
+        if not ILegacyPresentationAsset.providedBy(item):
+            yield ntiid, item
+
+
 # remove invalid assets
 
 
@@ -108,7 +115,7 @@ def remove_invalid_assets(removed=None, seen=None):
     seen = set() if seen is None else seen
     removed = set() if removed is None else removed
     # loop and check
-    for ntiid, item in list(component.getUtilitiesFor(IPresentationAsset)):
+    for ntiid, item in list(presentation_assets()):
         provided = iface_of_asset(item)
         doc_id = intids.queryId(item)
         if doc_id in seen:
@@ -234,7 +241,7 @@ def remove_inaccessible_assets(seen=None, master=None):
     site = getSite()
     registered = set()
     registry = site.getSiteManager()
-    for ntiid, asset in list(component.getUtilitiesFor(IPresentationAsset)):
+    for ntiid, asset in list(presentation_assets()):
         doc_id = intids.queryId(asset)
         if doc_id is None or doc_id not in master:
             remove_asset(ntiid, asset, registry, catalog=catalog)
@@ -283,7 +290,7 @@ def fix_inaccessible_assets(seen=None):
     catalog = get_library_catalog()
     # gather all site registered assets
     registry = component.getSiteManager()
-    for ntiid, asset in list(component.getUtilitiesFor(IPresentationAsset)):
+    for ntiid, asset in list(presentation_assets()):
         site_assets[ntiid] = asset
 
     containers = {}
