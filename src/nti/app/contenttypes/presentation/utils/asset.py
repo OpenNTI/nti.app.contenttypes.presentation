@@ -25,12 +25,12 @@ from zope.location.location import locate
 
 from ZODB.interfaces import IConnection
 
-from plone.namedfile.interfaces import INamed as IPloneNamed
-
 from nti.app.products.courseware.resources.utils import is_internal_file_link
 from nti.app.products.courseware.resources.utils import get_file_from_external_link
 
 from nti.base._compat import text_
+
+from nti.base.interfaces import IFile
 
 from nti.common.random import generate_random_hex_string
 
@@ -122,15 +122,15 @@ registry_by_name = get_registry_by_name
 
 def get_component_site(context, provided, name=None):
     result = None
-    folder = find_interface(context, IHostPolicyFolder, strict=False)
+    folder = IHostPolicyFolder(context, None)
     if folder is None:
         sites_names = get_component_hierarchy_names()
         name = name or getattr(context, 'ntiid', None)
         for idx in range(len(sites_names) - 1, -1, -1):  # higher sites first
             site_name = sites_names[idx]
             registry = get_registry_by_name(site_name)
-            if registry is not None \
-                    and registry.queryUtility(provided, name=name) == context:
+            if      registry is not None \
+                and registry.queryUtility(provided, name=name) == context:
                 result = site_name
                 break
     else:
@@ -180,22 +180,26 @@ def remove_asset(item, registry=None, catalog=None, name=None, event=True):
     catalog.unindex(item)
     # broadcast removed
     notify_removed(item)  # remove intid
+    return item
 
 
 def remove_mediaroll(item, registry=None, catalog=None, name=None, event=True):
+    removed = set()
     if isinstance(item, six.string_types):
         item = component.queryUtility(INTIMediaRoll, name=item)
     if item is None:
         return
     name = item.ntiid or name
     registry = get_registry_4_item(item, INTIMediaRoll, name,
-								   registry=registry)
+                                   registry=registry)
     catalog = get_library_catalog() if catalog is None else catalog
     # remove mediarefs first
     for media in tuple(item):  # mutating
-        remove_asset(media, registry, catalog, event=event)
+        removed.add(remove_asset(media, registry, catalog, event=event))
     # remove roll
-    remove_asset(item, registry, catalog, name=name, event=event)
+    removed.add(remove_asset(item, registry, catalog, name=name, event=event))
+    removed.discard(None)
+    return tuple(removed)
 
 
 def remove_group(group, registry=None, catalog=None, name=None, event=True):
@@ -203,45 +207,57 @@ def remove_group(group, registry=None, catalog=None, name=None, event=True):
         group = component.queryUtility(INTICourseOverviewGroup, name=group)
     if group is None:
         return
+    removed = set()
     name = group.ntiid or name
     registry = get_registry_4_item(group, INTICourseOverviewGroup,
-								   name, registry=registry)
+                                   name, registry=registry)
     catalog = get_library_catalog() if catalog is None else catalog
     # remove items first
     for item in tuple(group):  # mutating
         if INTIMediaRoll.providedBy(item):
-            remove_mediaroll(item, registry, catalog, event=event)
+            removed.update(
+                remove_mediaroll(item, registry, catalog, event=event)
+            )
         elif not IContentBackedPresentationAsset.providedBy(item):
-            remove_asset(item, registry, catalog, event=event)
+            removed.add(remove_asset(item, registry, catalog, event=event))
     # remove groups
-    remove_asset(group, registry, catalog, name=name, event=event)
+    removed.add(remove_asset(group, registry, catalog, name=name, event=event))
+    removed.discard(None)
+    return tuple(removed)
 
 
 def remove_lesson(item, registry=None, catalog=None, name=None, event=True):
     if isinstance(item, six.string_types):
         item = component.queryUtility(INTILessonOverview, name=item)
     if item is None:
-        return
+        return ()
+    removed = set()
     name = item.ntiid or name
     registry = get_registry_4_item(item, INTILessonOverview,
-								   name, registry=registry)
+                                   name, registry=registry)
     catalog = get_library_catalog() if catalog is None else catalog
     # remove groups first
     for group in tuple(item):  # mutating
-        remove_group(group, registry, catalog, event=event)
+        removed.update(
+            remove_group(group, registry, catalog, event=event)
+        )
     # remove asset
-    remove_asset(item, registry, catalog, name=name, event=event)
+    removed.add(remove_asset(item, registry, catalog, name=name, event=event))
+    removed.discard(None)
+    return tuple(removed)
 
 
 def remove_presentation_asset(item, registry=None, catalog=None, name=None, event=True):
     if INTILessonOverview.providedBy(item):
-        remove_lesson(item, registry, catalog, name=name, event=event)
+        result = remove_lesson(item, registry, catalog, name=name, event=event)
     elif INTICourseOverviewGroup.providedBy(item):
-        remove_group(item, registry, catalog, name=name, event=event)
+        result = remove_group(item, registry, catalog, name=name, event=event)
     elif INTIMediaRoll.providedBy(item):
-        remove_mediaroll(item, registry, catalog, name=name, event=event)
+        result = remove_mediaroll(item, registry, catalog, 
+                                  name=name, event=event)
     else:
-        remove_asset(item, registry, catalog, name=name, event=event)
+        result = remove_asset(item, registry, catalog, name=name, event=event)
+    return result
 
 
 def make_asset_ntiid(nttype, creator=SYSTEM_USER_NAME, base=None, extra=None, now=None):
@@ -330,7 +346,7 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None, sites=No
 def check_docket_targets(asset):
     if INTIDocketAsset.providedBy(asset) and not asset.target:
         href = asset.href
-        if IPloneNamed.providedBy(href):
+        if IFile.providedBy(href):
             asset.target = to_external_ntiid_oid(href)
             asset_type = getattr(href, 'contentType', None) or asset.type
             asset.type = text_(asset_type) if asset_type else None
