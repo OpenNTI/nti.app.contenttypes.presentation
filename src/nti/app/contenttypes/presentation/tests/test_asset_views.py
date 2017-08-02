@@ -1434,10 +1434,25 @@ class TestAssetViews(ApplicationLayerTest):
         groups = lesson.get('Items')
         assert_that(groups[3].get('Items'), has_length(3))
 
+        # Index must be an int if we include it.
+        self.testapp.delete(
+            g3_contents_link + '/ntiid/' + assignment_ntiid + '?index=zero', status=422)
+
         # If we have a mismatch between the index and ntiid, we
         # should detect the conflict.
         self.testapp.delete(
             g3_contents_link + '/ntiid/' + assignment_ntiid + '?index=0', status=409)
+
+        # It is also a conflict if we include no index, because we have
+        # two matching ntiids but don't know which to delete.
+        self.testapp.delete(
+            g3_contents_link + '/ntiid/' + assignment_ntiid, status=409)
+
+        # Not including an index param is treated the same as including an
+        # empty one. In this case, that results in a conflict, for the same
+        # reason as above.
+        self.testapp.delete(
+            g3_contents_link + '/ntiid/' + assignment_ntiid + '?index=', status=409)
 
         # Both indices 1 and 2 should match this ntiid, so we
         # just delete the second one.
