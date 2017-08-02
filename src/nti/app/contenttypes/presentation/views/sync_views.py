@@ -130,7 +130,7 @@ class SyncPresentationAssetsView(_AbstractSyncAllLibrariesView):
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
                context=IDataserverFolder,
-               permission=nauth.ACT_SYNC_LIBRARY )
+               permission=nauth.ACT_SYNC_LIBRARY)
 class RemoveInaccessibleAssetsView(AbstractAuthenticatedView):
 
     def __call__(self):
@@ -148,7 +148,7 @@ class RemoveInaccessibleAssetsView(AbstractAuthenticatedView):
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
                context=IDataserverFolder,
-               permission=nauth.ACT_SYNC_LIBRARY,)
+               permission=nauth.ACT_SYNC_LIBRARY)
 class RemoveInvalidPresentationAssetsView(_AbstractSyncAllLibrariesView):
 
     def _do_call(self):

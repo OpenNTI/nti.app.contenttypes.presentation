@@ -15,8 +15,6 @@ from zope import lifecycleevent
 from zope.component.hooks import getSite
 from zope.component.hooks import site as current_site
 
-from zope.interface.adapter import _lookupAll as zopeLookupAll  # Private func
-
 from zope.intid.interfaces import IIntIds
 
 from nti.app.contentlibrary.utils import yield_content_packages
@@ -31,8 +29,6 @@ from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
-
-from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.contenttypes.presentation import iface_of_asset
 
@@ -89,21 +85,6 @@ def has_a_valid_parent(item, intids):
     return parent is not None and doc_id is not None
 
 
-def lookup_all_presentation_assets(site_registry):
-    result = {}
-    required = ()
-    order = len(required)
-    for registry in site_registry.utilities.ro:  # must keep order
-        byorder = registry._adapters
-        if order >= len(byorder):
-            continue
-        components = byorder[order]
-        extendors = ALL_PRESENTATION_ASSETS_INTERFACES
-        zopeLookupAll(components, required, extendors, result, 0, order)
-        break  # break on first
-    return result
-
-
 # remove invalid assets
 
 
@@ -118,6 +99,7 @@ def remove_asset(ntiid, asset, registry, container=None, catalog=None):
 
 
 def remove_invalid_assets(removed=None, seen=None):
+    count = 0
     site_name = getSite().__name__
     catalog = get_library_catalog()
     registry = component.getSiteManager()
@@ -125,15 +107,13 @@ def remove_invalid_assets(removed=None, seen=None):
     # get defaults
     seen = set() if seen is None else seen
     removed = set() if removed is None else removed
-    # get all assets in site/no hierarchy
-    site_assets = lookup_all_presentation_assets(registry)
-    logger.info("%s asset(s) found in %s", len(site_assets), site_name)
     # loop and check
-    for ntiid, item in site_assets.items():
+    for ntiid, item in list(component.getUtilitiesFor(IPresentationAsset)):
         provided = iface_of_asset(item)
         doc_id = intids.queryId(item)
         if doc_id in seen:
             continue
+        count += 0
         # check invalid registration
         if doc_id is None:
             logger.warn("Removing invalid registration (%s,%s) from site %s",
@@ -160,6 +140,7 @@ def remove_invalid_assets(removed=None, seen=None):
             continue
         # track
         seen.add(doc_id)
+    logger.info("%s asset(s) found in %s", count, site_name)
     # return
     return removed, seen
 
@@ -253,12 +234,13 @@ def remove_inaccessible_assets(seen=None, master=None):
     site = getSite()
     registered = set()
     registry = site.getSiteManager()
-    for ntiid, asset in lookup_all_presentation_assets(registry).items():
+    for ntiid, asset in list(component.getUtilitiesFor(IPresentationAsset)):
         doc_id = intids.queryId(asset)
         if doc_id is None or doc_id not in master:
             remove_asset(ntiid, asset, registry, catalog=catalog)
             removed.add(ntiid)
-        else:
+        elif doc_id not in seen:
+            seen.add(doc_id)
             registered.add(doc_id)
     # unindex invalid entries in catalog
     references = catalog.get_references(sites=site.__name__)
@@ -297,12 +279,12 @@ def remove_all_inaccessible_assets():
 
 def fix_inaccessible_assets(seen=None):
     result = set()
+    site_assets = {}
     catalog = get_library_catalog()
     # gather all site registered assets
     registry = component.getSiteManager()
-    site_assets = lookup_all_presentation_assets(registry)
-    if not site_assets:
-        return result
+    for ntiid, asset in list(component.getUtilitiesFor(IPresentationAsset)):
+        site_assets[ntiid] = asset
 
     containers = {}
     seen = set() if seen is None else seen

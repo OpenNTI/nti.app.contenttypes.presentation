@@ -187,15 +187,15 @@ class FixCourseAssetContainersView(AbstractAuthenticatedView,
 
     def _get_package_ntiid(self, course):
         params = self.readInput()
-        result =   params.get('ntiid') \
-                or params.get('package') \
-                or params.get('package_ntiid')
+        result = params.get('ntiid') \
+              or params.get('package') \
+              or params.get('package_ntiid')
         if result is None:
             raise_json_error(self.request,
                              hexc.HTTPUnprocessableEntity,
                              {
-                                'message': _(u'Must provide package ntiid.'),
-                                'field': 'ntiid'
+                                 'message': _(u'Must provide package ntiid.'),
+                                 'field': 'ntiid'
                              },
                              None)
         package = find_object_with_ntiid(result)
@@ -204,8 +204,8 @@ class FixCourseAssetContainersView(AbstractAuthenticatedView,
             raise_json_error(self.request,
                              hexc.HTTPUnprocessableEntity,
                              {
-                                'message': _(u'Cannot remove package reference.'),
-                                'code': 'CannotRemovePackageReferenceError'
+                                 'message': _(u'Cannot remove package reference.'),
+                                 'code': 'CannotRemovePackageReferenceError'
                              },
                              None)
         return result
