@@ -34,7 +34,7 @@ from nti.site.interfaces import IHostPolicyFolder
 
 
 def get_courses_for_package(ntiid, sites=None):
-    result = get_courses_for_packages(sites, ntiid)
+    result = get_courses_for_packages(ntiid, sites)
     return result
 
 
