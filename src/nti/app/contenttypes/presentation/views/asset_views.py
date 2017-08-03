@@ -173,8 +173,6 @@ from nti.publishing.interfaces import IPublishable
 
 from nti.site.interfaces import IHostPolicyFolder
 
-from nti.site.site import get_component_hierarchy_names
-
 from nti.site.utils import registerUtility
 
 from nti.traversal.traversal import find_interface
@@ -776,8 +774,7 @@ class PackagePresentationAssetPutView(PresentationAssetPutView):
 			return result
 		package = find_interface(self.context, IContentPackage, strict=False)
 		if package is not None:
-			sites = get_component_hierarchy_names()  # check sites
-			courses = get_courses_for_packages(sites, package.ntiid)
+			courses = get_courses_for_packages(package.ntiid)
 			result = courses[0] if courses else None  # should always find one
 		return result
 
