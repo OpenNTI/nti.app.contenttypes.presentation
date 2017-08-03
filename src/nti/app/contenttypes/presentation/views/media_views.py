@@ -32,14 +32,14 @@ from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtils
 from nti.app.contenttypes.presentation import MessageFactory as _
 
 from nti.base.interfaces import IFile
- 
+
 from nti.contentindexing.media.interfaces import IVideoTranscriptParser
 
 from nti.contenttypes.presentation import NTI_TRANSCRIPT_MIMETYPE
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTITranscript
-from nti.contenttypes.presentation.interfaces import IUserCreatedAsset 
+from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import ITranscriptContainer
 from nti.contenttypes.presentation.interfaces import IUserCreatedTranscript
 
@@ -157,8 +157,16 @@ class NTITranscriptPutView(AbstractAuthenticatedView,
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
                request_method='DELETE',
-               permission=nauth.ACT_DELETE)
+               permission=nauth.ACT_CONTENT_EDIT)
 class NTITranscriptDeleteView(AbstractAuthenticatedView):
+
+    '''
+    We require CONTENT_EDIT permission for this view instead of
+    delete, because in general a content editor may not have delete
+    permissions for a course and thus its assets. Eventually, though,
+    we may clean up the ACLs so that editors have delete permissions
+    for assets in their courses.
+    '''
 
     def _do_remove(self, context):
         media = context.__parent__
@@ -204,7 +212,7 @@ class ClearTranscriptsView(NTITranscriptDeleteView):
         if items:
             # lock if required
             if      not IUserCreatedAsset.providedBy(self.context) \
-                and not self.context.isLocked():
+                    and not self.context.isLocked():
                 self.context.lock()
             self.context.updateLastMod()
             lifecycleevent.modified(self.context)
@@ -224,7 +232,8 @@ class TranscriptUploadView(AbstractAuthenticatedView,
     content_predicate = INTITranscript
 
     def readInput(self, value=None):
-        result = ModeledContentUploadRequestUtilsMixin.readInput(self, value=value)
+        result = ModeledContentUploadRequestUtilsMixin.readInput(
+            self, value=value)
         if MIMETYPE not in result:
             result[MIMETYPE] = NTI_TRANSCRIPT_MIMETYPE
         for name in (NTIID, 'ntiid'):
@@ -254,7 +263,7 @@ class TranscriptUploadView(AbstractAuthenticatedView,
         # add to container
         container = ITranscriptContainer(self.context)
         container.add(transcript)
-        # make sure all of the transcripts have an ntiid, 
+        # make sure all of the transcripts have an ntiid,
         # they are lazy properties
         [obj.ntiid for obj in container]
         # notify
@@ -262,7 +271,7 @@ class TranscriptUploadView(AbstractAuthenticatedView,
         assert IUserCreatedTranscript.providedBy(transcript)
         # lock
         if      not IUserCreatedAsset.providedBy(self.context) \
-            and not self.context.isLocked():
+                and not self.context.isLocked():
             self.context.lock()
             self.context.updateLastMod()
             lifecycleevent.modified(self.context)
