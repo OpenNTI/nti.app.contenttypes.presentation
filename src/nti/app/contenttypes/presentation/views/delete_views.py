@@ -5,6 +5,7 @@
 """
 
 from __future__ import print_function, absolute_import, division
+from nti.app.contenttypes.presentation.utils.asset import get_component_registry
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -71,8 +72,7 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 
     @Lazy
     def _registry(self):
-        folder = find_interface(self.context, IHostPolicyFolder, strict=False)
-        return folder.getSiteManager()
+        return get_component_registry(self.context)
 
     def _do_delete_object(self, theObject):
         remove_presentation_asset(theObject,

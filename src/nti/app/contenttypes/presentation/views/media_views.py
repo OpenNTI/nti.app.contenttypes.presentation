@@ -212,7 +212,7 @@ class ClearTranscriptsView(NTITranscriptDeleteView):
         if items:
             # lock if required
             if      not IUserCreatedAsset.providedBy(self.context) \
-                    and not self.context.isLocked():
+                and not self.context.isLocked():
                 self.context.lock()
             self.context.updateLastMod()
             lifecycleevent.modified(self.context)
@@ -232,8 +232,7 @@ class TranscriptUploadView(AbstractAuthenticatedView,
     content_predicate = INTITranscript
 
     def readInput(self, value=None):
-        result = ModeledContentUploadRequestUtilsMixin.readInput(
-            self, value=value)
+        result = ModeledContentUploadRequestUtilsMixin.readInput(self, value)
         if MIMETYPE not in result:
             result[MIMETYPE] = NTI_TRANSCRIPT_MIMETYPE
         for name in (NTIID, 'ntiid'):
@@ -271,7 +270,7 @@ class TranscriptUploadView(AbstractAuthenticatedView,
         assert IUserCreatedTranscript.providedBy(transcript)
         # lock
         if      not IUserCreatedAsset.providedBy(self.context) \
-                and not self.context.isLocked():
+            and not self.context.isLocked():
             self.context.lock()
             self.context.updateLastMod()
             lifecycleevent.modified(self.context)
