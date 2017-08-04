@@ -38,6 +38,8 @@ from nti.app.products.courseware.views.view_mixins import DeleteChildViewMixin
 
 from nti.appserver.ugd_edit_views import UGDDeleteView
 
+from nti.contenttypes.presentation import iface_of_asset
+
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
@@ -72,7 +74,8 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 
     @Lazy
     def _registry(self):
-        return get_component_registry(self.context)
+        provided = iface_of_asset(self.context)
+        return get_component_registry(self.context, provided)
 
     def _do_delete_object(self, theObject):
         remove_presentation_asset(theObject,
@@ -154,9 +157,9 @@ class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
             # remove concrete to avoid leaks
             concrete = IConcreteAsset(item, item)
             if      concrete is not item \
-                and not INTIVideo.providedBy(concrete) \
-                and IUserCreatedAsset.providedBy(concrete) \
-                and not IContentBackedPresentationAsset.providedBy(concrete):
+                    and not INTIVideo.providedBy(concrete) \
+                    and IUserCreatedAsset.providedBy(concrete) \
+                    and not IContentBackedPresentationAsset.providedBy(concrete):
                 remove_presentation_asset(concrete, self._registry)
         else:
             item = self.context.pop(index)
@@ -200,8 +203,8 @@ class RemoveRefsView(AbstractAuthenticatedView):
         # remove concrete to avoid leaks
         concrete = IConcreteAsset(item, item)
         if      concrete is not item \
-            and IUserCreatedAsset.providedBy(concrete) \
-            and not IContentBackedPresentationAsset.providedBy(concrete):
+                and IUserCreatedAsset.providedBy(concrete) \
+                and not IContentBackedPresentationAsset.providedBy(concrete):
             remove_presentation_asset(concrete, self._registry)
         # remove
         remove_presentation_asset(item, self._registry)
@@ -212,8 +215,8 @@ class RemoveRefsView(AbstractAuthenticatedView):
     def _get_target_ntiid(self):
         values = CaseInsensitiveDict(self.request.params)
         target_ntiid = values.get('target') \
-                    or values.get('target_ntiid') \
-                    or values.get('ntiid')
+            or values.get('target_ntiid') \
+            or values.get('ntiid')
         return target_ntiid
 
     def __call__(self):
