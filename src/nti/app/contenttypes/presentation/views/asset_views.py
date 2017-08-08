@@ -57,6 +57,8 @@ from nti.app.contenttypes.presentation.views.view_mixins import href_safe_to_ext
 
 from nti.app.contenttypes.presentation.views.view_mixins import PresentationAssetMixin
 
+from nti.app.externalization.error import raise_json_error
+
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
 from nti.app.products.courseware.resources.utils import get_course_filer
@@ -111,6 +113,8 @@ from nti.contenttypes.presentation import COURSE_OVERVIEW_GROUP_MIME_TYPES
 from nti.contenttypes.presentation import RELATED_WORK_REF_POINTER_MIME_TYPES
 
 from nti.contenttypes.presentation.discussion import is_nti_course_bundle
+
+from nti.contenttypes.presentation.group import DuplicateReference
 
 from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
@@ -1116,7 +1120,16 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
 		elif INTIRelatedWorkRef.providedBy(contentObject):
 			contentObject = self._convert_relatedwork_to_pointer(contentObject, creator,
 																 extended, externalValue)
-		self.context.insert(index, contentObject)
+		try:
+			self.context.insert(index, contentObject)
+		except DuplicateReference:
+			raise_json_error(self.request,
+                             hexc.HTTPUnprocessableEntity,
+                             {
+                                 'message': _(u"Reference already exists in section."),
+                                 'code': u'ReferenceAlreadyExistsError'
+                             },
+                             None)
 
 		notify_modified(self.context, externalValue, external_keys=(ITEMS,))
 		self.request.response.status_int = 201
