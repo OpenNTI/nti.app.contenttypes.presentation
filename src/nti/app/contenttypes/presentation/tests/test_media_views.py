@@ -140,7 +140,7 @@ class TestMediaViews(ApplicationLayerTest):
         href = res.json_body['src']
         res = self.testapp.get(href, status=200)
         assert_that(res, has_property('content_length', is_(704)))
-        
+
         student = 'ichigo'
         with mock_dataserver.mock_db_trans(self.ds):
             self._create_user(student)
@@ -188,9 +188,10 @@ class TestMediaViews(ApplicationLayerTest):
             video.pop(name, None)
         res = self.testapp.post_json(self.assets_url, video)
         res = res.json_body
-        delete_href = self.require_link_href_with_rel(res, 'delete')
-        self.testapp.delete(delete_href)
-        self.testapp.get(delete_href, status=404)
+        # Disable DELETE (and test) for now - JZ 8.2017
+#         delete_href = self.require_link_href_with_rel(res, 'delete')
+#         self.testapp.delete(delete_href)
+#         self.testapp.get(delete_href, status=404)
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_create_video(self):
