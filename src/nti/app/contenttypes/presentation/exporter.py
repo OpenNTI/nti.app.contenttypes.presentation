@@ -111,7 +111,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
     def _post_process_asset(self, asset, ext_obj, filer, backup=True, salt=None):
         concrete = IConcreteAsset(asset, asset)
         provided = iface_of_asset(concrete)
-        # remove unquired data if not backup mode
+        # remove identifying data if not backup mode
         ext_obj.pop(OID, None)
         ext_obj.pop(CONTAINER_ID, None)
         if not backup:  # remove unrequired keys
@@ -132,7 +132,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
                         item.pop(NTIID, None)
                         item.pop(INTERNAL_NTIID, None)
             # If not user created and not a package asset, we always
-            # want to pop the ntiid to avoid ntiid collission.
+            # want to pop the ntiid to avoid ntiid collision.
             if not IContentBackedPresentationAsset.providedBy(concrete):
                 ext_obj.pop(NTIID, None)
                 ext_obj.pop(INTERNAL_NTIID, None)
