@@ -32,6 +32,8 @@ from nti.app.products.courseware.resources.utils import to_external_file_link
 
 from nti.base._compat import text_
 
+from nti.base.interfaces import DEFAULT_CONTENT_TYPE
+
 from nti.contentlibrary.interfaces import IContentUnit
 
 from nti.contenttypes.presentation.interfaces import INTIDocketAsset
@@ -69,7 +71,7 @@ def handle_related_work(item, context, creator=None, request=None):
     handle_asset(item, context, creator, request)
     # capture updated/previous data
     ntiid, href = item.target, item.href
-    contentType = item.type or u'application/octet-stream'  # default
+    contentType = item.type or text_(DEFAULT_CONTENT_TYPE) # default
     # if client has uploaded a file, capture contentType and target ntiid
     if      request.POST \
         and 'href' in request.POST \

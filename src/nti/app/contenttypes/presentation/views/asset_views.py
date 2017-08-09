@@ -79,6 +79,8 @@ from nti.assessment.interfaces import IQuestionSet
 
 from nti.base._compat import text_
 
+from nti.base.interfaces import DEFAULT_CONTENT_TYPE
+
 from nti.contentfile.interfaces import IContentBaseFile
 
 from nti.contentlibrary.indexed_data import get_site_registry
@@ -375,7 +377,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 		# capture updated/previous data
 		ntiid, href = item.target, item.href
-		contentType = item.type or u'application/octet-stream'  # default
+		contentType = item.type or text_(DEFAULT_CONTENT_TYPE) # default
 
 		# if client has uploaded a file, capture contentType and target ntiid
 		if 		self.request.POST \

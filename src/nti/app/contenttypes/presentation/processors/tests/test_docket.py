@@ -21,6 +21,8 @@ from nti.app.products.courseware.resources.interfaces import ICourseSourceFiler
 
 from nti.app.products.courseware.resources.model import CourseContentFile
 
+from nti.base.interfaces import DEFAULT_CONTENT_TYPE
+
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
@@ -71,7 +73,7 @@ class TestDocket(ApplicationLayerTest):
                         has_properties('creator', "ichigo",
                                        "href", is_(href),
                                        "__parent__", is_(course),
-                                       "type", is_('application/octet-stream'),
+                                       "type", is_(DEFAULT_CONTENT_TYPE),
                                        "target", is_(not_none())))
             container = IPresentationAssetContainer(course)
             assert_that(container,

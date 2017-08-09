@@ -31,6 +31,8 @@ from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtils
 
 from nti.app.contenttypes.presentation import MessageFactory as _
 
+from nti.base.interfaces import DEFAULT_CONTENT_TYPE
+
 from nti.base.interfaces import IFile
 
 from nti.contentindexing.media.interfaces import IVideoTranscriptParser
@@ -57,7 +59,6 @@ MIMETYPE = StandardExternalFields.MIMETYPE
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
 TEXT_VTT = "text/vtt"
-OCTET_STREAM = 'application/octet-stream'
 
 
 @view_config(context=INTIMedia)
@@ -88,7 +89,7 @@ def process_transcript_source(transcript, source, name=None, request=None):
     old_src = transcript.src
     content = source.read()
     contentType = getattr(source, 'contentType', None) or TEXT_VTT
-    contentType = TEXT_VTT if contentType == OCTET_STREAM else contentType
+    contentType = TEXT_VTT if contentType == DEFAULT_CONTENT_TYPE else contentType
     parsed = {
         'filename': name,
         'contents': content,
