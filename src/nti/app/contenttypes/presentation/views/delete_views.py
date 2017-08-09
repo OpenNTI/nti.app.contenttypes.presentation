@@ -5,7 +5,6 @@
 """
 
 from __future__ import print_function, absolute_import, division
-from nti.app.contenttypes.presentation.utils.asset import get_component_registry
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -25,6 +24,7 @@ from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.contenttypes.presentation import MessageFactory as _
 
+from nti.app.contenttypes.presentation.utils.asset import get_component_registry
 from nti.app.contenttypes.presentation.utils.asset import remove_presentation_asset
 
 from nti.app.contenttypes.presentation.views import VIEW_CONTENTS
@@ -157,9 +157,9 @@ class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
             # remove concrete to avoid leaks
             concrete = IConcreteAsset(item, item)
             if      concrete is not item \
-                    and not INTIVideo.providedBy(concrete) \
-                    and IUserCreatedAsset.providedBy(concrete) \
-                    and not IContentBackedPresentationAsset.providedBy(concrete):
+                and not INTIVideo.providedBy(concrete) \
+                and IUserCreatedAsset.providedBy(concrete) \
+                and not IContentBackedPresentationAsset.providedBy(concrete):
                 remove_presentation_asset(concrete, self._registry)
         else:
             item = self.context.pop(index)
@@ -203,8 +203,8 @@ class RemoveRefsView(AbstractAuthenticatedView):
         # remove concrete to avoid leaks
         concrete = IConcreteAsset(item, item)
         if      concrete is not item \
-                and IUserCreatedAsset.providedBy(concrete) \
-                and not IContentBackedPresentationAsset.providedBy(concrete):
+            and IUserCreatedAsset.providedBy(concrete) \
+            and not IContentBackedPresentationAsset.providedBy(concrete):
             remove_presentation_asset(concrete, self._registry)
         # remove
         remove_presentation_asset(item, self._registry)
@@ -215,8 +215,8 @@ class RemoveRefsView(AbstractAuthenticatedView):
     def _get_target_ntiid(self):
         values = CaseInsensitiveDict(self.request.params)
         target_ntiid = values.get('target') \
-            or values.get('target_ntiid') \
-            or values.get('ntiid')
+                    or values.get('target_ntiid') \
+                    or values.get('ntiid')
         return target_ntiid
 
     def __call__(self):

@@ -267,7 +267,6 @@ class TranscriptUploadView(AbstractAuthenticatedView,
         [obj.ntiid for obj in container]
         # notify
         lifecycleevent.added(transcript)
-        assert IUserCreatedTranscript.providedBy(transcript)
         # lock
         if      not IUserCreatedAsset.providedBy(self.context) \
             and not self.context.isLocked():

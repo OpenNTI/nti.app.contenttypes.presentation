@@ -157,7 +157,6 @@ class TestMediaViews(ApplicationLayerTest):
                          ],
                          status=200)
 
-
         href = '/dataserver2/Objects/%s' % self.video_ntiid_cell
         res = self.testapp.get(href, status=200)
         assert_that(res.json_body, has_entry('transcripts', has_length(2)))
@@ -188,7 +187,7 @@ class TestMediaViews(ApplicationLayerTest):
             video.pop(name, None)
         res = self.testapp.post_json(self.assets_url, video)
         res = res.json_body
-        # Disable DELETE (and test) for now - JZ 8.2017
+#         Disable DELETE (and test) for now - JZ 8.2017
 #         delete_href = self.require_link_href_with_rel(res, 'delete')
 #         self.testapp.delete(delete_href)
 #         self.testapp.get(delete_href, status=404)
