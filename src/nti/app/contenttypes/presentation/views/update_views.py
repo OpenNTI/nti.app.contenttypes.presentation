@@ -136,7 +136,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
     @Lazy
     def container(self):
         result = find_interface(self.context, ICourseInstance, strict=False) \
-            or find_interface(self.context, IContentPackage, strict=False)
+              or find_interface(self.context, IContentPackage, strict=False)
         return result
 
     @Lazy
