@@ -120,31 +120,35 @@ def get_registry_by_name(name):
 registry_by_name = get_registry_by_name
 
 
-def get_component_site(context, provided, name=None):
+def get_component_site(context, provided=None, name=None):
     result = None
     folder = IHostPolicyFolder(context, None)
     if folder is None:
+        provided = provided or iface_of_asset(context)
         sites_names = get_component_hierarchy_names()
         name = name or getattr(context, 'ntiid', None)
         for idx in range(len(sites_names) - 1, -1, -1):  # higher sites first
-            site_name = sites_names[idx]
-            registry = get_registry_by_name(site_name)
+            folder = get_host_site(sites_names[idx], safe=True)
+            registry = folder.getSiteManager()
             if      registry is not None \
                 and registry.queryUtility(provided, name=name) == context:
-                result = site_name
+                result = folder
                 break
     else:
-        result = folder.__name__
+        result = folder
     return result
-component_site = get_component_site
 
 
-def get_component_registry(context, provided, name=None):
-    site_name = component_site(context, provided, name)
-    if site_name:
-        return get_registry_by_name(site_name)
+def get_component_site_name(context, provided=None, name=None):
+    site = get_component_site(context, provided, name)
+    return site.__name__ if site is not None else None
+
+
+def get_component_registry(context, provided=None, name=None):
+    site = get_component_site(context, provided, name)
+    if site is not None:
+        return site.getSiteManager()
     return get_site_registry()
-component_registry = get_component_registry
 
 
 def notify_removed(item):
@@ -153,11 +157,10 @@ def notify_removed(item):
         locate(item, None, None)
 
 
-def get_registry_4_item(item, provided, name, registry=None):
+def get_asset_registry(item, provided=None, name=None, registry=None):
     if registry is None:
-        registry = component_registry(item, provided, name=name)
+        registry = get_component_registry(item, provided, name=name)
     return registry
-registry4 = get_registry_4_item
 
 
 def remove_asset(item, registry=None, catalog=None, name=None, event=True):
@@ -167,7 +170,7 @@ def remove_asset(item, registry=None, catalog=None, name=None, event=True):
     # remove utility
     name = item.ntiid or name
     provided = iface_of_asset(item)
-    registry = get_registry_4_item(item, provided, name, registry=registry)
+    registry = get_asset_registry(item, provided, name, registry=registry)
     try:
         if name and not unregisterUtility(registry, provided=provided, name=name):
             logger.warn("Could not unregister %s,%s from %s",
@@ -190,8 +193,7 @@ def remove_mediaroll(item, registry=None, catalog=None, name=None, event=True):
     if item is None:
         return
     name = item.ntiid or name
-    registry = get_registry_4_item(item, INTIMediaRoll, name,
-                                   registry=registry)
+    registry = get_asset_registry(item, INTIMediaRoll, name, registry)
     catalog = get_library_catalog() if catalog is None else catalog
     # remove mediarefs first
     for media in tuple(item):  # mutating
@@ -209,8 +211,8 @@ def remove_group(group, registry=None, catalog=None, name=None, event=True):
         return
     removed = set()
     name = group.ntiid or name
-    registry = get_registry_4_item(group, INTICourseOverviewGroup,
-                                   name, registry=registry)
+    registry = get_asset_registry(group, INTICourseOverviewGroup,
+                                  name, registry=registry)
     catalog = get_library_catalog() if catalog is None else catalog
     # remove items first
     for item in tuple(group):  # mutating
@@ -233,8 +235,8 @@ def remove_lesson(item, registry=None, catalog=None, name=None, event=True):
         return ()
     removed = set()
     name = item.ntiid or name
-    registry = get_registry_4_item(item, INTILessonOverview,
-                                   name, registry=registry)
+    registry = get_asset_registry(item, INTILessonOverview,
+                                  name, registry=registry)
     catalog = get_library_catalog() if catalog is None else catalog
     # remove groups first
     for group in tuple(item):  # mutating

@@ -36,11 +36,11 @@ from nti.app.contentfile import validate_sources
 
 from nti.app.contenttypes.presentation import MessageFactory as _
 
-from nti.app.contenttypes.presentation.utils.asset import component_site
 from nti.app.contenttypes.presentation.utils.asset import intid_register
 from nti.app.contenttypes.presentation.utils.asset import add_2_connection
 from nti.app.contenttypes.presentation.utils.asset import make_asset_ntiid
 from nti.app.contenttypes.presentation.utils.asset import registry_by_name
+from nti.app.contenttypes.presentation.utils.asset import get_component_site_name
 from nti.app.contenttypes.presentation.utils.asset import remove_presentation_asset
 
 from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_courses
@@ -271,9 +271,9 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 	def _site_name(self):
 		# XXX: use correct registration site
 		provided = iface_of_asset(self.context)
-		return component_site(self.context,
-							  provided=provided,
-							  name=self.context.ntiid)
+		return get_component_site_name(self.context,
+							  		   provided,
+							  		   name=self.context.ntiid)
 
 	@Lazy
 	def _registry(self):
