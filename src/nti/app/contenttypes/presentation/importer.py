@@ -36,8 +36,6 @@ from nti.cabinet.filer import transfer_to_native_file
 
 from nti.contentlibrary.interfaces import IFilesystemBucket
 
-from nti.contenttypes.courses.common import get_course_site
-
 from nti.contenttypes.courses.importer import BaseSectionImporter
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -56,9 +54,7 @@ from nti.contenttypes.presentation.interfaces import IContentBackedPresentationA
 
 from nti.coremetadata.utils import current_principal
 
-from nti.site.hostpolicy import get_host_site
-
-from nti.site.site import get_component_hierarchy_names
+from nti.site.interfaces import IHostPolicyFolder
 
 
 @interface.implementer(ICourseSectionImporter)
@@ -92,25 +88,25 @@ class LessonOverviewsImporter(BaseSectionImporter):
             asset_items = asset.Items if asset.Items is not None else ()
             for item in asset_items:
                 self._post_process_asset(item, source_filer, target_filer)
-
         # set proper target
         check_docket_targets(concrete)
 
     def _get_course_site(self, course):
-        site_name = get_course_site(course)
-        site = get_host_site(site_name)
-        return site
+        return IHostPolicyFolder(course)
+
+    def _sync_lessons(self, course, bucket):
+        return synchronize_course_lesson_overview(course, buckets=(bucket,))
 
     def _do_import(self, context, source_filer, save_sources=True):
         course = ICourseInstance(context)
         entry = ICourseCatalogEntry(course)
         site = self._get_course_site(course)
         target_filer = get_course_filer(course)
-        named_sites = get_component_hierarchy_names()
-
+        # check there is a 'Lessons' folder
         if source_filer.is_bucket(self.__LESSONS__):
             bucket = source_filer.get(self.__LESSONS__)
             with current_site(site):
+                named_sites = (site.__name__,)
                 registry = site.getSiteManager()
                 # clear assets - not merging
                 clear_course_assets(course)
@@ -121,16 +117,13 @@ class LessonOverviewsImporter(BaseSectionImporter):
                                                  sites=named_sites,
                                                  force=True)  # not merging
                 # load assets
-                lessons = synchronize_course_lesson_overview(course,
-                                                             buckets=(bucket,))
+                lessons = self._sync_lessons(course, bucket)
                 for lesson in lessons or ():
                     self._post_process_asset(lesson,
                                              source_filer,
                                              target_filer)
-
             # save sources in main course Lessos folder
-            parent = get_parent_course(course)
-            root = parent.root
+            root = get_parent_course(course).root
             if save_sources and IFilesystemBucket.providedBy(root):
                 out_path = os.path.join(root.absolute_path, self.__LESSONS__)
                 self.makedirs(out_path)  # create
@@ -141,7 +134,6 @@ class LessonOverviewsImporter(BaseSectionImporter):
                         new_path = os.path.join(out_path, name)
                         transfer_to_native_file(source, new_path)
             return lessons
-
         return ()
 
     def process(self, context, filer, writeout=True):
