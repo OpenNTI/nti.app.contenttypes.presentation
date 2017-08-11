@@ -42,7 +42,7 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
-from nti.contenttypes.presentation import iface_of_asset
+from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
@@ -124,7 +124,7 @@ def get_component_site(context, provided=None, name=None):
     result = None
     folder = IHostPolicyFolder(context, None)
     if folder is None:
-        provided = provided or iface_of_asset(context)
+        provided = provided or interface_of_asset(context)
         sites_names = get_component_hierarchy_names()
         name = name or getattr(context, 'ntiid', None)
         for idx in range(len(sites_names) - 1, -1, -1):  # higher sites first
@@ -169,7 +169,7 @@ def remove_asset(item, registry=None, catalog=None, name=None, event=True):
         notify(WillRemovePresentationAssetEvent(item))
     # remove utility
     name = item.ntiid or name
-    provided = iface_of_asset(item)
+    provided = interface_of_asset(item)
     registry = get_asset_registry(item, provided, name, registry=registry)
     try:
         if name and not unregisterUtility(registry, provided=provided, name=name):

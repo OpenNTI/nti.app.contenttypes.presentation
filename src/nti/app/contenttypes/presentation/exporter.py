@@ -28,7 +28,7 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.contenttypes.presentation import PUBLICATION_CONSTRAINTS
 
-from nti.contenttypes.presentation import iface_of_asset
+from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
@@ -110,7 +110,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
 
     def _post_process_asset(self, asset, ext_obj, filer, backup=True, salt=None):
         concrete = IConcreteAsset(asset, asset)
-        provided = iface_of_asset(concrete)
+        provided = interface_of_asset(concrete)
         # remove identifying data if not backup mode
         ext_obj.pop(OID, None)
         ext_obj.pop(CONTAINER_ID, None)

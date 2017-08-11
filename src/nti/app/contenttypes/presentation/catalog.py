@@ -24,7 +24,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.courses.utils import get_courses_for_packages
 
-from nti.contenttypes.presentation import iface_of_asset
+from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.presentation.index import get_assets_catalog
 
@@ -82,7 +82,7 @@ class _Type(object):
 @component.adapter(IPresentationAsset)
 @interface.implementer(IContainedTypeAdapter)
 def _asset_to_contained_type(context):
-    provided = iface_of_asset(context)
+    provided = interface_of_asset(context)
     return _Type(provided.__name__)
 
 

@@ -43,7 +43,7 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
-from nti.contenttypes.presentation import iface_of_asset
+from nti.contenttypes.presentation import interface_of_asset
 
 from nti.dataserver import authorization as nauth
 
@@ -78,7 +78,7 @@ class ResetPresentationAssetsView(_AbstractSyncAllLibrariesView):
             registry = folder.getSiteManager()
             # remove registered assets
             for name, item, container in course_assets(course):
-                provided = iface_of_asset(item)
+                provided = interface_of_asset(item)
                 registered = component.queryUtility(provided, name)
                 if registered is None or can_be_removed(registered, force=force):
                     container.pop(name, None)

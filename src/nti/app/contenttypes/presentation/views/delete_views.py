@@ -38,7 +38,7 @@ from nti.app.products.courseware.views.view_mixins import DeleteChildViewMixin
 
 from nti.appserver.ugd_edit_views import UGDDeleteView
 
-from nti.contenttypes.presentation import iface_of_asset
+from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
@@ -74,7 +74,7 @@ class PresentationAssetDeleteView(PresentationAssetMixin, UGDDeleteView):
 
     @Lazy
     def _registry(self):
-        provided = iface_of_asset(self.context)
+        provided = interface_of_asset(self.context)
         return get_component_registry(self.context, provided)
 
     def _do_delete_object(self, theObject):

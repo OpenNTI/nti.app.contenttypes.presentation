@@ -73,7 +73,7 @@ from nti.contentlibrary.interfaces import IContentPackage
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
-from nti.contenttypes.presentation import iface_of_asset
+from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.presentation import POLL_REF_MIME_TYPES
 from nti.contenttypes.presentation import SURVEY_REF_MIME_TYPES
@@ -176,7 +176,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
         return result
 
     def transformOutput(self, obj):
-        provided = iface_of_asset(obj)
+        provided = interface_of_asset(obj)
         if provided is not None and 'href' in provided:
             result = href_safe_to_external_object(obj)
         else:
@@ -232,7 +232,7 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
         creator = self.remoteUser
         contentObject, externalValue, sources = self.readCreateUpdateContentObject()
         contentObject.creator = creator.username  # use string
-        provided = iface_of_asset(contentObject)
+        provided = interface_of_asset(contentObject)
 
         # check item does not exists
         check_exists(contentObject, self.registry, self.request, self._extra)
@@ -610,7 +610,7 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
         index = self._get_index()
         creator = self.remoteUser
         contentObject, externalValue = self.readCreateUpdateContentObject(creator)
-        provided = iface_of_asset(contentObject)
+        provided = interface_of_asset(contentObject)
 
         # check item does not exists
         check_exists(contentObject, self.registry, self.request, self.extra)

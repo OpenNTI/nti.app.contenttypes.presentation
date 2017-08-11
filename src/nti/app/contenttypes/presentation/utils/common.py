@@ -30,7 +30,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
-from nti.contenttypes.presentation import iface_of_asset
+from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
@@ -116,7 +116,7 @@ def remove_invalid_assets(removed=None, seen=None):
     removed = set() if removed is None else removed
     # loop and check
     for ntiid, item in list(presentation_assets()):
-        provided = iface_of_asset(item)
+        provided = interface_of_asset(item)
         doc_id = intids.queryId(item)
         if doc_id in seen:
             continue
@@ -196,7 +196,7 @@ def check_asset_container(context, removed=None, master=None):
         doc_id = intids.queryId(asset)
         if doc_id in master:
             continue
-        provided = iface_of_asset(asset)
+        provided = interface_of_asset(asset)
         # check it can be found in registry
         registered = registry.queryUtility(provided, name=ntiid)
         if registered is None:
@@ -257,7 +257,7 @@ def remove_inaccessible_assets(seen=None, master=None):
             catalog.unindex(uid)
         else:
             ntiid = asset.ntiid
-            provided = iface_of_asset(asset)
+            provided = interface_of_asset(asset)
             if registry.queryUtility(provided, name=ntiid) is None:
                 remove_asset(ntiid, asset, registry, catalog=catalog)
                 removed.add(ntiid)
@@ -339,7 +339,7 @@ def fix_inaccessible_assets(seen=None):
             namespace = entry.ntiid
         site = context_site(parent)
         doc_id = intids.queryId(item)
-        provided = iface_of_asset(item)
+        provided = interface_of_asset(item)
         # check registration
         if ntiid not in site_assets:
             result.add(ntiid)

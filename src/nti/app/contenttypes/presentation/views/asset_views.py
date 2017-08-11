@@ -99,7 +99,7 @@ from nti.contenttypes.courses.discussions.utils import resolve_discussion_course
 from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.courses.utils import get_courses_for_packages
 
-from nti.contenttypes.presentation import iface_of_asset
+from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.presentation import AUDIO_MIME_TYPES
 from nti.contenttypes.presentation import VIDEO_MIME_TYPES
@@ -232,7 +232,7 @@ def _canonicalize(items, creator, base=None, registry=None):
 	registry = get_site_registry(registry)
 	for idx, item in enumerate(items or ()):
 		created = True
-		provided = iface_of_asset(item)
+		provided = interface_of_asset(item)
 		if not item.ntiid:
 			item.ntiid = make_asset_ntiid(provided, base=base, extra=idx)
 		else:
@@ -250,7 +250,7 @@ def _canonicalize(items, creator, base=None, registry=None):
 
 def _handle_multipart(context, user, contentObject, sources, provided=None):
 	filer = get_course_filer(context, user)
-	provided = iface_of_asset(contentObject) if provided is None else provided
+	provided = interface_of_asset(contentObject) if provided is None else provided
 	for name, source in sources.items():
 		if name in provided:
 			# remove existing
@@ -272,7 +272,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 	@Lazy
 	def _site_name(self):
 		# XXX: use correct registration site
-		provided = iface_of_asset(self.context)
+		provided = interface_of_asset(self.context)
 		return get_component_site_name(self.context,
 							  		   provided,
 							  		   name=self.context.ntiid)
@@ -497,7 +497,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 		# process group items
 		for item in group or ():
-			provided = iface_of_asset(item)
+			provided = interface_of_asset(item)
 			if INTIMediaRoll.providedBy(item):
 				self._handle_media_roll(provided, item, creator, item_extended)
 			else:
@@ -618,7 +618,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		return result
 
 	def transformOutput(self, obj):
-		provided = iface_of_asset(obj)
+		provided = interface_of_asset(obj)
 		if provided is not None and 'href' in provided:
 			result = href_safe_to_external_object(obj)
 		else:
@@ -674,7 +674,7 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 		creator = self.remoteUser
 		contentObject, externalValue, sources = self.readCreateUpdateContentObject(creator)
 		contentObject.creator = creator.username  # use string
-		provided = iface_of_asset(contentObject)
+		provided = interface_of_asset(contentObject)
 
 		# check item does not exists and notify
 		self._check_exists(provided, contentObject, creator)
@@ -753,7 +753,7 @@ class PresentationAssetPutView(PresentationAssetSubmitViewMixin,
 	def __call__(self):
 		result = UGDPutView.__call__(self)
 		containers = self._get_containers()
-		self._handle_asset(iface_of_asset(result), result,
+		self._handle_asset(interface_of_asset(result), result,
 						   result.creator, containers)
 		return self.transformOutput(result)
 
@@ -1092,7 +1092,7 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
 		index = self._get_index()
 		creator = self.remoteUser
 		contentObject, externalValue = self.readCreateUpdateContentObject(creator)
-		provided = iface_of_asset(contentObject)
+		provided = interface_of_asset(contentObject)
 		__traceback_info__ = contentObject
 
 		# check item does not exists and notify

@@ -17,7 +17,7 @@ from zope import component
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
-from nti.contenttypes.presentation import iface_of_asset as iface_of_thing
+from nti.contenttypes.presentation import interface_of_asset as iface_of_thing
 
 #: View to store/fetch presentation assets.
 VIEW_ASSETS = 'assets'

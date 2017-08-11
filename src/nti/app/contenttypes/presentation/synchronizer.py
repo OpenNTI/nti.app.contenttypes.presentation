@@ -60,7 +60,6 @@ from nti.contenttypes.courses.interfaces import	ICourseOutlineContentNode
 from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import get_course_hierarchy
 
-from nti.contenttypes.presentation import iface_of_asset
 from nti.contenttypes.presentation import interface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
@@ -532,7 +531,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 					# This could be a related work ref only present in the Lessons
 					# folder of a course (import/export/synced). Therefore we must
 					# update if not locked.
-					removed_item = _removed_registered(iface_of_asset( found ),
+					removed_item = _removed_registered(interface_of_asset( found ),
 													   ntiid,
 													   intids,
 													   registry)

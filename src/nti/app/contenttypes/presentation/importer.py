@@ -45,7 +45,7 @@ from nti.contenttypes.courses.interfaces import ICourseSectionImporter
 from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import get_course_subinstances
 
-from nti.contenttypes.presentation import iface_of_asset
+from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
@@ -73,7 +73,7 @@ class LessonOverviewsImporter(BaseSectionImporter):
         # save asset resources
         # make sure we transfer from concrete
         concrete = IConcreteAsset(asset, asset)
-        transfer_resources_from_filer(iface_of_asset(concrete),
+        transfer_resources_from_filer(interface_of_asset(concrete),
                                       concrete,
                                       source_filer,
                                       target_filer)

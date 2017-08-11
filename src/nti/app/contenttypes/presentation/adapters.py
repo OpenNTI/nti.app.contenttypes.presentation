@@ -28,7 +28,7 @@ from nti.assessment.interfaces import IQEvaluation
 from nti.assessment.interfaces import IQuestionSet
 from nti.assessment.interfaces import IQAssignment
 
-from nti.contenttypes.presentation import iface_of_asset
+from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
@@ -210,7 +210,7 @@ class _PresentationAssetExternalFieldTraverser(_AbstractExternalFieldTraverser):
     def __init__(self, context, request=None):
         _AbstractExternalFieldTraverser.__init__(self, context, request=request)
         allowed_fields = set()
-        asset_iface = iface_of_asset(context)
+        asset_iface = interface_of_asset(context)
         for k, v in asset_iface.namesAndDescriptions(all=True):
             __traceback_info__ = k, v
             if IMethod.providedBy(v):

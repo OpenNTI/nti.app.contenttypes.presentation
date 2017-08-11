@@ -39,7 +39,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.courses.utils import get_course_subinstances
 
-from nti.contenttypes.presentation import iface_of_asset
+from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
@@ -116,7 +116,7 @@ def canonicalize(items, creator, base=None, registry=None):
     registry = registry or component.getSiteManager()
     for idx, item in enumerate(items or ()):
         created = True
-        provided = iface_of_asset(item)
+        provided = interface_of_asset(item)
         if not item.ntiid:
             item.ntiid = make_asset_ntiid(provided, base=base, extra=idx)
         else:
@@ -133,7 +133,7 @@ def canonicalize(items, creator, base=None, registry=None):
 
 def handle_multipart(context, user, contentObject, sources, provided=None):
     filer = get_course_filer(context, user)
-    provided = iface_of_asset(contentObject) if provided is None else provided
+    provided = interface_of_asset(contentObject) if provided is None else provided
     for name, source in sources.items():
         if name in provided:
             # remove existing
@@ -169,7 +169,7 @@ def get_ntiid(item):
 
 def check_exists(item, registry, request=None, extra=None):
     ntiid = get_ntiid(item)
-    provided = iface_of_asset(item)
+    provided = interface_of_asset(item)
     if ntiid:
         if registry.queryUtility(provided, name=ntiid):
             request = request or get_current_request()

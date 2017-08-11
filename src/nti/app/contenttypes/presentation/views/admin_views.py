@@ -48,7 +48,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.courses.utils import get_course_packages
 
-from nti.contenttypes.presentation import iface_of_asset
+from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.presentation.index import get_assets_catalog
 
@@ -120,7 +120,7 @@ class FixImportCourseReferences(AbstractAuthenticatedView):
         change_count = 0
         for unused_key, item, unused_container in course_assets(course):
             asset = IConcreteAsset(item, item)
-            transfer_result = transfer_resources_from_filer(iface_of_asset(asset),
+            transfer_result = transfer_resources_from_filer(interface_of_asset(asset),
                                                             asset,
                                                             source_filer,
                                                             course_filer)
