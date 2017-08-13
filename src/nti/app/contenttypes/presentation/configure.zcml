@@ -215,6 +215,7 @@
 	<utility factory=".exporter.LessonOverviewsExporter" name="015:Lesson_Overviews" />
 
 	<!-- Importers -->
+	<utility factory=".importer.UserAssetsImporter" name="014:User_Assets" />
 	<utility factory=".importer.LessonOverviewsImporter" name="015:Lesson_Overviews" />
 
 	<!-- Decorators -->

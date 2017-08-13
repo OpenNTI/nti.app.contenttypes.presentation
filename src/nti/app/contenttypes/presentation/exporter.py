@@ -12,16 +12,21 @@ logger = __import__('logging').getLogger(__name__)
 from zope import interface
 from zope import component
 
+from zope.intid.interfaces import IIntIds
+
 from nti.app.products.courseware.utils.exporter import save_resources_to_filer
 
 from nti.assessment.interfaces import IQEvaluation
 from nti.assessment.interfaces import IQEditableEvaluation
+
+from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contentlibrary.interfaces import IEditableContentUnit
 
 from nti.contenttypes.courses.exporter import BaseSectionExporter
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseSectionExporter
 
 from nti.contenttypes.courses.utils import get_course_subinstances
@@ -31,9 +36,12 @@ from nti.contenttypes.presentation import PUBLICATION_CONSTRAINTS
 from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
+from nti.contenttypes.presentation.interfaces import INTIVideo
+from nti.contenttypes.presentation.interfaces import INTIMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
+from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -126,14 +134,20 @@ class LessonOverviewsExporter(BaseSectionExporter):
                 ext_obj.pop(INTERNAL_NTIID, None)
             if      INTIMedia.providedBy(concrete) \
                 and not INTIMediaRoll.providedBy(asset.__parent__):
+                # XXX: Why not items in media rolls?
                 for name in ('sources', 'transcripts'):
                     for item in ext_obj.get(name) or ():
                         item.pop(OID, None)
                         item.pop(NTIID, None)
                         item.pop(INTERNAL_NTIID, None)
+                if IUserCreatedAsset.providedBy(concrete):
+                    # Update our ntiid so video refs line up correctly.
+                    new_ntiid = self.hash_ntiid(asset.ntiid, salt)
+                    ext_obj[NTIID] = ext_obj['ntiid'] = new_ntiid
             # If not user created and not a package asset, we always
-            # want to pop the ntiid to avoid ntiid collision.
-            if not IContentBackedPresentationAsset.providedBy(concrete):
+            # want to pop the ntiid to avoid ntiid collision (except for
+            # user created media).
+            elif not IContentBackedPresentationAsset.providedBy(concrete):
                 ext_obj.pop(NTIID, None)
                 ext_obj.pop(INTERNAL_NTIID, None)
 
@@ -169,16 +183,20 @@ class LessonOverviewsExporter(BaseSectionExporter):
                 and IQEditableEvaluation.providedBy(IQEvaluation(asset, None)):
                 ext_obj['target'] = self.hash_ntiid(asset.target, salt)
             # process lesson constraints
-            if      INTILessonOverview.providedBy(asset) \
+            elif    INTILessonOverview.providedBy(asset) \
                 and PUBLICATION_CONSTRAINTS in ext_obj:
                 self._post_lesson_constraints(asset, ext_obj, salt)
             # update related work refs targets
-            if      INTIRelatedWorkRef.providedBy(concrete) \
+            elif    INTIRelatedWorkRef.providedBy(concrete) \
                 and is_valid_ntiid_string(concrete.target):
                 target = find_object_with_ntiid(concrete.target)
                 if IEditableContentUnit.providedBy(target):
                     for name in ('target', 'href'):
                         ext_obj[name] = self.hash_ntiid(concrete.target, salt)
+            elif    INTIMediaRef.providedBy(asset) \
+                and IUserCreatedAsset.providedBy(concrete):
+                # We need to update our ref targets here
+                ext_obj['target'] = self.hash_ntiid(asset.target, salt)
 
             # don't leak internal OIDs
             for name in (NTIID, INTERNAL_NTIID, INTERNAL_CONTAINER_ID, 'target'):
@@ -212,10 +230,56 @@ class LessonOverviewsExporter(BaseSectionExporter):
                        bucket=u"Lessons",
                        contentType=u"application/x-json")
 
+    def _course_containers(self, course):
+        result = set()
+        entry = ICourseCatalogEntry(course)
+        result.add(entry.ntiid)
+        for subinstance in get_course_subinstances(course):
+            result.add(ICourseCatalogEntry(subinstance).ntiid)
+        return result
+
+    def _iter_user_assets(self, course):
+        # We only need to capture user created videos.
+        ifaces = (INTIVideo,)
+        catalog = get_library_catalog()
+        intids = component.getUtility(IIntIds)
+        container_ntiids = self._course_containers(course)
+        for item in catalog.search_objects(intids=intids,
+                                           container_all_of=False,
+                                           container_ntiids=container_ntiids,
+                                           provided=ifaces):
+            if IUserCreatedAsset.providedBy(item):
+                yield item
+
+    def _get_ext_user_assets(self, course, filer, backup, salt):
+        result = []
+        for asset in self._iter_user_assets(course):
+            ext_obj = to_external_object(asset,
+                                         name="exporter",
+                                         decorate=False)
+            self._post_process_asset(asset, ext_obj, filer, backup, salt)
+            result.append(ext_obj)
+        return result
+
+    def _export_assets(self, course, filer, backup, salt):
+        """
+        Export user created assets. We'll store all parent/subinstance assets
+        in a single file at the parent level.
+        """
+        ext_assets = self._get_ext_user_assets(course, filer, backup, salt)
+        if ext_assets:
+            source = self.dump(ext_assets)
+            filer.save('user_assets.json', source,
+                       overwrite=True,
+                       bucket=self.course_bucket(course),
+                       contentType=u"application/x-json")
+
     def export(self, context, filer, backup=True, salt=None):
         seen = set()
         course = ICourseInstance(context)
         self._do_export(context, filer, seen, backup, salt)
+        self._export_assets(course, filer, backup, salt)
         for sub_instance in get_course_subinstances(course):
             if sub_instance.Outline is not course.Outline:
+                # TODO: Are we saving these in the subinstance bucket?
                 self._do_export(sub_instance, filer, seen, backup, salt)
