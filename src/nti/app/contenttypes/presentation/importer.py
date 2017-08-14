@@ -110,9 +110,11 @@ class LessonOverviewsImporter(BaseSectionImporter):
         course = ICourseInstance(context)
         site = self._get_course_site(course)
         target_filer = get_course_filer(course)
+        bucket = self.course_bucket_path(course)
+        bucket = os.path.join(bucket, self.__LESSONS__)
         # check there is a 'Lessons' folder
-        if source_filer.is_bucket(self.__LESSONS__):
-            bucket = source_filer.get(self.__LESSONS__)
+        if source_filer.is_bucket(bucket):
+            bucket = source_filer.get(bucket)
             with current_site(site):
                 # load assets
                 lessons = self._sync_lessons(course, bucket)
@@ -168,13 +170,15 @@ class UserAssetsImporter(BaseSectionImporter):
                                          sites=named_sites,
                                          force=True)
 
-    def _save_source(self, course, source_file):
+    def _save_source(self, course, source_file, bucket):
         """
         Save our source file to our course bucket.
         """
         root = course.root
         if IFilesystemBucket.providedBy(root):
-            out_path = os.path.join(root.absolute_path, self.__USER_ASSETS__)
+            out_path = os.path.join(root.absolute_path,
+                                    bucket,
+                                    self.__USER_ASSETS__)
             self.makedirs(out_path)
             transfer_to_native_file(source_file, out_path)
 
@@ -211,13 +215,14 @@ class UserAssetsImporter(BaseSectionImporter):
         # Always clear state
         with current_site(site):
             self._clear_assets(course, site)
-        source_file = source_filer.get(self.__USER_ASSETS__)
+        bucket = self.course_bucket_path(course)
+        source_file = source_filer.get(self.__USER_ASSETS__, bucket)
         result = []
         if source_file is not None:
             source = self.load(source_file)
             with current_site(site):
                 if writeout:
-                    self._save_source(course, source_file)
+                    self._save_source(course, bucket, source_file)
                 for asset_source in source:
                     asset = self._create_asset(asset_source, course, site)
                     result.append(asset)

@@ -9,6 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import os
+
 from zope import interface
 from zope import component
 
@@ -225,9 +227,11 @@ class LessonOverviewsExporter(BaseSectionExporter):
             name = name + '.json' if not name.endswith('.json') else name
             if not backup:  # hash source file
                 name = self.hash_filename(name, salt)
+            bucket = self.course_bucket(course) or ''
+            bucket = os.path.join(bucket, 'Lessons')
             filer.save(name, source,
                        overwrite=True,
-                       bucket=u"Lessons",
+                       bucket=bucket,
                        contentType=u"application/x-json")
 
     def _course_containers(self, course):
@@ -251,9 +255,12 @@ class LessonOverviewsExporter(BaseSectionExporter):
             if IUserCreatedAsset.providedBy(item):
                 yield item
 
-    def _get_ext_user_assets(self, course, filer, backup, salt):
+    def _get_ext_user_assets(self, course, filer, seen_assets, backup, salt):
         result = []
         for asset in self._iter_user_assets(course):
+            if asset.ntiid in seen_assets:
+                continue
+            seen_assets.add(asset.ntiid)
             ext_obj = to_external_object(asset,
                                          name="exporter",
                                          decorate=False)
@@ -261,12 +268,13 @@ class LessonOverviewsExporter(BaseSectionExporter):
             result.append(ext_obj)
         return result
 
-    def _export_assets(self, course, filer, backup, salt):
+    def _export_assets(self, course, filer, seen_assets, backup, salt):
         """
         Export user created assets. We'll store all parent/subinstance assets
         in a single file at the parent level.
         """
-        ext_assets = self._get_ext_user_assets(course, filer, backup, salt)
+        ext_assets = self._get_ext_user_assets(course, filer,
+                                               seen_assets, backup, salt)
         if ext_assets:
             source = self.dump(ext_assets)
             filer.save('user_assets.json', source,
@@ -276,10 +284,12 @@ class LessonOverviewsExporter(BaseSectionExporter):
 
     def export(self, context, filer, backup=True, salt=None):
         seen = set()
+        seen_assets = set()
         course = ICourseInstance(context)
         self._do_export(context, filer, seen, backup, salt)
-        self._export_assets(course, filer, backup, salt)
+        self._export_assets(course, filer, seen_assets, backup, salt)
         for sub_instance in get_course_subinstances(course):
             if sub_instance.Outline is not course.Outline:
-                # TODO: Are we saving these in the subinstance bucket?
                 self._do_export(sub_instance, filer, seen, backup, salt)
+                self._export_assets(sub_instance, filer,
+                                    seen_assets, backup, salt)
