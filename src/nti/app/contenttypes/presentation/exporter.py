@@ -59,6 +59,8 @@ from nti.externalization.externalization import to_external_object
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import StandardInternalFields
 
+from nti.mimetype.externalization import decorateMimeType
+
 from nti.namedfile.file import safe_filename
 
 from nti.ntiids.ntiids import TYPE_OID
@@ -266,6 +268,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
             ext_obj = to_external_object(asset,
                                          name="exporter",
                                          decorate=False)
+            decorateMimeType(asset, ext_obj)
             self._post_process_asset(asset, ext_obj, filer, backup, salt)
             result.append(ext_obj)
         return result
