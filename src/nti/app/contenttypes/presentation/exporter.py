@@ -244,6 +244,8 @@ class LessonOverviewsExporter(BaseSectionExporter):
 
     def _iter_user_assets(self, course):
         # We only need to capture user created videos.
+        # XXX: Concrete relatedworkrefs and timelines are internalized via
+        # definitions in the lessons.
         ifaces = (INTIVideo,)
         catalog = get_library_catalog()
         intids = component.getUtility(IIntIds)
