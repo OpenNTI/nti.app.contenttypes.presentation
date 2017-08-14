@@ -122,6 +122,8 @@ class TestImportExporter(ApplicationLayerTest):
         video1_source = "dJ1VorN9Cl0"
         video2_source = "ZxDn9z9yEkQ"
         video3_source = "SuXlZ5PHK9I"
+        related_work_ref_title = 'ImportExportTitle'
+        related_work_ref_href = 'http://www.google.com"'
         video_json = {"MimeType":"application/vnd.nextthought.ntivideo",
                       "sources":[{"MimeType":"application/vnd.nextthought.ntivideosource",
                                   "service":"youtube",
@@ -137,6 +139,12 @@ class TestImportExporter(ApplicationLayerTest):
                                    "service":"youtube",
                                    "source":[video3_source],
                                    "type":["video/youtube"]}]}
+        related_work_ref_json = {"href": related_work_ref_href,
+                                 "MimeType": "application/vnd.nextthought.relatedworkref",
+                                 "label": related_work_ref_title,
+                                 "byline":"",
+                                 "description":"ImportExportDescription",
+                                 "targetMimeType":"application/vnd.nextthought.externallink"}
 
         video_res = self.testapp.post_json(self.assets_url, video_json)
         video_res = video_res.json_body
@@ -181,6 +189,9 @@ class TestImportExporter(ApplicationLayerTest):
         res = self.testapp.post_json(group_contents_url, roll_data)
         res = res.json_body
         video_roll_ntiid = res['ntiid']
+        res = self.testapp.post_json(group_contents_url, related_work_ref_json)
+        res = res.json_body
+        related_work_ref_ntiid = res['ntiid']
 
         # Export/Import
         tmp_dir = tempfile.mkdtemp(dir="/tmp")
@@ -219,7 +230,8 @@ class TestImportExporter(ApplicationLayerTest):
         content_ext = unit_ext['contents'][-1]
         assert_that(content_ext['title'], is_(content_title))
         assert_that(content_ext['ntiid'], is_not(content_ntiid))
-        lesson_overview_url = self.require_link_href_with_rel(content_ext, VIEW_OVERVIEW_CONTENT)
+        lesson_overview_url = self.require_link_href_with_rel(content_ext,
+                                                              VIEW_OVERVIEW_CONTENT)
         lesson_ext = self.testapp.get(lesson_overview_url)
         lesson_ext = lesson_ext.json_body
         assert_that(lesson_ext['ntiid'], is_not(lesson_ntiid))
@@ -227,13 +239,14 @@ class TestImportExporter(ApplicationLayerTest):
         assert_that(group_ext['title'], is_(group_title))
         assert_that(group_ext['ntiid'], is_not(group_ntiid))
         group_items = group_ext[ITEMS]
-        assert_that(group_items, has_length(2))
+        assert_that(group_items, has_length(3))
 
         # Validate videos
         video = group_items[0]
         new_video1_ntiid = video['ntiid']
         assert_that(new_video1_ntiid, is_not(video1_ntiid))
         assert_that(video['sources'][0]['source'], contains(video1_source))
+
         video_roll = group_items[1]
         assert_that(video_roll['ntiid'], is_not(video_roll_ntiid))
         roll_items = video_roll[ITEMS]
@@ -245,8 +258,14 @@ class TestImportExporter(ApplicationLayerTest):
         assert_that(new_video3_ntiid, is_not(video3_ntiid))
         assert_that(roll_items[1]['sources'][0]['source'], contains(video3_source))
 
+        related_work_ref = group_items[2]
+        assert_that(related_work_ref['label'], is_(related_work_ref_title))
+        assert_that(related_work_ref['href'], is_(related_work_ref_href))
+        assert_that(related_work_ref['ntiid'], is_not(related_work_ref_ntiid))
+
         # Correct videos show up in course assets
-        assets_res = self.testapp.get(self.assets_url, {'accept': video_mime_type})
+        assets_res = self.testapp.get(self.assets_url,
+                                      {'accept': video_mime_type})
         assets_res = assets_res.json_body
         course_video_ntiids = [x['ntiid'] for x in assets_res[ITEMS]]
         assert_that(course_video_ntiids, has_items(new_video1_ntiid,
