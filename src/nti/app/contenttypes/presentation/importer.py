@@ -198,6 +198,8 @@ class UserAssetsImporter(BaseSectionImporter):
         # Index and register
         provided = interface_of_asset(asset)
         entry_ntiid = ICourseCatalogEntry(course).ntiid
+        logger.info("[%s] Registering imported asset (%s)",
+                    site.__name__, asset.ntiid)
         registerUtility(registry,
                         component=asset,
                         provided=provided,
@@ -226,7 +228,7 @@ class UserAssetsImporter(BaseSectionImporter):
                 for asset_source in source:
                     asset = self._create_asset(asset_source, course, site)
                     result.append(asset)
-        logger.info('Imported %s user created assets in import', len(result))
+        logger.info('Imported %s user created assets', len(result))
         return result
 
     def process(self, context, filer, writeout=True):
