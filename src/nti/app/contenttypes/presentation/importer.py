@@ -208,12 +208,14 @@ class UserAssetsImporter(BaseSectionImporter):
 
     def _do_import(self, course, source_filer, writeout=True):
         site = self._get_course_site(course)
+        # Always clear state
+        with current_site(site):
+            self._clear_assets(course, site)
         source_file = source_filer.get(self.__USER_ASSETS__)
         result = []
         if source_file is not None:
             source = self.load(source_file)
             with current_site(site):
-                self._clear_assets(course, site)
                 if writeout:
                     self._save_source(course, source_file)
                 for asset_source in source:
@@ -223,7 +225,10 @@ class UserAssetsImporter(BaseSectionImporter):
         return result
 
     def process(self, context, filer, writeout=True):
-        # We export all assets to a single user_assets file at parent course
-        # level.
+        result = []
         course = ICourseInstance(context)
-        return self._do_import(course, filer, writeout)
+        result.extend(self._do_import(context, filer, writeout))
+        for sub_instance in get_course_subinstances(course):
+            if sub_instance.Outline is not course.Outline:
+                result.extend(self._do_import(sub_instance, filer, writeout))
+        return result
