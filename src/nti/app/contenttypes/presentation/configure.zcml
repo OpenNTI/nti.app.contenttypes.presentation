@@ -216,6 +216,7 @@
 
 	<!-- Importers -->
 	<utility factory=".importer.UserAssetsImporter" name="014:User_Assets" />
+	<utility factory=".importer.AssetCleanerImporter" name="013:Asset_Cleaner" />
 	<utility factory=".importer.LessonOverviewsImporter" name="015:Lesson_Overviews" />
 
 	<!-- Decorators -->

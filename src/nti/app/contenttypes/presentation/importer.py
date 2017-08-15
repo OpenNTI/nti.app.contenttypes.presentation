@@ -68,6 +68,41 @@ from nti.site.utils import registerUtility
 
 
 @interface.implementer(ICourseSectionImporter)
+class AssetCleanerImporter(BaseSectionImporter):
+    """
+    An importer that remove all course assets
+    """
+
+    def _clear_assets(self, course, site):
+        registry = site.getSiteManager()
+        clear_course_assets(course)
+        clear_namespace_last_modified(course)
+        named_sites = (site.__name__,)
+        entry_ntiid = ICourseCatalogEntry(course).ntiid
+        remove_and_unindex_course_assets(namespace=entry_ntiid,
+                                         registry=registry,
+                                         course=course,
+                                         sites=named_sites,
+                                         force=True)
+
+    def _do_clean(self, course, unused_filer, unused_writeout):
+        result = []
+        site = IHostPolicyFolder(course)
+        with current_site(site):
+            self._clear_assets(course, site)
+        return result
+
+    def process(self, context, filer, writeout=True):
+        result = []
+        course = ICourseInstance(context)
+        self._do_clean(context, filer, writeout)
+        for sub_instance in get_course_subinstances(course):
+            if sub_instance.Outline is not course.Outline:
+                self._do_clean(sub_instance)
+        return result
+
+
+@interface.implementer(ICourseSectionImporter)
 class LessonOverviewsImporter(BaseSectionImporter):
 
     __LESSONS__ = 'Lessons'
@@ -100,15 +135,12 @@ class LessonOverviewsImporter(BaseSectionImporter):
         # set proper target
         check_docket_targets(concrete)
 
-    def _get_course_site(self, course):
-        return IHostPolicyFolder(course)
-
     def _sync_lessons(self, course, bucket):
         return synchronize_course_lesson_overview(course, buckets=(bucket,))
 
     def _do_import(self, context, source_filer, save_sources=True):
         course = ICourseInstance(context)
-        site = self._get_course_site(course)
+        site = IHostPolicyFolder(course)
         target_filer = get_course_filer(course)
         bucket = self.course_bucket_path(course)
         bucket = os.path.join(bucket, self.__LESSONS__)
@@ -154,22 +186,6 @@ class UserAssetsImporter(BaseSectionImporter):
 
     __USER_ASSETS__ = 'user_assets.json'
 
-    def _get_course_site(self, course):
-        return IHostPolicyFolder(course)
-
-    def _clear_assets(self, course, site):
-        # We're not merging; start with a clean slate.
-        registry = site.getSiteManager()
-        clear_course_assets(course)
-        clear_namespace_last_modified(course)
-        named_sites = (site.__name__,)
-        entry_ntiid = ICourseCatalogEntry(course).ntiid
-        remove_and_unindex_course_assets(namespace=entry_ntiid,
-                                         registry=registry,
-                                         course=course,
-                                         sites=named_sites,
-                                         force=True)
-
     def _save_source(self, course, source_file, bucket):
         """
         Save our source file to our course bucket.
@@ -212,23 +228,23 @@ class UserAssetsImporter(BaseSectionImporter):
                       sites=site.__name__)
         return asset
 
-    def _do_import(self, course, source_filer, writeout=True):
-        site = self._get_course_site(course)
-        # Always clear state
-        with current_site(site):
-            self._clear_assets(course, site)
-        bucket = self.course_bucket_path(course)
-        source_file = source_filer.get(self.__USER_ASSETS__, bucket)
+    def _do_import(self, course, filer, writeout=True):
         result = []
-        if source_file is not None:
-            source = self.load(source_file)
-            with current_site(site):
+        site = IHostPolicyFolder(course)
+        entry = ICourseCatalogEntry(course)
+        with current_site(site):
+            # check for user asset source
+            bucket = self.course_bucket_path(course)
+            source_file = filer.get(self.__USER_ASSETS__, bucket)
+            if source_file is not None:
+                source = self.load(source_file)
                 if writeout:
                     self._save_source(course, bucket, source_file)
                 for asset_source in source:
                     asset = self._create_asset(asset_source, course, site)
                     result.append(asset)
-        logger.info('Imported %s user created assets', len(result))
+        logger.info('Imported %s user created assets in %s', 
+                    len(result), entry.ntiid)
         return result
 
     def process(self, context, filer, writeout=True):

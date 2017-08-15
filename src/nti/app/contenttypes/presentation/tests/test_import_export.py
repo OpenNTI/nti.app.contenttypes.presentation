@@ -27,6 +27,7 @@ from nti.app.contenttypes.presentation import VIEW_OVERVIEW_CONTENT
 from nti.app.contenttypes.presentation.exporter import LessonOverviewsExporter
 
 from nti.app.contenttypes.presentation.importer import UserAssetsImporter
+from nti.app.contenttypes.presentation.importer import AssetCleanerImporter
 from nti.app.contenttypes.presentation.importer import LessonOverviewsImporter
 
 from nti.cabinet.filer import DirectoryFiler
@@ -100,7 +101,8 @@ class TestImportExporter(ApplicationLayerTest):
         res = self.testapp.post_json(self.outline_contents_url, unit_data)
         res = res.json_body
         unit_ntiid = res['ntiid']
-        unit_contents_url = self.require_link_href_with_rel(res, VIEW_ORDERED_CONTENTS)
+        unit_contents_url = self.require_link_href_with_rel(res, 
+                                                            VIEW_ORDERED_CONTENTS)
         content_title = 'ImportExportContentTitle'
         content_data = {'title': content_title,
                         'MimeType': "application/vnd.nextthought.courses.courseoutlinecontentnode"}
@@ -108,15 +110,19 @@ class TestImportExporter(ApplicationLayerTest):
         res = res.json_body
         content_ntiid = res['ntiid']
         lesson_ntiid = res['LessonOverviewNTIID']
-        lesson_url = self.require_link_href_with_rel(res, VIEW_OVERVIEW_CONTENT)
+        lesson_url = self.require_link_href_with_rel(res, 
+                                                     VIEW_OVERVIEW_CONTENT)
         lesson_res = self.testapp.get(lesson_url)
         lesson_res = lesson_res.json_body
-        lesson_contents_url = self.require_link_href_with_rel(lesson_res, VIEW_ORDERED_CONTENTS)
+        lesson_contents_url = self.require_link_href_with_rel(lesson_res, 
+                                                              VIEW_ORDERED_CONTENTS)
         group_title = 'ImportExportGroupTitle'
-        group_res = self.testapp.post_json(lesson_contents_url, {'title': group_title})
+        group_res = self.testapp.post_json(lesson_contents_url, 
+                                           {'title': group_title})
         group_res = group_res.json_body
         group_ntiid = group_res['ntiid']
-        group_contents_url = self.require_link_href_with_rel(group_res, VIEW_ORDERED_CONTENTS)
+        group_contents_url = self.require_link_href_with_rel(group_res, 
+                                                             VIEW_ORDERED_CONTENTS)
 
         # Create a video and video roll and insert them into lesson.
         video1_source = "dJ1VorN9Cl0"
@@ -124,27 +130,27 @@ class TestImportExporter(ApplicationLayerTest):
         video3_source = "SuXlZ5PHK9I"
         related_work_ref_title = 'ImportExportTitle'
         related_work_ref_href = 'http://www.google.com"'
-        video_json = {"MimeType":"application/vnd.nextthought.ntivideo",
-                      "sources":[{"MimeType":"application/vnd.nextthought.ntivideosource",
-                                  "service":"youtube",
-                                  "source":[video1_source],
-                                  "type":["video/youtube"]}]}
-        video2_json = {"MimeType":"application/vnd.nextthought.ntivideo",
-                       "sources":[{"MimeType":"application/vnd.nextthought.ntivideosource",
-                                   "service":"youtube",
-                                   "source":[video2_source],
+        video_json = {"MimeType": "application/vnd.nextthought.ntivideo",
+                      "sources": [{"MimeType": "application/vnd.nextthought.ntivideosource",
+                                   "service": "youtube",
+                                   "source": [video1_source],
                                    "type":["video/youtube"]}]}
-        video3_json = {"MimeType":"application/vnd.nextthought.ntivideo",
-                       "sources":[{"MimeType":"application/vnd.nextthought.ntivideosource",
-                                   "service":"youtube",
-                                   "source":[video3_source],
-                                   "type":["video/youtube"]}]}
+        video2_json = {"MimeType": "application/vnd.nextthought.ntivideo",
+                       "sources": [{"MimeType": "application/vnd.nextthought.ntivideosource",
+                                    "service": "youtube",
+                                    "source": [video2_source],
+                                    "type":["video/youtube"]}]}
+        video3_json = {"MimeType": "application/vnd.nextthought.ntivideo",
+                       "sources": [{"MimeType": "application/vnd.nextthought.ntivideosource",
+                                    "service": "youtube",
+                                    "source": [video3_source],
+                                    "type":["video/youtube"]}]}
         related_work_ref_json = {"href": related_work_ref_href,
                                  "MimeType": "application/vnd.nextthought.relatedworkref",
                                  "label": related_work_ref_title,
-                                 "byline":"",
-                                 "description":"ImportExportDescription",
-                                 "targetMimeType":"application/vnd.nextthought.externallink"}
+                                 "byline": "",
+                                 "description": "ImportExportDescription",
+                                 "targetMimeType": "application/vnd.nextthought.externallink"}
 
         video_res = self.testapp.post_json(self.assets_url, video_json)
         video_res = video_res.json_body
@@ -211,6 +217,8 @@ class TestImportExporter(ApplicationLayerTest):
 
             with mock_dataserver.mock_db_trans(self.ds, site_name='platform.ou.edu'):
                 course = ICourseInstance(self.course_entry())
+                importer = AssetCleanerImporter()
+                importer.process(course, filer, False)
                 importer = CourseOutlineImporter()
                 importer.process(course, filer, False)
                 importer = UserAssetsImporter()
@@ -244,8 +252,10 @@ class TestImportExporter(ApplicationLayerTest):
         # Validate videos
         video = group_items[0]
         new_video1_ntiid = video['ntiid']
-        assert_that(new_video1_ntiid, is_not(video1_ntiid))
-        assert_that(video['sources'][0]['source'], contains(video1_source))
+        assert_that(new_video1_ntiid, 
+                    is_not(video1_ntiid))
+        assert_that(video['sources'][0]['source'], 
+                    contains(video1_source))
 
         video_roll = group_items[1]
         assert_that(video_roll['ntiid'], is_not(video_roll_ntiid))
@@ -254,9 +264,11 @@ class TestImportExporter(ApplicationLayerTest):
         new_video2_ntiid = roll_items[0]['ntiid']
         new_video3_ntiid = roll_items[1]['ntiid']
         assert_that(new_video2_ntiid, is_not(video2_ntiid))
-        assert_that(roll_items[0]['sources'][0]['source'], contains(video2_source))
+        assert_that(roll_items[0]['sources'][0]['source'], 
+                    contains(video2_source))
         assert_that(new_video3_ntiid, is_not(video3_ntiid))
-        assert_that(roll_items[1]['sources'][0]['source'], contains(video3_source))
+        assert_that(roll_items[1]['sources'][0]['source'], 
+                    contains(video3_source))
 
         related_work_ref = group_items[2]
         assert_that(related_work_ref['label'], is_(related_work_ref_title))
@@ -271,10 +283,7 @@ class TestImportExporter(ApplicationLayerTest):
         assert_that(course_video_ntiids, has_items(new_video1_ntiid,
                                                    new_video2_ntiid,
                                                    new_video3_ntiid))
-        assert_that(course_video_ntiids, does_not(
-                                            has_items(video1_ntiid,
-                                                      video2_ntiid,
-                                                      video3_ntiid)))
+        assert_that(course_video_ntiids, 
+                    does_not(has_items(video1_ntiid, video2_ntiid, video3_ntiid)))
 
         # TODO: Transcripts
-
