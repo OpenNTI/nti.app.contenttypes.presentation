@@ -14,21 +14,16 @@ import os
 from zope import interface
 from zope import component
 
-from zope.intid.interfaces import IIntIds
-
 from nti.app.products.courseware.utils.exporter import save_resources_to_filer
 
 from nti.assessment.interfaces import IQEvaluation
 from nti.assessment.interfaces import IQEditableEvaluation
-
-from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contentlibrary.interfaces import IEditableContentUnit
 
 from nti.contenttypes.courses.exporter import BaseSectionExporter
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
-from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseSectionExporter
 
 from nti.contenttypes.courses.utils import get_course_subinstances
@@ -38,7 +33,6 @@ from nti.contenttypes.presentation import PUBLICATION_CONSTRAINTS
 from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
-from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTIMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
@@ -49,6 +43,7 @@ from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
+from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import ISurveyCompletionConstraint
 from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraints
 from nti.contenttypes.presentation.interfaces import IAssignmentCompletionConstraint
@@ -66,7 +61,6 @@ from nti.namedfile.file import safe_filename
 from nti.ntiids.ntiids import TYPE_OID
 from nti.ntiids.ntiids import TYPE_UUID
 from nti.ntiids.ntiids import is_ntiid_of_types
-from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 ID = StandardExternalFields.ID
@@ -191,8 +185,7 @@ class LessonOverviewsExporter(BaseSectionExporter):
                 and PUBLICATION_CONSTRAINTS in ext_obj:
                 self._post_lesson_constraints(asset, ext_obj, salt)
             # update related work refs targets
-            elif    INTIRelatedWorkRef.providedBy(concrete) \
-                and is_valid_ntiid_string(concrete.target):
+            elif INTIRelatedWorkRef.providedBy(concrete):
                 target = find_object_with_ntiid(concrete.target)
                 if IEditableContentUnit.providedBy(target):
                     for name in ('target', 'href'):
@@ -206,7 +199,6 @@ class LessonOverviewsExporter(BaseSectionExporter):
             for name in (NTIID, INTERNAL_NTIID, INTERNAL_CONTAINER_ID, 'target'):
                 value = ext_obj.get(name)
                 if      value \
-                    and is_valid_ntiid_string(value) \
                     and is_ntiid_of_types(value, (TYPE_OID, TYPE_UUID)):
                     ext_obj.pop(name, None)
 
@@ -236,27 +228,14 @@ class LessonOverviewsExporter(BaseSectionExporter):
                        bucket=bucket,
                        contentType=u"application/x-json")
 
-    def _course_containers(self, course):
-        result = set()
-        entry = ICourseCatalogEntry(course)
-        result.add(entry.ntiid)
-        for subinstance in get_course_subinstances(course):
-            result.add(ICourseCatalogEntry(subinstance).ntiid)
-        return result
-
     def _iter_user_assets(self, course):
         # We only need to capture user created videos.
         # XXX: Concrete relatedworkrefs and timelines are internalized via
         # definitions in the lessons.
-        ifaces = (INTIVideo,)
-        catalog = get_library_catalog()
-        intids = component.getUtility(IIntIds)
-        container_ntiids = self._course_containers(course)
-        for item in catalog.search_objects(intids=intids,
-                                           container_all_of=False,
-                                           container_ntiids=container_ntiids,
-                                           provided=ifaces):
-            if IUserCreatedAsset.providedBy(item):
+        container = IPresentationAssetContainer(course)
+        for item in container.assets():
+            if      INTIMedia.providedBy(item) \
+                and IUserCreatedAsset.providedBy(item):
                 yield item
 
     def _get_ext_user_assets(self, course, filer, seen_assets, backup, salt):
