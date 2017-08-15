@@ -229,7 +229,7 @@ class LessonOverviewsExporter(BaseSectionExporter,
             if not backup:  # hash source file
                 name = self.hash_filename(name, salt)
             bucket = self.course_bucket(course) or ''
-            bucket = os.path.join(bucket, 'Lessons')
+            filer.default_bucket = bucket = os.path.join(bucket, 'Lessons')
             filer.save(name, source,
                        overwrite=True,
                        bucket=bucket,
@@ -280,9 +280,10 @@ class UserAssetsExporter(BaseSectionExporter, AssetExporterMixin):
                                                seen, backup, salt)
         if ext_assets:
             source = self.dump(ext_assets)
+            filer.default_bucket = bucket = self.course_bucket(course)
             filer.save('user_assets.json', source,
                        overwrite=True,
-                       bucket=self.course_bucket(course),
+                       bucket=bucket,
                        contentType="application/x-json")
         return ext_assets
 
