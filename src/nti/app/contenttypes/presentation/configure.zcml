@@ -212,6 +212,7 @@
                 for="nti.contentlibrary.interfaces.IContentUnit" />
 
 	<!-- Exporters -->
+	<utility factory=".exporter.UserAssetsExporter" name="014:User_Assets" />
 	<utility factory=".exporter.LessonOverviewsExporter" name="015:Lesson_Overviews" />
 
 	<!-- Importers -->

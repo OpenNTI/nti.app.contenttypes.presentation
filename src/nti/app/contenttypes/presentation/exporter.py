@@ -89,30 +89,10 @@ def _outline_nodes(outline, seen):
     return result
 
 
-@interface.implementer(ICourseSectionExporter)
-class LessonOverviewsExporter(BaseSectionExporter):
+class AssetExporterMixin(object):
 
-    def _post_lesson_constraints(self, asset, ext_obj, salt=None):
-        ext_constraints = ext_obj.get(PUBLICATION_CONSTRAINTS)
-        constraints = ILessonPublicationConstraints(asset).Items
-        if ext_constraints is not None:
-            ext_items = ext_constraints.get(ITEMS)
-            for ix, ext_constraint in enumerate(ext_items or ()):
-                constraint = constraints[ix]
-                if ISurveyCompletionConstraint.providedBy(constraint):
-                    ntiids = ext_constraint.get('surveys')
-                elif IAssignmentCompletionConstraint.providedBy(constraint):
-                    ntiids = ext_constraint.get('assignments')
-                else:
-                    ntiids = ()
-                for i, ntiid in enumerate(ntiids or ()):
-                    evaluation = component.queryUtility(IQEvaluation, ntiid)
-                    # only hash ntiid if it's an authored evaluation
-                    if IQEditableEvaluation.providedBy(evaluation):
-                        ntiids[i] = self.hash_ntiid(ntiids[i], salt)
-                # remove ntiids
-                ext_constraint.pop(NTIID, None)
-                ext_constraint.pop(INTERNAL_NTIID, None)
+    def __init__(self, *args, **kwargs):
+        super(AssetExporterMixin, self).__init__(*args, **kwargs)
 
     def _post_process_asset(self, asset, ext_obj, filer, backup=True, salt=None):
         concrete = IConcreteAsset(asset, asset)
@@ -205,6 +185,33 @@ class LessonOverviewsExporter(BaseSectionExporter):
         # save asset/concrete resources
         save_resources_to_filer(provided, concrete, filer, ext_obj)
 
+
+@interface.implementer(ICourseSectionExporter)
+class LessonOverviewsExporter(BaseSectionExporter,
+                              AssetExporterMixin):
+
+    def _post_lesson_constraints(self, asset, ext_obj, salt=None):
+        ext_constraints = ext_obj.get(PUBLICATION_CONSTRAINTS)
+        constraints = ILessonPublicationConstraints(asset).Items
+        if ext_constraints is not None:
+            ext_items = ext_constraints.get(ITEMS)
+            for ix, ext_constraint in enumerate(ext_items or ()):
+                constraint = constraints[ix]
+                if ISurveyCompletionConstraint.providedBy(constraint):
+                    ntiids = ext_constraint.get('surveys')
+                elif IAssignmentCompletionConstraint.providedBy(constraint):
+                    ntiids = ext_constraint.get('assignments')
+                else:
+                    ntiids = ()
+                for i, ntiid in enumerate(ntiids or ()):
+                    evaluation = component.queryUtility(IQEvaluation, ntiid)
+                    # only hash ntiid if it's an authored evaluation
+                    if IQEditableEvaluation.providedBy(evaluation):
+                        ntiids[i] = self.hash_ntiid(ntiids[i], salt)
+                # remove ntiids
+                ext_constraint.pop(NTIID, None)
+                ext_constraint.pop(INTERNAL_NTIID, None)
+
     def _do_export(self, context, filer, seen, backup=True, salt=None):
         course = ICourseInstance(context)
         nodes = _outline_nodes(course.Outline, seen)
@@ -226,7 +233,19 @@ class LessonOverviewsExporter(BaseSectionExporter):
             filer.save(name, source,
                        overwrite=True,
                        bucket=bucket,
-                       contentType=u"application/x-json")
+                       contentType="application/x-json")
+
+    def export(self, context, filer, backup=True, salt=None):
+        seen = set()
+        course = ICourseInstance(context)
+        self._do_export(context, filer, seen, backup, salt)
+        for sub_instance in get_course_subinstances(course):
+            if sub_instance.Outline is not course.Outline:
+                self._do_export(sub_instance, filer, seen, backup, salt)
+
+
+@interface.implementer(ICourseSectionExporter)
+class UserAssetsExporter(BaseSectionExporter, AssetExporterMixin):
 
     def _iter_user_assets(self, course):
         # We only need to capture user created videos.
@@ -238,12 +257,12 @@ class LessonOverviewsExporter(BaseSectionExporter):
                 and IUserCreatedAsset.providedBy(item):
                 yield item
 
-    def _get_ext_user_assets(self, course, filer, seen_assets, backup, salt):
+    def _get_ext_user_assets(self, course, filer, seen, backup, salt):
         result = []
         for asset in self._iter_user_assets(course):
-            if asset.ntiid in seen_assets:
+            if asset.ntiid in seen:
                 continue
-            seen_assets.add(asset.ntiid)
+            seen.add(asset.ntiid)
             ext_obj = to_external_object(asset,
                                          name="exporter",
                                          decorate=False)
@@ -252,28 +271,25 @@ class LessonOverviewsExporter(BaseSectionExporter):
             result.append(ext_obj)
         return result
 
-    def _export_assets(self, course, filer, seen_assets, backup, salt):
+    def _export_assets(self, course, filer, seen, backup, salt):
         """
         Export user created assets. We'll store all parent/subinstance assets
         in a single file at the parent level.
         """
-        ext_assets = self._get_ext_user_assets(course, filer,
-                                               seen_assets, backup, salt)
+        ext_assets = self._get_ext_user_assets(course, filer, 
+                                               seen, backup, salt)
         if ext_assets:
             source = self.dump(ext_assets)
             filer.save('user_assets.json', source,
                        overwrite=True,
                        bucket=self.course_bucket(course),
-                       contentType=u"application/x-json")
+                       contentType="application/x-json")
+        return ext_assets
 
     def export(self, context, filer, backup=True, salt=None):
         seen = set()
-        seen_assets = set()
         course = ICourseInstance(context)
-        self._do_export(context, filer, seen, backup, salt)
-        self._export_assets(course, filer, seen_assets, backup, salt)
+        self._export_assets(course, filer, seen, backup, salt)
         for sub_instance in get_course_subinstances(course):
             if sub_instance.Outline is not course.Outline:
-                self._do_export(sub_instance, filer, seen, backup, salt)
-                self._export_assets(sub_instance, filer,
-                                    seen_assets, backup, salt)
+                self._export_assets(sub_instance, filer, seen, backup, salt)

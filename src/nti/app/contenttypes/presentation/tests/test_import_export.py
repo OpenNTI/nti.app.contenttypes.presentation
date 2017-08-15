@@ -24,6 +24,7 @@ from nti.app.contenttypes.presentation import VIEW_CONTENTS
 from nti.app.contenttypes.presentation import VIEW_ORDERED_CONTENTS
 from nti.app.contenttypes.presentation import VIEW_OVERVIEW_CONTENT
 
+from nti.app.contenttypes.presentation.exporter import UserAssetsExporter
 from nti.app.contenttypes.presentation.exporter import LessonOverviewsExporter
 
 from nti.app.contenttypes.presentation.importer import UserAssetsImporter
@@ -205,10 +206,11 @@ class TestImportExporter(ApplicationLayerTest):
             filer = DirectoryFiler(tmp_dir)
             with mock_dataserver.mock_db_trans(self.ds, site_name='platform.ou.edu'):
                 course = ICourseInstance(self.course_entry())
-                exporter = CourseOutlineExporter()
-                exporter.export(course, filer, backup=False)
-                exporter = LessonOverviewsExporter()
-                exporter.export(course, filer, backup=False)
+                for factory in (CourseOutlineExporter, 
+                                LessonOverviewsExporter,
+                                UserAssetsExporter):
+                    exporter = factory()
+                    exporter.export(course, filer, backup=False)
                 assert_that(filer.list(), contains_inanyorder('Lessons',
                                                               'user_assets.json',
                                                               'course_outline.xml',
@@ -217,15 +219,14 @@ class TestImportExporter(ApplicationLayerTest):
 
             with mock_dataserver.mock_db_trans(self.ds, site_name='platform.ou.edu'):
                 course = ICourseInstance(self.course_entry())
-                importer = AssetCleanerImporter()
-                importer.process(course, filer, False)
-                importer = CourseOutlineImporter()
-                importer.process(course, filer, False)
-                importer = UserAssetsImporter()
-                result = importer.process(course, filer, False)
-                assert_that(result, has_length(3))
-                lesson_importer = LessonOverviewsImporter()
-                lesson_importer.process(course, filer, False)
+                for idx, factory in enumerate((AssetCleanerImporter, 
+                                               CourseOutlineImporter,
+                                               UserAssetsImporter,
+                                               LessonOverviewsImporter)):
+                    importer = factory()
+                    result = importer.process(course, filer, False)
+                    if idx == 2:
+                        assert_that(result, has_length(3))
         finally:
             shutil.rmtree(tmp_dir, True)
 
