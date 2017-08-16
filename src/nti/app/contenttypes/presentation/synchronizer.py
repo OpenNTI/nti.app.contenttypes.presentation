@@ -289,7 +289,11 @@ def _register_media_rolls(roll, registry=None, validate=False):
 	return roll
 
 def _is_auto_roll_coalesce(item):
-	return 		(INTIMedia.providedBy(item) or INTIMediaRef.providedBy(item)) \
+	"""
+	Only media items that are not locked.
+	"""
+	return 		(INTIMedia.providedBy(item)
+			  or INTIMediaRef.providedBy(item)) \
 			and not _is_obj_locked(item)
 
 def _validate_ref(item, validate):
@@ -416,7 +420,8 @@ def _update_asset_state(asset, parsed, course, source_filer=None,
 def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 											validate=False, course=None,
 											node=None, sync_results=None,
-											intids=None, connection=None):
+											intids=None, connection=None,
+											auto_roll_coalesce=True):
 	registry = get_site_registry(registry)
 
 	# read and parse json text
@@ -473,7 +478,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 			# asset produces more than one object. (e.g. discussions
 			# with multiple ntiids). If that happens, then the source
 			# items do not line up with the input json.
-			if _is_auto_roll_coalesce(item):
+			if auto_roll_coalesce and _is_auto_roll_coalesce(item):
 				# Ok, we have media that we want to auto-coalesce into a roll.
 				roll_idx = idx
 				roll_item = item

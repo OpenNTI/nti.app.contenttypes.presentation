@@ -102,7 +102,7 @@ class TestImportExporter(ApplicationLayerTest):
         res = self.testapp.post_json(self.outline_contents_url, unit_data)
         res = res.json_body
         unit_ntiid = res['ntiid']
-        unit_contents_url = self.require_link_href_with_rel(res, 
+        unit_contents_url = self.require_link_href_with_rel(res,
                                                             VIEW_ORDERED_CONTENTS)
         content_title = 'ImportExportContentTitle'
         content_data = {'title': content_title,
@@ -111,18 +111,18 @@ class TestImportExporter(ApplicationLayerTest):
         res = res.json_body
         content_ntiid = res['ntiid']
         lesson_ntiid = res['LessonOverviewNTIID']
-        lesson_url = self.require_link_href_with_rel(res, 
+        lesson_url = self.require_link_href_with_rel(res,
                                                      VIEW_OVERVIEW_CONTENT)
         lesson_res = self.testapp.get(lesson_url)
         lesson_res = lesson_res.json_body
-        lesson_contents_url = self.require_link_href_with_rel(lesson_res, 
+        lesson_contents_url = self.require_link_href_with_rel(lesson_res,
                                                               VIEW_ORDERED_CONTENTS)
         group_title = 'ImportExportGroupTitle'
-        group_res = self.testapp.post_json(lesson_contents_url, 
+        group_res = self.testapp.post_json(lesson_contents_url,
                                            {'title': group_title})
         group_res = group_res.json_body
         group_ntiid = group_res['ntiid']
-        group_contents_url = self.require_link_href_with_rel(group_res, 
+        group_contents_url = self.require_link_href_with_rel(group_res,
                                                              VIEW_ORDERED_CONTENTS)
 
         # Create a video and video roll and insert them into lesson.
@@ -206,7 +206,7 @@ class TestImportExporter(ApplicationLayerTest):
             filer = DirectoryFiler(tmp_dir)
             with mock_dataserver.mock_db_trans(self.ds, site_name='platform.ou.edu'):
                 course = ICourseInstance(self.course_entry())
-                for factory in (CourseOutlineExporter, 
+                for factory in (CourseOutlineExporter,
                                 LessonOverviewsExporter,
                                 UserAssetsExporter):
                     exporter = factory()
@@ -219,13 +219,13 @@ class TestImportExporter(ApplicationLayerTest):
 
             with mock_dataserver.mock_db_trans(self.ds, site_name='platform.ou.edu'):
                 course = ICourseInstance(self.course_entry())
-                for idx, factory in enumerate((AssetCleanerImporter, 
-                                               CourseOutlineImporter,
-                                               UserAssetsImporter,
-                                               LessonOverviewsImporter)):
+                for factory in (AssetCleanerImporter,
+                                CourseOutlineImporter,
+                                UserAssetsImporter,
+                                LessonOverviewsImporter):
                     importer = factory()
                     result = importer.process(course, filer, False)
-                    if idx == 2:
+                    if isinstance(factory, UserAssetsImporter):
                         assert_that(result, has_length(3))
         finally:
             shutil.rmtree(tmp_dir, True)
@@ -253,9 +253,9 @@ class TestImportExporter(ApplicationLayerTest):
         # Validate videos
         video = group_items[0]
         new_video1_ntiid = video['ntiid']
-        assert_that(new_video1_ntiid, 
+        assert_that(new_video1_ntiid,
                     is_not(video1_ntiid))
-        assert_that(video['sources'][0]['source'], 
+        assert_that(video['sources'][0]['source'],
                     contains(video1_source))
 
         video_roll = group_items[1]
@@ -265,10 +265,10 @@ class TestImportExporter(ApplicationLayerTest):
         new_video2_ntiid = roll_items[0]['ntiid']
         new_video3_ntiid = roll_items[1]['ntiid']
         assert_that(new_video2_ntiid, is_not(video2_ntiid))
-        assert_that(roll_items[0]['sources'][0]['source'], 
+        assert_that(roll_items[0]['sources'][0]['source'],
                     contains(video2_source))
         assert_that(new_video3_ntiid, is_not(video3_ntiid))
-        assert_that(roll_items[1]['sources'][0]['source'], 
+        assert_that(roll_items[1]['sources'][0]['source'],
                     contains(video3_source))
 
         related_work_ref = group_items[2]
@@ -284,7 +284,9 @@ class TestImportExporter(ApplicationLayerTest):
         assert_that(course_video_ntiids, has_items(new_video1_ntiid,
                                                    new_video2_ntiid,
                                                    new_video3_ntiid))
-        assert_that(course_video_ntiids, 
-                    does_not(has_items(video1_ntiid, video2_ntiid, video3_ntiid)))
+        assert_that(course_video_ntiids, does_not(
+                                            has_items(video1_ntiid,
+                                                      video2_ntiid,
+                                                      video3_ntiid)))
 
         # TODO: Transcripts

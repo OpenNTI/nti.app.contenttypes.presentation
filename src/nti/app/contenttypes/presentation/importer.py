@@ -136,7 +136,9 @@ class LessonOverviewsImporter(BaseSectionImporter):
         check_docket_targets(concrete)
 
     def _sync_lessons(self, course, bucket):
-        return synchronize_course_lesson_overview(course, buckets=(bucket,))
+        return synchronize_course_lesson_overview(course,
+                                                  buckets=(bucket,),
+                                                  auto_roll_coalesce=False)
 
     def _do_import(self, context, source_filer, save_sources=True):
         course = ICourseInstance(context)
@@ -243,7 +245,7 @@ class UserAssetsImporter(BaseSectionImporter):
                 for asset_source in source:
                     asset = self._create_asset(asset_source, course, site)
                     result.append(asset)
-        logger.info('Imported %s user created assets in %s', 
+        logger.info('Imported %s user created assets in %s',
                     len(result), entry.ntiid)
         return result
 
