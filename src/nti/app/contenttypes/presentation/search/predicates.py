@@ -47,7 +47,7 @@ class _LessonsSearchHitPredicate(DefaultSearchHitPredicate):
     published).
     """
 
-    __name__ = 'LessonsPresentationAsset'
+    __name__ = u'LessonsPresentationAsset'
 
     def _get_lessons_for_item(self, item):
         """
@@ -92,7 +92,7 @@ class _AssetVisibleSearchPredicate(DefaultSearchHitPredicate):
     items through that are in lessons that are visible.
     """
 
-    __name__ = 'PresentationAssetVisible'
+    __name__ = u'PresentationAssetVisible'
 
     def allow(self, item, unused_score, unused_query=None):
         user = get_remote_user()
