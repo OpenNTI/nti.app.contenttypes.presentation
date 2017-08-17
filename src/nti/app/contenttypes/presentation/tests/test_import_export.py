@@ -39,6 +39,9 @@ from nti.contenttypes.courses.importer import CourseOutlineImporter
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
+from nti.contenttypes.presentation.media import NTIVideo
+from nti.contenttypes.presentation.media import NTIVideoRoll
+
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.app.products.courseware.tests import PersistentInstructedCourseApplicationTestLayer
@@ -165,6 +168,10 @@ class TestImportExporter(ApplicationLayerTest):
         source1_ntiid = sources[0]['NTIID']
         assert_that(source1_ntiid, not_none())
 
+        video_res = self.testapp.post_json(self.assets_url, video_json)
+        video_res = video_res.json_body
+        video4_ntiid = video_res['NTIID']
+
         video_res = self.testapp.post_json(self.assets_url, video2_json)
         video_res = video_res.json_body
         video2_ntiid = video_res['NTIID']
@@ -188,8 +195,15 @@ class TestImportExporter(ApplicationLayerTest):
         assert_that(source3_ntiid, not_none())
 
         # Now insert the videos into lesson
+        # video1
+        # video4
+        # roll {video2, video3}
+        # related-work-ref
         video_data = {"MimeType": "application/vnd.nextthought.ntivideo",
                       "NTIID": video1_ntiid}
+        self.testapp.post_json(group_contents_url, video_data)
+        video_data = {"MimeType": "application/vnd.nextthought.ntivideo",
+                      "NTIID": video4_ntiid}
         self.testapp.post_json(group_contents_url, video_data)
         roll_data = {"MimeType": "application/vnd.nextthought.videoroll",
                      ITEMS: [video2_ntiid, video3_ntiid]}
@@ -226,7 +240,7 @@ class TestImportExporter(ApplicationLayerTest):
                     importer = factory()
                     result = importer.process(course, filer, False)
                     if isinstance(factory, UserAssetsImporter):
-                        assert_that(result, has_length(3))
+                        assert_that(result, has_length(4))
         finally:
             shutil.rmtree(tmp_dir, True)
 
@@ -248,18 +262,23 @@ class TestImportExporter(ApplicationLayerTest):
         assert_that(group_ext['title'], is_(group_title))
         assert_that(group_ext['ntiid'], is_not(group_ntiid))
         group_items = group_ext[ITEMS]
-        assert_that(group_items, has_length(3))
+        assert_that(group_items, has_length(4))
 
         # Validate videos
         video = group_items[0]
         new_video1_ntiid = video['ntiid']
-        assert_that(new_video1_ntiid,
-                    is_not(video1_ntiid))
+        assert_that(new_video1_ntiid, is_not(video1_ntiid))
+        assert_that(video['MimeType'], is_(NTIVideo.mime_type))
         assert_that(video['sources'][0]['source'],
                     contains(video1_source))
 
-        video_roll = group_items[1]
+        video = group_items[1]
+        assert_that(video['ntiid'], is_not(video4_ntiid))
+        assert_that(video['MimeType'], is_(NTIVideo.mime_type))
+
+        video_roll = group_items[2]
         assert_that(video_roll['ntiid'], is_not(video_roll_ntiid))
+        assert_that(video_roll['MimeType'], is_(NTIVideoRoll.mime_type))
         roll_items = video_roll[ITEMS]
         assert_that(roll_items, has_length(2))
         new_video2_ntiid = roll_items[0]['ntiid']
@@ -271,7 +290,7 @@ class TestImportExporter(ApplicationLayerTest):
         assert_that(roll_items[1]['sources'][0]['source'],
                     contains(video3_source))
 
-        related_work_ref = group_items[2]
+        related_work_ref = group_items[3]
         assert_that(related_work_ref['label'], is_(related_work_ref_title))
         assert_that(related_work_ref['href'], is_(related_work_ref_href))
         assert_that(related_work_ref['ntiid'], is_not(related_work_ref_ntiid))
