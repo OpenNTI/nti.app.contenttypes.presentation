@@ -29,8 +29,6 @@ from zope.security.management import queryInteraction
 from zc.intid.interfaces import IAfterIdAddedEvent
 from zc.intid.interfaces import IBeforeIdRemovedEvent
 
-from nti.app.assessment.common.evaluations import get_evaluation_courses
-
 from nti.app.contenttypes.presentation.synchronizer import clear_course_assets
 from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
 from nti.app.contenttypes.presentation.synchronizer import remove_and_unindex_course_assets
@@ -349,32 +347,27 @@ def _on_assignment_removed(assignment, _):
     """
     count = 0
     ntiid = getattr(assignment, 'ntiid', None)
-    courses = get_evaluation_courses(assignment)
     registry = get_site_registry()
     if     not ntiid \
-        or not courses \
         or current_principal() is None \
         or registry == component.getGlobalSiteManager():
-        return
+        return count
 
-    # Get all overview groups for course.
-    container_ntiids = [ICourseCatalogEntry(x).ntiid for x in courses]
     catalog = get_library_catalog()
     sites = get_component_hierarchy_names()
-    groups = tuple(catalog.search_objects(provided=INTICourseOverviewGroup,
-                                          container_ntiids=container_ntiids,
-                                          container_all_of=False,
-                                          sites=sites))
-    for group in groups:
-        for item in tuple(group):
-            if      INTIAssignmentRef.providedBy(item) \
-                and assignment.ntiid == getattr(item, 'target', ''):
-                # This ends up removing from group here.
-                remove_presentation_asset(item, registry)
-                count += 1
+    items = catalog.search_objects(provided=INTIAssignmentRef, 
+                                   target=ntiid,
+                                   sites=sites)
+    for item in items or ():
+        if      INTIAssignmentRef.providedBy(item) \
+            and assignment.ntiid == getattr(item, 'target', ''):
+            # This ends up removing from containers.
+            remove_presentation_asset(item, registry)
+            count += 1
     if count:
         logger.info('Removed assignment (%s) from %s overview group(s)',
                     ntiid, count)
+    return count
 
 
 @component.adapter(IQEvaluation, IObjectModifiedEvent)
