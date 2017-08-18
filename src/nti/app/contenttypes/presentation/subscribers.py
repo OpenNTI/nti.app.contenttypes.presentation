@@ -123,11 +123,14 @@ from nti.recorder.record import remove_transaction_history
 
 from nti.recorder.utils import record_transaction
 
+from nti.site.interfaces import IHostPolicyFolder
+
 from nti.site.site import get_component_hierarchy_names
 
 from nti.traversal.traversal import find_interface
 
 ITEMS = StandardExternalFields.ITEMS
+
 
 # interaction
 
@@ -179,20 +182,24 @@ def _clear_data_when_course_removed(course, _):
     for item in removed:
         remove_transaction_history(item)
 
+
 # Outline nodes
 
 
 @component.adapter(ICourseOutlineNode, IUnregistered)
 def _on_outlinenode_unregistered(node, _):
+    course = find_interface(node, ICourseInstance, strict=False)
+    folder = IHostPolicyFolder(course, None)
     lesson = INTILessonOverview(node, None)
     if lesson is None:
         return
     # ground lesson
     lesson.__parent__ = None
     # unregister empty lesson overviews to avoid leaking
-    registry = get_site_registry()
+    registry = get_site_registry() if folder is None else folder.getSiteManager()
     if not lesson.Items and registry != component.getGlobalSiteManager():
         remove_presentation_asset(lesson, registry)
+
 
 # Presentation assets
 
