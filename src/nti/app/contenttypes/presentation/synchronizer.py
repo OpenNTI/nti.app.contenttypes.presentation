@@ -63,7 +63,8 @@ from nti.contenttypes.courses.utils import get_course_hierarchy
 from nti.contenttypes.presentation import interface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
-from nti.contenttypes.presentation.interfaces import INTIMedia
+from nti.contenttypes.presentation.interfaces import IPointer
+from nti.contenttypes.presentation.interfaces import INTIMedia 
 from nti.contenttypes.presentation.interfaces import INTIMediaRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
@@ -977,7 +978,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 
 	return result
 
-def _clear_course_assets(course, unregister=True):
+def clear_course_assets(course, unregister=True):
 	container = _asset_container(course)
 	if unregister:
 		catalog = get_library_catalog()
@@ -985,6 +986,8 @@ def _clear_course_assets(course, unregister=True):
 
 		# remove user created concrete assets
 		for ntiid, item in list(container.items()): # modifying
+			if IPointer.providedBy(item):
+				remove_presentation_asset(item, registry, catalog, name=ntiid)
 			concrete = IConcreteAsset(item, None)
 			if 		IUserCreatedAsset.providedBy(concrete) \
 				and not IContentBackedPresentationAsset.providedBy(concrete):
@@ -996,7 +999,7 @@ def _clear_course_assets(course, unregister=True):
 
 	# clear all
 	container.clear()
-clear_course_assets = _clear_course_assets
+_clear_course_assets = clear_course_assets
 
 def _clear_namespace_last_modified(course, catalog=None):
 	nodes = _outline_nodes(course.Outline)
