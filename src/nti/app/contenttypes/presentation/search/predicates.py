@@ -9,9 +9,9 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from pyramid.threadlocal import get_current_request
-
 from zope import interface
+
+from pyramid.threadlocal import get_current_request
 
 from nti.app.authentication import get_remote_user
 
