@@ -218,7 +218,9 @@ class LessonOverviewsExporter(BaseSectionExporter,
         for node, lesson in nodes:
             ext_obj = to_external_object(lesson,
                                          name="exporter",
-                                         decorate=False)
+                                         decorate=False,
+                                         backup=backup,
+                                         salt=salt)
             # process internal resources
             self._post_process_asset(lesson, ext_obj, filer, backup, salt)
             # save to json
