@@ -62,7 +62,7 @@ ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 class PresentationAssetGetView(GenericGetView, PublishVisibilityMixin):
 
     def __call__(self):
-        accept = self.request.headers.get(b'Accept') or u''
+        accept = self.request.headers.get('Accept') or ''
         if accept == 'application/vnd.nextthought.pageinfo+json':
             raise hexc.HTTPNotAcceptable()
         if not self._is_visible(self.context):
