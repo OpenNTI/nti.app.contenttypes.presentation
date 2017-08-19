@@ -11,6 +11,7 @@ logger = __import__('logging').getLogger(__name__)
 
 import six
 import time
+import uuid
 
 from zope import component
 from zope import lifecycleevent
@@ -28,11 +29,11 @@ from ZODB.interfaces import IConnection
 from nti.app.products.courseware.resources.utils import is_internal_file_link
 from nti.app.products.courseware.resources.utils import get_file_from_external_link
 
+from nti.appserver.policies.interfaces import ISitePolicyUserEventListener
+
 from nti.base._compat import text_
 
 from nti.base.interfaces import IFile
-
-from nti.common.random import generate_random_hex_string
 
 from nti.coremetadata.interfaces import SYSTEM_USER_NAME
 
@@ -124,14 +125,13 @@ def get_component_site(context, provided=None, name=None):
     result = None
     folder = IHostPolicyFolder(context, None)
     if folder is None:
+        name = name or context.ntiid
         provided = provided or interface_of_asset(context)
         sites_names = get_component_hierarchy_names()
-        name = name or getattr(context, 'ntiid', None)
         for idx in range(len(sites_names) - 1, -1, -1):  # higher sites first
-            folder = get_host_site(sites_names[idx], safe=True)
+            folder = get_host_site(sites_names[idx])
             registry = folder.getSiteManager()
-            if      registry is not None \
-                and registry.queryUtility(provided, name=name) == context:
+            if registry.queryUtility(provided, name=name) == context:
                 result = folder
                 break
     else:
@@ -262,14 +262,19 @@ def remove_presentation_asset(item, registry=None, catalog=None, name=None, even
     return result
 
 
-def make_asset_ntiid(nttype, creator=SYSTEM_USER_NAME, base=None, extra=None, now=None):
+def get_site_provider():
+    policy = component.queryUtility(ISitePolicyUserEventListener)
+    provider = getattr(policy, 'PROVIDER', None) or u'NTI'
+    return provider
+
+
+def make_asset_ntiid(nttype, base=None, extra=None, now=None):
     if type(nttype) == InterfaceClass:
         nttype = nttype.__name__[1:]
 
-    creator = getattr(creator, 'username', creator)
-    provider = get_provider(base) or 'NTI' if base else 'NTI'
+    provider = get_provider(base) if base else get_site_provider()
     current_time = time_to_64bit_int(time.time() if now is None else now)
-    specific_base = '%s.%s' % (creator, current_time)
+    specific_base = '%s.%s' % (SYSTEM_USER_NAME, current_time)
     if extra:
         specific_base = specific_base + ".%s" % extra
     specific = make_specific_safe(specific_base)
@@ -290,7 +295,7 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None, sites=No
     creator = getattr(node, 'creator', None)
     creator = getattr(creator, 'username', creator)
     if not ntiid:
-        extra = generate_random_hex_string(6).upper()
+        extra = str(uuid.uuid4().get_time_low())
         ntiid = make_asset_ntiid(nttype=INTILessonOverview,
                                  base=node.ntiid,
                                  extra=extra)
