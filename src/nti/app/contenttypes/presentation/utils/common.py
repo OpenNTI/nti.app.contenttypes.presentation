@@ -99,10 +99,7 @@ def remove_asset(ntiid, asset, registry, container=None, catalog=None):
     if container is not None:
         container.pop(ntiid, None)
     remove_transaction_history(asset)
-    remove_presentation_asset(asset,
-                              registry,
-                              catalog,
-                              name=ntiid)
+    remove_presentation_asset(asset, registry, catalog, ntiid)
 
 
 def remove_invalid_assets(removed=None, seen=None):
