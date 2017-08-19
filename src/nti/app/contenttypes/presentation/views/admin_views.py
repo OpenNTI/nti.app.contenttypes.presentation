@@ -64,7 +64,6 @@ from nti.externalization.interfaces import StandardExternalFields
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
-
 from nti.site.hostpolicy import get_all_host_sites
 
 ITEMS = StandardExternalFields.ITEMS
@@ -84,14 +83,13 @@ class RebuildEvaluationCatalogView(AbstractAuthenticatedView):
         intids = component.getUtility(IIntIds)
         # clear indexes
         catalog = get_assets_catalog()
-        for index in list(catalog.values()):
+        for index in catalog.values():
             index.clear()
         # reindex
         seen = set()
         for host_site in get_all_host_sites():  # check all sites
-            logger.info("Processing site %s", host_site.__name__)
             with current_site(host_site):
-                for unused_name, evaluation in list(component.getUtilitiesFor(IPresentationAsset)):
+                for unused, evaluation in component.getUtilitiesFor(IPresentationAsset):
                     doc_id = intids.queryId(evaluation)
                     if doc_id is None or doc_id in seen:
                         continue
