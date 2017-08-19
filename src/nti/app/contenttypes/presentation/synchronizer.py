@@ -986,8 +986,10 @@ def clear_course_assets(course, unregister=True):
 
 		# remove user created concrete assets
 		for ntiid, item in list(container.items()): # modifying
+			# remove reference pointer
 			if IPointer.providedBy(item):
 				remove_presentation_asset(item, registry, catalog, name=ntiid)
+			# remove concrete asset
 			concrete = IConcreteAsset(item, None)
 			if 		IUserCreatedAsset.providedBy(concrete) \
 				and not IContentBackedPresentationAsset.providedBy(concrete):
@@ -1001,9 +1003,10 @@ def clear_course_assets(course, unregister=True):
 	container.clear()
 _clear_course_assets = clear_course_assets
 
-def _clear_namespace_last_modified(course, catalog=None):
+
+def clear_namespace_last_modified(course, catalog=None):
 	nodes = _outline_nodes(course.Outline)
 	for node in nodes or ():
-		namespace = node.src or u''  # this is ntiid based file (unique)
+		namespace = node.src or ''  # this is ntiid based file (unique)
 		_remove_source_lastModified(namespace, catalog)
-clear_namespace_last_modified = _clear_namespace_last_modified
+_clear_namespace_last_modified = clear_namespace_last_modified
