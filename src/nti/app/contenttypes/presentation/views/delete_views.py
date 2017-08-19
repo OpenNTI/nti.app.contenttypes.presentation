@@ -54,10 +54,6 @@ from nti.dataserver import authorization as nauth
 
 from nti.externalization.externalization import StandardExternalFields
 
-from nti.site.interfaces import IHostPolicyFolder
-
-from nti.traversal.traversal import find_interface
-
 ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID
 MIMETYPE = StandardExternalFields.MIMETYPE
@@ -141,8 +137,8 @@ class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
 
     @Lazy
     def _registry(self):
-        folder = find_interface(self.context, IHostPolicyFolder, strict=False)
-        return folder.getSiteManager() if folder is not None else None
+        provided = interface_of_asset(self.context)
+        return get_component_registry(self.context, provided)
 
     def _is_target(self, obj, ntiid):
         return ntiid == getattr(obj, 'target', '') \
@@ -187,8 +183,8 @@ class RemoveRefsView(AbstractAuthenticatedView):
 
     @Lazy
     def _registry(self):
-        folder = find_interface(self.context, IHostPolicyFolder, strict=False)
-        return folder.getSiteManager() if folder is not None else None
+        provided = interface_of_asset(self.context)
+        return get_component_registry(self.context, provided)
 
     def _is_target(self, obj, ntiid):
         concrete = IConcreteAsset(obj, obj)
