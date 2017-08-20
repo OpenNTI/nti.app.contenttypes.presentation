@@ -63,7 +63,7 @@ class _Site(object):
 @interface.implementer(ISiteAdapter)
 @component.adapter(IPresentationAsset)
 def _asset_to_site(context):
-    folder = find_interface(context, IHostPolicyFolder, strict=False)
+    folder = IHostPolicyFolder(context, None)
     if folder is not None:
         return _Site(folder.__name__)
 
