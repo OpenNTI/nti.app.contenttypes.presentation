@@ -177,7 +177,7 @@ class LessonOverviewsImporter(BaseSectionImporter):
         for sub_instance in get_course_subinstances(course):
             if sub_instance.Outline is not course.Outline:
                 result.extend(self._do_import(sub_instance, filer, writeout))
-        return tuple(result)
+        return result
 
 
 @interface.implementer(ICourseSectionImporter)

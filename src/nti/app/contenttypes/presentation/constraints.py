@@ -153,7 +153,7 @@ class LessonPublishablePredicate(object):
     def __init__(self, *args):
         pass
 
-    def is_published(self, lesson, principal=None, *args, **kwargs):
+    def is_published(self, lesson, principal=None, *unused_args, **unused_kwargs):
         constraints = constraints_for_lesson(lesson, False)
         if constraints is not None:
             for constraint in constraints.Items:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-.. $Id: evolve46.py 114944 2017-06-13 14:29:46Z carlos.sanchez $
+.. $Id$
 """
 
 from __future__ import print_function, absolute_import, division

@@ -203,7 +203,7 @@ class _NTIAssetOrderedContentsLinkDecorator(AbstractAuthenticatedRequestAwareDec
         result = getattr(self.request, 'acl_decoration', True)
         return result
 
-    def _predicate(self, context, result):
+    def _predicate(self, context, unused_result):
         return  self._acl_decoration \
             and self._is_authenticated \
             and has_permission(ACT_CONTENT_EDIT, context, self.request)
@@ -457,11 +457,11 @@ class _NTILessonOverviewDecorator(AbstractAuthenticatedRequestAwareDecorator):
     Remove empty groups for non-editors.
     """
 
-    def _predicate(self, context, result):
+    def _predicate(self, context, unused_result):
         result = has_permission(ACT_CONTENT_EDIT, context, self.request)
         return not result
 
-    def _do_decorate_external(self, context, result):
+    def _do_decorate_external(self, unused_context, result):
         removal = set()
         items = result.get(ITEMS) or ()  # groups
         for idx, group in enumerate(items):
@@ -534,7 +534,7 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
     def is_legacy_ipad(self):
         return is_legacy_uas(self.request, LEGACY_UAS_40)
 
-    def _predicate(self, context, result):
+    def _predicate(self, context, unused_result):
         return self._is_authenticated and self._should_process(context)
 
     def _should_process(self, obj):
@@ -569,7 +569,7 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 @interface.implementer(IExternalMappingDecorator)
 class _NTITranscriptURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
-    def _predicate(self, context, result):
+    def _predicate(self, unused_context, unused_result):
         return self._is_authenticated
 
     def _package_bucket(self, context):
@@ -597,7 +597,7 @@ class _NTITranscriptURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 @interface.implementer(IExternalMappingDecorator)
 class _AssetContentFileDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
-    def _predicate(self, context, result):
+    def _predicate(self, unused_context, unused_result):
         result = self._is_authenticated
         return result
 
@@ -611,7 +611,7 @@ class _AssetContentFileDecorator(AbstractAuthenticatedRequestAwareDecorator):
 @interface.implementer(IExternalMappingDecorator)
 class _IPADLegacyReferenceDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
-    def _predicate(self, context, result):
+    def _predicate(self, unused_context, unused_result):
         result = is_legacy_uas(self.request, LEGACY_UAS_40)
         return result
 
