@@ -244,6 +244,7 @@ class LessonOverviewsExporter(BaseSectionExporter,
         for sub_instance in get_course_subinstances(course):
             if sub_instance.Outline is not course.Outline:
                 self._do_export(sub_instance, filer, seen, backup, salt)
+        filer.default_bucket = None # restore
 
 
 @interface.implementer(ICourseSectionExporter)
@@ -296,3 +297,4 @@ class UserAssetsExporter(BaseSectionExporter, AssetExporterMixin):
         for sub_instance in get_course_subinstances(course):
             if sub_instance.Outline is not course.Outline:
                 self._export_assets(sub_instance, filer, seen, backup, salt)
+        filer.default_bucket = None # restore
