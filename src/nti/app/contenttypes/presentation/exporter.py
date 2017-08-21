@@ -221,6 +221,9 @@ class LessonOverviewsExporter(BaseSectionExporter,
                                          decorate=False,
                                          backup=backup,
                                          salt=salt)
+            if not backup:
+                ext_obj.pop("lesson", None)
+
             # process internal resources
             self._post_process_asset(lesson, ext_obj, filer, backup, salt)
             # save to json
