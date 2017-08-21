@@ -43,6 +43,7 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
+from nti.contenttypes.presentation import NTI
 from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.presentation.interfaces import IAssetRef
@@ -264,7 +265,7 @@ def remove_presentation_asset(item, registry=None, catalog=None, name=None, even
 
 def get_site_provider():
     policy = component.queryUtility(ISitePolicyUserEventListener)
-    provider = getattr(policy, 'PROVIDER', None) or u'NTI'
+    provider = getattr(policy, 'PROVIDER', None) or NTI
     return provider
 
 

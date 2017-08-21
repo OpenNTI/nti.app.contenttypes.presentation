@@ -36,6 +36,8 @@ from nti.base.interfaces import DEFAULT_CONTENT_TYPE
 
 from nti.contentlibrary.interfaces import IContentUnit
 
+from nti.contenttypes.presentation import NTI
+
 from nti.contenttypes.presentation.interfaces import INTIDocketAsset
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 
@@ -91,7 +93,7 @@ def handle_related_work(item, context, creator=None, request=None):
     # full url
     if ntiid is None and parsed is not None and (parsed.scheme or parsed.netloc):
         ntiid = make_ntiid(nttype=TYPE_UUID,
-                           provider=u'NTI',
+                           provider=NTI,
                            specific=hexdigest(href.lower()))
     # replace if needed
     if item.target != ntiid:

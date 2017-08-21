@@ -93,6 +93,7 @@ from nti.contenttypes.courses.interfaces import ES_ALL
 
 from nti.contenttypes.courses.utils import get_user_or_instructor_enrollment_record as get_any_enrollment_record
 
+from nti.contenttypes.presentation import NTI
 from nti.contenttypes.presentation import AUDIO_MIME_TYPES
 from nti.contenttypes.presentation import VIDEO_MIME_TYPES
 from nti.contenttypes.presentation import TIMELINE_MIME_TYPES
@@ -320,7 +321,7 @@ class OutlineNodeInsertView(AbstractAuthenticatedView,
             entry = self._get_catalog_entry(parent)
             base = entry.ntiid if entry is not None else None
 
-        provider = get_provider(base) or u'NTI'
+        provider = get_provider(base) or NTI
         current_time = time_to_64bit_int(time.time())
         specific_base = u'%s.%s.%s' % (get_specific(base),
                                        self.remoteUser.username,
