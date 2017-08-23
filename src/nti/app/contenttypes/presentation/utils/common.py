@@ -63,9 +63,9 @@ def yield_sync_courses(ntiids=()):
     if not ntiids:
         for entry in catalog.iterCatalogEntries():
             course = ICourseInstance(entry, None)
-            if course is None \
-                    or ILegacyCourseInstance.providedBy(course) \
-                    or ICourseSubInstance.providedBy(course):
+            if     course is None \
+                or ILegacyCourseInstance.providedBy(course) \
+                or ICourseSubInstance.providedBy(course):
                 continue
             yield course
             for subinstance in get_course_subinstances(course):
