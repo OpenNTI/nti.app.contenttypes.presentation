@@ -16,6 +16,10 @@ import uuid
 from zope import component
 from zope import lifecycleevent
 
+from zope.annotation.interfaces import IAnnotations
+
+from zope.component.hooks import getSite
+
 from zope.event import notify
 
 from zope.interface.interface import InterfaceClass
@@ -265,8 +269,11 @@ def remove_presentation_asset(item, registry=None, catalog=None, name=None, even
 
 def get_site_provider():
     policy = component.queryUtility(ISitePolicyUserEventListener)
-    provider = getattr(policy, 'PROVIDER', None) or NTI
-    return provider
+    result = getattr(policy, 'PROVIDER', None)
+    if not result:
+        annontations = IAnnotations(getSite(), {})
+        result = annontations.get('PROVIDER')
+    return result or NTI
 
 
 def make_asset_ntiid(nttype, base=None, extra=None, now=None):
