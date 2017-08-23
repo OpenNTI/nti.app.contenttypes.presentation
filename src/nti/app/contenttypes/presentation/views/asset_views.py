@@ -96,7 +96,6 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.courses.discussions.utils import resolve_discussion_course_bundle
 
-from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.courses.utils import get_courses_for_packages
 
 from nti.contenttypes.presentation import interface_of_asset
@@ -207,13 +206,12 @@ def _notify_created(item, principal=None, externalValue=None):
 def _add_2_course(context, item):
 	course = ICourseInstance(context, None)
 	if course is not None:
-		container = IPresentationAssetContainer(course, None)
+		container = IPresentationAssetContainer(course)
 		container[item.ntiid] = item
 
 def _add_2_courses(context, item):
+	# We only want to add to our context course, not any subinstances.
 	_add_2_course(context, item)
-	for subinstance in get_course_subinstances(context):
-		_add_2_course(subinstance, item)
 
 def _add_2_container(context, item):
 	result = []

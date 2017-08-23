@@ -37,8 +37,6 @@ from nti.contentfile.interfaces import IContentBaseFile
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
-from nti.contenttypes.courses.utils import get_course_subinstances
-
 from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.presentation.interfaces import IAssetRef
@@ -92,14 +90,13 @@ def notify_created(item, principal=None, externalValue=None):
 def add_to_course(context, item):
     course = ICourseInstance(context, None)
     if course is not None:
-        container = IPresentationAssetContainer(course, None)
+        container = IPresentationAssetContainer(course)
         container[item.ntiid] = item
 
 
 def add_to_courses(context, item):
+    # We only want to add to our context course, not any subinstances.
     add_to_course(context, item)
-    for subinstance in get_course_subinstances(context):
-        add_to_course(subinstance, item)
 
 
 def add_to_container(context, item):

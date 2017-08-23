@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-generation = 48
+generation = 49
 
 from zope import component
 from zope import interface
@@ -19,14 +19,9 @@ from zope.component.hooks import site as current_site
 
 from zope.intid.interfaces import IIntIds
 
-from nti.app.contenttypes.presentation.utils.common import yield_sync_courses
+from nti.contenttypes.presentation.index import install_assets_library_catalog
 
-from nti.contenttypes.courses.interfaces import ICourseSubInstance
-from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
-
-from nti.contenttypes.courses.utils import get_course_subinstances
-
-from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
+from nti.contenttypes.presentation.interfaces import IPresentationAsset
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
@@ -48,23 +43,14 @@ class MockDataserver(object):
         return None
 
 
-def _process_site(intids, seen):
-    # process courses
-    for course in yield_sync_courses():
-        doc_id = intids.queryId(course)
-        if doc_id is None or doc_id in seen:
-            continue
-        seen.add(doc_id)
-        if ICourseSubInstance.providedBy(course):
-            continue
-        parent_course = course
-        for course in get_course_subinstances(parent_course):
-            if parent_course.Outline is course.Outline:
-                # These shared subinstances should have no user created assets.
-                sub_container = IPresentationAssetContainer(course)
-                logger.info('Removing user assets from %s',
-                            ICourseCatalogEntry(course).ntiid)
-                sub_container.clear()
+def _process_site(current, catalog, intids, seen):
+    with current_site(current):
+        for _, asset in list(component.getUtilitiesFor(IPresentationAsset)):
+            doc_id = intids.queryId(asset)
+            if doc_id is None or doc_id in seen:
+                continue
+            seen.add(doc_id)
+            catalog.index_doc(doc_id, asset)
 
 
 def do_evolve(context, generation=generation):
@@ -84,17 +70,19 @@ def do_evolve(context, generation=generation):
 
         lsm = ds_folder.getSiteManager()
         intids = lsm.getUtility(IIntIds)
-
+        catalog = install_assets_library_catalog(ds_folder, intids)
+        for index in catalog.values():
+            index.clear()
         for current in get_all_host_sites():
-            with current_site(current):
-                _process_site(intids, seen)
+            _process_site(current, catalog, intids, seen)
 
     component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
-    logger.info('Dataserver evolution %s done.', generation)
+    logger.info('Dataserver evolution %s done. %s assets(s) indexed',
+                generation, len(seen))
 
 
 def evolve(context):
     """
-    Evolve to gen 48 by removing shared user-created assets from subinstance containers.
+    Evolve to gen 48 to index all assets
     """
-    do_evolve(context)
+    # do_evolve(context)  DON'T install yet

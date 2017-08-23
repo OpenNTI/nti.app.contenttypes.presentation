@@ -260,7 +260,7 @@ def remove_presentation_asset(item, registry=None, catalog=None, name=None, even
     elif INTICourseOverviewGroup.providedBy(item):
         result = remove_group(item, registry, catalog, name=name, event=event)
     elif INTIMediaRoll.providedBy(item):
-        result = remove_mediaroll(item, registry, catalog, 
+        result = remove_mediaroll(item, registry, catalog,
                                   name=name, event=event)
     else:
         result = remove_asset(item, registry, catalog, name=name, event=event)
