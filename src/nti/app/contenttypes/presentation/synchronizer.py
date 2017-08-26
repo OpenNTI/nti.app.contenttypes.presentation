@@ -63,7 +63,6 @@ from nti.contenttypes.courses.utils import get_course_hierarchy
 from nti.contenttypes.presentation import interface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
-from nti.contenttypes.presentation.interfaces import IPointer
 from nti.contenttypes.presentation.interfaces import INTIMedia 
 from nti.contenttypes.presentation.interfaces import INTIMediaRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
@@ -986,9 +985,6 @@ def clear_course_assets(course, unregister=True):
 
 		# remove user created concrete assets
 		for ntiid, item in list(container.items()): # modifying
-			# remove reference pointer
-			if IPointer.providedBy(item):
-				remove_presentation_asset(item, registry, catalog, name=ntiid)
 			# remove concrete asset
 			concrete = IConcreteAsset(item, None)
 			if 		IUserCreatedAsset.providedBy(concrete) \
