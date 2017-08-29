@@ -343,19 +343,21 @@ def _on_content_file_removed(context, _):
 @component.adapter(IQAssignment, IBeforeIdRemovedEvent)
 def _on_assignment_removed(assignment, _):
     """
-    Remove deleted assignment from all overview groups referencing it.
+    Remove deleted (editable) assignment from all overview groups referencing
+    it.
     """
     count = 0
     ntiid = getattr(assignment, 'ntiid', None)
     registry = get_site_registry()
     if     not ntiid \
         or current_principal() is None \
+        or not IQEditableEvaluation.providedBy(assignment) \
         or registry == component.getGlobalSiteManager():
         return count
 
     catalog = get_library_catalog()
     sites = get_component_hierarchy_names()
-    items = catalog.search_objects(provided=INTIAssignmentRef, 
+    items = catalog.search_objects(provided=INTIAssignmentRef,
                                    target=ntiid,
                                    sites=sites)
     for item in items or ():
