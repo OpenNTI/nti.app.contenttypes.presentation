@@ -98,7 +98,7 @@ class AssetCleanerImporter(BaseSectionImporter):
         self._do_clean(context, filer, writeout)
         for sub_instance in get_course_subinstances(course):
             if sub_instance.Outline is not course.Outline:
-                self._do_clean(sub_instance)
+                self._do_clean(sub_instance, filer, writeout)
         return result
 
 
