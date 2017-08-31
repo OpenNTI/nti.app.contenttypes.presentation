@@ -265,6 +265,10 @@ def _remove_registered_lesson_overview(name, registry=None, course=None, force=F
 	return result
 remove_registered_lesson_overview = _remove_registered_lesson_overview
 
+def _validate_ref(item, validate):
+	validator = IItemRefValidator(item, None)
+	return (not validate or validator is None or validator.validate())
+
 def _register_media_rolls(roll, registry=None, validate=False):
 	idx = 0
 	items = roll.Items
@@ -272,12 +276,11 @@ def _register_media_rolls(roll, registry=None, validate=False):
 
 	while idx < len(items):  # mutating
 		item = items[idx]
-		item_iface = interface_of_asset(item)
-		validator = IItemRefValidator(item, None)
-		is_valid = (not validate or validator is None or validator.validate())
+		is_valid = _validate_ref(item, validate)
 		if not is_valid:  # don't include in the roll
 			del items[idx]
 			continue
+		item_iface = interface_of_asset(item)
 		result, registered = _register_utility(item,
 										 	   ntiid=item.ntiid,
 										  	   registry=registry,
@@ -294,10 +297,6 @@ def _is_auto_roll_coalesce(item):
 	return 		(INTIMedia.providedBy(item)
 			  or INTIMediaRef.providedBy(item)) \
 			and not _is_obj_locked(item)
-
-def _validate_ref(item, validate):
-	validator = IItemRefValidator(item, None)
-	return (not validate or validator is None or validator.validate())
 
 def _do_register(item, registry):
 	item_iface = interface_of_asset(item)
