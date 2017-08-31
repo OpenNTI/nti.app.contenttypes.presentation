@@ -241,7 +241,7 @@ class UserAssetsImporter(BaseSectionImporter):
             if source_file is not None:
                 source = self.load(source_file)
                 if writeout:
-                    self._save_source(course, bucket, source_file)
+                    self._save_source(course, source_file, bucket)
                 for asset_source in source:
                     asset = self._create_asset(asset_source, course, site)
                     result.append(asset)
