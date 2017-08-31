@@ -62,6 +62,8 @@ from nti.dataserver.interfaces import IDataserverFolder
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 
+from nti.metadata import queue_add
+
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.site.hostpolicy import get_all_host_sites
@@ -77,7 +79,7 @@ ITEM_COUNT = StandardExternalFields.ITEM_COUNT
              permission=nauth.ACT_NTI_ADMIN,
              context=IDataserverFolder,
              name='RebuildPresentationAssetCatalog')
-class RebuildEvaluationCatalogView(AbstractAuthenticatedView):
+class RebuildPresentationAssetCatalogView(AbstractAuthenticatedView):
 
     def __call__(self):
         intids = component.getUtility(IIntIds)
@@ -89,12 +91,13 @@ class RebuildEvaluationCatalogView(AbstractAuthenticatedView):
         seen = set()
         for host_site in get_all_host_sites():  # check all sites
             with current_site(host_site):
-                for unused, evaluation in component.getUtilitiesFor(IPresentationAsset):
-                    doc_id = intids.queryId(evaluation)
+                for unused, asset in component.getUtilitiesFor(IPresentationAsset):
+                    doc_id = intids.queryId(asset)
                     if doc_id is None or doc_id in seen:
                         continue
                     seen.add(doc_id)
-                    catalog.index_doc(doc_id, evaluation)
+                    queue_add(asset)
+                    catalog.index_doc(doc_id, asset)
         result = LocatedExternalDict()
         result[ITEM_COUNT] = result[TOTAL] = len(seen)
         return result
