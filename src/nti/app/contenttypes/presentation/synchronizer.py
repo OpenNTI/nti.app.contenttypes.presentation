@@ -273,17 +273,16 @@ def _register_media_rolls(roll, registry=None, validate=False):
 	while idx < len(items):  # mutating
 		item = items[idx]
 		item_iface = interface_of_asset(item)
-		result, registered = _register_utility(item,
-										 	   ntiid=item.ntiid,
-										  	   registry=registry,
-										  	   provided=item_iface)
-
 		validator = IItemRefValidator(item, None)
 		is_valid = (not validate or validator is None or validator.validate())
 		if not is_valid:  # don't include in the roll
 			del items[idx]
 			continue
-		elif not result:  # replace if registered before
+		result, registered = _register_utility(item,
+										 	   ntiid=item.ntiid,
+										  	   registry=registry,
+										  	   provided=item_iface)
+		if not result:  # replace if registered before
 			items[idx] = registered
 		idx += 1
 	return roll
