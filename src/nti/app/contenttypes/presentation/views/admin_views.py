@@ -59,10 +59,10 @@ from nti.dataserver import authorization as nauth
 
 from nti.dataserver.interfaces import IDataserverFolder
 
+from nti.dataserver.metadata.index import get_metadata_catalog
+
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
-
-from nti.metadata import queue_add
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -87,6 +87,7 @@ class RebuildPresentationAssetCatalogView(AbstractAuthenticatedView):
         catalog = get_assets_catalog()
         for index in catalog.values():
             index.clear()
+        metadata = get_metadata_catalog()
         # reindex
         seen = set()
         for host_site in get_all_host_sites():  # check all sites
@@ -96,8 +97,8 @@ class RebuildPresentationAssetCatalogView(AbstractAuthenticatedView):
                     if doc_id is None or doc_id in seen:
                         continue
                     seen.add(doc_id)
-                    queue_add(asset)
                     catalog.index_doc(doc_id, asset)
+                    metadata.index_doc(doc_id, asset)
         result = LocatedExternalDict()
         result[ITEM_COUNT] = result[TOTAL] = len(seen)
         return result
