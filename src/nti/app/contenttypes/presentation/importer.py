@@ -194,10 +194,9 @@ class UserAssetsImporter(BaseSectionImporter):
         """
         root = course.root
         if IFilesystemBucket.providedBy(root):
-            out_path = os.path.join(root.absolute_path,
-                                    bucket,
-                                    self.__USER_ASSETS__)
+            out_path = os.path.join(root.absolute_path, bucket)
             self.makedirs(out_path)
+            out_path = os.path.join(out_path, self.__USER_ASSETS__)
             transfer_to_native_file(source_file, out_path)
 
     def _create_asset(self, source, course, site):
