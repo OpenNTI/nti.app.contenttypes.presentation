@@ -212,13 +212,25 @@
                 for="nti.contentlibrary.interfaces.IContentUnit" />
 
 	<!-- Exporters -->
-	<utility factory=".exporter.UserAssetsExporter" name="017:User_Assets" />
-	<utility factory=".exporter.LessonOverviewsExporter" name="018:Lesson_Overviews" />
+	<utility factory=".exporter.UserAssetsExporter" 
+			 name="017:User_Assets" />
+
+	<utility factory=".exporter.LessonOverviewsExporter" 
+			 provides=".interfaces.ILessonOverviewsSectionExporter"
+			 name="018:Lesson_Overviews" />
+
+	<subscriber handler=".exporter._on_course_section_exported_event" />
 
 	<!-- Importers -->
-	<utility factory=".importer.UserAssetsImporter" name="017:User_Assets" />
-	<utility factory=".importer.AssetCleanerImporter" name="016:Asset_Cleaner" />
-	<utility factory=".importer.LessonOverviewsImporter" name="018:Lesson_Overviews" />
+	<utility factory=".importer.UserAssetsImporter" 
+			 name="017:User_Assets" />
+
+	<utility factory=".importer.AssetCleanerImporter" 
+			 name="016:Asset_Cleaner" />
+
+	<utility factory=".importer.LessonOverviewsImporter"
+			 provides=".interfaces.ILessonOverviewsSectionImporter"
+			 name="018:Lesson_Overviews" />
 
 	<!-- Decorators -->
 	<include package=".decorators" />
