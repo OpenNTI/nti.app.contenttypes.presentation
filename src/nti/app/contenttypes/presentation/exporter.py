@@ -336,6 +336,7 @@ class UserAssetsExporter(BaseSectionExporter, AssetExporterMixin):
 
 
 def export_user_course_discussions(context, exporter, filer):
+    result = []
     catalog = get_library_catalog()
     course = ICourseInstance(context)
     entry = ICourseCatalogEntry(course)
@@ -357,6 +358,8 @@ def export_user_course_discussions(context, exporter, filer):
             name = user_topic_file_name(context)
             filer.save(name, source, contentType="application/json",
                        bucket=bucket, overwrite=True)
+            result.append(context)
+    return result
 
 
 @component.adapter(ICourseInstance, ICourseSectionExporterExecutedEvent)
@@ -364,4 +367,5 @@ def _on_course_section_exported_event(context, event):
     filer = event.filer
     exporter = event.exporter
     if ICourseDiscussionsSectionExporter.providedBy(exporter) and filer is not None:
+        logger.info("Exporting lesson overviews course discussions")
         export_user_course_discussions(context, exporter, filer)
