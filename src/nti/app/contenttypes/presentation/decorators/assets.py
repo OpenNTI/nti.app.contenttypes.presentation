@@ -162,7 +162,7 @@ class _PresentationAssetRequestDecorator(AbstractAuthenticatedRequestAwareDecora
         result = getattr(self.request, 'acl_decoration', True)
         return result
 
-    def _predicate(self, context, result):
+    def _predicate(self, context, unused_result):
         return  self._acl_decoration \
             and self._is_authenticated \
             and has_permission(ACT_CONTENT_EDIT, context, self.request)

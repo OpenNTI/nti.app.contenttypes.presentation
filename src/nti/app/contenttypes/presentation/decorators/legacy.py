@@ -62,7 +62,7 @@ class _BaseAssetDecorator(object):
 
     __metaclass__ = SingletonDecorator
 
-    def decorateExternalObject(self, original, external):
+    def decorateExternalObject(self, unused_original, external):
         if 'ntiid' in external:
             external[NTIID] = external.pop('ntiid')
         if 'target' in external:
@@ -147,7 +147,7 @@ class _NTIRelatedWorkRefDecorator(object):
 
     __metaclass__ = SingletonDecorator
 
-    def decorateExternalObject(self, original, external):
+    def decorateExternalObject(self, unused_original, external):
         if 'byline' in external:
             external['creator'] = external['byline']  # legacy
         description = external.get('description')
@@ -259,7 +259,7 @@ class _BaseMediaDecorator(object):
 
     __metaclass__ = SingletonDecorator
 
-    def decorateExternalObject(self, original, external):
+    def decorateExternalObject(self, unused_original, external):
         if MIMETYPE in external:
             # legacy
             external['mimeType'] = external[MIMETYPE]

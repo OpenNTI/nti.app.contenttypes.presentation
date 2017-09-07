@@ -14,17 +14,32 @@ import os
 from zope import interface
 from zope import component
 
+from nti.app.contenttypes.presentation.interfaces import ILessonOverviewsSectionExporter
+
 from nti.app.products.courseware.utils.exporter import save_resources_to_filer
 
 from nti.assessment.interfaces import IQEvaluation
 from nti.assessment.interfaces import IQEditableEvaluation
 
+from nti.contentlibrary.indexed_data import get_library_catalog
+
 from nti.contentlibrary.interfaces import IEditableContentUnit
+
+from nti.contenttypes.courses.discussions.exporter import user_topic_file_name
+from nti.contenttypes.courses.discussions.exporter import user_topic_dicussion_id
+from nti.contenttypes.courses.discussions.exporter import export_user_topic_as_discussion
+
+from nti.contenttypes.courses.discussions.parser import path_to_discussions
+
+from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussionTopic
+from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussionsSectionExporter
 
 from nti.contenttypes.courses.exporter import BaseSectionExporter
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseSectionExporter
+from nti.contenttypes.courses.interfaces import ICourseSectionExporterExecutedEvent
 
 from nti.contenttypes.courses.utils import get_course_subinstances
 
@@ -49,6 +64,9 @@ from nti.contenttypes.presentation.interfaces import ILessonPublicationConstrain
 from nti.contenttypes.presentation.interfaces import IAssignmentCompletionConstraint
 from nti.contenttypes.presentation.interfaces import IContentBackedPresentationAsset
 
+from nti.dataserver.contenttypes.forums.interfaces import ITopic
+from nti.dataserver.contenttypes.forums.interfaces import IHeadlinePost
+
 from nti.externalization.externalization import to_external_object
 
 from nti.externalization.interfaces import StandardExternalFields
@@ -61,7 +79,10 @@ from nti.namedfile.file import safe_filename
 from nti.ntiids.ntiids import TYPE_OID
 from nti.ntiids.ntiids import TYPE_UUID
 from nti.ntiids.ntiids import is_ntiid_of_types
+from nti.ntiids.ntiids import is_valid_ntiid_string 
 from nti.ntiids.ntiids import find_object_with_ntiid
+
+from nti.site.site import get_component_hierarchy_names
 
 ID = StandardExternalFields.ID
 OID = StandardExternalFields.OID
@@ -98,8 +119,7 @@ class AssetExporterMixin(object):
         concrete = IConcreteAsset(asset, asset)
         provided = interface_of_asset(concrete)
         # remove identifying data if not backup mode
-        ext_obj.pop(OID, None)
-        ext_obj.pop(CONTAINER_ID, None)
+        [ext_obj.pop(x, None) for x in (OID, CONTAINER_ID)]
         if not backup:  # remove unrequired keys
             if not INTIDiscussionRef.providedBy(asset):
                 ext_obj.pop(ID, None)
@@ -108,27 +128,32 @@ class AssetExporterMixin(object):
             if INTIAssessmentRef.providedBy(asset):
                 ext_obj.pop(INTERNAL_CONTAINER_ID, None)
             if INTIMediaRoll.providedBy(asset.__parent__):
-                ext_obj.pop(NTIID, None)
-                ext_obj.pop(INTERNAL_NTIID, None)
+                [ext_obj.pop(x, None) for x in (NTIID, INTERNAL_NTIID)]
             if      INTIMedia.providedBy(concrete) \
                 and not INTIMediaRoll.providedBy(asset.__parent__):
                 # XXX: Why not items in media rolls?
                 for name in ('sources', 'transcripts'):
                     for item in ext_obj.get(name) or ():
-                        item.pop(OID, None)
-                        item.pop(NTIID, None)
-                        item.pop(INTERNAL_NTIID, None)
+                        [item.pop(x, None) for x in (OID, NTIID, INTERNAL_NTIID)]
+
                 if IUserCreatedAsset.providedBy(concrete):
                     # Update our ntiid so video refs line up correctly.
                     new_ntiid = self.hash_ntiid(asset.ntiid, salt)
-                    ext_obj[NTIID] = ext_obj['ntiid'] = new_ntiid
+                    ext_obj[NTIID] = ext_obj[INTERNAL_NTIID] = new_ntiid
             # If not user created and not a package asset, we always
             # want to pop the ntiid to avoid ntiid collision (except for
             # user created media).
             elif not IContentBackedPresentationAsset.providedBy(concrete):
-                ext_obj.pop(NTIID, None)
-                ext_obj.pop(INTERNAL_NTIID, None)
-
+                [ext_obj.pop(x, None) for x in (NTIID, INTERNAL_NTIID)]
+        # check for user discussions
+        if INTIDiscussionRef.providedBy(asset):
+            if is_valid_ntiid_string(asset.target or ''):
+                target = find_object_with_ntiid(asset.target)
+                if IHeadlinePost.providedBy(target):
+                    target = target.__parent__
+                if      ITopic.providedBy(target) \
+                    and not ICourseDiscussionTopic.providedBy(target):
+                    ext_obj[ID] = ext_obj['target'] = user_topic_dicussion_id(target)
         # check 'children'
         if IItemAssetContainer.providedBy(asset):
             if INTISlideDeck.providedBy(asset):
@@ -154,7 +179,6 @@ class AssetExporterMixin(object):
                                              filer=filer,
                                              backup=backup,
                                              salt=salt)
-
         if not backup:
             # check references to authored evaluations
             if      INTIAssessmentRef.providedBy(asset) \
@@ -174,21 +198,18 @@ class AssetExporterMixin(object):
                 and IUserCreatedAsset.providedBy(concrete):
                 # We need to update our ref targets here
                 ext_obj['target'] = self.hash_ntiid(asset.target, salt)
-
             # don't leak internal OIDs
             for name in (NTIID, INTERNAL_NTIID, INTERNAL_CONTAINER_ID, 'target'):
                 value = ext_obj.get(name)
                 if      value \
                     and is_ntiid_of_types(value, (TYPE_OID, TYPE_UUID)):
                     ext_obj.pop(name, None)
-
         # save asset/concrete resources
         save_resources_to_filer(provided, concrete, filer, ext_obj)
 
 
-@interface.implementer(ICourseSectionExporter)
-class LessonOverviewsExporter(BaseSectionExporter,
-                              AssetExporterMixin):
+@interface.implementer(ILessonOverviewsSectionExporter)
+class LessonOverviewsExporter(BaseSectionExporter, AssetExporterMixin):
 
     def _post_lesson_constraints(self, asset, ext_obj, salt=None):
         ext_constraints = ext_obj.get(PUBLICATION_CONSTRAINTS)
@@ -301,3 +322,32 @@ class UserAssetsExporter(BaseSectionExporter, AssetExporterMixin):
             if sub_instance.Outline is not course.Outline:
                 self._export_assets(sub_instance, filer, seen, backup, salt)
         filer.default_bucket = None # restore
+
+
+@component.adapter(ICourseInstance, ICourseSectionExporterExecutedEvent)
+def _on_course_section_exported_event(context, event):
+    filer = event.filer
+    exporter = event.exporter
+    if filer is None or not ICourseDiscussionsSectionExporter.providedBy(exporter):
+        return
+    catalog = get_library_catalog()
+    course = ICourseInstance(context)
+    entry = ICourseCatalogEntry(course)
+    bucket = path_to_discussions(course)
+    for item in catalog.search_objects(provided=INTIDiscussionRef,
+                                       container_ntiids=entry.ntiid,
+                                       sites=get_component_hierarchy_names()):
+        if not INTIDiscussionRef.providedBy(item):
+            continue
+        if not is_valid_ntiid_string(item.target or ''):
+            continue
+        context = find_object_with_ntiid(item.target)
+        if IHeadlinePost.providedBy(context):
+            context = context.__parent__
+        if      ITopic.providedBy(context) \
+            and not ICourseDiscussionTopic.providedBy(context):
+            ext_obj = export_user_topic_as_discussion(context)
+            source = exporter.dump(ext_obj)
+            name = user_topic_file_name(context)
+            filer.save(name, source, contentType="application/json",
+                       bucket=bucket, overwrite=True)

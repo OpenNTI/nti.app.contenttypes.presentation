@@ -26,6 +26,7 @@ from nti.app.contenttypes.presentation.decorators import VIEW_OVERVIEW_SUMMARY
 from nti.app.contenttypes.presentation.decorators import is_legacy_uas
 from nti.app.contenttypes.presentation.decorators import get_omit_published
 from nti.app.contenttypes.presentation.decorators import can_view_publishable
+
 from nti.app.contenttypes.presentation.decorators import _AbstractMoveLinkDecorator
 
 from nti.app.products.courseware.decorators import BaseRecursiveAuditLogLinkDecorator
@@ -85,7 +86,7 @@ class _CourseOutlineSharedDecorator(AbstractAuthenticatedRequestAwareDecorator):
     def _acl_decoration(self):
         return getattr(self.request, 'acl_decoration', True)
 
-    def _predicate(self, context, result):
+    def _predicate(self, context, unused_result):
         return self._acl_decoration \
            and has_permission(ACT_CONTENT_EDIT, context, self.request)
 
@@ -122,7 +123,7 @@ class _CourseOutlineEditLinkDecorator(AbstractAuthenticatedRequestAwareDecorator
     def _acl_decoration(self):
         return getattr(self.request, 'acl_decoration', True)
 
-    def _predicate(self, context, result):
+    def _predicate(self, context, unused_result):
         return self._acl_decoration \
            and self._is_authenticated \
            and has_permission(ACT_CONTENT_EDIT, context, self.request)
@@ -145,7 +146,7 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
     def _acl_decoration(self):
         return getattr(self.request, 'acl_decoration', True)
 
-    def _predicate(self, context, result):
+    def _predicate(self, unused_context, unused_result):
         return self._acl_decoration
 
     def _legacy_decorate_external(self, context, result):
@@ -186,7 +187,7 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
 @interface.implementer(IExternalMappingDecorator)
 class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
-    def _predicate(self, context, result):
+    def _predicate(self, unused_context, unused_result):
         return is_legacy_uas(self.request, LEGACY_UAS_20)
 
     def _overview_decorate_external(self, context, result):

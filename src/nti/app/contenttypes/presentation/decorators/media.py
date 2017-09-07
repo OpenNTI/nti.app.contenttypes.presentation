@@ -64,12 +64,12 @@ class _MediaLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
             link.__parent__ = context
             _links.append(link)
         # Disable DELETE (and test) for now - JZ 8.2017
-#         if IUserCreatedAsset.providedBy(context):
-#             link = Link(context, rel='delete', method='DELETE')
-#             interface.alsoProvides(link, ILocation)
-#             link.__name__ = ''
-#             link.__parent__ = context
-#             _links.append(link)
+        if IUserCreatedAsset.providedBy(context):
+            link = Link(context, rel='delete', method='DELETE')
+            interface.alsoProvides(link, ILocation)
+            link.__name__ = ''
+            link.__parent__ = context
+            # _links.append(link)
 
 
 @component.adapter(INTITranscript)
