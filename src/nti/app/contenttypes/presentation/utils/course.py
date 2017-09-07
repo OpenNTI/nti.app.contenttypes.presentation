@@ -9,6 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from ordered_set import OrderedSet
+
 from zope import component
 
 from zope.component.hooks import getSite
@@ -17,12 +19,17 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contentlibrary.interfaces import IContentPackage
 
+from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
+
+from nti.contenttypes.courses.discussions.utils import get_topic_key
+
 from nti.contenttypes.courses.interfaces import NTIID_ENTRY_TYPE
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
 
+from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import get_courses_for_packages
 
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
@@ -160,3 +167,19 @@ def remove_package_assets_from_course_container(package_ntiid, course):
     for doc_id in removed_doc_ids or ():
         catalog.remove_containers(doc_id, (entry.ntiid,))
     return len(removed_doc_ids)
+
+
+def course_discussions(course, by_topic_key=True):
+    result = {}
+    courses = OrderedSet((course, get_parent_course(course)))
+    courses.discard(None)
+    for course in courses:
+        discussions = ICourseDiscussions(course)
+        for discussion in discussions.values():
+            if by_topic_key:
+                key = get_topic_key(discussion)
+            else:
+                key = discussion.id
+            if key not in result:
+                result[key] = discussion
+    return result
