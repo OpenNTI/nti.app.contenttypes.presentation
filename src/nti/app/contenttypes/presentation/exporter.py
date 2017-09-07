@@ -16,6 +16,8 @@ from zope import component
 
 from nti.app.contenttypes.presentation.interfaces import ILessonOverviewsSectionExporter
 
+from nti.app.contenttypes.presentation.utils.course import course_discussions
+
 from nti.app.products.courseware.utils.exporter import save_resources_to_filer
 
 from nti.assessment.interfaces import IQEvaluation
@@ -84,6 +86,8 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.site.site import get_component_hierarchy_names
 
+from nti.traversal.traversal import find_interface
+
 ID = StandardExternalFields.ID
 OID = StandardExternalFields.OID
 ITEMS = StandardExternalFields.ITEMS
@@ -151,9 +155,16 @@ class AssetExporterMixin(object):
                 target = find_object_with_ntiid(asset.target)
                 if IHeadlinePost.providedBy(target):
                     target = target.__parent__
-                if      ITopic.providedBy(target) \
-                    and not ICourseDiscussionTopic.providedBy(target):
-                    ext_obj[ID] = ext_obj['target'] = user_topic_dicussion_id(target)
+                if ITopic.providedBy(target):
+                    name = target.__name__ # by definition
+                    course = find_interface(asset, ICourseInstance, strict=False)
+                    discussions = course_discussions(course)
+                    discussion = discussions.get(name)
+                    if discussion is not None:
+                        discussion_id = discussion.id
+                    else:
+                        discussion_id = user_topic_dicussion_id(target)
+                    ext_obj[ID] = ext_obj['target'] = discussion_id
         # check 'children'
         if IItemAssetContainer.providedBy(asset):
             if INTISlideDeck.providedBy(asset):
