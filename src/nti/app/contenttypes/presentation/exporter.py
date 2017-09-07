@@ -324,12 +324,7 @@ class UserAssetsExporter(BaseSectionExporter, AssetExporterMixin):
         filer.default_bucket = None # restore
 
 
-@component.adapter(ICourseInstance, ICourseSectionExporterExecutedEvent)
-def _on_course_section_exported_event(context, event):
-    filer = event.filer
-    exporter = event.exporter
-    if filer is None or not ICourseDiscussionsSectionExporter.providedBy(exporter):
-        return
+def export_user_course_discussions(context, exporter, filer):
     catalog = get_library_catalog()
     course = ICourseInstance(context)
     entry = ICourseCatalogEntry(course)
@@ -351,3 +346,11 @@ def _on_course_section_exported_event(context, event):
             name = user_topic_file_name(context)
             filer.save(name, source, contentType="application/json",
                        bucket=bucket, overwrite=True)
+
+
+@component.adapter(ICourseInstance, ICourseSectionExporterExecutedEvent)
+def _on_course_section_exported_event(context, event):
+    filer = event.filer
+    exporter = event.exporter
+    if ICourseDiscussionsSectionExporter.providedBy(exporter) and filer is not None:
+        export_user_course_discussions(context, exporter, filer)
