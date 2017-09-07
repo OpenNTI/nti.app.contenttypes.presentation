@@ -11,6 +11,9 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope import interface
 
+from nti.contenttypes.courses.interfaces import ICourseSectionExporter
+from nti.contenttypes.courses.interfaces import ICourseSectionImporter
+
 
 class IPresentationAssetProcessor(interface.Interface):
     """
@@ -42,3 +45,11 @@ class ILessonPublicationConstraintValidator(interface.Interface):
         """
         Raise an exception if the contraint is not valid
         """
+
+
+class ILessonOverviewsSectionExporter(ICourseSectionExporter):
+    pass
+
+
+class ILessonOverviewsSectionImporter(ICourseSectionImporter):
+    pass
