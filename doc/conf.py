@@ -155,7 +155,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'ntiappcontenttypespresentation', u'nti.app.contenttypes.presentation Documentation',
-     author, 'ntiapp.contenttypespresentation', 'One line description of project.',
+     author, 'ntiappcontenttypespresentation', 'One line description of project.',
      'Miscellaneous'),
 ]
 
