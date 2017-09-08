@@ -105,8 +105,8 @@ html_static_path = ['_static']
 
 # -- Options for HTMLHelp output ------------------------------------------
 
-# Output file app.contenttypes.presentation name for HTML help builder.
-htmlhelp_appcontenttypespresentationname = 'ntiappcontenttypespresentationdoc'
+# Output file base name for HTML help builder.
+htmlhelp_basename = 'ntiappcontenttypespresentationdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
