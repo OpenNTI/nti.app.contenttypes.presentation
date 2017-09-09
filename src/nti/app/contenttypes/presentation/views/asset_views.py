@@ -34,6 +34,10 @@ from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.contentfile import validate_sources
 
+from nti.app.contentfolder.resources import is_internal_file_link
+from nti.app.contentfolder.resources import to_external_file_link
+from nti.app.contentfolder.resources import get_file_from_external_link
+
 from nti.app.contenttypes.presentation import MessageFactory as _
 
 from nti.app.contenttypes.presentation.utils.asset import intid_register
@@ -62,9 +66,6 @@ from nti.app.externalization.error import raise_json_error
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
 from nti.app.products.courseware.resources.utils import get_course_filer
-from nti.app.products.courseware.resources.utils import is_internal_file_link
-from nti.app.products.courseware.resources.utils import to_external_file_link
-from nti.app.products.courseware.resources.utils import get_file_from_external_link
 
 from nti.app.products.courseware.views.view_mixins import IndexedRequestMixin
 
