@@ -88,9 +88,9 @@ class RebuildPresentationAssetCatalogView(AbstractAuthenticatedView):
         for index in catalog.values():
             index.clear()
         metadata = get_metadata_catalog()
-        items = []
         # reindex
         seen = set()
+        items = dict()
         for host_site in get_all_host_sites():  # check all sites
             with current_site(host_site):
                 count = 0
