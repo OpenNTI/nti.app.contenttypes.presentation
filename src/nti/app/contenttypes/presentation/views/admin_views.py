@@ -13,6 +13,8 @@ from requests.structures import CaseInsensitiveDict
 
 from zope import component
 
+from zope.cachedescriptors.property import Lazy
+
 from zope.component.hooks import site as current_site
 
 from zope.intid.interfaces import IIntIds
@@ -52,7 +54,9 @@ from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.presentation.index import get_assets_catalog
 
+from nti.contenttypes.presentation.interfaces import INTISlide
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
+from nti.contenttypes.presentation.interfaces import INTISlideVideo
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 
 from nti.dataserver import authorization as nauth
@@ -81,27 +85,42 @@ ITEM_COUNT = StandardExternalFields.ITEM_COUNT
              name='RebuildPresentationAssetCatalog')
 class RebuildPresentationAssetCatalogView(AbstractAuthenticatedView):
 
+    @Lazy
+    def assets(self):
+        return get_assets_catalog()
+    
+    @Lazy
+    def metadata(self):
+        return get_metadata_catalog()
+    
+    def index_doc(self, doc_id, asset):
+        self.assets.index_doc(doc_id, asset)
+        self.metadata.index_doc(doc_id, asset)
+                    
     def __call__(self):
         intids = component.getUtility(IIntIds)
         # clear indexes
-        catalog = get_assets_catalog()
-        for index in catalog.values():
+        for index in self.assets.values():
             index.clear()
-        metadata = get_metadata_catalog()
         # reindex
         seen = set()
         items = dict()
         for host_site in get_all_host_sites():  # check all sites
             with current_site(host_site):
                 count = 0
-                for unused, asset in component.getUtilitiesFor(IPresentationAsset):
+                expensive = {}
+                for unused, asset in list(component.getUtilitiesFor(IPresentationAsset)):
                     doc_id = intids.queryId(asset)
                     if doc_id is None or doc_id in seen:
                         continue
                     count += 1
                     seen.add(doc_id)
-                    catalog.index_doc(doc_id, asset)
-                    metadata.index_doc(doc_id, asset)
+                    if INTISlide.providedBy(asset) or INTISlideVideo.providedBy(asset):
+                        expensive[doc_id] = asset
+                    else:
+                        self.index_doc(doc_id, asset)
+                for doc_id, asset in expensive.items():
+                    self.index_doc(doc_id, asset)
                 items[host_site.__name__] = count
                 logger.info("%s asset(s) indexed in site %s",
                             count, host_site.__name__)
