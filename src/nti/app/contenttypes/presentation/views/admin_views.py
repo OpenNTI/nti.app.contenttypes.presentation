@@ -88,18 +88,25 @@ class RebuildPresentationAssetCatalogView(AbstractAuthenticatedView):
         for index in catalog.values():
             index.clear()
         metadata = get_metadata_catalog()
+        items = []
         # reindex
         seen = set()
         for host_site in get_all_host_sites():  # check all sites
             with current_site(host_site):
+                count = 0
                 for unused, asset in component.getUtilitiesFor(IPresentationAsset):
                     doc_id = intids.queryId(asset)
                     if doc_id is None or doc_id in seen:
                         continue
+                    count += 1
                     seen.add(doc_id)
                     catalog.index_doc(doc_id, asset)
                     metadata.index_doc(doc_id, asset)
+                items[host_site.__name__] = count
+                logger.info("%s asset(s) indexed in site %s",
+                            count, host_site.__name__)
         result = LocatedExternalDict()
+        result[ITEMS] = items
         result[ITEM_COUNT] = result[TOTAL] = len(seen)
         return result
 
@@ -216,7 +223,8 @@ class FixCourseAssetContainersView(AbstractAuthenticatedView,
         result = LocatedExternalDict()
         course = ICourseInstance(self.context)
         package_ntiid = self._get_package_ntiid(course)
-        count = remove_package_assets_from_course_container(package_ntiid, course)
+        count = remove_package_assets_from_course_container(package_ntiid, 
+                                                            course)
         entry_ntiid = ICourseCatalogEntry(course).ntiid
         logger.info('Removed %s package assets from course containers (%s) (%s)',
                     count, package_ntiid, entry_ntiid)
