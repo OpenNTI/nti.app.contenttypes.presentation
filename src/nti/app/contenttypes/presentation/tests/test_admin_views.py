@@ -32,5 +32,5 @@ class TestAdminViews(ApplicationLayerTest):
         res = self.testapp.post('/dataserver2/@@RebuildPresentationAssetCatalog',
                                 status=200)
         assert_that(res.json_body,
-                    has_entries('Total', is_(greater_than(0)),
-                                'ItemCount', is_(greater_than(0))))
+                    has_entries('Total', is_(greater_than(1000)),
+                                'ItemCount', is_(greater_than(1000))))
