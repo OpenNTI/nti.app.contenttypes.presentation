@@ -29,6 +29,10 @@ from zope.security.management import queryInteraction
 from zc.intid.interfaces import IAfterIdAddedEvent
 from zc.intid.interfaces import IBeforeIdRemovedEvent
 
+from nti.app.contentfolder.resources import is_internal_file_link
+from nti.app.contentfolder.resources import to_external_file_link
+from nti.app.contentfolder.resources import get_file_from_external_link
+
 from nti.app.contenttypes.presentation.synchronizer import clear_course_assets
 from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
 from nti.app.contenttypes.presentation.synchronizer import remove_and_unindex_course_assets
@@ -38,10 +42,6 @@ from nti.app.contenttypes.presentation.utils.asset import remove_presentation_as
 
 from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_containers
 from nti.app.contenttypes.presentation.utils.course import remove_package_assets_from_course_container
-
-from nti.app.products.courseware.resources.utils import is_internal_file_link
-from nti.app.products.courseware.resources.utils import to_external_file_link
-from nti.app.products.courseware.resources.utils import get_file_from_external_link
 
 from nti.app.products.courseware.utils import get_content_related_work_refs
 

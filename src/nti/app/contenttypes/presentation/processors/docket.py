@@ -17,6 +17,9 @@ from zope import lifecycleevent
 
 from pyramid.threadlocal import get_current_request
 
+from nti.app.contentfolder.resources import is_internal_file_link
+from nti.app.contentfolder.resources import to_external_file_link
+
 from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProcessor
 
 from nti.app.contenttypes.presentation.processors.mixins import BaseAssetProcessor
@@ -27,8 +30,6 @@ from nti.app.contenttypes.presentation.processors.mixins import get_content_file
 from nti.app.contenttypes.presentation.processors.asset import handle_asset
 
 from nti.app.products.courseware.resources.utils import get_course_filer
-from nti.app.products.courseware.resources.utils import is_internal_file_link
-from nti.app.products.courseware.resources.utils import to_external_file_link
 
 from nti.base._compat import text_
 

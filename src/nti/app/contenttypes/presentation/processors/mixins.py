@@ -23,6 +23,9 @@ from pyramid.threadlocal import get_current_request
 
 from nti.app.base.abstract_views import get_safe_source_filename
 
+from nti.app.contentfolder.resources import is_internal_file_link
+from nti.app.contentfolder.resources import get_file_from_external_link
+
 from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProcessor
 
 from nti.app.contenttypes.presentation.utils.asset import make_asset_ntiid
@@ -30,8 +33,6 @@ from nti.app.contenttypes.presentation.utils.asset import make_asset_ntiid
 from nti.app.externalization.error import raise_json_error
 
 from nti.app.products.courseware.resources.utils import get_course_filer
-from nti.app.products.courseware.resources.utils import is_internal_file_link
-from nti.app.products.courseware.resources.utils import get_file_from_external_link
 
 from nti.contentfile.interfaces import IContentBaseFile
 

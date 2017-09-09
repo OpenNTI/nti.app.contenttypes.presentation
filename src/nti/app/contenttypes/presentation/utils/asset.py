@@ -30,8 +30,8 @@ from zope.location.location import locate
 
 from ZODB.interfaces import IConnection
 
-from nti.app.products.courseware.resources.utils import is_internal_file_link
-from nti.app.products.courseware.resources.utils import get_file_from_external_link
+from nti.app.contentfolder.resources import is_internal_file_link
+from nti.app.contentfolder.resources import get_file_from_external_link
 
 from nti.appserver.policies.interfaces import ISitePolicyUserEventListener
 

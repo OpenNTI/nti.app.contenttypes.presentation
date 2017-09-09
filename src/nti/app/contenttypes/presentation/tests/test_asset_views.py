@@ -39,7 +39,7 @@ from nti.app.contenttypes.presentation import VIEW_NODE_MOVE
 from nti.app.contenttypes.presentation import VIEW_ORDERED_CONTENTS
 from nti.app.contenttypes.presentation import VIEW_LESSON_REMOVE_REFS
 
-from nti.app.products.courseware.resources.utils import is_internal_file_link
+from nti.app.contentfolder.resources import is_internal_file_link
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 

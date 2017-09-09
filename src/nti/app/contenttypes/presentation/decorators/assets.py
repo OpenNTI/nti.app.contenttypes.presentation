@@ -24,6 +24,10 @@ from pyramid.interfaces import IRequest
 
 from nti.app.assessment.decorators.assignment import AssessmentPolicyEditLinkDecorator
 
+from nti.app.contentfolder.resources import is_internal_file_link
+from nti.app.contentfolder.resources import to_external_file_link
+from nti.app.contentfolder.resources import get_file_from_external_link
+
 from nti.app.contenttypes.presentation.decorators import LEGACY_UAS_40
 from nti.app.contenttypes.presentation.decorators import VIEW_ORDERED_CONTENTS
 
@@ -37,10 +41,6 @@ from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_TOPIC
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_SECTION_TOPIC
 
 from nti.app.products.courseware.decorators import BaseRecursiveAuditLogLinkDecorator
-
-from nti.app.products.courseware.resources.utils import is_internal_file_link
-from nti.app.products.courseware.resources.utils import to_external_file_link
-from nti.app.products.courseware.resources.utils import get_file_from_external_link
 
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
