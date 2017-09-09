@@ -47,6 +47,11 @@ Predicates
 
 .. automodule:: nti.app.contenttypes.presentation.predicates
 
+Search
+======
+
+.. automodule:: nti.app.contenttypes.presentation.search
+
 Subscribers
 ===========
 

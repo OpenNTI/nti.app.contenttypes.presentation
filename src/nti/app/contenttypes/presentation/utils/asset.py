@@ -282,9 +282,9 @@ def make_asset_ntiid(nttype, base=None, extra=None, now=None):
 
     provider = get_provider(base) if base else get_site_provider()
     current_time = time_to_64bit_int(time.time() if now is None else now)
-    specific_base = '%s.%s' % (SYSTEM_USER_NAME, current_time)
+    specific_base = u'%s.%s' % (SYSTEM_USER_NAME, current_time)
     if extra:
-        specific_base = specific_base + ".%s" % extra
+        specific_base = specific_base + u".%s" % extra
     specific = make_specific_safe(specific_base)
 
     ntiid = make_ntiid(nttype=nttype,

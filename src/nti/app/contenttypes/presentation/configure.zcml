@@ -92,7 +92,13 @@
 				provides="nti.publishing.interfaces.ICalendarPublishablePredicate" />
 
 	<!-- Search filters -->
-	<include package=".search" />
+	<subscriber factory=".search._LessonsSearchHitPredicate"
+				provides="nti.contentsearch.interfaces.ISearchHitPredicate"
+				for="nti.contenttypes.presentation.interfaces.IPresentationAsset" />
+
+	<subscriber factory=".search._AssetVisibleSearchPredicate"
+                provides="nti.contentsearch.interfaces.ISearchHitPredicate"
+                for="nti.contenttypes.presentation.interfaces.IPresentationAsset" />
 
 	<!-- ACLs -->
 	<adapter factory=".acl.NTIAudioACLProvider" />
