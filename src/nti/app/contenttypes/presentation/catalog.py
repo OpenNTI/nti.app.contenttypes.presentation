@@ -226,14 +226,8 @@ def slide_video_course_references(context):
             continue
         # query all video and video refs in the course
         site = IHostPolicyFolder(course)
-        refcs = catalog.get_references(provided=INTIVideoRef,
+        refcs = catalog.get_references(provided=(INTIVideo, INTIVideoRef),
                                        target=context.video_ntiid,
-                                       container_ntiids=entry.ntiid,
-                                       container_all_of=False,
-                                       sites=site.__name__) \
-            or \
-                catalog.get_references(provided=INTIVideo,
-                                       ntiid=context.video_ntiid,
                                        container_ntiids=entry.ntiid,
                                        container_all_of=False,
                                        sites=site.__name__)
