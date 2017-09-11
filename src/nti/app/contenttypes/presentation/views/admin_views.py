@@ -5,7 +5,6 @@
 """
 
 from __future__ import print_function, absolute_import, division
-from ZODB.POSException import POSError
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -19,6 +18,8 @@ from zope.cachedescriptors.property import Lazy
 from zope.component.hooks import site as current_site
 
 from zope.intid.interfaces import IIntIds
+
+from ZODB.POSException import POSError
 
 from pyramid import httpexceptions as hexc
 
