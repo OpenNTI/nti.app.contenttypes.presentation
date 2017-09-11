@@ -5,6 +5,7 @@
 """
 
 from __future__ import print_function, absolute_import, division
+from ZODB.POSException import POSError
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -94,8 +95,14 @@ class RebuildPresentationAssetCatalogView(AbstractAuthenticatedView):
         return get_metadata_catalog()
     
     def index_doc(self, doc_id, asset):
-        self.assets.index_doc(doc_id, asset)
-        self.metadata.force_index_doc(doc_id, asset)
+        try:
+            self.assets.index_doc(doc_id, asset)
+            self.metadata.force_index_doc(doc_id, asset)
+        except POSError:
+            logger.error("Error while indexing asset %s/%s", 
+                         doc_id, type(asset))
+            return False
+        return True
                     
     def __call__(self):
         intids = component.getUtility(IIntIds)
@@ -113,14 +120,14 @@ class RebuildPresentationAssetCatalogView(AbstractAuthenticatedView):
                     doc_id = intids.queryId(asset)
                     if doc_id is None or doc_id in seen:
                         continue
-                    count += 1
                     seen.add(doc_id)
                     if INTISlide.providedBy(asset) or INTISlideVideo.providedBy(asset):
                         expensive[doc_id] = asset
-                    else:
-                        self.index_doc(doc_id, asset)
+                    elif self.index_doc(doc_id, asset):
+                        count += 1
                 for doc_id, asset in expensive.items():
-                    self.index_doc(doc_id, asset)
+                    if self.index_doc(doc_id, asset):
+                        count += 1
                 items[host_site.__name__] = count
                 logger.info("%s asset(s) indexed in site %s",
                             count, host_site.__name__)
