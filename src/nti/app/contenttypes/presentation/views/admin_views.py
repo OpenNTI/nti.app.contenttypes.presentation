@@ -95,7 +95,7 @@ class RebuildPresentationAssetCatalogView(AbstractAuthenticatedView):
     
     def index_doc(self, doc_id, asset):
         self.assets.index_doc(doc_id, asset)
-        self.metadata.index_doc(doc_id, asset)
+        self.metadata.force_index_doc(doc_id, asset)
                     
     def __call__(self):
         intids = component.getUtility(IIntIds)
