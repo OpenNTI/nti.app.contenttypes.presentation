@@ -38,6 +38,7 @@ from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_
 from nti.app.contenttypes.presentation.synchronizer import remove_and_unindex_course_assets
 from nti.app.contenttypes.presentation.synchronizer import synchronize_course_lesson_overview
 
+from nti.app.contenttypes.presentation.utils.asset import remove_mediaroll
 from nti.app.contenttypes.presentation.utils.asset import remove_presentation_asset
 
 from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_containers
@@ -71,6 +72,8 @@ from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.courses.common import get_course_packages
 
+from nti.contenttypes.presentation.group import DuplicateReference
+
 from nti.contenttypes.presentation.interfaces import TRX_ASSET_MOVE_TYPE
 from nti.contenttypes.presentation.interfaces import TRX_OVERVIEW_GROUP_MOVE_TYPE
 from nti.contenttypes.presentation.interfaces import TRX_ASSET_REMOVED_FROM_ITEM_ASSET_CONTAINER
@@ -80,6 +83,7 @@ from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTIPollRef
 from nti.contenttypes.presentation.interfaces import INTIAudioRef
 from nti.contenttypes.presentation.interfaces import INTIVideoRef
+from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import INTIDocketAsset
@@ -445,15 +449,45 @@ def _on_topic_removed(topic, _):
         remove_presentation_asset(pointer)
 
 
+def _remove_media_pointers(media, iface):
+    """
+    Remove lesson pointers (iface) pointing to a given media type.
+    """
+    pointers = _get_target_refs(media.ntiid, iface)
+    media_rolls = set()
+    for pointer in pointers:
+        if INTIMediaRoll.providedBy(pointer.__parent__):
+            media_rolls.add(pointer.__parent__)
+        remove_presentation_asset(pointer)
+    for media_roll in media_rolls:
+        # Remove containing video roll if necessary; mimics what the client does
+        if len(media_roll) == 0:
+            remove_mediaroll(media_roll)
+        elif len(media_roll) == 1:
+            group = find_interface(media_roll,
+                                   INTICourseOverviewGroup,
+                                   strict=False)
+            if group is not None:
+                insert_index = None
+                for idx, item in enumerate(group):
+                    if item == media_roll:
+                        insert_index = idx
+                        break
+                if insert_index is not None:
+                    try:
+                        group.insert(insert_index, media_roll[0])
+                    except DuplicateReference:
+                        pass
+                    remove_mediaroll(media_roll, remove_video_refs=False)
+
+
 @component.adapter(INTIVideo, IBeforeIdRemovedEvent)
 def _on_video_removed(video, _):
     """
      When an :class:`INTIVideo` is deleted, clean up any refs pointing to it.
     """
     if IUserCreatedAsset.providedBy(video):
-        pointers = _get_target_refs(video.ntiid, INTIVideoRef)
-        for pointer in pointers:
-            remove_presentation_asset(pointer)
+        _remove_media_pointers(video, INTIVideoRef)
 
 
 @component.adapter(INTIAudio, IBeforeIdRemovedEvent)
@@ -462,9 +496,7 @@ def _on_audio_removed(audio, _):
      When an :class:`INTIAudio` is deleted, clean up any refs pointing to it.
     """
     if IUserCreatedAsset.providedBy(audio):
-        pointers = _get_target_refs(audio.ntiid, INTIAudioRef)
-        for pointer in pointers:
-            remove_presentation_asset(pointer)
+        _remove_media_pointers(audio, INTIAudioRef)
 
 
 @component.adapter(IContentUnit, IContentUnitRemovedEvent)

@@ -256,6 +256,7 @@ class TestAssetViews(ApplicationLayerTest):
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_video_roll(self):
+        content_video_ntiid = 'tag:nextthought.com,2011-10:OU-NTIVideo-CS1323_F_2015_Intro_to_Computer_Programming.ntivideo.video_01.01.01_Obama'
         # Use existing overview group to check containers.
         group_ntiid = 'tag:nextthought.com,2011-10:OU-NTICourseOverviewGroup-CS1323_F_2015_Intro_to_Computer_Programming.lec:01.01_LESSON.0'
         res = self.testapp.get('/dataserver2/Objects/%s' % group_ntiid)
@@ -263,6 +264,7 @@ class TestAssetViews(ApplicationLayerTest):
         group_ntiid = res.get('ntiid')
         group_href = res.get('href')
         assert_that(res.get('Items'), has_length(1))
+        original_group_item_ntiid = res['Items'][0]['ntiid']
         contents_link = self.require_link_href_with_rel(res,
                                                         VIEW_ORDERED_CONTENTS)
 
@@ -287,6 +289,7 @@ class TestAssetViews(ApplicationLayerTest):
         video_source.pop('NTIID', None)
         res = self.testapp.post_json(self.assets_url, video_source, status=201)
         res = res.json_body
+        video_href = res.get('href')
         video_ntiid = res.get('ntiid')
 
         # Video does not exist in MediaByOutlineNode
@@ -464,6 +467,7 @@ class TestAssetViews(ApplicationLayerTest):
         res = self.testapp.post_json(self.assets_url, video_source, status=201)
         res = res.json_body
         new_video_ntiid = res.get('ntiid')
+        new_video_href = res.get('href')
         res = self.testapp.post_json(contents_link,
                                      {'ntiid': new_video_ntiid}, status=201)
         res = res.json_body
@@ -495,8 +499,37 @@ class TestAssetViews(ApplicationLayerTest):
         items.append(video_ntiid + 'xxx')
         self.testapp.put_json(roll_href, source, status=422)
 
+        # Delete underlying video
+        # Empty video roll is removed
+        self.testapp.delete(video_href)
+        group_res = self.testapp.get(group_href).json_body
+        assert_that(group_res.get('Items'), has_length(2))
+        first_item_ntiid = group_res.get('Items')[0]['ntiid']
+        last_item_ntiid = group_res.get('Items')[1]['ntiid']
+        assert_that(first_item_ntiid, is_(original_group_item_ntiid))
+        assert_that(last_item_ntiid, is_(new_video_ntiid))
+
+        # Now add a roll with new_video_ntiid
+        # On new_video_ntiid deletion, video roll disappears
+        roll_source = {"MimeType": NTIVideoRoll.mime_type,
+                       "Items": [new_video_ntiid, content_video_ntiid]}
+        self.testapp.post_json(contents_link, roll_source, status=201)
+        self.testapp.delete(new_video_href)
+        group_res = self.testapp.get(group_href).json_body
+        assert_that(group_res.get('Items'), has_length(2))
+        first_item_ntiid = group_res.get('Items')[0]['ntiid']
+        last_item_ntiid = group_res.get('Items')[1]['ntiid']
+        assert_that(first_item_ntiid, is_(original_group_item_ntiid))
+        assert_that(last_item_ntiid, is_(content_video_ntiid))
+
         # Delete roll
-        res = self.testapp.delete(roll_href, status=204)
+        roll_source = {"MimeType": NTIVideoRoll.mime_type,
+                       "Items": [content_video_ntiid]}
+        res = self.testapp.post_json(contents_link, roll_source, status=201)
+        res = res.json_body
+        video_roll_href = res['href']
+        video_roll_ntiid = res['ntiid']
+        res = self.testapp.delete(video_roll_href, status=204)
         with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
             obj = find_object_with_ntiid(video_roll_ntiid)
             assert_that(obj, is_(none()))

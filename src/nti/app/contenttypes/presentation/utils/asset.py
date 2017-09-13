@@ -191,7 +191,7 @@ def remove_asset(item, registry=None, catalog=None, name=None, event=True):
     return item
 
 
-def remove_mediaroll(item, registry=None, catalog=None, name=None, event=True):
+def remove_mediaroll(item, registry=None, catalog=None, name=None, event=True, remove_video_refs=True):
     removed = set()
     if isinstance(item, six.string_types):
         item = component.queryUtility(INTIMediaRoll, name=item)
@@ -200,9 +200,10 @@ def remove_mediaroll(item, registry=None, catalog=None, name=None, event=True):
     name = item.ntiid or name
     registry = get_asset_registry(item, INTIMediaRoll, name, registry)
     catalog = get_library_catalog() if catalog is None else catalog
-    # remove mediarefs first
-    for media in tuple(item):  # mutating
-        removed.add(remove_asset(media, registry, catalog, event=event))
+    if remove_video_refs:
+        # remove mediarefs first
+        for media in tuple(item):  # mutating
+            removed.add(remove_asset(media, registry, catalog, event=event))
     # remove roll
     removed.add(remove_asset(item, registry, catalog, name=name, event=event))
     removed.discard(None)
