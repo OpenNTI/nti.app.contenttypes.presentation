@@ -167,13 +167,13 @@ from nti.externalization.externalization import StandardExternalFields
 
 from nti.externalization.internalization import notify_modified
 
-from nti.externalization.oids import to_external_ntiid_oid
-
 from nti.ntiids.ntiids import TYPE_UUID
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
+
+from nti.ntiids.oids import to_external_ntiid_oid
 
 from nti.publishing.interfaces import IPublishable
 

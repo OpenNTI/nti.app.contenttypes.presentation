@@ -42,12 +42,12 @@ from nti.contenttypes.presentation import NTI
 from nti.contenttypes.presentation.interfaces import INTIDocketAsset
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 
-from nti.externalization.oids import to_external_ntiid_oid
-
 from nti.ntiids.ntiids import TYPE_UUID
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
+
+from nti.ntiids.oids import to_external_ntiid_oid
 
 
 def handle_docket_asset(item, *unused_args, **unused_kwargs):

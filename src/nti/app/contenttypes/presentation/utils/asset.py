@@ -62,8 +62,6 @@ from nti.contenttypes.presentation.interfaces import WillRemovePresentationAsset
 
 from nti.contenttypes.presentation.lesson import NTILessonOverView
 
-from nti.externalization.oids import to_external_ntiid_oid
-
 from nti.intid.common import addIntId
 
 from nti.namedfile.file import safe_filename
@@ -73,6 +71,8 @@ from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import make_specific_safe
 
 from nti.ntiids.ntiids import is_valid_ntiid_string
+
+from nti.ntiids.oids import to_external_ntiid_oid
 
 from nti.site.hostpolicy import get_host_site
 

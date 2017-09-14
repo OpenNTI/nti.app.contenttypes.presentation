@@ -130,10 +130,10 @@ from nti.dataserver import authorization as nauth
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
-from nti.externalization.oids import to_external_ntiid_oid
+from nti.externalization.externalization import to_external_object
+
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
-from nti.externalization.externalization import to_external_object
 
 from nti.mimetype.mimetype import MIME_BASE
 
@@ -142,6 +142,8 @@ from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
 from nti.ntiids.ntiids import find_object_with_ntiid
+
+from nti.ntiids.oids import to_external_ntiid_oid
 
 from nti.publishing.interfaces import IPublishable
 
