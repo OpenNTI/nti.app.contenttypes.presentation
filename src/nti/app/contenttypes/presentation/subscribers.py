@@ -15,6 +15,8 @@ from zope import component
 from zope import interface
 from zope import lifecycleevent
 
+from zope.component.hooks import getSite
+
 from zope.interface.interfaces import IUnregistered
 
 from zope.intid.interfaces import IIntIdAddedEvent
@@ -66,6 +68,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseBundleUpdatedEvent
+from nti.contenttypes.courses.interfaces import ICourseInstanceRemovedEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
@@ -73,6 +76,10 @@ from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 from nti.contenttypes.courses.common import get_course_packages
 
 from nti.contenttypes.presentation.group import DuplicateReference
+
+from nti.contenttypes.presentation.index import IX_SITE
+from nti.contenttypes.presentation.index import IX_CONTAINERS
+from nti.contenttypes.presentation.index import get_assets_catalog
 
 from nti.contenttypes.presentation.interfaces import TRX_ASSET_MOVE_TYPE
 from nti.contenttypes.presentation.interfaces import TRX_OVERVIEW_GROUP_MOVE_TYPE
@@ -556,3 +563,21 @@ def update_course_asset_containers(course, event):
     """
     for package_ntiid in event.removed_packages or ():
         remove_package_assets_from_course_container(package_ntiid, course)
+
+
+def unindex_course_assets(course, entry=None, site=None):
+    catalog = get_assets_catalog()
+    site = getSite() if site is None else site
+    entry = ICourseCatalogEntry(course) if entry is None else entry
+    if catalog is not None and site is not None:
+        query = {
+            IX_CONTAINERS: {'any_of': (entry.ntiid,)},
+            IX_SITE: {'any_of': (site.__name__,)},
+        }
+        for uid in catalog.apply(query) or ():
+            catalog.unindex_doc(uid)
+
+
+@component.adapter(ICourseInstance, ICourseInstanceRemovedEvent)
+def _on_course_instance_removed(course, event):
+    unindex_course_assets(course, event.entry, event.site)
