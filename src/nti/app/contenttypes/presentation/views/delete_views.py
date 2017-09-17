@@ -41,6 +41,7 @@ from nti.appserver.ugd_edit_views import UGDDeleteView
 from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.presentation.interfaces import INTIVideo
+from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
@@ -148,22 +149,24 @@ class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
         # We remove the item from our context and clean it
         # up. We want to make sure we clean up the underlying asset.
         # Safe if already gone.
+        if item is None:
+            item = self.context.pop(index)
         if item is not None:
             self.context.remove(item)
             # remove concrete to avoid leaks
             concrete = IConcreteAsset(item, item)
             if      concrete is not item \
-                and not INTIVideo.providedBy(concrete) \
+                and INTIVideo.providedBy(concrete) \
+                and INTITimeline.providedBy(concrete) \
                 and IUserCreatedAsset.providedBy(concrete) \
                 and not IContentBackedPresentationAsset.providedBy(concrete):
                 remove_presentation_asset(concrete, self._registry)
-        else:
-            item = self.context.pop(index)
-        # remove
-        remove_presentation_asset(item, self._registry)
-        # broadcast container removal
-        event = ItemRemovedFromItemAssetContainerEvent(self.context, item)
-        event_notify(event)
+        if item is not None:
+            # remove
+            remove_presentation_asset(item, self._registry)
+            # broadcast container removal
+            event = ItemRemovedFromItemAssetContainerEvent(self.context, item)
+            event_notify(event)
 
 
 @view_config(route_name='objects.generic.traversal',
