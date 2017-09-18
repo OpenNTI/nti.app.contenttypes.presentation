@@ -156,8 +156,8 @@ class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
             # remove concrete to avoid leaks
             concrete = IConcreteAsset(item, item)
             if      concrete is not item \
-                and INTIVideo.providedBy(concrete) \
-                and INTITimeline.providedBy(concrete) \
+                and not INTIVideo.providedBy(concrete) \
+                and not INTITimeline.providedBy(concrete) \
                 and IUserCreatedAsset.providedBy(concrete) \
                 and not IContentBackedPresentationAsset.providedBy(concrete):
                 remove_presentation_asset(concrete, self._registry)
