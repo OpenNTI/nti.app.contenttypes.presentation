@@ -16,7 +16,7 @@ from hamcrest import assert_that
 
 import fudge
 
-from nti.dataserver.users import User
+from nti.dataserver.users.users import User
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 

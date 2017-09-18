@@ -23,7 +23,7 @@ from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
 
-from nti.dataserver.users import User
+from nti.dataserver.users.users import User
 
 from nti.site.hostpolicy import get_all_host_sites
 
