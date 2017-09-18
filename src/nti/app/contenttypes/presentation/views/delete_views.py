@@ -146,14 +146,13 @@ class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
             or ntiid == getattr(obj, 'ntiid', '')
 
     def _remove(self, item, index):
-        # We remove the item from our context and clean it
-        # up. We want to make sure we clean up the underlying asset.
-        # Safe if already gone.
+        # We remove the item from our context and clean it up and also remove
+        # the underlying asset when appropriate (to avoid leaks); safe if
+        # already gone.
         if item is None:
             item = self.context.pop(index)
         if item is not None:
             self.context.remove(item)
-            # remove concrete to avoid leaks
             concrete = IConcreteAsset(item, item)
             if      concrete is not item \
                 and not INTIVideo.providedBy(concrete) \
@@ -161,8 +160,6 @@ class AssetDeleteChildView(AbstractAuthenticatedView, DeleteChildViewMixin):
                 and IUserCreatedAsset.providedBy(concrete) \
                 and not IContentBackedPresentationAsset.providedBy(concrete):
                 remove_presentation_asset(concrete, self._registry)
-        if item is not None:
-            # remove
             remove_presentation_asset(item, self._registry)
             # broadcast container removal
             event = ItemRemovedFromItemAssetContainerEvent(self.context, item)

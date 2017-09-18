@@ -484,8 +484,9 @@ def _remove_media_pointers(media, iface):
                     try:
                         group.insert(insert_index, media_roll[0])
                     except DuplicateReference:
-                        pass
-                    remove_mediaroll(media_roll, remove_video_refs=False)
+                        remove_mediaroll(media_roll)
+                    else:
+                        remove_mediaroll(media_roll, remove_video_refs=False)
 
 
 @component.adapter(INTIVideo, IBeforeIdRemovedEvent)
