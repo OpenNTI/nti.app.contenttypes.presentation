@@ -248,7 +248,8 @@ class LessonOverviewsExporter(BaseSectionExporter, AssetExporterMixin):
         course = ICourseInstance(context)
         nodes = _outline_nodes(course.Outline, seen)
         for node, lesson in nodes:
-            ext_obj = to_external_object(lesson,
+            proxy = self.proxy(lesson, filer, backup, salt)
+            ext_obj = to_external_object(proxy,
                                          name="exporter",
                                          decorate=False,
                                          backup=backup,
@@ -301,7 +302,7 @@ class UserAssetsExporter(BaseSectionExporter, AssetExporterMixin):
             if asset.ntiid in seen:
                 continue
             seen.add(asset.ntiid)
-            ext_obj = to_external_object(asset,
+            ext_obj = to_external_object(self.proxy(asset, filer, backup, salt),
                                          name="exporter",
                                          decorate=False)
             decorateMimeType(asset, ext_obj)
