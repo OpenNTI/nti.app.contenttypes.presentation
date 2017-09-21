@@ -10,6 +10,7 @@ __docformat__ = "restructuredtext en"
 from hamcrest import is_
 from hamcrest import none
 from hamcrest import is_not
+from hamcrest import not_none
 from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
@@ -24,6 +25,8 @@ from nti.contenttypes.presentation.interfaces import IUserCreatedTranscript
 
 from nti.contenttypes.presentation.utils import prepare_json_text
 
+from nti.externalization.interfaces import StandardExternalFields
+
 from nti.externalization.representation import to_json_representation
 
 from nti.ntiids.ntiids import find_object_with_ntiid
@@ -35,6 +38,9 @@ from nti.app.testing.application_webtest import ApplicationLayerTest
 from nti.app.testing.decorators import WithSharedApplicationMockDS
 
 from nti.dataserver.tests import mock_dataserver
+
+CREATED_TIME = StandardExternalFields.CREATED_TIME
+LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 
 
 class TestMediaViews(ApplicationLayerTest):
@@ -91,8 +97,10 @@ class TestMediaViews(ApplicationLayerTest):
         href = '/dataserver2/Objects/%s' % video_ntiid
         video_res = self.testapp.get(href, status=200)
         if check:
-            assert_that(video_res.json_body,
-                        has_entry('transcripts', has_length(1)))
+            transcripts = video_res.json_body['transcripts']
+            assert_that(transcripts, has_length(1))
+            assert_that(transcripts[0], has_entry(LAST_MODIFIED, not_none()))
+            assert_that(transcripts[0], has_entry(CREATED_TIME, not_none()))
 
         href = self.require_link_href_with_rel(video_res.json_body, 'transcript')
         data = {'__json__': to_json_representation(data)}

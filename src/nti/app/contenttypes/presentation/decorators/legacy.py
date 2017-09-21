@@ -30,7 +30,6 @@ from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
-from nti.contenttypes.presentation.interfaces import IUserCreatedTranscript
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.externalization.interfaces import StandardExternalFields
@@ -276,11 +275,6 @@ class _BaseMediaDecorator(object):
         for source in external.get('sources') or ():
             source.pop(CREATED_TIME, None)
             source.pop(LAST_MODIFIED, None)
-
-        for transcript in external.get('transcripts') or ():
-            if not IUserCreatedTranscript.providedBy(transcript):
-                transcript.pop(CREATED_TIME, None)
-                transcript.pop(LAST_MODIFIED, None)
 
 
 @component.adapter(INTIVideo)
