@@ -14,7 +14,7 @@ import six
 import copy
 import time
 import simplejson
-from urlparse import urlparse
+from six.moves import urllib_parse
 
 from zope import component
 from zope import lifecycleevent
@@ -701,7 +701,7 @@ def _set_internal_resource_from_filer(provided, obj, filer):
 			and isinstance(value, six.string_types) \
 			and value.startswith(NTI_COURSE_FILE_SCHEME):
 
-			path = urlparse(value).path
+			path = urllib_parse.urlparse(value).path
 			bucket, name = os.path.split(path)
 			bucket = None if not bucket else bucket
 

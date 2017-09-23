@@ -12,8 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 import six
 import copy
 from itertools import chain
-from urlparse import urlparse
 from collections import Mapping
+from six.moves import urllib_parse
 
 import transaction
 
@@ -395,7 +395,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 				ntiid = item.href
 
 		# parse href
-		parsed = urlparse(href) if href else None
+		parsed = urllib_parse.urlparse(href) if href else None
 		if ntiid is None and parsed is not None and (parsed.scheme or parsed.netloc):  # full url
 			ntiid = make_ntiid(nttype=TYPE_UUID,
 							   provider='NTI',

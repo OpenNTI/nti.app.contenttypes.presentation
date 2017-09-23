@@ -10,8 +10,7 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 import os
-
-from urlparse import urljoin
+from six.moves import urllib_parse
 
 from zope import component
 from zope import interface
@@ -559,9 +558,9 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
                 if package is not None:
                     mapper = IContentUnitHrefMapper(package.key.bucket, None)
                     location = mapper.href if mapper is not None else u''
-                    value = urljoin(location, value)
+                    value = urllib_parse.urljoin(location, value)
                     if self.is_legacy_ipad:  # for legacy ipad
-                        value = urljoin(self.request.host_url, value)
+                        value = urllib_parse.urljoin(self.request.host_url, value)
                     result[name] = value
 
 
@@ -588,7 +587,7 @@ class _NTITranscriptURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
             if IFile.providedBy(value):
                 result[name] = to_external_file_link(value, True)
             elif location and value and not value.startswith('/') and '://' not in value:
-                value = urljoin(location, value)
+                value = urllib_parse.urljoin(location, value)
                 result[name] = value
 
 

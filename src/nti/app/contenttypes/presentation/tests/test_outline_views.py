@@ -29,7 +29,7 @@ from datetime import datetime
 from datetime import timedelta
 from calendar import timegm as _calendar_timegm
 
-from urlparse import urlparse
+from six.moves import urllib_parse
 
 from nti.app.publishing import VIEW_PUBLISH
 from nti.app.publishing import VIEW_UNPUBLISH
@@ -275,7 +275,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 	def _get_outline_url(self, get_unpublished=True):
 		url = self.outline_url
 		if get_unpublished:
-			parsed = urlparse( url )
+			parsed = urllib_parse.urlparse( url )
 			parsed = parsed._replace( query="omit_unpublished=False" )
 			url = parsed.geturl()
 		return url

@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from urlparse import urlparse
+from six.moves import urllib_parse
 
 from zope import component
 from zope import interface
@@ -90,7 +90,7 @@ def handle_related_work(item, context, creator=None, request=None):
         if href_obj is not None and IContentUnit.providedBy(href_obj):
             ntiid = item.href
     # parse href
-    parsed = urlparse(href) if href else None
+    parsed = urllib_parse.urlparse(href) if href else None
     # full url
     if ntiid is None and parsed is not None and (parsed.scheme or parsed.netloc):
         ntiid = make_ntiid(nttype=TYPE_UUID,
