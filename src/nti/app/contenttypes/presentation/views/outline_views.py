@@ -25,6 +25,8 @@ from zope.component.hooks import getSite
 
 from zope.intid.interfaces import IIntIds
 
+from ZODB.interfaces import IBroken
+
 from pyramid import httpexceptions as hexc
 
 from pyramid.view import view_config
@@ -904,6 +906,8 @@ class MediaByOutlineNodeView(AssetByOutlineNodeView):
         result['ContainerOrder'] = [node.ContentNTIID for node in nodes]
 
         def _add_item_to_container(container_ntiid, item):
+            if IBroken.providedBy(item):
+                return
             # We only want to map to our ContentNTIID here, for clients.
             if container_ntiid in lesson_to_content_map:
                 container_ntiid = lesson_to_content_map.get(container_ntiid)
@@ -930,11 +934,9 @@ class MediaByOutlineNodeView(AssetByOutlineNodeView):
             # sync'd objects are indexed with media objects.
             for media_obj in (item, ref_obj):
                 # Check if ref was valid
-                uid = intids.queryId(
-                    media_obj) if media_obj is not None else None
+                uid = intids.queryId(media_obj) if media_obj is not None else None
                 if uid is None:
                     return
-
                 # Set content containers
                 for ntiid in catalog.get_containers(uid):
                     if ntiid in ntiids:
