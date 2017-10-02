@@ -35,7 +35,7 @@ from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalObjectDecorator
 
-from nti.externalization.singleton import SingletonDecorator
+from nti.externalization.singleton import SingletonMetaclass
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -46,11 +46,13 @@ CREATED_TIME = StandardExternalFields.CREATED_TIME
 LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 
 
+@six.add_metaclass(SingletonMetaclass)
 @component.adapter(INTICourseOverviewGroup)
 @interface.implementer(IExternalObjectDecorator)
 class _OverviewGroupDecorator(object):
 
-    __metaclass__ = SingletonDecorator
+    def __init__(self, *args):
+        pass
 
     def decorateExternalObject(self, original, external):
         external['accentColor'] = original.color
@@ -59,7 +61,8 @@ class _OverviewGroupDecorator(object):
 @interface.implementer(IExternalObjectDecorator)
 class _BaseAssetDecorator(object):
 
-    __metaclass__ = SingletonDecorator
+    def __init__(self, *args):
+        pass
 
     def decorateExternalObject(self, unused_original, external):
         if 'ntiid' in external:
@@ -68,18 +71,21 @@ class _BaseAssetDecorator(object):
             external['Target-NTIID'] = external.pop('target')
 
 
+@six.add_metaclass(SingletonMetaclass)
 @component.adapter(INTIQuestionRef)
 @interface.implementer(IExternalObjectDecorator)
 class _NTIQuestionRefDecorator(_BaseAssetDecorator):
     pass
 
 
+@six.add_metaclass(SingletonMetaclass)
 @component.adapter(INTISlideDeckRef)
 @interface.implementer(IExternalObjectDecorator)
 class _NTISlideDeckRefDecorator(_BaseAssetDecorator):
     pass
 
 
+@six.add_metaclass(SingletonMetaclass)
 @component.adapter(INTITimelineRef)
 @interface.implementer(IExternalObjectDecorator)
 class _NTITimelineRefDecorator(_BaseAssetDecorator):
@@ -88,8 +94,6 @@ class _NTITimelineRefDecorator(_BaseAssetDecorator):
 
 @interface.implementer(IExternalObjectDecorator)
 class _BaseAssessmentRefDecorator(_BaseAssetDecorator):
-
-    __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
         super(_BaseAssessmentRefDecorator, self).decorateExternalObject(original, external)
@@ -102,23 +106,24 @@ class _BaseAssessmentRefDecorator(_BaseAssetDecorator):
         external['question-count'] = str(question_count)
 
 
+@six.add_metaclass(SingletonMetaclass)
 @component.adapter(INTIQuestionSetRef)
 @interface.implementer(IExternalObjectDecorator)
 class _NTIQuestionSetRefDecorator(_BaseAssessmentRefDecorator):
     pass
 
 
+@six.add_metaclass(SingletonMetaclass)
 @component.adapter(INTISurveyRef)
 @interface.implementer(IExternalObjectDecorator)
 class _NTISurveyRefDecorator(_BaseAssessmentRefDecorator):
     pass
 
 
+@six.add_metaclass(SingletonMetaclass)
 @component.adapter(INTIAssignmentRef)
 @interface.implementer(IExternalObjectDecorator)
 class _NTIAssignmentRefDecorator(_BaseAssetDecorator):
-
-    __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
         super(_NTIAssignmentRefDecorator, self).decorateExternalObject(original, external)
@@ -126,11 +131,10 @@ class _NTIAssignmentRefDecorator(_BaseAssetDecorator):
             external['ContainerId'] = external.pop('containerId')
 
 
+@six.add_metaclass(SingletonMetaclass)
 @component.adapter(INTIDiscussionRef)
 @interface.implementer(IExternalObjectDecorator)
 class _NTIDiscussionRefDecorator(_BaseAssetDecorator):
-
-    __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
         super(_NTIDiscussionRefDecorator, self).decorateExternalObject(original, external)
@@ -140,11 +144,13 @@ class _NTIDiscussionRefDecorator(_BaseAssetDecorator):
             external[NTIID] = external['Target-NTIID']
 
 
+@six.add_metaclass(SingletonMetaclass)
 @component.adapter(INTIRelatedWorkRef)
 @interface.implementer(IExternalObjectDecorator)
 class _NTIRelatedWorkRefDecorator(object):
 
-    __metaclass__ = SingletonDecorator
+    def __init__(self, *args):
+        pass
 
     def decorateExternalObject(self, unused_original, external):
         if 'byline' in external:
@@ -161,11 +167,10 @@ class _NTIRelatedWorkRefDecorator(object):
             external['targetMimeType'] = external['type']
 
 
+@six.add_metaclass(SingletonMetaclass)
 @component.adapter(INTITimeline)
 @interface.implementer(IExternalObjectDecorator)
 class _NTITimelineDecorator(_BaseAssetDecorator):
-
-    __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
         super(_NTITimelineDecorator, self).decorateExternalObject(original, external)
@@ -177,12 +182,9 @@ class _NTITimelineDecorator(_BaseAssetDecorator):
 
 
 @interface.implementer(IExternalObjectDecorator)
-class _NTIBaseSlideDecorator(_BaseAssetDecorator):
-
-    __metaclass__ = SingletonDecorator
+class _NTIBaseSlideDecoratorMixin(object):
 
     def decorateExternalObject(self, original, external):
-        super(_NTIBaseSlideDecorator, self).decorateExternalObject(original, external)
         if 'byline' in external:
             external['creator'] = external['byline']
         if CLASS in external:
@@ -192,11 +194,10 @@ class _NTIBaseSlideDecorator(_BaseAssetDecorator):
         external['ntiid'] = external[NTIID] = original.ntiid
 
 
+@six.add_metaclass(SingletonMetaclass)
 @component.adapter(INTISlide)
 @interface.implementer(IExternalObjectDecorator)
-class _NTISlideDecorator(_NTIBaseSlideDecorator):
-
-    __metaclass__ = SingletonDecorator
+class _NTISlideDecorator(_NTIBaseSlideDecoratorMixin):
 
     def decorateExternalObject(self, original, external):
         super(_NTISlideDecorator, self).decorateExternalObject(original, external)
@@ -206,11 +207,10 @@ class _NTISlideDecorator(_NTIBaseSlideDecorator):
                 external[name] = str(value)
 
 
+@six.add_metaclass(SingletonMetaclass)
 @component.adapter(INTISlideVideo)
 @interface.implementer(IExternalObjectDecorator)
-class _NTISlideVideoDecorator(_NTIBaseSlideDecorator):
-
-    __metaclass__ = SingletonDecorator
+class _NTISlideVideoDecorator(_NTIBaseSlideDecoratorMixin):
 
     def decorateExternalObject(self, original, external):
         super(_NTISlideVideoDecorator, self).decorateExternalObject(original, external)
@@ -218,22 +218,20 @@ class _NTISlideVideoDecorator(_NTIBaseSlideDecorator):
             external['video-ntiid'] = external['video_ntiid']  # legacy
 
 
+@six.add_metaclass(SingletonMetaclass)
 @component.adapter(INTISlideDeck)
 @interface.implementer(IExternalObjectDecorator)
-class _NTISlideDeckDecorator(_NTIBaseSlideDecorator):
-
-    __metaclass__ = SingletonDecorator
+class _NTISlideDeckDecorator(_NTIBaseSlideDecoratorMixin):
 
     def decorateExternalObject(self, original, external):
         super(_NTISlideDeckDecorator, self).decorateExternalObject(original, external)
         external['creator'] = original.byline
 
 
+@six.add_metaclass(SingletonMetaclass)
 @component.adapter(INTIAudioRef)
 @interface.implementer(IExternalObjectDecorator)
 class _NTIAudioRefDecorator(_BaseAssetDecorator):
-
-    __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
         super(_NTIAudioRefDecorator, self).decorateExternalObject(original, external)
@@ -241,11 +239,10 @@ class _NTIAudioRefDecorator(_BaseAssetDecorator):
             external[MIMETYPE] = "application/vnd.nextthought.ntiaudio"
 
 
+@six.add_metaclass(SingletonMetaclass)
 @component.adapter(INTIVideoRef)
 @interface.implementer(IExternalObjectDecorator)
 class _NTIVideoRefDecorator(_BaseAssetDecorator):
-
-    __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
         super(_NTIVideoRefDecorator, self).decorateExternalObject(original, external)
@@ -256,7 +253,8 @@ class _NTIVideoRefDecorator(_BaseAssetDecorator):
 @interface.implementer(IExternalObjectDecorator)
 class _BaseMediaDecorator(object):
 
-    __metaclass__ = SingletonDecorator
+    def __init__(self, *args):
+        pass
 
     def decorateExternalObject(self, unused_original, external):
         if MIMETYPE in external:
@@ -277,11 +275,10 @@ class _BaseMediaDecorator(object):
             source.pop(LAST_MODIFIED, None)
 
 
+@six.add_metaclass(SingletonMetaclass)
 @component.adapter(INTIVideo)
 @interface.implementer(IExternalObjectDecorator)
 class _NTIVideoDecorator(_BaseMediaDecorator):
-
-    __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
         super(_NTIVideoDecorator, self).decorateExternalObject(original, external)
@@ -297,6 +294,7 @@ class _NTIVideoDecorator(_BaseMediaDecorator):
             external['label'] = title
 
 
+@six.add_metaclass(SingletonMetaclass)
 @component.adapter(INTIAudio)
 @interface.implementer(IExternalObjectDecorator)
 class _NTIAudioDecorator(_BaseMediaDecorator):
