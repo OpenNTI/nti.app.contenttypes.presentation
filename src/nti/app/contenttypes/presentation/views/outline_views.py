@@ -908,7 +908,6 @@ class MediaByOutlineNodeView(AssetByOutlineNodeView):
         def _add_item_to_container(container_ntiid, item):
             if IBroken.providedBy(item):
                 logger.error('Broken object found in %s', container_ntiid)
-                return
             # We only want to map to our ContentNTIID here, for clients.
             if container_ntiid in lesson_to_content_map:
                 container_ntiid = lesson_to_content_map.get(container_ntiid)
