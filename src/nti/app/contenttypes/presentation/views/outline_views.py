@@ -938,6 +938,7 @@ class MediaByOutlineNodeView(AssetByOutlineNodeView):
                 if uid is None:
                     return
                 # Set content containers
+                __traceback_info__ = media_obj, uid
                 for ntiid in catalog.get_containers(uid):
                     if ntiid in ntiids:
                         _add_item_to_container(ntiid, item)
