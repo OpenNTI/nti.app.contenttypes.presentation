@@ -38,6 +38,7 @@ from nti.base.interfaces import IFile
 from nti.contentindexing.media.interfaces import IVideoTranscriptParser
 
 from nti.contenttypes.presentation import NTI_TRANSCRIPT_MIMETYPE
+from nti.contenttypes.presentation import TEXT_VTT_MIMETYPE as TEXT_VTT
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTITranscript
@@ -57,8 +58,6 @@ NTIID = StandardExternalFields.NTIID
 TOTAL = StandardExternalFields.TOTAL
 MIMETYPE = StandardExternalFields.MIMETYPE
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
-
-TEXT_VTT = "text/vtt"
 
 
 @view_config(context=INTIMedia)
@@ -98,6 +97,7 @@ def process_transcript_source(transcript, source, name=None, request=None):
     try:
         validate_transcript(content, contentType)
     except Exception:
+        logger.exception("Error parsing transcript")
         exc_info = sys.exc_info()
         raise_json_error(request,
                          hexc.HTTPUnprocessableEntity,
