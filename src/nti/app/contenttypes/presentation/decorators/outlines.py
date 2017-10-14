@@ -4,12 +4,11 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
-logger = __import__('logging').getLogger(__name__)
-
-from urlparse import urljoin
+from six.moves import urllib_parse
 
 from zope import component
 from zope import interface
@@ -57,6 +56,8 @@ from nti.links import render_link
 from nti.links.links import Link
 
 LINKS = StandardExternalFields.LINKS
+
+logger = __import__('logging').getLogger(__name__)
 
 
 def _lesson_overview_links(context, request):
@@ -158,7 +159,7 @@ class _CourseOutlineContentNodeLinkDecorator(AbstractAuthenticatedRequestAwareDe
             paths = library.pathToNTIID(ntiid) if library else ()
             if paths:
                 href = IContentUnitHrefMapper(paths[-1].key).href
-                href = urljoin(href, context.src)
+                href = urllib_parse.urljoin(href, context.src)
                 # set link for overview
                 links = result.setdefault(LINKS, [])
                 link = Link(href, rel=VIEW_OVERVIEW_CONTENT,
@@ -196,7 +197,7 @@ class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwar
             link = overview_links[0] if overview_links else None
             if link is not None:
                 href = render_link(link)['href']
-                url = urljoin(self.request.host_url, href)
+                url = urllib_parse.urljoin(self.request.host_url, href)
                 result['src'] = url
                 return True
         except (KeyError, ValueError, AssertionError):

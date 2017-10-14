@@ -4,10 +4,9 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from zope import interface
 
@@ -51,6 +50,8 @@ LEGACY_UAS_20 = ("NTIFoundation DataLoader NextThought/1.0",
 LEGACY_UAS_40 = LEGACY_UAS_20 + \
                 ("NTIFoundation DataLoader NextThought/1.3.",
                  "NTIFoundation DataLoader NextThought/1.4.0")
+
+logger = __import__('logging').getLogger(__name__)
 
 
 def is_legacy_uas(request, legacy_uas=LEGACY_UAS_40):
