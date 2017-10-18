@@ -4,10 +4,9 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 import os
 
@@ -66,6 +65,10 @@ from nti.site.interfaces import IHostPolicyFolder
 
 from nti.site.utils import registerUtility
 
+__LESSONS__ = 'Lessons'
+    
+logger = __import__('logging').getLogger(__name__)
+
 
 @interface.implementer(ICourseSectionImporter)
 class AssetCleanerImporter(BaseSectionImporter):
@@ -95,17 +98,19 @@ class AssetCleanerImporter(BaseSectionImporter):
     def process(self, context, filer, writeout=True):
         result = []
         course = ICourseInstance(context)
-        self._do_clean(context, filer, writeout)
+        bucket = self.course_bucket_path(course)
+        bucket = os.path.join(bucket, __LESSONS__)
+        # check there is a 'Lessons' folder
+        if filer.is_bucket(bucket):
+            self._do_clean(context, filer, writeout)
         for sub_instance in get_course_subinstances(course):
             if sub_instance.Outline is not course.Outline:
-                self._do_clean(sub_instance, filer, writeout)
+                self.process(sub_instance, filer, writeout)
         return result
 
 
 @interface.implementer(ICourseSectionImporter)
 class LessonOverviewsImporter(BaseSectionImporter):
-
-    __LESSONS__ = 'Lessons'
 
     @Lazy
     def current_principal(self):
@@ -145,7 +150,7 @@ class LessonOverviewsImporter(BaseSectionImporter):
         site = IHostPolicyFolder(course)
         target_filer = get_course_filer(course)
         bucket = self.course_bucket_path(course)
-        bucket = os.path.join(bucket, self.__LESSONS__)
+        bucket = os.path.join(bucket, __LESSONS__)
         # check there is a 'Lessons' folder
         if source_filer.is_bucket(bucket):
             bucket = source_filer.get(bucket)
@@ -159,9 +164,9 @@ class LessonOverviewsImporter(BaseSectionImporter):
             # save sources in main course Lessos folder
             root = get_parent_course(course).root
             if save_sources and IFilesystemBucket.providedBy(root):
-                out_path = os.path.join(root.absolute_path, self.__LESSONS__)
+                out_path = os.path.join(root.absolute_path, __LESSONS__)
                 self.makedirs(out_path)  # create
-                for path in source_filer.list(self.__LESSONS__):
+                for path in source_filer.list(__LESSONS__):
                     if not source_filer.is_bucket(path):
                         source = source_filer.get(path)
                         name = source_filer.key_name(path)
