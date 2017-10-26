@@ -84,6 +84,6 @@ def do_evolve(context, generation=generation):
 
 def evolve(context):
     """
-    Evolve to gen 48 to index all assets
+    Evolve to gen 50 to index all assets
     """
     # do_evolve(context)  DON'T install yet

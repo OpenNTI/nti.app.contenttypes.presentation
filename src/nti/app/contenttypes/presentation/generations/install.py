@@ -4,12 +4,11 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
-logger = __import__('logging').getLogger(__name__)
-
-generation = 48
+generation = 49
 
 from zope import interface
 
@@ -20,6 +19,8 @@ from zope.generations.interfaces import IInstallableSchemaManager
 from zope.intid.interfaces import IIntIds
 
 from nti.contenttypes.presentation.index import install_assets_library_catalog
+
+logger = __import__('logging').getLogger(__name__)
 
 
 @interface.implementer(IInstallableSchemaManager)
