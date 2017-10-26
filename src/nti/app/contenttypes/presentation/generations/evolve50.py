@@ -16,21 +16,16 @@ from zope.component.hooks import site as current_site
 
 from zope.intid.interfaces import IIntIds
 
-from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_containers
+from nti.contenttypes.presentation.index import install_assets_library_catalog
 
-from nti.contentlibrary.interfaces import IContentPackage
-from nti.contentlibrary.interfaces import IContentPackageLibrary
-from nti.contentlibrary.interfaces import IEditableContentPackage
-
-from nti.contenttypes.presentation.interfaces import IPackagePresentationAsset
-from nti.contenttypes.presentation.interfaces import IContentBackedPresentationAsset
+from nti.contenttypes.presentation.interfaces import IPresentationAsset
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
 
 from nti.site.hostpolicy import get_all_host_sites
 
-generation = 49
+generation = 50
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -49,27 +44,14 @@ class MockDataserver(object):
         return None
 
 
-def _process_site(current, intids, seen):
+def _process_site(current, catalog, intids, seen):
     with current_site(current):
-        for ntiid, asset in list(component.getUtilitiesFor(IPackagePresentationAsset)):
+        for _, asset in list(component.getUtilitiesFor(IPresentationAsset)):
             doc_id = intids.queryId(asset)
             if doc_id is None or doc_id in seen:
                 continue
             seen.add(doc_id)
-            if not IContentBackedPresentationAsset.providedBy(asset):
-                continue
-            # find any content ``legacy``` pkg
-            package = None
-            for container in get_presentation_asset_containers(asset):
-                if      IContentPackage.providedBy(container) \
-                    and not IEditableContentPackage.providedBy(container):
-                    package = container
-                    break
-            # if not found the asset cannot be marked as
-            # content back
-            if package is None:
-                logger.info("Unmarking %s", ntiid)
-                interface.noLongerProvides(asset, IContentBackedPresentationAsset)
+            catalog.index_doc(doc_id, asset)
 
 
 def do_evolve(context, generation=generation):
@@ -89,14 +71,11 @@ def do_evolve(context, generation=generation):
 
         lsm = ds_folder.getSiteManager()
         intids = lsm.getUtility(IIntIds)
-
-        # Load library
-        library = component.queryUtility(IContentPackageLibrary)
-        if library is not None:
-            library.syncContentPackages()
-
+        catalog = install_assets_library_catalog(ds_folder, intids)
+        for index in catalog.values():
+            index.clear()
         for current in get_all_host_sites():
-            _process_site(current, intids, seen)
+            _process_site(current, catalog, intids, seen)
 
     component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
     logger.info('Dataserver evolution %s done. %s assets(s) indexed',
@@ -105,6 +84,6 @@ def do_evolve(context, generation=generation):
 
 def evolve(context):
     """
-    Evolve to gen 49 by unmarked non-content-backed assets
+    Evolve to gen 48 to index all assets
     """
-    do_evolve(context)
+    # do_evolve(context)  DON'T install yet
