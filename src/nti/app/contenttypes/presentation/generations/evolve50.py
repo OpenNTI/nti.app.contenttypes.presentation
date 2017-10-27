@@ -81,7 +81,7 @@ def _process_site(current, intids, seen):
                     if found:
                         break
             # if not found the asset cannot be marked as content back
-            if found:
+            if not found:
                 logger.info("Unmarking %s", ntiid)
                 interface.noLongerProvides(asset, IContentBackedPresentationAsset)
 
