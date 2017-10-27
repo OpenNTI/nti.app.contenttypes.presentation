@@ -42,8 +42,8 @@ from nti.publishing.interfaces import IPublishable
 
 LINKS = StandardExternalFields.LINKS
 
-LEGACY_UAS_20 = ("NTIFoundation DataLoader NextThought/1.0",
-                 "NTIFoundation DataLoader NextThought/1.1",
+LEGACY_UAS_20 = ("NTIFoundation DataLoader NextThought/1.0.",
+                 "NTIFoundation DataLoader NextThought/1.1.",
                  "NTIFoundation DataLoader NextThought/1.1.1",
                  "NTIFoundation DataLoader NextThought/1.2.")
 
