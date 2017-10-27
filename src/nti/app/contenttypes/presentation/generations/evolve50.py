@@ -50,6 +50,19 @@ class MockDataserver(object):
         return None
 
 
+def _find_in_pacakge_asset_containers(ntiid, pacakge):
+    result = []
+    def _recur(unit):
+        container = IPresentationAssetContainer(unit, None)
+        if container and ntiid in container:
+            result.append(unit)
+        if not result:
+            for child in unit.children or ():
+                _recur(child)
+    _recur(pacakge)
+    return bool(result)
+
+
 def _process_site(current, intids, seen):
     with current_site(current):
         for ntiid, asset in list(component.getUtilitiesFor(IPackagePresentationAsset)):
@@ -64,12 +77,11 @@ def _process_site(current, intids, seen):
             for container in get_presentation_asset_containers(asset):
                 if      IContentPackage.providedBy(container) \
                     and not IEditableContentPackage.providedBy(container):
-                    asset_container = IPresentationAssetContainer(container, None)
-                    if asset_container and ntiid in asset_container:
-                        found = True
+                    found = _find_in_pacakge_asset_containers(ntiid, container)
+                    if found:
                         break
             # if not found the asset cannot be marked as content back
-            if found is None:
+            if found:
                 logger.info("Unmarking %s", ntiid)
                 interface.noLongerProvides(asset, IContentBackedPresentationAsset)
 
