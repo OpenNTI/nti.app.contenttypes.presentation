@@ -7,7 +7,6 @@
 from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
-__docformat__ = "restructuredtext en"
 
 from zope import component
 from zope import interface
@@ -67,8 +66,10 @@ class BasePresentationAssetACLProvider(object):
     @property
     def __acl__(self):
         result = acl_from_aces(ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
-        result.append(ace_allowing(ROLE_CONTENT_ADMIN, ALL_PERMISSIONS, type(self)))
-        result.append(ace_allowing(ROLE_SITE_ADMIN, ALL_PERMISSIONS, type(self)))
+        result.append(ace_allowing(ROLE_CONTENT_ADMIN,
+                                   ALL_PERMISSIONS, type(self)))
+        result.append(ace_allowing(ROLE_SITE_ADMIN,
+                                   ALL_PERMISSIONS, type(self)))
         courses = get_presentation_asset_courses(self.context)
         for course in courses or ():
             result.extend(IACLProvider(course).__acl__)
@@ -175,8 +176,10 @@ class AdminEditorParentObjectACLProvider(object):
     @Lazy
     def __acl__(self):
         result = acl_from_aces(ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
-        result.append(ace_allowing(ROLE_CONTENT_ADMIN, ALL_PERMISSIONS, type(self)))
-        result.append(ace_allowing(ROLE_SITE_ADMIN, ALL_PERMISSIONS, type(self)))
+        result.append(ace_allowing(ROLE_CONTENT_ADMIN,
+                                   ALL_PERMISSIONS, type(self)))
+        result.append(ace_allowing(ROLE_SITE_ADMIN,
+                                   ALL_PERMISSIONS, type(self)))
         return result
 
 
