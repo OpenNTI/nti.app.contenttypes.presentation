@@ -4,10 +4,10 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 __docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
 
 from zope import component
 from zope import interface
@@ -42,6 +42,7 @@ from nti.contenttypes.presentation.interfaces import ILessonPublicationConstrain
 from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraints
 
 from nti.dataserver.authorization import ROLE_ADMIN
+from nti.dataserver.authorization import ROLE_SITE_ADMIN
 from nti.dataserver.authorization import ROLE_CONTENT_ADMIN
 
 from nti.dataserver.authorization_acl import ace_allowing
@@ -54,6 +55,8 @@ from nti.dataserver.interfaces import IACLProvider
 
 from nti.traversal.traversal import find_interface
 
+logger = __import__('logging').getLogger(__name__)
+
 
 @interface.implementer(IACLProvider)
 class BasePresentationAssetACLProvider(object):
@@ -65,6 +68,7 @@ class BasePresentationAssetACLProvider(object):
     def __acl__(self):
         result = acl_from_aces(ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
         result.append(ace_allowing(ROLE_CONTENT_ADMIN, ALL_PERMISSIONS, type(self)))
+        result.append(ace_allowing(ROLE_SITE_ADMIN, ALL_PERMISSIONS, type(self)))
         courses = get_presentation_asset_courses(self.context)
         for course in courses or ():
             result.extend(IACLProvider(course).__acl__)
@@ -172,6 +176,7 @@ class AdminEditorParentObjectACLProvider(object):
     def __acl__(self):
         result = acl_from_aces(ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
         result.append(ace_allowing(ROLE_CONTENT_ADMIN, ALL_PERMISSIONS, type(self)))
+        result.append(ace_allowing(ROLE_SITE_ADMIN, ALL_PERMISSIONS, type(self)))
         return result
 
 
@@ -182,7 +187,7 @@ class NTITranscriptFileACLProvider(ContentBaseFileACLProvider):
 
 @component.adapter(INTITranscript)
 class NTITranscriptACLProvider(AdminEditorParentObjectACLProvider):
-    
+
     @Lazy
     def __acl__(self):
         result = super(NTITranscriptACLProvider, self).__acl__
