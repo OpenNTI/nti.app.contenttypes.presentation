@@ -304,7 +304,7 @@ def create_lesson_4_node(node, ntiid=None, registry=None, catalog=None, sites=No
     creator = getattr(node, 'creator', None)
     creator = getattr(creator, 'username', creator)
     if not ntiid:
-        extra = str(uuid.uuid4().get_time_low())
+        extra = str(uuid.uuid4().time_low)
         ntiid = make_asset_ntiid(nttype=INTILessonOverview,
                                  base=node.ntiid,
                                  extra=extra)
