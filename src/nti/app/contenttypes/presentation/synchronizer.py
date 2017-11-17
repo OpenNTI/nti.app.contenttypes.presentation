@@ -63,7 +63,7 @@ from nti.contenttypes.courses.utils import get_course_hierarchy
 from nti.contenttypes.presentation import interface_of_asset
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
-from nti.contenttypes.presentation.interfaces import INTIMedia 
+from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTIMediaRef
 from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
@@ -812,15 +812,22 @@ def get_cataloged_namespaces(ntiid, catalog=None, sites=None):
 	result.discard(None)
 	return result
 
-def get_sibling_entry(source, unit=None, buckets=None):
-	# seek in buckets first
+
+def _get_lesson_src(namespace, packages, buckets):
+	"""
+	Checks the buckets and then the packages for a given namespace.
+	"""
+	# Check buckets first
 	for bucket in buckets or ():
-		result = bucket.getChildNamed(source) if bucket is not None else None
+		result = bucket.getChildNamed(namespace) if bucket is not None else None
 		if result is not None:
 			return result
-	if unit is not None:
-		return unit.does_sibling_entry_exist(source)  # returns a key
-	return None
+	for package in packages or ():
+		# Returns a key
+		result = package.does_sibling_entry_exist(namespace)
+		if result is not None:
+			return result
+
 
 def _add_buckets(course, buckets):
 	root = course.root
@@ -830,6 +837,7 @@ def _add_buckets(course, buckets):
 			buckets.append(lessons)
 		buckets.append(root)
 	return buckets
+
 
 def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 									   buckets=None, **kwargs):
@@ -895,62 +903,22 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 			continue
 		# ready to sync
 		namespaces.add(namespace)  # this is ntiid based file (unique)
-		for content_package in course_packages:
-			sibling_key = get_sibling_entry(namespace, content_package, buckets)
-			if not sibling_key:
-				break
+		sibling_key = _get_lesson_src(namespace, course_packages, buckets)
+		if not sibling_key:
+			logger.warn('No lesson found for %s', namespace)
+			continue
 
-			sibling_lastModified = sibling_key.lastModified
-			root_lastModified = _get_source_lastModified(namespace, catalog)
-			if root_lastModified >= sibling_lastModified:
-				# we want to associate the ntiid of the new course with the
-				# assets and set the lesson overview ntiid to the outline node
-				objects = catalog.search_objects(namespace=namespace,
-												 provided=INTILessonOverview,
-												 container_ntiids=hierarchy,
-												 container_all_of=False,
-												 intids=intids)
-				_index_overview_items(objects,
-									  namespace=namespace,
-									  container_ntiids=ntiid,
-									  catalog=catalog,
-									  intids=intids,
-									  node=node,
-									  course=course,
-									  connection=connection)
-
-				continue
-
-			# this remove all lesson overviews and overview groups
-			# for specified namespace file. As of 20150521 we
-			# don't allow sharing of lesson amongst different courses
-			# (not in hierarchy)...and overview groups are unique to
-			# its own lesson
-			removed.extend(_remove_and_unindex_course_assets(namespace=namespace,
-															 container_ntiids=ntiid,
-															 registry=registry,
-															 catalog=catalog,
-															 intids=intids,
-															 course=course))
-
-			logger.info("Synchronizing %s", namespace)
-
-			index_text = sibling_key.readContents()
-			overview, rmv = _load_and_register_lesson_overview_json(
-											index_text,
-											node=node,
-											validate=True,
-											course=course,
-											ntiid=ref_ntiid,
-											registry=registry,
-											intids=intids,
-											connection=connection,
-											**kwargs)
-			removed.extend(rmv)
-			result.append(overview)
-
-			# index
-			_index_overview_items((overview,),
+		sibling_lastModified = sibling_key.lastModified
+		root_lastModified = _get_source_lastModified(namespace, catalog)
+		if root_lastModified >= sibling_lastModified:
+			# we want to associate the ntiid of the new course with the
+			# assets and set the lesson overview ntiid to the outline node
+			objects = catalog.search_objects(namespace=namespace,
+											 provided=INTILessonOverview,
+											 container_ntiids=hierarchy,
+											 container_all_of=False,
+											 intids=intids)
+			_index_overview_items(objects,
 								  namespace=namespace,
 								  container_ntiids=ntiid,
 								  catalog=catalog,
@@ -959,11 +927,51 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 								  course=course,
 								  connection=connection)
 
-			# publish by default if not locked
-			if not _is_lesson_sync_locked(overview)[0]:  # returns an array
-				overview.publish(event=False)
+			continue
 
-			_set_source_lastModified(namespace, sibling_lastModified, catalog)
+		# this remove all lesson overviews and overview groups
+		# for specified namespace file. As of 20150521 we
+		# don't allow sharing of lesson amongst different courses
+		# (not in hierarchy)...and overview groups are unique to
+		# its own lesson
+		removed.extend(_remove_and_unindex_course_assets(namespace=namespace,
+														 container_ntiids=ntiid,
+														 registry=registry,
+														 catalog=catalog,
+														 intids=intids,
+														 course=course))
+
+		logger.info("Synchronizing %s", namespace)
+
+		index_text = sibling_key.readContents()
+		overview, rmv = _load_and_register_lesson_overview_json(
+										index_text,
+										node=node,
+										validate=True,
+										course=course,
+										ntiid=ref_ntiid,
+										registry=registry,
+										intids=intids,
+										connection=connection,
+										**kwargs)
+		removed.extend(rmv)
+		result.append(overview)
+
+		# index
+		_index_overview_items((overview,),
+							  namespace=namespace,
+							  container_ntiids=ntiid,
+							  catalog=catalog,
+							  intids=intids,
+							  node=node,
+							  course=course,
+							  connection=connection)
+
+		# publish by default if not locked
+		if not _is_lesson_sync_locked(overview)[0]:  # returns an array
+			overview.publish(event=False)
+
+		_set_source_lastModified(namespace, sibling_lastModified, catalog)
 
 	# finally copy transactions from removed to new objects
 	_copy_remove_transactions(removed, registry=registry)
