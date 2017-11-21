@@ -12,7 +12,6 @@
 	<include package="nti.contenttypes.courses" />
 	
 	<include package="nti.contenttypes.presentation" />
-	<include package="nti.contenttypes.presentation" file="configure_legacy.zcml" />
 	
 	<!-- Database creation and migration -->
 	<include package="zope.generations" />
