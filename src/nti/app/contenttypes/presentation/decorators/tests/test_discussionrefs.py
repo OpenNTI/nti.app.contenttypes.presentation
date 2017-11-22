@@ -33,12 +33,12 @@ CLASS = StandardExternalFields.CLASS
 MIMETYPE = StandardExternalFields.MIMETYPE
 
 
-class TestDiscussion(unittest.TestCase):
+class TestDiscussionRefs(unittest.TestCase):
 
     layer = SharedConfiguringTestLayer
 
-    def test_discussion(self):
-        path = os.path.join(os.path.dirname(__file__), 'discussion.json')
+    def test_discussionref(self):
+        path = os.path.join(os.path.dirname(__file__), 'discussionref.json')
         with open(path, "r") as fp:
             source = simplejson.loads(prepare_json_text(fp.read()))
             original = copy.deepcopy(source)
@@ -65,9 +65,9 @@ class TestDiscussion(unittest.TestCase):
         assert_that(ext_obj, has_key('Class'))
         assert_that(ext_obj, has_key('NTIID'))
 
-    def test_discussion_bundle(self):
+    def test_discussionref_bundle(self):
         path = os.path.join(os.path.dirname(__file__),
-                            'discussion_bundle.json')
+                            'discussionref_bundle.json')
         with open(path, "r") as fp:
             source = simplejson.loads(prepare_json_text(fp.read()))
 

@@ -36,12 +36,12 @@ CLASS = StandardExternalFields.CLASS
 MIMETYPE = StandardExternalFields.MIMETYPE
 
 
-class TestAssignment(unittest.TestCase):
+class TestAssignmentRef(unittest.TestCase):
 
     layer = SharedConfiguringTestLayer
 
-    def test_assignment(self):
-        path = os.path.join(os.path.dirname(__file__), 'assignment.json')
+    def test_assignmentref(self):
+        path = os.path.join(os.path.dirname(__file__), 'assignmentref.json')
         with open(path, "r") as fp:
             source = simplejson.loads(prepare_json_text(fp.read()))
             original = copy.deepcopy(source)
@@ -69,8 +69,8 @@ class TestAssignment(unittest.TestCase):
         assert_that(ext_obj, has_key('Class'))
         assert_that(ext_obj, has_key('NTIID'))
 
-    def test_questionset(self):
-        path = os.path.join(os.path.dirname(__file__), 'questionset.json')
+    def test_questionsetref(self):
+        path = os.path.join(os.path.dirname(__file__), 'questionsetref.json')
         with open(path, "r") as fp:
             source = simplejson.loads(prepare_json_text(fp.read()))
             original = copy.deepcopy(source)
@@ -94,8 +94,8 @@ class TestAssignment(unittest.TestCase):
         assert_that(ext_obj, has_key('Class'))
         assert_that(ext_obj, has_key('NTIID'))
 
-    def test_question(self):
-        path = os.path.join(os.path.dirname(__file__), 'question.json')
+    def test_questionref(self):
+        path = os.path.join(os.path.dirname(__file__), 'questionref.json')
         with open(path, "r") as fp:
             source = simplejson.loads(prepare_json_text(fp.read()))
             original = copy.deepcopy(source)
@@ -116,8 +116,8 @@ class TestAssignment(unittest.TestCase):
         assert_that(ext_obj, has_key('Class'))
         assert_that(ext_obj, has_key('NTIID'))
 
-    def test_survey(self):
-        path = os.path.join(os.path.dirname(__file__), 'survey.json')
+    def test_surveyref(self):
+        path = os.path.join(os.path.dirname(__file__), 'surveyref.json')
         with open(path, "r") as fp:
             source = simplejson.loads(prepare_json_text(fp.read()))
             original = copy.deepcopy(source)
