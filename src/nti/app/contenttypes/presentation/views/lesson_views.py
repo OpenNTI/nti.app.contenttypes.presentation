@@ -202,11 +202,10 @@ class LessonPublicationConstraintsPostView(UGDPostView):
 class LessonCompletionConstraintPutView(UGDPutView):
 
     def updateContentObject(self, contentObject, externalValue, set_id=False,
-                            notify=True, pre_hook=None, object_hook=None):
+                            notify=True, pre_hook=None):
         result = UGDPutView.updateContentObject(self, contentObject, externalValue,
                                                 set_id=set_id, notify=notify,
-                                                pre_hook=pre_hook,
-                                                object_hook=object_hook)
+                                                pre_hook=pre_hook)
         try:
             validator = ILessonPublicationConstraintValidator(contentObject)
             validator.validate()
