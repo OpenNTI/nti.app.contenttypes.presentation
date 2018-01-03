@@ -635,6 +635,18 @@ class _AssessmentRefEditLinkDecorator(AssessmentPolicyEditLinkDecorator):
     Give editors and instructors policy edit links on assessment refs.
     """
 
+    def _predicate(self, context, unused_result):
+        assessment_context = find_object_with_ntiid(context.target)
+        if assessment_context is not None:
+            result = super(_AssessmentRefEditLinkDecorator, self)._predicate(context,
+                                                                             unused_result)
+        else:
+            result = False
+            logger.info('AssessmentRef target deleted? (%s) (%s)',
+                        context.target,
+                        context.ntiid)
+        return result
+
     def get_context(self, context):
         return find_object_with_ntiid(context.target)
 
