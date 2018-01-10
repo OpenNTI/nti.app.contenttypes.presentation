@@ -66,7 +66,7 @@ from nti.site.interfaces import IHostPolicyFolder
 from nti.site.utils import registerUtility
 
 __LESSONS__ = 'Lessons'
-    
+
 logger = __import__('logging').getLogger(__name__)
 
 
@@ -143,7 +143,8 @@ class LessonOverviewsImporter(BaseSectionImporter):
     def _sync_lessons(self, course, bucket):
         return synchronize_course_lesson_overview(course,
                                                   buckets=(bucket,),
-                                                  auto_roll_coalesce=False)
+                                                  auto_roll_coalesce=False,
+                                                  default_publish=False)
 
     def _do_import(self, context, source_filer, save_sources=True):
         course = ICourseInstance(context)

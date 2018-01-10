@@ -840,12 +840,13 @@ def _add_buckets(course, buckets):
 
 
 def synchronize_course_lesson_overview(course, intids=None, catalog=None,
-									   buckets=None, **kwargs):
+									   buckets=None, default_publish=True, **kwargs):
 	"""
 	Synchronize course lesson overviews
 
 	:param course: Course to sync
 	:param intids: IntID facility
+	:param default_publish: publish the lesson
 	:param catalog: Presentation assets catalog index
 	:param buckets: Array of source buckets where lesson files are located
 	"""
@@ -967,8 +968,9 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 							  course=course,
 							  connection=connection)
 
-		# publish by default if not locked
-		if not _is_lesson_sync_locked(overview)[0]:  # returns an array
+		# publish by default if not locked/scheduled
+		if 		default_publish \
+			and not _is_lesson_sync_locked(overview)[0]:  # returns an array
 			overview.publish(event=False)
 
 		_set_source_lastModified(namespace, sibling_lastModified, catalog)
