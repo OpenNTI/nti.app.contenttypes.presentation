@@ -4,10 +4,9 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from zope import component
 from zope import interface
@@ -71,6 +70,8 @@ from nti.schema.jsonschema import TAG_HIDDEN_IN_UI
 from nti.site.interfaces import IHostPolicyFolder
 
 from nti.traversal.traversal import find_interface
+
+logger = __import__('logging').getLogger(__name__)
 
 
 @interface.implementer(ICourseInstance)
@@ -212,6 +213,7 @@ class _PresentationAssetExternalFieldTraverser(_AbstractExternalFieldTraverser):
         allowed_fields = set()
         asset_iface = interface_of_asset(context)
         for k, v in asset_iface.namesAndDescriptions(all=True):
+            # pylint: disable=unused-variable
             __traceback_info__ = k, v
             if IMethod.providedBy(v):
                 continue
