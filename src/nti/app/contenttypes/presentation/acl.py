@@ -70,6 +70,8 @@ class BasePresentationAssetACLProvider(object):
                                    ALL_PERMISSIONS, type(self)))
         result.append(ace_allowing(ROLE_SITE_ADMIN,
                                    ALL_PERMISSIONS, type(self)))
+        # TODO: Maybe we should lookup package for asset and then gather the courses
+        # for that package.
         courses = get_presentation_asset_courses(self.context)
         for course in courses or ():
             result.extend(IACLProvider(course).__acl__)
