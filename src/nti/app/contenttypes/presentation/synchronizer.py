@@ -419,13 +419,18 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 											validate=False, course=None,
 											node=None, sync_results=None,
 											intids=None, connection=None,
-											auto_roll_coalesce=True):
+											auto_roll_coalesce=True,
+											lesson_pre_hook=None):
 	registry = get_site_registry(registry)
 
 	# read and parse json text
 	catalog = get_library_catalog()
 	jtext = _prepare_json_text(jtext)
 	json_data = simplejson.loads(jtext)
+
+	if lesson_pre_hook is not None:
+		lesson_pre_hook(json_data)
+
 	source_data = copy.deepcopy(json_data) # copy for tracking
 	# We'll handle this on update, manually.
 	json_data.pop('PublicationConstraints', None)
@@ -530,7 +535,7 @@ def _load_and_register_lesson_overview_json(jtext, registry=None, ntiid=None,
 				found = find_object_with_ntiid(ntiid)
 				if 		found is not None \
 					and not IContentBackedPresentationAsset.providedBy(found):
-					# Remove and register our mew object if we not content backed.
+					# Remove and register our new object if we are not content backed.
 					# This could be a related work ref only present in the Lessons
 					# folder of a course (import/export/synced). Therefore we must
 					# update if not locked.
@@ -840,7 +845,8 @@ def _add_buckets(course, buckets):
 
 
 def synchronize_course_lesson_overview(course, intids=None, catalog=None,
-									   buckets=None, default_publish=True, **kwargs):
+									   buckets=None, default_publish=True,
+									   **kwargs):
 	"""
 	Synchronize course lesson overviews
 
@@ -849,6 +855,7 @@ def synchronize_course_lesson_overview(course, intids=None, catalog=None,
 	:param default_publish: publish the lesson
 	:param catalog: Presentation assets catalog index
 	:param buckets: Array of source buckets where lesson files are located
+	:param lesson_pre_hook: lesson source pre-processing hook
 	"""
 	result = []
 	namespaces = set()
