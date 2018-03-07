@@ -54,7 +54,7 @@ def _process_site(current, catalog, intids, seen):
             catalog.index_doc(doc_id, asset)
 
 
-def do_evolve(context, generation=generation):
+def do_evolve(context, generation=generation):  # pylint: disable=redefined-outer-name
     setHooks()
     conn = context.connection
     root = conn.root()
