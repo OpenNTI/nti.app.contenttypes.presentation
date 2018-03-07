@@ -4,15 +4,14 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
-logger = __import__('logging').getLogger(__name__)
+from pyramid.location import lineage
 
 from zope import component
 from zope import interface
-
-from pyramid.location import lineage
 
 from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackage
@@ -47,6 +46,8 @@ from nti.contenttypes.presentation.interfaces import IContainedTypeAdapter
 from nti.site.interfaces import IHostPolicyFolder
 
 from nti.traversal.traversal import find_interface
+
+logger = __import__('logging').getLogger(__name__)
 
 
 # Site
@@ -235,7 +236,7 @@ def slide_video_course_references(context):
             containers.append(course)
     return containers
 
-    
+
 @component.adapter(INTISlideVideo)
 @interface.implementer(IContainersAdapter)
 def _slide_video_to_containers(context):
@@ -243,7 +244,7 @@ def _slide_video_to_containers(context):
     containers = set(containers.containers or ())
     # include the courses that refer to the slide video
     courses = slide_video_course_references(context)
-    containers.update(ICourseCatalogEntry(x).ntiid for x in courses)
+    containers.update(ICourseCatalogEntry(x).ntiid for x in courses or ())
     # include the parent slide deck
     if      context.__parent__ is not None \
         and context.__parent__.ntiid:
