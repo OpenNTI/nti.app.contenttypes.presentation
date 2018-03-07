@@ -4,12 +4,18 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
-logger = __import__('logging').getLogger(__name__)
+from pyramid import httpexceptions as hexc
+
+from pyramid.view import view_config
+from pyramid.view import view_defaults
 
 from requests.structures import CaseInsensitiveDict
+
+import transaction
 
 from zope import component
 
@@ -20,11 +26,6 @@ from zope.component.hooks import site as current_site
 from zope.intid.interfaces import IIntIds
 
 from ZODB.POSException import POSError
-
-from pyramid import httpexceptions as hexc
-
-from pyramid.view import view_config
-from pyramid.view import view_defaults
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
@@ -78,6 +79,8 @@ ITEMS = StandardExternalFields.ITEMS
 TOTAL = StandardExternalFields.TOTAL
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
+logger = __import__('logging').getLogger(__name__)
+
 
 @view_config(route_name='objects.generic.traversal',
              renderer='rest',
@@ -90,24 +93,26 @@ class RebuildPresentationAssetCatalogView(AbstractAuthenticatedView):
     @Lazy
     def assets(self):
         return get_assets_catalog()
-    
+
     @Lazy
     def metadata(self):
         return get_metadata_catalog()
-    
+
     def index_doc(self, doc_id, asset):
+        # pylint: disable=no-member
         try:
             self.assets.index_doc(doc_id, asset)
-            self.metadata.force_index_doc(doc_id, asset)
+            self.metadata.index_doc(doc_id, asset)
         except POSError:
-            logger.error("Error while indexing asset %s/%s", 
+            logger.error("Error while indexing asset %s/%s",
                          doc_id, type(asset))
             return False
         return True
-                    
+
     def __call__(self):
         intids = component.getUtility(IIntIds)
         # clear indexes
+        # pylint: disable=no-member
         for index in self.assets.values():
             index.clear()
         # reindex
@@ -117,7 +122,8 @@ class RebuildPresentationAssetCatalogView(AbstractAuthenticatedView):
             with current_site(host_site):
                 count = 0
                 expensive = {}
-                for unused, asset in list(component.getUtilitiesFor(IPresentationAsset)):
+                # process assets
+                for unused_name, asset in list(component.getUtilitiesFor(IPresentationAsset)):
                     doc_id = intids.queryId(asset)
                     if doc_id is None or doc_id in seen:
                         continue
@@ -126,9 +132,16 @@ class RebuildPresentationAssetCatalogView(AbstractAuthenticatedView):
                         expensive[doc_id] = asset
                     elif self.index_doc(doc_id, asset):
                         count += 1
+                        if count % 1000 == 0:
+                            logger.info('Processed %s objects...', count)
+                            transaction.savepoint(optimistic=True)
+                # process expensive items
                 for doc_id, asset in expensive.items():
                     if self.index_doc(doc_id, asset):
                         count += 1
+                        if count % 1000 == 0:
+                            logger.info('Processed %s objects...', count)
+                            transaction.savepoint(optimistic=True)
                 items[host_site.__name__] = count
                 logger.info("%s asset(s) indexed in site %s",
                             count, host_site.__name__)
@@ -250,8 +263,9 @@ class FixCourseAssetContainersView(AbstractAuthenticatedView,
         result = LocatedExternalDict()
         course = ICourseInstance(self.context)
         package_ntiid = self._get_package_ntiid(course)
-        count = remove_package_assets_from_course_container(package_ntiid, 
-                                                            course)
+        count = remove_package_assets_from_course_container(
+            package_ntiid, course
+        )
         entry_ntiid = ICourseCatalogEntry(course).ntiid
         logger.info('Removed %s package assets from course containers (%s) (%s)',
                     count, package_ntiid, entry_ntiid)
