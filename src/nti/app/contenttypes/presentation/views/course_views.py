@@ -4,10 +4,12 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
-logger = __import__('logging').getLogger(__name__)
+from pyramid.view import view_config
+from pyramid.view import view_defaults
 
 from requests.structures import CaseInsensitiveDict
 
@@ -16,9 +18,6 @@ from zope import component
 from zope.intid.interfaces import IIntIds
 
 from zope.mimetype.interfaces import IContentTypeAware
-
-from pyramid.view import view_config
-from pyramid.view import view_defaults
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
@@ -49,6 +48,8 @@ TOTAL = StandardExternalFields.TOTAL
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 
+logger = __import__('logging').getLogger(__name__)
+
 
 @view_config(context=ICourseInstance)
 @view_config(context=ICourseCatalogEntry)
@@ -60,7 +61,7 @@ LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 class CoursePresentationAssetsView(AbstractAuthenticatedView,
                                    BatchingUtilsMixin):
 
-    def _get_mimeTypes(self):
+    def get_mimeTypes(self):
         params = CaseInsensitiveDict(self.request.params)
         accept = params.get('accept') or params.get('mimeTypes') or ''
         accept = accept.split(',') if accept else ()
@@ -71,7 +72,7 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView,
             accept = ()
         return accept
 
-    def _pkg_containers(self, pacakge):
+    def pkg_containers(self, pacakge):
         result = []
         def recur(unit):
             for child in unit.children or ():
@@ -80,18 +81,18 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView,
         recur(pacakge)
         return result
 
-    def _course_containers(self, course):
+    def course_containers(self, course):
         result = set()
         courses = {course, get_parent_course(course)}
         courses.discard(None)
         for _course in courses:
             entry = ICourseCatalogEntry(_course)
             for package in get_course_packages(_course):
-                result.update(self._pkg_containers(package))
+                result.update(self.pkg_containers(package))
             result.add(entry.ntiid)
         return result
 
-    def _check_mimeType(self, item, mimeTypes=()):
+    def check_mimeType(self, item, mimeTypes=()):
         if not mimeTypes:
             return True
         else:
@@ -102,37 +103,38 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView,
                 return True
         return False
 
-    def _isBatching(self):
+    def isBatching(self):
         size, start = self._get_batch_size_start()
         return bool(size is not None and start is not None)
 
-    def _yield_course_items(self, course, mimeTypes=()):
+    def yield_course_items(self, course, mimeTypes=()):
         catalog = get_library_catalog()
         intids = component.getUtility(IIntIds)
-        container_ntiids = self._course_containers(course)
+        container_ntiids = self.course_containers(course)
         for item in catalog.search_objects(intids=intids,
                                            container_all_of=False,
                                            container_ntiids=container_ntiids,
                                            sites=get_component_hierarchy_names(),
                                            provided=ALL_PRESENTATION_ASSETS_INTERFACES):
-            if self._check_mimeType(item, mimeTypes):
+            if self.check_mimeType(item, mimeTypes):
                 yield item
 
     def _do_call(self):
-        batching = self._isBatching()
+        batching = self.isBatching()
         result = LocatedExternalDict()
         result.__name__ = self.request.view_name
         result.__parent__ = self.request.context
         self.request.acl_decoration = not batching  # decoration
 
-        mimeTypes = self._get_mimeTypes()
+        mimeTypes = self.get_mimeTypes()
         course = ICourseInstance(self.context)
 
         result[ITEMS] = items = []
-        items.extend(x for x in self._yield_course_items(course, mimeTypes))
+        items.extend(x for x in self.yield_course_items(course, mimeTypes))
         items.sort()  # natural order
-        lastModified = reduce(lambda x, y: max(x, getattr(y, 'lastModified', 0)),
-                              items, 0)
+        lastModified = reduce(
+            lambda x, y: max(x, getattr(y, 'lastModified', 0)), items, 0
+        )
 
         if batching:
             self._batch_items_iterable(result, items)
