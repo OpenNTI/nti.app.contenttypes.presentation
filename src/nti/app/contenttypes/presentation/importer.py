@@ -116,7 +116,7 @@ class AssetCleanerImporter(BaseSectionImporter):
         if filer.is_bucket(bucket):
             self._do_clean(context, filer, writeout)
         for sub_instance in get_course_subinstances(course):
-            if sub_instance.Outline is not course.Outline:
+            if sub_instance.Outline != course.Outline:
                 self.process(sub_instance, filer, writeout)
         return result
 
@@ -217,7 +217,7 @@ class LessonOverviewsImporter(BaseSectionImporter):
         course = ICourseInstance(context)
         result.extend(self._do_import(context, filer, writeout))
         for sub_instance in get_course_subinstances(course):
-            if sub_instance.Outline is not course.Outline:
+            if sub_instance.Outline != course.Outline:
                 result.extend(self._do_import(sub_instance, filer, writeout))
         return result
 
@@ -295,6 +295,6 @@ class UserAssetsImporter(BaseSectionImporter):
         course = ICourseInstance(context)
         result.extend(self._do_import(context, filer, writeout))
         for sub_instance in get_course_subinstances(course):
-            if sub_instance.Outline is not course.Outline:
+            if sub_instance.Outline != course.Outline:
                 result.extend(self._do_import(sub_instance, filer, writeout))
         return result

@@ -194,7 +194,7 @@ def _course_lineage_to_containers(context):
             break
     # include subinstances
     for instance in get_course_subinstances(course):
-        if instance.Outline is course.Outline:
+        if instance.Outline == course.Outline:
             result.add(_entry_ntiid(course))
     result.discard(None)
     return result
