@@ -64,6 +64,10 @@ from nti.contentlibrary.interfaces import IContentUnitRemovedEvent
 from nti.contentlibrary.interfaces import IContentUnitAssociations
 from nti.contentlibrary.interfaces import IContentPackageRemovedEvent
 
+from nti.contenttypes.completion.interfaces import IUserProgressUpdatedEvent
+
+from nti.contenttypes.completion.utils import update_completion
+
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
@@ -582,3 +586,14 @@ def unindex_course_assets(course, entry=None, site=None):
 @component.adapter(ICourseInstance, ICourseInstanceRemovedEvent)
 def _on_course_instance_removed(course, event):
     unindex_course_assets(course, event.entry, event.site)
+
+
+@component.adapter(IPresentationAsset, IUserProgressUpdatedEvent)
+def _asset_progress(asset, event):
+    """
+    On asset progress update, update completion.
+    """
+    update_completion(asset,
+                      asset.ntiid,
+                      event.user,
+                      event.context)

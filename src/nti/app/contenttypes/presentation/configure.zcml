@@ -10,9 +10,9 @@
 
 	<include package="nti.contentindexing" />
 	<include package="nti.contenttypes.courses" />
-	
+
 	<include package="nti.contenttypes.presentation" />
-	
+
 	<!-- Database creation and migration -->
 	<include package="zope.generations" />
 	<include package="zope.generations" file="subscriber.zcml" />
@@ -184,6 +184,27 @@
 			 provides="zope.traversing.interfaces.ITraversable"
 			 name="fields" />
 
+    <!-- Completion -->
+    <subscriber handler=".subscribers._asset_progress" />
+
+    <adapter factory=".completion._video_completion_policy"
+             provides="nti.contenttypes.completion.interfaces.ICompletableItemCompletionPolicy"
+             for="nti.contenttypes.presentation.interfaces.INTIVideo
+                  nti.contenttypes.courses.interfaces.ICourseInstance" />
+
+    <adapter factory=".completion._related_work_ref_completion_policy"
+             provides="nti.contenttypes.completion.interfaces.ICompletableItemCompletionPolicy"
+             for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef
+                  nti.contenttypes.courses.interfaces.ICourseInstance" />
+
+    <adapter factory=".completion.DefaultVideoCompletionPolicy"
+             provides="nti.contenttypes.completion.interfaces.ICompletableItemCompletionPolicy"
+             for="nti.contenttypes.presentation.interfaces.INTIVideo" />
+
+    <adapter factory=".completion.DefaultRelatedWorkRefCompletionPolicy"
+             provides="nti.contenttypes.completion.interfaces.ICompletableItemCompletionPolicy"
+             for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef" />
+
 	<!-- Events -->
 	<subscriber handler=".subscribers._on_outlinenode_unregistered" />
 
@@ -220,20 +241,20 @@
                 for="nti.contentlibrary.interfaces.IContentUnit" />
 
 	<!-- Exporters -->
-	<utility factory=".exporter.UserAssetsExporter" 
+	<utility factory=".exporter.UserAssetsExporter"
 			 name="017:User_Assets" />
 
-	<utility factory=".exporter.LessonOverviewsExporter" 
+	<utility factory=".exporter.LessonOverviewsExporter"
 			 provides=".interfaces.ILessonOverviewsSectionExporter"
 			 name="018:Lesson_Overviews" />
 
 	<subscriber handler=".exporter._on_course_section_exported_event" />
 
 	<!-- Importers -->
-	<utility factory=".importer.UserAssetsImporter" 
+	<utility factory=".importer.UserAssetsImporter"
 			 name="017:User_Assets" />
 
-	<utility factory=".importer.AssetCleanerImporter" 
+	<utility factory=".importer.AssetCleanerImporter"
 			 name="016:Asset_Cleaner" />
 
 	<utility factory=".importer.LessonOverviewsImporter"
