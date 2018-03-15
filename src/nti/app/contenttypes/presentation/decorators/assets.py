@@ -26,6 +26,8 @@ from nti.app.contentfolder.resources import is_internal_file_link
 from nti.app.contentfolder.resources import to_external_file_link
 from nti.app.contentfolder.resources import get_file_from_external_link
 
+from nti.app.contenttypes.completion.decorators import CompletableItemDecorator
+
 from nti.app.contenttypes.presentation.decorators import LEGACY_UAS_40
 from nti.app.contenttypes.presentation.decorators import VIEW_ORDERED_CONTENTS
 
@@ -55,6 +57,8 @@ from nti.contentlibrary.interfaces import IContentUnitHrefMapper
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
+from nti.contenttypes.completion.interfaces import ICompletableItem
+
 from nti.contenttypes.courses.common import get_course_packages
 
 from nti.contenttypes.courses.discussions.utils import resolve_discussion_course_bundle
@@ -80,6 +84,7 @@ from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTISurveyRef
+from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import INTITranscript
 from nti.contenttypes.presentation.interfaces import INTIQuestionRef
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
@@ -104,7 +109,7 @@ from nti.externalization.interfaces import IExternalMappingDecorator
 
 from nti.links.links import Link
 
-from nti.ntiids.ntiids import get_type
+from nti.ntiids.ntiids import get_type, is_valid_ntiid_string
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_provider_safe
 from nti.ntiids.ntiids import find_object_with_ntiid
@@ -665,3 +670,30 @@ class _SurveyRefEditLinkDecorator(_AssessmentRefEditLinkDecorator):
 @interface.implementer(IExternalMappingDecorator)
 class LessonRecursiveAuditLogLinkDecorator(BaseRecursiveAuditLogLinkDecorator):
     pass
+
+
+@component.adapter(IPresentationAsset)
+@interface.implementer(IExternalObjectDecorator)
+class AssetCompletableItemDecorator(CompletableItemDecorator):
+    """
+    Decorate the :class:`ICompletableItem` with requirement information. This
+    requires being able to adapt :class:`ICompletableItem` to the correct
+    :class:`ICompletionContext`.
+
+    The assets themselves may be :class:`ICompletableItems` and thus, already
+    decorated; this should be overridden by :class:`ICompletableItem` objects
+    pointed to by the asset, if applicable.
+    """
+
+    def _do_decorate_external(self, context, result):
+        asset = IConcreteAsset(context, context)
+        if      asset is not context \
+            and ICompletableItem.providedBy(asset):
+                # Decorate concrete asset data
+                super(AssetCompletableItemDecorator, self)._do_decorate_external(asset, result)
+        target = getattr(asset, 'target', '')
+        if target and is_valid_ntiid_string(target):
+            target = find_object_with_ntiid(target)
+            if ICompletableItem.providedBy(target):
+                # Decorate target data
+                super(AssetCompletableItemDecorator, self)._do_decorate_external(target, result)
