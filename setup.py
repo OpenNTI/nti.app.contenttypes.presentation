@@ -52,7 +52,7 @@ setup(
         'setuptools',
         'nti.app.assessment',
         'nti.app.products.courseware',
-        'nti.app.contenttypes.presentation',
+        'nti.app.contenttypes.completion',
         'nti.assessment',
         'nti.base',
         'nti.common',
