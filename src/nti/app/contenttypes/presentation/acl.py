@@ -65,7 +65,9 @@ class BasePresentationAssetACLProvider(object):
 
     @property
     def __acl__(self):
-        result = acl_from_aces(ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
+        result = acl_from_aces(
+            ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self))
+        )
         result.append(ace_allowing(ROLE_CONTENT_ADMIN,
                                    ALL_PERMISSIONS, type(self)))
         result.append(ace_allowing(ROLE_SITE_ADMIN,
@@ -127,7 +129,9 @@ class AbstractCourseLineageACLProvider(object):
 
     @Lazy
     def __acl__(self):
-        result = acl_from_aces(ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
+        result = acl_from_aces(
+            ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self))
+        )
         course = find_interface(self.context, ICourseInstance, strict=False)
         if course is not None:
             result.extend(IACLProvider(course).__acl__)
@@ -177,7 +181,9 @@ class AdminEditorParentObjectACLProvider(object):
 
     @Lazy
     def __acl__(self):
-        result = acl_from_aces(ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)))
+        result = acl_from_aces(
+            ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self))
+        )
         result.append(ace_allowing(ROLE_CONTENT_ADMIN,
                                    ALL_PERMISSIONS, type(self)))
         result.append(ace_allowing(ROLE_SITE_ADMIN,
@@ -199,7 +205,10 @@ class NTITranscriptACLProvider(AdminEditorParentObjectACLProvider):
         if IUserCreatedTranscript.providedBy(self.context):
             creator = IPrincipal(self.context.creator, None)
             if creator is not None:
-                result.append(ace_allowing(creator, ALL_PERMISSIONS, type(self)))
+                # pylint: disable=no-member
+                result.append(
+                    ace_allowing(creator, ALL_PERMISSIONS, type(self))
+                )
         return result
 
 
