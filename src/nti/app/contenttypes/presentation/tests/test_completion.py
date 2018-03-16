@@ -105,10 +105,12 @@ class TestCompletion(ApplicationLayerTest):
             for item in group['Items']:
                 if item['Class'] == u'ContentVideoCollection':
                     for item in item['Items']:
-                        assert_that(item[u'CompletionDefaultState'], is_(True))
+                        assert_that(item[u'CompletionDefaultState'], is_(False))
+                        assert_that(item[u'IsCompletionDefaultState'], is_(True))
                         assert_that(item[u'CompletionRequired'], is_(False))
                 else:
-                    assert_that(item[u'CompletionDefaultState'], is_(True))
+                    assert_that(item[u'CompletionDefaultState'], is_(False))
+                    assert_that(item[u'IsCompletionDefaultState'], is_(True))
                     assert_that(item[u'CompletionRequired'], is_(False))
 
         with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
@@ -128,11 +130,13 @@ class TestCompletion(ApplicationLayerTest):
             for item in group['Items']:
                 for item in item['Items']:
                     assert_that(item[u'CompletionDefaultState'], is_(True))
+                    assert_that(item[u'IsCompletionDefaultState'], is_(True))
                     assert_that(item[u'CompletionRequired'], is_(True))
 
         for group in ref_groups:
             for item in group['Items']:
-                assert_that(item[u'CompletionDefaultState'], is_(True))
+                assert_that(item[u'CompletionDefaultState'], is_(False))
+                assert_that(item[u'IsCompletionDefaultState'], is_(True))
                 assert_that(item[u'CompletionRequired'], is_(False))
 
         # Video explicitly optional; ref explicitly required
@@ -150,10 +154,12 @@ class TestCompletion(ApplicationLayerTest):
             for item in group['Items']:
                 for item in item['Items']:
                     if item['NTIID'] == self.video_ntiid:
-                        assert_that(item[u'CompletionDefaultState'], is_(False))
+                        assert_that(item[u'CompletionDefaultState'], is_(True))
+                        assert_that(item[u'IsCompletionDefaultState'], is_(False))
                         assert_that(item[u'CompletionRequired'], is_(False))
                     else:
                         assert_that(item[u'CompletionDefaultState'], is_(True))
+                        assert_that(item[u'IsCompletionDefaultState'], is_(True))
                         assert_that(item[u'CompletionRequired'], is_(True))
 
         for group in ref_groups:
@@ -161,7 +167,9 @@ class TestCompletion(ApplicationLayerTest):
                 if     item['NTIID'] == self.pdf_ntiid \
                     or item['target-NTIID'] == self.reading_ntiid:
                     assert_that(item[u'CompletionDefaultState'], is_(False))
+                    assert_that(item[u'IsCompletionDefaultState'], is_(False))
                     assert_that(item[u'CompletionRequired'], is_(True))
                 else:
-                    assert_that(item[u'CompletionDefaultState'], is_(True))
+                    assert_that(item[u'CompletionDefaultState'], is_(False))
+                    assert_that(item[u'IsCompletionDefaultState'], is_(True))
                     assert_that(item[u'CompletionRequired'], is_(False))
