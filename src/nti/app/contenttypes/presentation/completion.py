@@ -13,11 +13,12 @@ from __future__ import absolute_import
 from zope import component
 from zope import interface
 
-from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.completion.completion import CompletedItem
 
 from nti.contenttypes.completion.interfaces import ICompletableItemCompletionPolicy
 from nti.contenttypes.completion.interfaces import ICompletionContextCompletionPolicyContainer
 
+from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
@@ -37,7 +38,12 @@ class DefaultRelatedWorkRefCompletionPolicy(object):
         self.asset = obj
 
     def is_complete(self, progress):
-        return progress is not None and progress.HasProgress
+        result = None
+        if progress is not None and progress.HasProgress:
+            result = CompletedItem(Item=progress.Item,
+                                   Principal=progress.User,
+                                   CompletedDate=progress.LastModified)
+        return result
 
 
 @component.adapter(INTIVideo)
@@ -52,7 +58,12 @@ class DefaultVideoCompletionPolicy(object):
         self.asset = obj
 
     def is_complete(self, progress):
-        return progress is not None and progress.HasProgress
+        result = None
+        if progress is not None and progress.HasProgress:
+            result = CompletedItem(Item=progress.Item,
+                                   Principal=progress.User,
+                                   CompletedDate=progress.LastModified)
+        return result
 
 
 def _asset_completion_policy(asset, course):
