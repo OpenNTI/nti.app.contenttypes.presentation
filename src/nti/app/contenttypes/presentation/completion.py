@@ -134,7 +134,7 @@ class _AssetItemProvider(object):
                     target = getattr(item, 'target', '')
                     target = find_object_with_ntiid(target)
                     if self._is_item_required(target):
-                        accum.add(item)
+                        accum.add(target)
 
     def iter_items(self):
         result = set()
