@@ -198,7 +198,7 @@ class TestCompletion(ApplicationLayerTest):
             for provider in providers:
                 items.update(provider.iter_items())
             assert_that(items, has_length(greater_than_or_equal_to(3)))
-            assert_that(items, has_items(has_property('target', self.reading_ntiid),
+            assert_that(items, has_items(has_property('ntiid', self.reading_ntiid),
                                          has_property('ntiid', self.pdf_ntiid),
                                          has_property('mime_type',
                                                       'application/vnd.nextthought.ntivideo'),

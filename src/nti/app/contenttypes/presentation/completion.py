@@ -26,6 +26,7 @@ from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
+from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 
 from nti.coremetadata.interfaces import IUser
@@ -109,7 +110,8 @@ def _video_completion_policy(asset, course):
 class _AssetItemProvider(object):
     """
     Return the :class:`ICompletableItem` items for this user/course. This will
-    be the set of items in available/published lessons.
+    be the set of items in available/published lessons. This provider will not
+    return any assignments.
     """
 
     def __init__(self, user, course):
@@ -128,6 +130,8 @@ class _AssetItemProvider(object):
         if lesson is not None and self._is_published(lesson):
             for group in lesson or ():
                 for item in group or ():
+                    if INTIAssignmentRef.providedBy(item):
+                        continue
                     item = IConcreteAsset(item, item)
                     if self._is_item_required(item):
                         accum.add(item)
