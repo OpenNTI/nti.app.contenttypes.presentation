@@ -15,7 +15,7 @@ from zope import interface
 
 from nti.contenttypes.completion.completion import CompletedItem
 
-from nti.contenttypes.completion.interfaces import ICompletableItemProvider
+from nti.contenttypes.completion.interfaces import IRequiredCompletableItemProvider
 from nti.contenttypes.completion.interfaces import ICompletableItemCompletionPolicy
 from nti.contenttypes.completion.interfaces import ICompletionContextCompletionPolicyContainer
 
@@ -106,7 +106,7 @@ def _video_completion_policy(asset, course):
 
 
 @component.adapter(IUser, ICourseInstance)
-@interface.implementer(ICompletableItemProvider)
+@interface.implementer(IRequiredCompletableItemProvider)
 class _AssetItemProvider(object):
     """
     Return the :class:`ICompletableItem` items for this user/course. This will

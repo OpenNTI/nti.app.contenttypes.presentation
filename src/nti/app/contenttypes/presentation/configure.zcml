@@ -206,7 +206,7 @@
              for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef" />
 
     <subscriber factory=".completion._AssetItemProvider"
-                provides="nti.contenttypes.completion.interfaces.ICompletableItemProvider"
+                provides="nti.contenttypes.completion.interfaces.IRequiredCompletableItemProvider"
                 for="nti.dataserver.interfaces.IUser
                      nti.contenttypes.courses.interfaces.ICourseInstance" />
 
