@@ -14,18 +14,27 @@ from pyramid.view import view_config
 
 from zope import component
 
+from zope.cachedescriptors.property import Lazy
+
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.contenttypes.presentation.views import VIEW_LESSON_PROGRESS
+from nti.app.contenttypes.presentation.views import VIEW_LESSON_PROGRESS_STATS
 
 from nti.app.externalization.error import raise_json_error
 
 from nti.contentlibrary.indexed_data import get_catalog
 
 from nti.contenttypes.completion.interfaces import IProgress
+from nti.contenttypes.completion.interfaces import ICompletableItem
+from nti.contenttypes.completion.interfaces import ICompletedItemContainer
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseEnrollments
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
+
+from nti.contenttypes.courses.utils import get_course_editors
+from nti.contenttypes.courses.utils import get_course_instructors
 
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
@@ -44,7 +53,6 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 from nti.site.site import get_component_hierarchy_names
 
 ITEMS = StandardExternalFields.ITEMS
-TOTAL = StandardExternalFields.TOTAL
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
 logger = __import__('logging').getLogger(__name__)
@@ -112,7 +120,6 @@ class LessonProgressView(AbstractAuthenticatedView):
             for child in unit.children:
                 self._get_legacy_progress_objects(child, accum)
 
-
     def _get_lesson_progress_objects(self, lesson, lesson_ntiid):
         results = set()
         catalog = get_catalog()
@@ -178,4 +185,98 @@ class LessonProgressView(AbstractAuthenticatedView):
 
         # Setting this will enable the renderer to return a 304, if needed.
         self.request.response.last_modified = node_last_modified
+        return result
+
+
+@view_config(route_name='objects.generic.traversal',
+             renderer='rest',
+             context=ICourseOutlineContentNode,
+             request_method='GET',
+             permission=ACT_READ,
+             name=VIEW_LESSON_PROGRESS_STATS)
+class LessonCompletionStatisticsView(AbstractAuthenticatedView):
+    """
+    Fetch the completed item statistics for items in the lesson. This
+    view will be widely available, so we should take care to return
+    anonymous data only here.
+    """
+
+    @Lazy
+    def course(self):
+        return ICourseInstance(self.context, None)
+
+    def _get_enrolled_usernames(self):
+        """
+        Get the enrolled non-instructor, non-editor usernames.
+        """
+        usernames = set(ICourseEnrollments(self.course).iter_principals())
+        admins = list(get_course_instructors(self.course))
+        editors = list(get_course_editors(self.course))
+        admins.extend(editors)
+        admin_usernames = set(getattr(x, 'username', x) for x in admins)
+        return usernames - admin_usernames
+
+    def _validate(self):
+        if self.course is None:
+            raise_json_error(self.request,
+                             hexc.HTTPUnprocessableEntity,
+                             {
+                                 'message': _(u"Cannot gather progress without course."),
+                                 'code': u'CourseNotFoundError'
+                             },
+                             None)
+
+    def _get_completable_items(self, lesson):
+        # TODO: Seems useful to have this logic elsewhere
+        result = set()
+        for group in lesson or ():
+            for item in group or ():
+                item = IConcreteAsset(item, item)
+                if ICompletableItem.providedBy(item):
+                    result.add(item)
+                target = getattr(item, 'target', '')
+                if target is not None:
+                    target = find_object_with_ntiid(target)
+                    if ICompletableItem.providedBy(target):
+                        result.add(target)
+        return result
+
+    def _build_stats(self, item, completed_item_container, usernames, enrolled_count):
+        completed_count = 0
+        completed_date = None
+        for username in usernames:
+            principal_container = completed_item_container.get(username)
+            if principal_container is not None:
+                completed_item = principal_container.get_completed_item(item)
+                if completed_item is not None:
+                    completed_count += 1
+                    if completed_date is None:
+                        completed_date = completed_item.CompletedDate
+                    else:
+                        completed_date = max(completed_date,
+                                             completed_item.CompletedDate)
+        return {'CountCompleted': completed_count,
+                'TotalUsers': enrolled_count,
+                'LastCompleteDate': completed_date}
+
+    def __call__(self):
+        self._validate()
+        ntiid = self.context.LessonOverviewNTIID
+        lesson = find_object_with_ntiid(ntiid)
+        # We might have to get smarter about this, some students may not have
+        # access to all items
+        usernames = self._get_enrolled_usernames()
+        enrolled_count = len(usernames)
+        completed_item_container = ICompletedItemContainer(self.course)
+        items = self._get_completable_items(lesson)
+        result = LocatedExternalDict()
+        result[ITEMS] = result_dict = {}
+        for item in items:
+            stat_dict = self._build_stats(item,
+                                          completed_item_container,
+                                          usernames,
+                                          enrolled_count)
+            result_dict[item.ntiid] = stat_dict
+        result[ITEM_COUNT] = len(items)
+        result['TotalUsers'] = enrolled_count
         return result

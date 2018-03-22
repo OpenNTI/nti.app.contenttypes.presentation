@@ -17,3 +17,4 @@ from nti.app.contenttypes.presentation import VIEW_LESSON_PROGRESS
 from nti.app.contenttypes.presentation import VIEW_OVERVIEW_CONTENT
 from nti.app.contenttypes.presentation import VIEW_OVERVIEW_SUMMARY
 from nti.app.contenttypes.presentation import VIEW_LESSON_REMOVE_REFS
+from nti.app.contenttypes.presentation import VIEW_LESSON_PROGRESS_STATS

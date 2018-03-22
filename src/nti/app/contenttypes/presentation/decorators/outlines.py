@@ -22,6 +22,7 @@ from nti.app.contenttypes.presentation.decorators import VIEW_LESSON_PROGRESS
 from nti.app.contenttypes.presentation.decorators import VIEW_ORDERED_CONTENTS
 from nti.app.contenttypes.presentation.decorators import VIEW_OVERVIEW_CONTENT
 from nti.app.contenttypes.presentation.decorators import VIEW_OVERVIEW_SUMMARY
+from nti.app.contenttypes.presentation.decorators import VIEW_LESSON_PROGRESS_STATS
 
 from nti.app.contenttypes.presentation.decorators import is_legacy_uas
 from nti.app.contenttypes.presentation.decorators import get_omit_published
@@ -227,10 +228,9 @@ class _CourseOutlineNodeProgressLinkDecorator(Singleton):
 
     def decorateExternalObject(self, original, external):
         links = external.setdefault(LINKS, [])
-        link = Link(original,
-                    rel=VIEW_LESSON_PROGRESS,
-                    elements=('@@%s' % VIEW_LESSON_PROGRESS,))
-        interface.alsoProvides(link, ILocation)
-        link.__name__ = ''
-        link.__parent__ = original
-        links.append(link)
+        for rel in (VIEW_LESSON_PROGRESS, VIEW_LESSON_PROGRESS_STATS):
+            link = Link(original, rel=rel, elements=('@@%s' % rel,))
+            interface.alsoProvides(link, ILocation)
+            link.__name__ = ''
+            link.__parent__ = original
+            links.append(link)

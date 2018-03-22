@@ -47,3 +47,7 @@ VIEW_LESSON_REMOVE_REFS = 'RemoveRefs'
 
 #: View to gather lesson progress for the remote user.
 VIEW_LESSON_PROGRESS = 'Progress'
+
+#: View to gather lesson progress stats
+VIEW_LESSON_PROGRESS_STATS = 'ProgressStatisticsByItem'
+
