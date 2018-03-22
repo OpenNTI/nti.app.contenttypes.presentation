@@ -18,6 +18,7 @@ from zope.cachedescriptors.property import Lazy
 from zope.location.interfaces import ILocation
 
 from nti.app.contenttypes.presentation.decorators import LEGACY_UAS_20
+from nti.app.contenttypes.presentation.decorators import VIEW_LESSON_PROGRESS
 from nti.app.contenttypes.presentation.decorators import VIEW_ORDERED_CONTENTS
 from nti.app.contenttypes.presentation.decorators import VIEW_OVERVIEW_CONTENT
 from nti.app.contenttypes.presentation.decorators import VIEW_OVERVIEW_SUMMARY
@@ -51,6 +52,8 @@ from nti.dataserver.authorization import ACT_CONTENT_EDIT
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalMappingDecorator
 
+from nti.externalization.singleton import Singleton
+
 from nti.links import render_link
 
 from nti.links.links import Link
@@ -66,7 +69,7 @@ def _lesson_overview_links(context, request):
         result = []
         omit_unpublished = get_omit_published(request)
         for name in (VIEW_OVERVIEW_CONTENT, VIEW_OVERVIEW_SUMMARY):
-            link = Link(context, 
+            link = Link(context,
                         rel=name,
                         elements=('@@' + name,),
                         params={'omit_unpublished': omit_unpublished})
@@ -212,3 +215,22 @@ class _IpadCourseOutlineContentNodeSrcDecorator(AbstractAuthenticatedRequestAwar
 @interface.implementer(IExternalMappingDecorator)
 class OutlineNodeRecursiveAuditLogLinkDecorator(BaseRecursiveAuditLogLinkDecorator):
     pass
+
+
+@component.adapter(ICourseOutlineContentNode)
+@interface.implementer(IExternalMappingDecorator)
+class _CourseOutlineNodeProgressLinkDecorator(Singleton):
+    """
+    Return a link on the content node in which the client can retrieve
+    progress information for a user.
+    """
+
+    def decorateExternalObject(self, original, external):
+        links = external.setdefault(LINKS, [])
+        link = Link(original,
+                    rel=VIEW_LESSON_PROGRESS,
+                    elements=('@@%s' % VIEW_LESSON_PROGRESS,))
+        interface.alsoProvides(link, ILocation)
+        link.__name__ = ''
+        link.__parent__ = original
+        links.append(link)

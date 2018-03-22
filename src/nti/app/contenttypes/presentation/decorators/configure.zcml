@@ -37,6 +37,11 @@
 				for="nti.contenttypes.courses.interfaces.ICourseOutlineNode
 					 pyramid.interfaces.IRequest" />
 
+	<subscriber factory=".outlines._CourseOutlineNodeProgressLinkDecorator"
+                provides="nti.externalization.interfaces.IExternalObjectDecorator"
+                for="nti.contenttypes.courses.interfaces.ICourseOutlineContentNode
+                     pyramid.interfaces.IRequest"  />
+
 	<!-- Courses -->
 	<subscriber factory=".courses._ByOutlineNodeDecorator"
 				provides="nti.externalization.interfaces.IExternalMappingDecorator"

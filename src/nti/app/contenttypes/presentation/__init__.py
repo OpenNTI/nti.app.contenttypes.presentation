@@ -44,3 +44,6 @@ VIEW_ORDERED_CONTENTS = 'ordered-contents'
 
 #: View to remove all refs pointing at target in lessons.
 VIEW_LESSON_REMOVE_REFS = 'RemoveRefs'
+
+#: View to gather lesson progress for the remote user.
+VIEW_LESSON_PROGRESS = 'Progress'

@@ -14,5 +14,6 @@
 	<pyramid:scan package=".delete_views" />
 	<pyramid:scan package=".lesson_views" />
 	<pyramid:scan package=".outline_views" />
+	<pyramid:scan package=".completion_views" />
 
 </configure>
