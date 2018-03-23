@@ -226,19 +226,25 @@ class LessonCompletionStatisticsView(AbstractAuthenticatedView):
                              },
                              None)
 
+    def _accum_item(self, item, accum):
+        item = IConcreteAsset(item, item)
+        if ICompletableItem.providedBy(item):
+            accum.add(item)
+        target = getattr(item, 'target', '')
+        if target is not None:
+            target = find_object_with_ntiid(target)
+            if ICompletableItem.providedBy(target):
+                accum.add(target)
+        children = getattr(item, 'Items', None)
+        for child in children or ():
+            self._accum_item(child, accum)
+
     def _get_completable_items(self, lesson):
         # TODO: Seems useful to have this logic elsewhere
         result = set()
         for group in lesson or ():
             for item in group or ():
-                item = IConcreteAsset(item, item)
-                if ICompletableItem.providedBy(item):
-                    result.add(item)
-                target = getattr(item, 'target', '')
-                if target is not None:
-                    target = find_object_with_ntiid(target)
-                    if ICompletableItem.providedBy(target):
-                        result.add(target)
+                self._accum_item(item, result)
         return result
 
     def _build_stats(self, item, completed_item_container, usernames, enrolled_count):

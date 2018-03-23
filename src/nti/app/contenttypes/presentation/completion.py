@@ -125,20 +125,26 @@ class _AssetItemProvider(object):
         return  self._is_published(item) \
             and is_item_required(item, self.course)
 
+    def _accum_item(self, item, accum):
+        if INTIAssignmentRef.providedBy(item):
+            return
+        item = IConcreteAsset(item, item)
+        if self._is_item_required(item):
+            accum.add(item)
+        target = getattr(item, 'target', '')
+        target = find_object_with_ntiid(target)
+        if self._is_item_required(target):
+            accum.add(target)
+        children = getattr(item, 'Items', None)
+        for child in children or ():
+            self._accum_item(child, accum)
+
     def _get_items_for_node(self, node, accum):
         lesson = find_object_with_ntiid(node.LessonOverviewNTIID)
         if lesson is not None and self._is_published(lesson):
             for group in lesson or ():
                 for item in group or ():
-                    if INTIAssignmentRef.providedBy(item):
-                        continue
-                    item = IConcreteAsset(item, item)
-                    if self._is_item_required(item):
-                        accum.add(item)
-                    target = getattr(item, 'target', '')
-                    target = find_object_with_ntiid(target)
-                    if self._is_item_required(target):
-                        accum.add(target)
+                    self._accum_item(item, accum)
 
     def iter_items(self):
         result = set()
