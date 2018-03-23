@@ -34,6 +34,7 @@ from nti.coremetadata.interfaces import IUser
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.publishing.interfaces import IPublishable
+from nti.dataserver.interfaces import ICalendarPublishable
 
 
 logger = __import__('logging').getLogger(__name__)
@@ -118,11 +119,21 @@ class _AssetItemProvider(object):
         self.user = user
         self.course = course
 
-    def _is_published(self, obj):
-        return not IPublishable.providedBy(obj) or obj.is_published()
+    def _is_scheduled(self, obj):
+        return  ICalendarPublishable.providedBy(obj) \
+            and (obj.publishBeginning or obj.publishEnding)
+
+    def _is_available(self, obj):
+        """
+        An object is considered part of completion if it is either published
+        or scheduled to be published.
+        """
+        return not IPublishable.providedBy(obj) \
+            or obj.is_published() \
+            or self._is_scheduled(obj)
 
     def _is_item_required(self, item):
-        return  self._is_published(item) \
+        return  self._is_available(item) \
             and is_item_required(item, self.course)
 
     def _accum_item(self, item, accum):
@@ -141,7 +152,7 @@ class _AssetItemProvider(object):
 
     def _get_items_for_node(self, node, accum):
         lesson = find_object_with_ntiid(node.LessonOverviewNTIID)
-        if lesson is not None and self._is_published(lesson):
+        if lesson is not None and self._is_available(lesson):
             for group in lesson or ():
                 for item in group or ():
                     self._accum_item(item, accum)
