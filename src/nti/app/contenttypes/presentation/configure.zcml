@@ -207,8 +207,7 @@
 
     <subscriber factory=".completion._AssetItemProvider"
                 provides="nti.contenttypes.completion.interfaces.IRequiredCompletableItemProvider"
-                for="nti.dataserver.interfaces.IUser
-                     nti.contenttypes.courses.interfaces.ICourseInstance" />
+                for="nti.contenttypes.courses.interfaces.ICourseInstance" />
 
 	<!-- Events -->
 	<subscriber handler=".subscribers._on_outlinenode_unregistered" />

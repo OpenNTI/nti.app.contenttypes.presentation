@@ -24,12 +24,12 @@ from nti.contenttypes.completion.utils import is_item_required
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 
+from nti.contenttypes.courses.utils import get_enrollment_record
+
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
-
-from nti.coremetadata.interfaces import IUser
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -106,7 +106,7 @@ def _video_completion_policy(asset, course):
     return _asset_completion_policy(asset, course)
 
 
-@component.adapter(IUser, ICourseInstance)
+@component.adapter(ICourseInstance)
 @interface.implementer(IRequiredCompletableItemProvider)
 class _AssetItemProvider(object):
     """
@@ -115,9 +115,9 @@ class _AssetItemProvider(object):
     return any assignments.
     """
 
-    def __init__(self, user, course):
-        self.user = user
+    def __init__(self, course):
         self.course = course
+        self._scope_to_items = dict()
 
     def _is_scheduled(self, obj):
         return  ICalendarPublishable.providedBy(obj) \
@@ -157,13 +157,18 @@ class _AssetItemProvider(object):
                 for item in group or ():
                     self._accum_item(item, accum)
 
-    def iter_items(self):
-        result = set()
-        def _recur(node):
-            if ICourseOutlineContentNode.providedBy(node):
-                self._get_items_for_node(node, result)
-            for child_node in node.values():
-                _recur(child_node)
+    def iter_items(self, user):
+        record = get_enrollment_record(self.course, user)
+        scope = record.Scope if record is not None else 'ALL'
+        result = self._scope_to_items.get(scope)
+        if result is None:
+            result = set()
+            def _recur(node):
+                if ICourseOutlineContentNode.providedBy(node):
+                    self._get_items_for_node(node, result)
+                for child_node in node.values():
+                    _recur(child_node)
 
-        _recur(self.course.Outline)
+            _recur(self.course.Outline)
+            self._scope_to_items[scope] = result
         return result
