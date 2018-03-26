@@ -64,6 +64,7 @@ from nti.contentlibrary.interfaces import IContentUnitRemovedEvent
 from nti.contentlibrary.interfaces import IContentUnitAssociations
 from nti.contentlibrary.interfaces import IContentPackageRemovedEvent
 
+from nti.contenttypes.completion.interfaces import ICompletableItem
 from nti.contenttypes.completion.interfaces import IUserProgressUpdatedEvent
 
 from nti.contenttypes.completion.utils import update_completion
@@ -593,7 +594,8 @@ def _asset_progress(asset, event):
     """
     On asset progress update, update completion.
     """
-    update_completion(asset,
-                      asset.ntiid,
-                      event.user,
-                      event.context)
+    if ICompletableItem.providedBy(asset):
+        update_completion(asset,
+                          asset.ntiid,
+                          event.user,
+                          event.context)
