@@ -13,6 +13,8 @@ from __future__ import absolute_import
 from zope import component
 from zope import interface
 
+from nti.app.contenttypes.presentation.utils import is_item_visible
+
 from nti.contenttypes.completion.completion import CompletedItem
 
 from nti.contenttypes.completion.interfaces import IRequiredCompletableItemProvider
@@ -132,30 +134,34 @@ class _AssetItemProvider(object):
             or obj.is_published() \
             or self._is_scheduled(obj)
 
-    def _is_item_required(self, item):
-        return  self._is_available(item) \
-            and is_item_required(item, self.course)
+    def _is_visible(self, obj, user, record):
+        return is_item_visible(obj, user, context=self.course, record=record)
 
-    def _accum_item(self, item, accum):
+    def _is_item_required(self, item, user, record):
+        return  self._is_available(item) \
+            and is_item_required(item, self.course) \
+            and self._is_visible(item, user, record)
+
+    def _accum_item(self, item, accum, user, record):
         if INTIAssignmentRef.providedBy(item):
             return
         item = IConcreteAsset(item, item)
-        if self._is_item_required(item):
+        if self._is_item_required(item, user, record):
             accum.add(item)
         target = getattr(item, 'target', '')
         target = find_object_with_ntiid(target)
-        if self._is_item_required(target):
+        if self._is_item_required(target, user, record):
             accum.add(target)
         children = getattr(item, 'Items', None)
         for child in children or ():
-            self._accum_item(child, accum)
+            self._accum_item(child, accum, user, record)
 
-    def _get_items_for_node(self, node, accum):
+    def _get_items_for_node(self, node, accum, user, record):
         lesson = find_object_with_ntiid(node.LessonOverviewNTIID)
         if lesson is not None and self._is_available(lesson):
             for group in lesson or ():
                 for item in group or ():
-                    self._accum_item(item, accum)
+                    self._accum_item(item, accum, user, record)
 
     def iter_items(self, user):
         record = get_enrollment_record(self.course, user)
@@ -165,7 +171,7 @@ class _AssetItemProvider(object):
             result = set()
             def _recur(node):
                 if ICourseOutlineContentNode.providedBy(node):
-                    self._get_items_for_node(node, result)
+                    self._get_items_for_node(node, result, user, record)
                 for child_node in node.values():
                     _recur(child_node)
 
