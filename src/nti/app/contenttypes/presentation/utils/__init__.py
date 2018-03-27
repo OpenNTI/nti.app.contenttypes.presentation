@@ -11,8 +11,6 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope.authentication.interfaces import IUnauthenticatedPrincipal
 
-from nti.appserver.pyramid_authorization import has_permission
-
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import ES_CREDIT
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
@@ -35,6 +33,9 @@ from nti.contenttypes.presentation.interfaces import IPresentationVisibility
 from nti.coremetadata.utils import current_principal
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
+
+from nti.dataserver.authorization_acl import has_permission
+
 
 #: Visibility scope map
 VISIBILITY_SCOPE_MAP = {
@@ -92,5 +93,5 @@ def is_item_visible(item, user, context=None, record=None):
         if scope != ES_ALL and get_visibility_for_scope(scope) != item.visibility:
             # Our item is scoped and not-visible to us, but editors always have
             # access.
-            result = has_permission(ACT_CONTENT_EDIT, context)
+            result = has_permission(ACT_CONTENT_EDIT, context, user.username)
     return result
