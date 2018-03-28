@@ -7,9 +7,12 @@
 from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
-logger = __import__('logging').getLogger(__name__)
-
 from zope.authentication.interfaces import IUnauthenticatedPrincipal
+
+from zope.security.interfaces import IParticipation
+from zope.security.management import endInteraction
+from zope.security.management import newInteraction
+from zope.security.management import restoreInteraction
 
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import ES_CREDIT
@@ -35,6 +38,8 @@ from nti.coremetadata.utils import current_principal
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.dataserver.authorization_acl import has_permission
+
+logger = __import__('logging').getLogger(__name__)
 
 
 #: Visibility scope map
@@ -92,6 +97,11 @@ def is_item_visible(item, user, context=None, record=None):
         scope = _get_scope(user, context, record)
         if scope != ES_ALL and get_visibility_for_scope(scope) != item.visibility:
             # Our item is scoped and not-visible to us, but editors always have
-            # access.
-            result = has_permission(ACT_CONTENT_EDIT, context, user.username)
+            # access. We may be checking this on behalf of another user.
+            endInteraction()
+            try:
+                newInteraction(IParticipation(user))
+                result = has_permission(ACT_CONTENT_EDIT, context, user.username)
+            finally:
+                restoreInteraction()
     return result
