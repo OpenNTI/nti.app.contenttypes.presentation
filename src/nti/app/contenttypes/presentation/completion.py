@@ -137,20 +137,25 @@ class _AssetItemProvider(object):
     def _is_visible(self, obj, user, record):
         return is_item_visible(obj, user, context=self.course, record=record)
 
-    def _is_item_required(self, item, user, record):
+    def _is_item_required(self, item):
         return  self._is_available(item) \
-            and is_item_required(item, self.course) \
-            and self._is_visible(item, user, record)
+            and is_item_required(item, self.course)
 
     def _accum_item(self, item, accum, user, record):
-        if INTIAssignmentRef.providedBy(item):
-            return
         item = IConcreteAsset(item, item)
-        if self._is_item_required(item, user, record):
+        if     INTIAssignmentRef.providedBy(item) \
+            or not self._is_visible(item, user, record):
+            # Do not pull in target if we are an assignment ref (different
+            # provider) or we are not visible.
+            return
+
+        if self._is_item_required(item):
             accum.add(item)
+        # Now check target
         target = getattr(item, 'target', '')
         target = find_object_with_ntiid(target)
-        if self._is_item_required(target, user, record):
+        if      self._is_item_required(target) \
+            and self._is_visible(target, user, record):
             accum.add(target)
         children = getattr(item, 'Items', None)
         for child in children or ():
