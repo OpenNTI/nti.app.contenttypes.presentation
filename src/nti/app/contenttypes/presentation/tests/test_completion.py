@@ -35,6 +35,7 @@ from nti.app.testing.application_webtest import ApplicationLayerTest
 from nti.app.testing.decorators import WithSharedApplicationMockDS
 
 from nti.contenttypes.completion.interfaces import IProgress
+from nti.contenttypes.completion.interfaces import ICompletableItemProvider
 from nti.contenttypes.completion.interfaces import IRequiredCompletableItemProvider
 from nti.contenttypes.completion.interfaces import ICompletableItemDefaultRequiredPolicy
 
@@ -129,6 +130,16 @@ class TestCompletion(ApplicationLayerTest):
             assert_that(default_required.mime_types, has_length(0))
             for video_mime in VIDEO_MIME_TYPES:
                 default_required.mime_types.add(video_mime)
+
+            user = User.get_user('sjohnson@nextthought.com')
+            providers = component.subscribers((course,),
+                                              ICompletableItemProvider)
+            providers = tuple(providers)
+            assert_that(providers, has_length(greater_than_or_equal_to(1)))
+            possible_items = set()
+            for provider in providers:
+                possible_items.update(provider.iter_items(user))
+            assert_that(possible_items, has_length(greater_than_or_equal_to(3)))
 
         # Videos are now default required
         res = self._get_video_lesson()

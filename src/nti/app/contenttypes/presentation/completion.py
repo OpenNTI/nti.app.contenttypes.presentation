@@ -17,6 +17,8 @@ from nti.app.contenttypes.presentation.utils import is_item_visible
 
 from nti.contenttypes.completion.completion import CompletedItem
 
+from nti.contenttypes.completion.interfaces import ICompletableItem
+from nti.contenttypes.completion.interfaces import ICompletableItemProvider
 from nti.contenttypes.completion.interfaces import IRequiredCompletableItemProvider
 from nti.contenttypes.completion.interfaces import ICompletableItemCompletionPolicy
 from nti.contenttypes.completion.interfaces import ICompletionContextCompletionPolicyContainer
@@ -109,7 +111,7 @@ def _video_completion_policy(asset, course):
 
 
 @component.adapter(ICourseInstance)
-@interface.implementer(IRequiredCompletableItemProvider)
+@interface.implementer(ICompletableItemProvider)
 class _AssetItemProvider(object):
     """
     Return the :class:`ICompletableItem` items for this user/course. This will
@@ -137,9 +139,9 @@ class _AssetItemProvider(object):
     def _is_visible(self, obj, user, record):
         return is_item_visible(obj, user, context=self.course, record=record)
 
-    def _is_item_required(self, item):
-        return  self._is_available(item) \
-            and is_item_required(item, self.course)
+    def _include_item(self, item):
+        return  ICompletableItem.providedBy(item) \
+            and self._is_available(item) \
 
     def _accum_item(self, item, accum, user, record):
         item = IConcreteAsset(item, item)
@@ -149,12 +151,12 @@ class _AssetItemProvider(object):
             # provider) or we are not visible.
             return
 
-        if self._is_item_required(item):
+        if self._include_item(item):
             accum.add(item)
         # Now check target
         target = getattr(item, 'target', '')
         target = find_object_with_ntiid(target)
-        if      self._is_item_required(target) \
+        if      self._include_item(target) \
             and self._is_visible(target, user, record):
             accum.add(target)
         children = getattr(item, 'Items', None)
@@ -183,3 +185,17 @@ class _AssetItemProvider(object):
             _recur(self.course.Outline)
             self._scope_to_items[scope] = result
         return result
+
+
+@component.adapter(ICourseInstance)
+@interface.implementer(IRequiredCompletableItemProvider)
+class _AssetRequiredItemProvider(_AssetItemProvider):
+    """
+    Return the set of required :class:`ICompletableItem` items for this
+    user/course. This will be the set of items in available/published lessons.
+    This provider will not return any assignments.
+    """
+
+    def _include_item(self, item):
+        result = super(_AssetRequiredItemProvider, self)._include_item(item)
+        return result and is_item_required(item, self.course)

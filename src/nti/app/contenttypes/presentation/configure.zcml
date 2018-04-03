@@ -206,6 +206,10 @@
              for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef" />
 
     <subscriber factory=".completion._AssetItemProvider"
+                provides="nti.contenttypes.completion.interfaces.ICompletableItemProvider"
+                for="nti.contenttypes.courses.interfaces.ICourseInstance" />
+
+    <subscriber factory=".completion._AssetRequiredItemProvider"
                 provides="nti.contenttypes.completion.interfaces.IRequiredCompletableItemProvider"
                 for="nti.contenttypes.courses.interfaces.ICourseInstance" />
 
