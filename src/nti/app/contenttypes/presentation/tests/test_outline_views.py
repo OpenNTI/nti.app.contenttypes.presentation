@@ -62,6 +62,7 @@ INVALID_TITLE = 'x' * INVALID_TITLE_LENGTH
 
 STUDENT = 'ichigo'
 
+
 class TestOutlineViews(ApplicationLayerTest):
 
 	layer = InstructedCourseApplicationTestLayer
@@ -70,6 +71,7 @@ class TestOutlineViews(ApplicationLayerTest):
 
 	course_ntiid = 'tag:nextthought.com,2011-10:NTI-CourseInfo-Fall2015_CS_1323_SubInstances_995'
 	course_href = '/dataserver2/Objects/%s' % course_ntiid
+	course_url = '/dataserver2/++etc++hostsites/platform.ou.edu/++etc++site/Courses/Fall2015/CS%201323/SubInstances/995'
 
 	def _do_enroll(self):
 		admin_environ = self._make_extra_environ(username=self.default_username)
@@ -80,13 +82,13 @@ class TestOutlineViews(ApplicationLayerTest):
 	@WithSharedApplicationMockDS(testapp=True, users=(STUDENT,))
 	@fudge.patch( 'nti.app.products.courseware.utils.PreviewCourseAccessPredicate._is_preview' )
 	def test_links(self, mock_preview):
+		ichigo_environ = self._make_extra_environ(username=STUDENT)
 		mock_preview.is_callable().returns( True )
-		res = self._do_enroll()
-		course_ext = res.json_body['CourseInstance']
+		self._do_enroll()
+		course_ext = self.testapp.get(self.course_url, extra_environ=ichigo_environ).json_body
 		course_href = course_ext.get( 'href' )
 
 		# Students do not in have access in preview mode.
-		ichigo_environ = self._make_extra_environ(username=STUDENT)
 		res = self.testapp.get( course_href, extra_environ=ichigo_environ)
 		for rel in ( 'MediaByOutlineNode', 'AssetByOutlineNode' ):
 			self.forbid_link_with_rel( res.json_body, rel )
@@ -100,12 +102,10 @@ class TestOutlineViews(ApplicationLayerTest):
 
 	@WithSharedApplicationMockDS(testapp=True, users=(STUDENT,))
 	def test_media_asset_by_outline(self):
-		res = self._do_enroll()
-
-		# request media by outline
-		course_ext = res.json_body['CourseInstance']
-		course_href = course_ext.get( 'href' )
 		ichigo_environ = self._make_extra_environ(username=STUDENT)
+		self._do_enroll()
+		course_ext = self.testapp.get(self.course_url, extra_environ=ichigo_environ).json_body
+		course_href = course_ext.get( 'href' )
 		res = self.testapp.get( course_href, extra_environ=ichigo_environ )
 		course_ext = res.json_body
 		media_href = self.require_link_href_with_rel(course_ext, 'MediaByOutlineNode')
@@ -162,10 +162,10 @@ class TestOutlineViews(ApplicationLayerTest):
 
 	@WithSharedApplicationMockDS(testapp=True, users=(STUDENT,))
 	def test_assessment_asset_by_outline(self):
-		res = self._do_enroll()
-		course_ext = res.json_body['CourseInstance']
-		course_href = course_ext.get( 'href' )
 		ichigo_environ = self._make_extra_environ(username=STUDENT)
+		self._do_enroll()
+		course_ext = self.testapp.get(self.course_url, extra_environ=ichigo_environ).json_body
+		course_href = course_ext.get( 'href' )
 		res = self.testapp.get( course_href, extra_environ=ichigo_environ )
 		course_ext = res.json_body
 		base_asset_href = self.require_link_href_with_rel(course_ext, 'AssetByOutlineNode')
@@ -254,7 +254,7 @@ class TestOutlineEditViews(ApplicationLayerTest):
 			result['OldParentNTIID'] = old_parent_ntiid
 		return result
 
-	def _get_delete_url_suffix(self, index, ntiid):
+	def _get_delete_url_suffix(self, unused_index, ntiid):
 		# For outlines, the index is ignored. Validate that.
 		return '/ntiid/%s?index=%s' % (ntiid, -1)
 
