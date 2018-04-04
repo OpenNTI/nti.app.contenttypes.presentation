@@ -13,6 +13,8 @@ from __future__ import absolute_import
 from zope import component
 from zope import interface
 
+from zope.cachedescriptors.property import Lazy
+
 from nti.app.contenttypes.presentation.utils import is_item_visible
 
 from nti.contenttypes.completion.completion import CompletedItem
@@ -34,6 +36,7 @@ from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
+from nti.contenttypes.presentation.interfaces import INTILessonOverview
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -110,18 +113,22 @@ def _video_completion_policy(asset, course):
     return _asset_completion_policy(asset, course)
 
 
-@component.adapter(ICourseInstance)
+@component.adapter(INTILessonOverview)
 @interface.implementer(ICompletableItemProvider)
-class _AssetItemProvider(object):
+class _LessonAssetItemProvider(object):
     """
-    Return the :class:`ICompletableItem` items for this user/course. This will
+    Return the :class:`ICompletableItem` items for this user/lesson. This will
     be the set of items in available/published lessons. This provider will not
     return any assignments.
     """
 
-    def __init__(self, course):
-        self.course = course
+    def __init__(self, context):
+        self.context = context
         self._scope_to_items = dict()
+
+    @Lazy
+    def course(self):
+        return ICourseInstance(self.context)
 
     def _is_scheduled(self, obj):
         return  ICalendarPublishable.providedBy(obj) \
@@ -163,33 +170,33 @@ class _AssetItemProvider(object):
         for child in children or ():
             self._accum_item(child, accum, user, record)
 
-    def _get_items_for_node(self, node, accum, user, record):
-        lesson = find_object_with_ntiid(node.LessonOverviewNTIID)
+    def _get_items_for_lesson(self, lesson, accum, user, record):
         if lesson is not None and self._is_available(lesson):
             for group in lesson or ():
                 for item in group or ():
                     self._accum_item(item, accum, user, record)
+
+    def _get_items(self, user, record):
+        """
+        Subclasses may override.
+        """
+        result = set()
+        self._get_items_for_lesson(self.context, result, user, record)
+        return result
 
     def iter_items(self, user):
         record = get_enrollment_record(self.course, user)
         scope = record.Scope if record is not None else 'ALL'
         result = self._scope_to_items.get(scope)
         if result is None:
-            result = set()
-            def _recur(node):
-                if ICourseOutlineContentNode.providedBy(node):
-                    self._get_items_for_node(node, result, user, record)
-                for child_node in node.values():
-                    _recur(child_node)
-
-            _recur(self.course.Outline)
+            result = self._get_items(user, record)
             self._scope_to_items[scope] = result
         return result
 
 
-@component.adapter(ICourseInstance)
+@component.adapter(INTILessonOverview)
 @interface.implementer(IRequiredCompletableItemProvider)
-class _AssetRequiredItemProvider(_AssetItemProvider):
+class _LessonAssetRequiredItemProvider(_LessonAssetItemProvider):
     """
     Return the set of required :class:`ICompletableItem` items for this
     user/course. This will be the set of items in available/published lessons.
@@ -197,5 +204,44 @@ class _AssetRequiredItemProvider(_AssetItemProvider):
     """
 
     def _include_item(self, item):
-        result = super(_AssetRequiredItemProvider, self)._include_item(item)
+        result = super(_LessonAssetRequiredItemProvider, self)._include_item(item)
+        return result and is_item_required(item, self.course)
+
+
+@component.adapter(ICourseInstance)
+@interface.implementer(ICompletableItemProvider)
+class _CourseAssetItemProvider(_LessonAssetItemProvider):
+    """
+    Return the :class:`ICompletableItem` items for this user/course. This will
+    be the set of items in available/published lessons. This provider will not
+    return any assignments.
+    """
+
+    def _get_items_for_node(self, node, accum, user, record):
+        lesson = find_object_with_ntiid(node.LessonOverviewNTIID)
+        return self._get_items_for_lesson(lesson, accum, user, record)
+
+    def _get_items(self, user, record):
+        result = set()
+        def _recur(node):
+            if ICourseOutlineContentNode.providedBy(node):
+                self._get_items_for_node(node, result, user, record)
+            for child_node in node.values():
+                _recur(child_node)
+
+        _recur(self.course.Outline)
+        return result
+
+
+@component.adapter(ICourseInstance)
+@interface.implementer(IRequiredCompletableItemProvider)
+class _CourseAssetRequiredItemProvider(_CourseAssetItemProvider):
+    """
+    Return the set of required :class:`ICompletableItem` items for this
+    user/course. This will be the set of items in available/published lessons.
+    This provider will not return any assignments.
+    """
+
+    def _include_item(self, item):
+        result = super(_CourseAssetRequiredItemProvider, self)._include_item(item)
         return result and is_item_required(item, self.course)

@@ -205,11 +205,19 @@
              provides="nti.contenttypes.completion.interfaces.ICompletableItemCompletionPolicy"
              for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef" />
 
-    <subscriber factory=".completion._AssetItemProvider"
+    <subscriber factory=".completion._LessonAssetItemProvider"
+                provides="nti.contenttypes.completion.interfaces.ICompletableItemProvider"
+                for="nti.contenttypes.presentation.interfaces.INTILessonOverview" />
+
+    <subscriber factory=".completion._LessonAssetRequiredItemProvider"
+                provides="nti.contenttypes.completion.interfaces.IRequiredCompletableItemProvider"
+                for="nti.contenttypes.presentation.interfaces.INTILessonOverview" />
+
+    <subscriber factory=".completion._CourseAssetItemProvider"
                 provides="nti.contenttypes.completion.interfaces.ICompletableItemProvider"
                 for="nti.contenttypes.courses.interfaces.ICourseInstance" />
 
-    <subscriber factory=".completion._AssetRequiredItemProvider"
+    <subscriber factory=".completion._CourseAssetRequiredItemProvider"
                 provides="nti.contenttypes.completion.interfaces.IRequiredCompletableItemProvider"
                 for="nti.contenttypes.courses.interfaces.ICourseInstance" />
 

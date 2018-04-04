@@ -35,11 +35,12 @@ from nti.app.testing.application_webtest import ApplicationLayerTest
 from nti.app.testing.decorators import WithSharedApplicationMockDS
 
 from nti.contenttypes.completion.interfaces import IProgress
-from nti.contenttypes.completion.interfaces import ICompletableItemProvider
 from nti.contenttypes.completion.interfaces import IRequiredCompletableItemProvider
 from nti.contenttypes.completion.interfaces import ICompletableItemDefaultRequiredPolicy
 
 from nti.contenttypes.completion.policies import CompletableItemAggregateCompletionPolicy
+
+from nti.contenttypes.completion.utils import get_completable_items_for_user
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
@@ -132,14 +133,18 @@ class TestCompletion(ApplicationLayerTest):
                 default_required.mime_types.add(video_mime)
 
             user = User.get_user('sjohnson@nextthought.com')
-            providers = component.subscribers((course,),
-                                              ICompletableItemProvider)
-            providers = tuple(providers)
-            assert_that(providers, has_length(greater_than_or_equal_to(1)))
-            possible_items = set()
-            for provider in providers:
-                possible_items.update(provider.iter_items(user))
-            assert_that(possible_items, has_length(greater_than_or_equal_to(3)))
+            possible_items = get_completable_items_for_user(user, course)
+            assert_that(possible_items, has_length(greater_than_or_equal_to(50)))
+            units = tuple(course.Outline.values())
+            video_lesson_ntiid = tuple(units[0].values())[0].LessonOverviewNTIID
+            video_lesson = find_object_with_ntiid(video_lesson_ntiid)
+            ref_lesson_ntiid = tuple(units[1].values())[0].LessonOverviewNTIID
+            ref_lesson = find_object_with_ntiid(ref_lesson_ntiid)
+            possible_items = get_completable_items_for_user(user, video_lesson)
+            assert_that(possible_items, has_length(5))
+
+            possible_items = get_completable_items_for_user(user, ref_lesson)
+            assert_that(possible_items, has_length(9))
 
         # Videos are now default required
         res = self._get_video_lesson()
@@ -220,3 +225,11 @@ class TestCompletion(ApplicationLayerTest):
             assert_that(progress.MaxPossibleProgress, is_(13))
             assert_that(progress.HasProgress, is_(False))
             assert_that(progress.LastModified, none())
+
+            video_lesson = find_object_with_ntiid(video_lesson_ntiid)
+            ref_lesson = find_object_with_ntiid(ref_lesson_ntiid)
+            possible_items = get_completable_items_for_user(user, video_lesson)
+            assert_that(possible_items, has_length(5))
+
+            possible_items = get_completable_items_for_user(user, ref_lesson)
+            assert_that(possible_items, has_length(9))
