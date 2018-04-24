@@ -158,14 +158,14 @@ class _LessonAssetItemProvider(object):
             # provider) or we are not visible.
             return
 
-        if self._include_item(item):
-            accum.add(item)
-        # Now check target
         target = getattr(item, 'target', '')
         target = find_object_with_ntiid(target)
-        if      self._include_item(target) \
-            and self._is_visible(target, user, record):
-            accum.add(target)
+        if self._include_item(target):
+            # If the target is a completable item, prefer it over the ref.
+            if self._is_visible(target, user, record):
+                accum.add(target)
+        elif self._include_item(item):
+            accum.add(item)
         children = getattr(item, 'Items', None)
         for child in children or ():
             self._accum_item(child, accum, user, record)

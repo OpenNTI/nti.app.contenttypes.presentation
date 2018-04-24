@@ -144,7 +144,7 @@ class TestCompletion(ApplicationLayerTest):
             assert_that(possible_items, has_length(5))
 
             possible_items = get_completable_items_for_user(user, ref_lesson)
-            assert_that(possible_items, has_length(9))
+            assert_that(possible_items, has_length(7))
 
         # Videos are now default required
         res = self._get_video_lesson()
@@ -232,4 +232,4 @@ class TestCompletion(ApplicationLayerTest):
             assert_that(possible_items, has_length(5))
 
             possible_items = get_completable_items_for_user(user, ref_lesson)
-            assert_that(possible_items, has_length(9))
+            assert_that(possible_items, has_length(7))
