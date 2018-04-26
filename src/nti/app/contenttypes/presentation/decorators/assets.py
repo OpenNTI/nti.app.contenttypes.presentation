@@ -78,6 +78,7 @@ from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_
 from nti.contenttypes.courses.utils import get_user_or_instructor_enrollment_record as get_any_enrollment_record
 
 from nti.contenttypes.presentation.interfaces import IVisible
+from nti.contenttypes.presentation.interfaces import INTISlide
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTITimeline
@@ -493,6 +494,8 @@ def _path_exists_in_package(path, package):
 def _get_content_package(context, path, ntiids=()):
     # Prefer to use package in our lineage if possible.
     result = find_interface(context, IContentPackage, strict=False)
+    if result is not None:
+        return result
     # XXX: We would like context from clients.
     # Get the first available content package from the given ntiids.
     # This could be improved if we indexed/registered ContentUnits.
@@ -527,6 +530,7 @@ def _get_item_content_package(item, path):
     return result
 
 
+@component.adapter(INTISlide, IRequest)
 @component.adapter(INTITimeline, IRequest)
 @component.adapter(INTIRelatedWorkRef, IRequest)
 @interface.implementer(IExternalMappingDecorator)
@@ -550,11 +554,13 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
         elif    INTIRelatedWorkRef.providedBy(obj) \
             and obj.type in (self.EXTERNAL_LINK_MIME_TYPE, self.CONTENT_MIME_TYPE):
             result = True
+        elif INTISlide.providedBy(obj):
+            result = True
         return result
 
     def _do_decorate_external(self, context, result):
         package = None
-        for name in ('href', 'icon'):
+        for name in ('href', 'icon', 'slideimage'):
             value = getattr(context, name, None)
             if value and not value.startswith('/') and '://' not in value:
                 if     package is None \
