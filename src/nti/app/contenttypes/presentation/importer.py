@@ -49,8 +49,6 @@ from nti.contenttypes.courses.interfaces import ICourseSectionImporter
 from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import get_course_subinstances
 
-from nti.contenttypes.presentation import RELATED_WORK_REF_MIME_TYPES
-
 from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
@@ -65,8 +63,6 @@ from nti.externalization.interfaces import StandardInternalFields
 
 from nti.externalization.internalization import find_factory_for
 from nti.externalization.internalization import update_from_external_object
-
-from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.site.interfaces import IHostPolicyFolder
 
@@ -152,35 +148,11 @@ class LessonOverviewsImporter(BaseSectionImporter):
         # set proper target
         check_docket_targets(concrete)
 
-    def _pre_process_lesson(self, lesson_json):
-        """
-        Our source may be from a content-backed course (with content-backed
-        assets). However, for related work refs, this may be system generated
-        NTIIDs (instead of fixed NTIIDs directly referenced by the content).
-        In those cases, we may be importing/exporting across environments such
-        that those NTIIDs are not found. In that case, we'll end up creating
-        during sync and marking as IUserCreatedAssets (in post-process step
-        above). Courses copied from the same source multiple times may then be
-        pointing at the same (user-created) asset. Thus, we'll want to pop the
-        NTIIDs in that case.
-        """
-        # Modify in place
-        for group in lesson_json.get(ITEMS) or ():
-            for item in group.get(ITEMS) or ():
-                mime_type = item.get(MIMETYPE)
-                if mime_type in RELATED_WORK_REF_MIME_TYPES:
-                    ntiid = item.get(NTIID)
-                    if ntiid:
-                        found = find_object_with_ntiid(ntiid)
-                        if found is None:
-                            [item.pop(x, None) for x in (NTIID, INTERNAL_NTIID)]
-
     def _sync_lessons(self, course, bucket):
         return synchronize_course_lesson_overview(course,
                                                   buckets=(bucket,),
                                                   auto_roll_coalesce=False,
-                                                  default_publish=False,
-                                                  lesson_pre_hook=self._pre_process_lesson)
+                                                  default_publish=False)
 
     def _do_import(self, context, source_filer, save_sources=True):
         course = ICourseInstance(context)

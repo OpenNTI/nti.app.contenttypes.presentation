@@ -81,7 +81,7 @@ from nti.namedfile.file import safe_filename
 from nti.ntiids.ntiids import TYPE_OID
 from nti.ntiids.ntiids import TYPE_UUID
 from nti.ntiids.ntiids import is_ntiid_of_types
-from nti.ntiids.ntiids import is_valid_ntiid_string 
+from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.site.site import get_component_hierarchy_names
@@ -139,16 +139,10 @@ class AssetExporterMixin(object):
                 for name in ('sources', 'transcripts'):
                     for item in ext_obj.get(name) or ():
                         [item.pop(x, None) for x in (OID, NTIID, INTERNAL_NTIID)]
-
-                if IUserCreatedAsset.providedBy(concrete):
-                    # Update our ntiid so video refs line up correctly.
-                    new_ntiid = self.hash_ntiid(asset.ntiid, salt)
-                    ext_obj[NTIID] = ext_obj[INTERNAL_NTIID] = new_ntiid
-            # If not user created and not a package asset, we always
-            # want to pop the ntiid to avoid ntiid collision (except for
-            # user created media).
-            elif not IContentBackedPresentationAsset.providedBy(concrete):
-                [ext_obj.pop(x, None) for x in (NTIID, INTERNAL_NTIID)]
+            if IUserCreatedAsset.providedBy(concrete):
+                # Update our ntiid so refs line up correctly.
+                new_ntiid = self.hash_ntiid(concrete.ntiid, salt)
+                ext_obj[NTIID] = ext_obj[INTERNAL_NTIID] = new_ntiid
         # check for user discussions
         if INTIDiscussionRef.providedBy(asset):
             if is_valid_ntiid_string(asset.target or ''):
@@ -312,7 +306,7 @@ class UserAssetsExporter(BaseSectionExporter, AssetExporterMixin):
         Export user created assets. We'll store all parent/subinstance assets
         in a single file at the parent level.
         """
-        ext_assets = self._get_ext_user_assets(course, filer, 
+        ext_assets = self._get_ext_user_assets(course, filer,
                                                seen, backup, salt)
         if ext_assets:
             source = self.dump(ext_assets)
