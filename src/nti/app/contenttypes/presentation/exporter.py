@@ -140,9 +140,14 @@ class AssetExporterMixin(object):
                     for item in ext_obj.get(name) or ():
                         [item.pop(x, None) for x in (OID, NTIID, INTERNAL_NTIID)]
             if IUserCreatedAsset.providedBy(concrete):
-                # Update our ntiid so refs line up correctly.
+                # Update/hash our ntiid so refs line up correctly.
                 new_ntiid = self.hash_ntiid(concrete.ntiid, salt)
                 ext_obj[NTIID] = ext_obj[INTERNAL_NTIID] = new_ntiid
+            # If not user created and not a package asset, we always
+            # want to pop the ntiid to avoid ntiid collision; applies
+            # to lessons, groups, etc.
+            elif not IContentBackedPresentationAsset.providedBy(concrete):
+                [ext_obj.pop(x, None) for x in (NTIID, INTERNAL_NTIID)]
         # check for user discussions
         if INTIDiscussionRef.providedBy(asset):
             if is_valid_ntiid_string(asset.target or ''):

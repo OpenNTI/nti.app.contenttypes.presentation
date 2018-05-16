@@ -99,8 +99,8 @@ from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 
-from nti.dataserver.authorization import ACT_CONTENT_EDIT
 from nti.dataserver.authorization import ACT_READ
+from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.externalization.externalization import to_external_object
 
@@ -110,9 +110,10 @@ from nti.externalization.interfaces import IExternalMappingDecorator
 
 from nti.links.links import Link
 
-from nti.ntiids.ntiids import get_type, is_valid_ntiid_string
+from nti.ntiids.ntiids import get_type
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_provider_safe
+from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.traversal.traversal import find_interface
