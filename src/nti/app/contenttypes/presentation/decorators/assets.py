@@ -48,6 +48,7 @@ from nti.appserver.pyramid_authorization import has_permission
 
 from nti.assessment.interfaces import IQSurvey
 from nti.assessment.interfaces import IQAssignment
+from nti.assessment.interfaces import IQAssessmentPolicies
 
 from nti.base.interfaces import IFile
 
@@ -298,6 +299,10 @@ class _NTIMediaRollDecorator(_VisibleMixinDecorator):
 class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 
     @Lazy
+    def assessment_policies(self):
+        return IQAssessmentPolicies(self.record.CourseInstance)
+
+    @Lazy
     def is_legacy_ipad(self):
         result = is_legacy_uas(self.request, LEGACY_UAS_40)
         return result
@@ -352,12 +357,17 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
                                                     record=record)
         return bool(resolved is not None)
 
+    def _is_assessment_excluded(self, assessment):
+        assessment_policy = self.assessment_policies.getPolicyForAssessment(assessment.ntiid)
+        return assessment_policy.get('excluded', False)
+
     def _allow_assessmentref(self, iface, context, item):
+        assg = iface(item, None)
+        if     assg is None \
+            or self._is_assessment_excluded(assg):
+            return False
         if self._is_editor:
             return True
-        assg = iface(item, None)
-        if assg is None:
-            return False
         # Instructor
         record = self.record(context)
         if record.Scope == ES_ALL:
