@@ -104,7 +104,10 @@ def fix_assessment_refs(current_site, seen):
                 continue
         except AttributeError:
             # Alpha data issue?
-            logger.info('Invalid registered type (%s)', item)
+            logger.info('Invalid registered type (%s) (name=%s)', item, name)
+            if component is item:
+                # Registered zope component objects
+                unregisterUtility(registry, provided=INTIAssessmentRef, name=name)
             continue
 
         # Regenerate ntiid
