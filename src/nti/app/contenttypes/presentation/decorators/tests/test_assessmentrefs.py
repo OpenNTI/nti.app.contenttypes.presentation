@@ -9,6 +9,7 @@ from __future__ import absolute_import
 # pylint: disable=W0212,R0904
 
 from hamcrest import is_
+from hamcrest import is_not
 from hamcrest import has_key
 from hamcrest import not_none
 from hamcrest import has_entry
@@ -45,24 +46,24 @@ class TestAssignmentRef(unittest.TestCase):
         with open(path, "r") as fp:
             source = simplejson.loads(prepare_json_text(fp.read()))
             original = copy.deepcopy(source)
-        assert_that(source, 
+        assert_that(source,
                     has_entry(MIMETYPE, is_('application/vnd.nextthought.assessment.assignment')))
 
         assignment = create_assignmentref_from_external(source)
-        assert_that(assignment, 
+        assert_that(assignment,
                     has_property('containerId', is_('tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.discussions:_the_liberal_hour')))
-        assert_that(assignment, 
+        assert_that(assignment,
                     has_property('title', is_('Discussions: The Liberal Hour')))
-        assert_that(assignment, 
+        assert_that(assignment,
                     has_property('label', is_('Discussions: The Liberal Hour')))
-        assert_that(assignment, 
+        assert_that(assignment,
                     has_property('target', is_("tag:nextthought.com,2011-10:OU-NAQ-LSTD1153_S_2015_History_United_States_1865_to_Present.naq.asg.assignment:11.6_discussions")))
-        assert_that(assignment, 
-                    has_property('ntiid', is_("tag:nextthought.com,2011-10:OU-NAQ-LSTD1153_S_2015_History_United_States_1865_to_Present.naq.asg.assignment:11.6_discussions")))
+        assert_that(assignment,
+                    has_property('ntiid', is_not("tag:nextthought.com,2011-10:OU-NAQ-LSTD1153_S_2015_History_United_States_1865_to_Present.naq.asg.assignment:11.6_discussions")))
 
         ext_obj = to_external_object(assignment)
         for k, v in original.items():
-            if k not in (MIMETYPE, CLASS):
+            if k not in (MIMETYPE, CLASS, 'NTIID'):
                 assert_that(ext_obj, has_entry(k, is_(v)))
 
         assert_that(ext_obj, has_key('MimeType'))
@@ -74,15 +75,15 @@ class TestAssignmentRef(unittest.TestCase):
         with open(path, "r") as fp:
             source = simplejson.loads(prepare_json_text(fp.read()))
             original = copy.deepcopy(source)
-        assert_that(source, 
+        assert_that(source,
                     has_entry(MIMETYPE, is_('application/vnd.nextthought.naquestionset')))
 
         questionset = create_questionsetref_from_external(source)
         assert_that(questionset, has_property('question_count', is_(7)))
         assert_that(questionset, has_property('ntiid', is_(not_none())))
-        assert_that(questionset, 
+        assert_that(questionset,
                     has_property('label', is_('Janux Course Features Verification Quiz')))
-        assert_that(questionset, 
+        assert_that(questionset,
                     has_property('target', is_("tag:nextthought.com,2011-10:OU-NAQ-CHEM4970_200_F_2014_Chemistry_of_Beer.naq.set.qset:janux_features_verification_quiz")))
 
         ext_obj = to_external_object(questionset)
@@ -99,11 +100,11 @@ class TestAssignmentRef(unittest.TestCase):
         with open(path, "r") as fp:
             source = simplejson.loads(prepare_json_text(fp.read()))
             original = copy.deepcopy(source)
-        assert_that(source, 
+        assert_that(source,
                     has_entry(MIMETYPE, is_('application/vnd.nextthought.naquestion')))
 
         question = create_questionref_from_external(source)
-        assert_that(question, 
+        assert_that(question,
                     has_property('target', is_("tag:nextthought.com,2011-10:OKState-NAQ-OKState_AGEC4990_S_2015_Farm_to_Fork.naq.qid.FootprintQuiz.01")))
         assert_that(question, has_property('ntiid', is_(not_none())))
 
@@ -121,21 +122,21 @@ class TestAssignmentRef(unittest.TestCase):
         with open(path, "r") as fp:
             source = simplejson.loads(prepare_json_text(fp.read()))
             original = copy.deepcopy(source)
-        assert_that(source, 
+        assert_that(source,
                     has_entry(MIMETYPE, is_('application/vnd.nextthought.nasurvey')))
 
         question = create_surveyref_from_external(source)
-        assert_that(question, 
+        assert_that(question,
                     has_property('target', is_("tag:nextthought.com,2011-10:NTIAlpha-NAQ-NTI1000_TestCourse.naq.survey.survey_test")))
-        assert_that(question, 
-                    has_property('ntiid', is_("tag:nextthought.com,2011-10:NTIAlpha-NAQ-NTI1000_TestCourse.naq.survey.survey_test")))
+        assert_that(question,
+                    has_property('ntiid', is_not("tag:nextthought.com,2011-10:NTIAlpha-NAQ-NTI1000_TestCourse.naq.survey.survey_test")))
 
         ext_obj = to_external_object(question)
         for k, v in original.items():
-            if k != MIMETYPE:
+            if k not in (MIMETYPE, 'NTIID'):
                 assert_that(ext_obj, has_entry(k, is_(v)))
-            else:
-                assert_that(ext_obj, 
+            elif k == MIMETYPE:
+                assert_that(ext_obj,
                             has_entry(k, is_('application/vnd.nextthought.surveyref')))
 
         assert_that(ext_obj, has_key('MimeType'))

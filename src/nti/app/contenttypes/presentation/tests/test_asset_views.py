@@ -1421,13 +1421,15 @@ class TestAssetViews(ApplicationLayerTest):
 
         # Insert some refs into various groups.
         # Group one, just the assignment ref
-        self.testapp.post_json(g1_contents_link, ref, status=201)
+        res = self.testapp.post_json(g1_contents_link, ref, status=201)
+        res = res.json_body
+        assert_that(res['NTIID'], is_not(res['Target-NTIID']))
         # Group two, just a video
-        res = self.testapp.post_json(g2_contents_link,
-                                     {'ntiid': video_ntiid}, status=201)
+        self.testapp.post_json(g2_contents_link,
+                               {'ntiid': video_ntiid}, status=201)
         # Group three, one of each
-        res = self.testapp.post_json(g3_contents_link,
-                                     {'ntiid': video_ntiid}, status=201)
+        self.testapp.post_json(g3_contents_link,
+                               {'ntiid': video_ntiid}, status=201)
         self.testapp.post_json(g3_contents_link, ref, status=201)
 
         # Validate current state

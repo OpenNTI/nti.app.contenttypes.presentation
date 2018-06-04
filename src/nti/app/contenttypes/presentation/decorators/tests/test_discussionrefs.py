@@ -47,11 +47,11 @@ class TestDiscussionRefs(unittest.TestCase):
         assert_that(discussion, has_property('label', is_('')))
         assert_that(discussion, has_property('ntiid', is_(not_none())))
         assert_that(discussion, has_property('id', is_(discussion.ntiid)))
-        assert_that(discussion, 
+        assert_that(discussion,
                     has_property('title', is_('11.6 Perspectives')))
-        assert_that(discussion, 
+        assert_that(discussion,
                     has_property('icon', is_("resources/LSTD1153_S_2015_History_United_States_1865_to_Present/8c9c6e901a7884087d71ccf46941ad258121abce/fd35e23767020999111e1f49239199b4c5eff23e.jpg")))
-        assert_that(discussion, 
+        assert_that(discussion,
                     has_property('mimeType', is_("application/vnd.nextthought.discussionref")))
         assert_that(discussion,
                     has_property('target', is_("tag:nextthought.com,2011-10:LSTD_1153-Topic:EnrolledCourseRoot-Open_Discussions.11_6_Perspectives")))
@@ -75,11 +75,11 @@ class TestDiscussionRefs(unittest.TestCase):
         assert_that(discussion, has_property('label', is_('Ichigo')))
         assert_that(discussion, has_property('title', is_('Ichigo')))
         assert_that(discussion, has_property('ntiid', is_(not_none())))
-        assert_that(discussion, 
+        assert_that(discussion,
                     has_property('icon', is_("resources/ichigo.jpg")))
-        assert_that(discussion, 
+        assert_that(discussion,
                     has_property('mimeType', is_("application/vnd.nextthought.discussionref")))
         assert_that(discussion,
                     has_property('id', is_("nti-course-bundle://Discussions/ichigo.json")))
-        assert_that(discussion, 
+        assert_that(discussion,
                     has_property('target', is_("nti-course-bundle://Discussions/ichigo.json")))

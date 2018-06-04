@@ -11,23 +11,40 @@ from __future__ import absolute_import
 from zope import component
 from zope import interface
 
+from zope.component.hooks import site
 from zope.component.hooks import setHooks
-from zope.component.hooks import site as current_site
 
-from zope.intid.interfaces import IIntIds
+from zope.event import notify
 
-from nti.contenttypes.presentation.index import install_assets_library_catalog
+from zope.lifecycleevent import ObjectModifiedEvent
 
-from nti.contenttypes.presentation.interfaces import IPresentationAsset
+from nti.app.contenttypes.presentation.utils.asset import registry_by_name
+from nti.app.contenttypes.presentation.utils.asset import get_component_site_name
+
+from nti.contenttypes.presentation import interface_of_asset
+
+from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
+from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
+
+from nti.coremetadata.interfaces import IUser
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
 
+from nti.dataserver.users import User
+
+from nti.externalization.interfaces import StandardExternalFields
+
 from nti.site.hostpolicy import get_all_host_sites
 
-generation = 51
+from nti.site.utils import registerUtility
+from nti.site.utils import unregisterUtility
+
+NTIID = StandardExternalFields.NTIID
 
 logger = __import__('logging').getLogger(__name__)
+
+generation = 51
 
 
 @interface.implementer(IDataserver)
@@ -44,46 +61,90 @@ class MockDataserver(object):
         return None
 
 
-def _process_site(current, catalog, intids, seen):
-    with current_site(current):
-        for _, asset in list(component.getUtilitiesFor(IPresentationAsset)):
-            doc_id = intids.queryId(asset)
-            if doc_id is None or doc_id in seen:
+def get_registry(asset, provided):
+    # XXX: use correct registration site
+    site_name = get_component_site_name(asset,
+                                        provided,
+                                        name=asset.ntiid)
+    return registry_by_name(site_name)
+
+
+def reregister_asset(asset):
+    provided = interface_of_asset(asset)
+    registry = get_registry(asset, provided)
+    if registry is None:
+        logger.info('Asset without lineage/registry (%s)', asset.ntiid)
+        return
+    logger.info('[%s] Fixing asset (%s) (target=%s) (user_created=%s)',
+                registry.__name__,
+                asset.ntiid,
+                asset.target,
+                IUserCreatedAsset.providedBy(asset))
+    unregisterUtility(registry, provided=provided, name=asset.target)
+    registerUtility(registry, component, provided, name=asset.ntiid)
+
+
+def update_interfaces(item):
+    user = item.creator
+    if not IUser.providedBy(user):
+        user = User.get_user(user)
+    if user is None:
+        interface.noLongerProvides(item, IUserCreatedAsset)
+
+
+def fix_assessment_refs(current_site, seen):
+    result = 0
+    registry = current_site.getSiteManager()
+    for name, item in list(registry.getUtilitiesFor(INTIAssessmentRef)):
+        if name in seen:
+            continue
+        seen.add(name)
+        try:
+            if item.ntiid != item.target:
                 continue
-            seen.add(doc_id)
-            catalog.index_doc(doc_id, asset)
+        except AttributeError:
+            # Alpha data issue?
+            continue
+
+        # Regenerate ntiid
+        delattr(item, 'ntiid')
+        assert item.ntiid is not None
+        update_interfaces(item)
+        reregister_asset(item)
+        notify(ObjectModifiedEvent(item))
+        result += 1
+    return result
 
 
-def do_evolve(context, generation=generation):  # pylint: disable=redefined-outer-name
+def do_evolve(context, generation=generation):
     setHooks()
     conn = context.connection
     root = conn.root()
-    ds_folder = root['nti.dataserver']
+    dataserver_folder = root['nti.dataserver']
 
     mock_ds = MockDataserver()
-    mock_ds.root = ds_folder
+    mock_ds.root = dataserver_folder
     component.provideUtility(mock_ds, IDataserver)
 
-    seen = set()
-    with current_site(ds_folder):
-        assert component.getSiteManager() == ds_folder.getSiteManager(), \
+    with site(dataserver_folder):
+        assert component.getSiteManager() == dataserver_folder.getSiteManager(), \
                "Hooks not installed?"
 
-        lsm = ds_folder.getSiteManager()
-        intids = lsm.getUtility(IIntIds)
-        catalog = install_assets_library_catalog(ds_folder, intids)
-        for index in catalog.values():
-            index.clear()
-        for current in get_all_host_sites():
-            _process_site(current, catalog, intids, seen)
+        result = 0
+        seen = set()
+        logger.info('Evolution %s started.', generation)
+        for current_site in get_all_host_sites():
+            with site(current_site):
+                result += fix_assessment_refs(current_site, seen)
 
     component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
-    logger.info('Dataserver evolution %s done. %s assets(s) indexed',
-                generation, len(seen))
+    logger.info('Evolution %s done. %s item(s) processed',
+                generation, result)
 
 
 def evolve(context):
     """
-    Evolve to gen 51 to index all assets
+    Evolve to 51 by making sure assessment ref ntiids do not equal the
+    target ntiid.
     """
-    # do_evolve(context)  DON'T install yet
+    do_evolve(context, generation)
