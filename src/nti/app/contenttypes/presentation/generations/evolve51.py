@@ -104,6 +104,7 @@ def fix_assessment_refs(current_site, seen):
                 continue
         except AttributeError:
             # Alpha data issue?
+            logger.info('Invalid registered type (%s)', item)
             continue
 
         # Regenerate ntiid

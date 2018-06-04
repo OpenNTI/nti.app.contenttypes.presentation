@@ -188,8 +188,7 @@ def _relatedworkrefpointer_to_relatedworkref(context):
 @component.adapter(IAssetRef)
 @interface.implementer(IConcreteAsset)
 def _reference_to_concrete(context):
-    if getattr(context, 'ntiid', '') != context.target:
-        return component.queryUtility(IPresentationAsset, name=context.target or '')
+    return component.queryUtility(IPresentationAsset, name=context.target or '')
 
 
 @component.adapter(ICourseOutlineNode)
