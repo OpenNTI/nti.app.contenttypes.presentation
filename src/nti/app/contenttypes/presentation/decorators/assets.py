@@ -302,9 +302,8 @@ class _NTIMediaRollDecorator(_VisibleMixinDecorator):
 @component.adapter(INTICourseOverviewGroup)
 class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 
-    @Lazy
-    def assessment_policies(self):
-        return IQAssessmentPolicies(self.record.CourseInstance)
+    def assessment_policies(self, context):
+        return IQAssessmentPolicies(self.record(context).CourseInstance)
 
     @Lazy
     def is_legacy_ipad(self):
@@ -361,14 +360,15 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
                                                     record=record)
         return bool(resolved is not None)
 
-    def _is_assessment_excluded(self, assessment):
-        assessment_policy = self.assessment_policies.getPolicyForAssessment(assessment.ntiid)
+    def _is_assessment_excluded(self, assessment, policies):
+        assessment_policy = policies.getPolicyForAssessment(assessment.ntiid)
         return assessment_policy.get('excluded', False)
 
     def _allow_assessmentref(self, iface, context, item):
+        policies = self.assessment_policies(context)
         assg = iface(item, None)
         if     assg is None \
-            or self._is_assessment_excluded(assg):
+            or self._is_assessment_excluded(assg, policies):
             return False
         if self._is_editor:
             return True
