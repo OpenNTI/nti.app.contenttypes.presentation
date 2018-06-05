@@ -109,7 +109,6 @@ def fix_assessment_refs(current_site, seen):
                 # Registered zope component objects
                 unregisterUtility(registry, provided=INTIAssessmentRef, name=name)
             continue
-
         # Regenerate ntiid
         delattr(item, 'ntiid')
         assert item.ntiid is not None

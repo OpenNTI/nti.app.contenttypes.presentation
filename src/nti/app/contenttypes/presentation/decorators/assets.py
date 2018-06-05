@@ -118,6 +118,7 @@ from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.traversal.traversal import find_interface
+from nti.publishing.interfaces import IPublishable
 
 LINKS = StandardExternalFields.LINKS
 ITEMS = StandardExternalFields.ITEMS
@@ -127,6 +128,9 @@ IN_CLASS_SAFE = make_provider_safe(IN_CLASS)
 
 #: Legacy ipad key for item video rolls
 COLLECTION_ITEMS = 'collectionItems'
+
+#: Ref reading mime type
+CONTENT_MIME_TYPE = 'application/vnd.nextthought.content'
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -547,7 +551,6 @@ def _get_item_content_package(item, path):
 @interface.implementer(IExternalMappingDecorator)
 class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
-    CONTENT_MIME_TYPE = 'application/vnd.nextthought.content'
     EXTERNAL_LINK_MIME_TYPE = 'application/vnd.nextthought.externallink'
 
     @Lazy
@@ -563,7 +566,7 @@ class _NTIAbsoluteURLDecorator(AbstractAuthenticatedRequestAwareDecorator):
             and not is_internal_file_link(obj.href or ''):
             result = True
         elif    INTIRelatedWorkRef.providedBy(obj) \
-            and obj.type in (self.EXTERNAL_LINK_MIME_TYPE, self.CONTENT_MIME_TYPE):
+            and obj.type in (self.EXTERNAL_LINK_MIME_TYPE, CONTENT_MIME_TYPE):
             result = True
         elif INTISlide.providedBy(obj):
             result = True
@@ -628,6 +631,22 @@ class _AssetContentFileDecorator(AbstractAuthenticatedRequestAwareDecorator):
             internal = get_file_from_external_link(context.href)
             ext_obj = to_external_object(internal)
             result['ContentFile'] = ext_obj
+
+
+@component.adapter(INTIRelatedWorkRef, IRequest)
+@interface.implementer(IExternalMappingDecorator)
+class _RefTargetPublishDecorator(AbstractAuthenticatedRequestAwareDecorator):
+
+    def _predicate(self, context, unused_result):
+        return self._is_authenticated and context.type == CONTENT_MIME_TYPE
+
+    def _do_decorate_external(self, context, result):
+        content = find_object_with_ntiid(context.target)
+        if content is not None:
+            target_publish_state = None
+            if IPublishable.providedBy(content):
+                target_publish_state = 'DefaultPublished' if content.is_published() else 'Unpublished'
+            result['TargetPublishState'] = target_publish_state
 
 
 @interface.implementer(IExternalMappingDecorator)
