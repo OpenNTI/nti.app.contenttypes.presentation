@@ -21,10 +21,13 @@ from zope.lifecycleevent import ObjectModifiedEvent
 from nti.app.contenttypes.presentation.utils.asset import registry_by_name
 from nti.app.contenttypes.presentation.utils.asset import get_component_site_name
 
+from nti.contenttypes.courses.interfaces import ICourseInstance
+
 from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
+from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.coremetadata.interfaces import IUser
 
@@ -110,10 +113,21 @@ def fix_assessment_refs(current_site, seen):
                 unregisterUtility(registry, provided=INTIAssessmentRef, name=name)
             continue
         # Regenerate ntiid
+        old_ntiid = item.ntiid
         delattr(item, 'ntiid')
         assert item.ntiid is not None
         update_interfaces(item)
         reregister_asset(item)
+        # Update container mapping
+        course = ICourseInstance(item, None)
+        container = IPresentationAssetContainer(course, None)
+        if container is not None:
+            logger.info('Updating asset container mapping (%s) (%s)',
+                        item.__name__, item.ntiid)
+            container.pop(item.__name__, None)
+            container.pop(old_ntiid, None)
+            container.pop(item.ntiid, None)
+            container[item.ntiid] = item
         notify(ObjectModifiedEvent(item))
         result += 1
     return result
