@@ -72,6 +72,7 @@ def fix_assessment_refs(current_site, seen):
             logger.info('Updating asset container mapping (%s) (%s)',
                         item.__name__, item.ntiid)
             container.pop(item.__name__, None)
+            container.pop(item.target, None)
             container.pop(item.ntiid, None)
             container[item.ntiid] = item
         notify(ObjectModifiedEvent(item))
