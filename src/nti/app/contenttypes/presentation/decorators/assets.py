@@ -303,7 +303,12 @@ class _NTIMediaRollDecorator(_VisibleMixinDecorator):
 class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 
     def assessment_policies(self, context):
-        return IQAssessmentPolicies(self.record(context).CourseInstance)
+        record = self.record(context)
+        if record:
+            course = record.CourseInstance
+        else:
+            course = find_interface(context, ICourseInstance)
+        return IQAssessmentPolicies(course)
 
     @Lazy
     def is_legacy_ipad(self):
