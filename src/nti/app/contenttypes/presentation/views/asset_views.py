@@ -222,9 +222,9 @@ def _add_2_container(context, item):
 		result.append(entry.ntiid)
 	return result
 
-def _register_utility(registry, component=None, provided=None, name=None):
-	name = name or component.ntiid
-	registerUtility(registry, component, provided, name=name)
+def _register_utility(registry, obj=None, provided=None, name=None):
+	name = name or obj.ntiid
+	registerUtility(registry, obj, provided, name=name)
 
 def _canonicalize(items, creator, base=None, registry=None):
 	result = []
@@ -681,7 +681,7 @@ class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 		# add to connection and register
 		intid_register(contentObject, registry=self._registry)
 		_register_utility(self._registry,
-						  component=contentObject,
+						  obj=contentObject,
 						  provided=provided,
 						  name=contentObject.ntiid)
 
@@ -932,7 +932,7 @@ class LessonOverviewOrderedContentsView(PresentationAssetSubmitViewMixin,
 		intid_register(contentObject, registry=self._registry)
 		_register_utility(self._registry,
 						  provided=provided,
-						  component=contentObject,
+						  obj=contentObject,
 						  name=contentObject.ntiid)
 
 		self._handle_overview_group(contentObject,
@@ -1079,7 +1079,7 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
 		"""
 		_register_utility(self._registry,
 						  provided=provided,
-						  component=obj,
+						  obj=obj,
 						  name=obj.ntiid)
 		self._handle_asset(provided,
 						   obj,
