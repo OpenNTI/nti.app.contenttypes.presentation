@@ -130,7 +130,7 @@ def process_asset(item, container, group):
             container.pop(item.target, None)
             container.pop(old_ntiid, None)
             container.pop(item.ntiid, None)
-            container.append(item)
+            container[item.ntiid] = item
         notify(ObjectModifiedEvent(item))
 
 
