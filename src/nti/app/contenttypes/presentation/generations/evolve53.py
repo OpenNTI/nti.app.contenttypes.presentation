@@ -106,7 +106,7 @@ def process_asset(item, container, group):
     if registry is None:
         logger.info("Cannot find registry for asset (%s)",
                     item.ntiid)
-        return
+        registry = component.getSiteManager()
     registered_item = registry.queryUtility(INTIAssessmentRef,
                                             name=item.ntiid)
     if registered_item == component:
