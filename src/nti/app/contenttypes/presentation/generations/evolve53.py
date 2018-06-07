@@ -97,11 +97,11 @@ def update_interfaces(item):
         interface.noLongerProvides(item, IUserCreatedAsset)
 
 
-def process_asset(item, container, course):
+def process_asset(item, container, group):
     provided = interface_of_asset(item)
     registry = get_registry(item, provided)
     if registry is None and item.__parent__ is None:
-        item.__parent__ = course
+        item.__parent__ = group
         registry = get_registry(item, provided)
     registered_item = registry.queryUtility(INTIAssessmentRef,
                                             name=item.ntiid)
@@ -138,7 +138,7 @@ def process_course(course):
             for group in lesson or ():
                 for item in group or ():
                     if INTIAssessmentRef.providedBy(item):
-                        process_asset(item, course_container, course)
+                        process_asset(item, course_container, group)
         for child in node.values():
             _recur(child)
     _recur(course.Outline)
