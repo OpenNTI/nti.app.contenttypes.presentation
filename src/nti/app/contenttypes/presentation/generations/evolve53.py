@@ -104,8 +104,8 @@ def process_asset(item, container, group):
         item.__parent__ = group
         registry = get_registry(item, provided)
     if registry is None:
-        logger.info("Cannot find registry for asset (%s) (%s) (%s)",
-                    item, item.__parent__, item.ntiid)
+        logger.info("Cannot find registry for asset (%s)",
+                    item.ntiid)
         return
     registered_item = registry.queryUtility(INTIAssessmentRef,
                                             name=item.ntiid)
