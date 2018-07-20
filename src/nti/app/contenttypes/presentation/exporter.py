@@ -59,6 +59,7 @@ from nti.contenttypes.presentation.interfaces import INTIAssessmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
+from nti.contenttypes.presentation.interfaces import INonExportableAsset
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import ISurveyCompletionConstraint
@@ -289,7 +290,8 @@ class UserAssetsExporter(BaseSectionExporter, AssetExporterMixin):
         container = IPresentationAssetContainer(course)
         for item in container.assets():
             if      INTIMedia.providedBy(item) \
-                and IUserCreatedAsset.providedBy(item):
+                and IUserCreatedAsset.providedBy(item) \
+                and not INonExportableAsset.providedBy(item):
                 yield item
 
     def _get_ext_user_assets(self, course, filer, seen, backup, salt):
