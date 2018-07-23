@@ -1085,6 +1085,10 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
 						   obj,
 						   creator=creator,
 						   extended=extended)
+		if obj.__parent__ is None:
+			# We always take ownership when inserting into group anyway
+			# Take ownership before sending event
+			obj.__parent__ = self.context
 		_notify_created(obj, self.remoteUser.username, externalValue)
 
 	def _do_call(self):
@@ -1112,8 +1116,6 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
 		extended = (self.context.ntiid,) + ((parent.ntiid,) if parent is not None else ())
 
 		self._finish_creating_object(contentObject, creator, extended, provided, externalValue)
-		if contentObject.__parent__ is None: # in case there is no parent
-			contentObject.__parent__ = self.context
 
 		if INTITimeline.providedBy(contentObject):
 			contentObject = self._convert_timeline_to_timelineref(contentObject, creator,
@@ -1121,6 +1123,7 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
 		elif INTIRelatedWorkRef.providedBy(contentObject):
 			contentObject = self._convert_relatedwork_to_pointer(contentObject, creator,
 																 extended, externalValue)
+
 		try:
 			self.context.insert(index, contentObject)
 		except DuplicateReference:
