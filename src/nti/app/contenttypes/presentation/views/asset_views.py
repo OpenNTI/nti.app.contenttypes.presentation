@@ -165,7 +165,7 @@ from nti.dataserver.contenttypes.forums.interfaces import ITopic
 
 from nti.externalization.externalization import StandardExternalFields
 
-from nti.externalization.internalization import notify_modified
+from nti.externalization.internalization import notifyModified as notify_modified
 
 from nti.ntiids.ntiids import TYPE_UUID
 from nti.ntiids.ntiids import make_ntiid

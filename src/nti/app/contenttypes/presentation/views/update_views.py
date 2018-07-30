@@ -117,7 +117,7 @@ from nti.dataserver import authorization as nauth
 
 from nti.externalization.externalization import StandardExternalFields
 
-from nti.externalization.internalization import notify_modified
+from nti.externalization.internalization import notifyModified as notify_modified
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -589,9 +589,9 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
         Convert and create a timeline ref that can be stored in our overview group.
         """
         timeline_ref = INTITimelineRef(timeline)
-        self._finish_creating_object(timeline_ref, 
-                                     creator, 
-                                     INTITimelineRef, 
+        self._finish_creating_object(timeline_ref,
+                                     creator,
+                                     INTITimelineRef,
                                      externalValue)
         return timeline_ref
 
@@ -600,9 +600,9 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
         Convert and create a relatedwork ref that can be stored in our overview group.
         """
         asset_ref = INTIRelatedWorkRefPointer(relatedwork)
-        self._finish_creating_object(asset_ref, 
-                                     creator, 
-                                     INTIRelatedWorkRefPointer, 
+        self._finish_creating_object(asset_ref,
+                                     creator,
+                                     INTIRelatedWorkRefPointer,
                                      externalValue)
         return asset_ref
 
@@ -614,8 +614,8 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
 
         # check item does not exists
         check_exists(contentObject, self.registry, self.request, self.extra)
-        self._finish_creating_object(contentObject, 
-                                     creator, 
+        self._finish_creating_object(contentObject,
+                                     creator,
                                      provided,
                                      externalValue)
 
@@ -623,12 +623,12 @@ class CourseOverviewGroupInsertView(PresentationAssetSubmitViewMixin,
         result = contentObject
 
         if INTITimeline.providedBy(contentObject):
-            result = self._convert_timeline_to_timelineref(result, 
-                                                           creator, 
+            result = self._convert_timeline_to_timelineref(result,
+                                                           creator,
                                                            externalValue)
         elif INTIRelatedWorkRef.providedBy(contentObject):
-            result = self._convert_relatedwork_to_pointer(result, 
-                                                          creator, 
+            result = self._convert_relatedwork_to_pointer(result,
+                                                          creator,
                                                           externalValue)
 
         # insert in group
