@@ -38,8 +38,8 @@ from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.dataserver import authorization as nauth
 
-from nti.externalization.externalization import LocatedExternalDict
-from nti.externalization.externalization import StandardExternalFields
+from nti.externalization.interfaces import LocatedExternalDict
+from nti.externalization.interfaces import StandardExternalFields
 
 from nti.site.site import get_component_hierarchy_names
 
