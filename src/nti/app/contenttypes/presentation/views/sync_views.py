@@ -76,6 +76,7 @@ class ResetPresentationAssetsView(_AbstractSyncAllLibrariesView):
         folder = IHostPolicyFolder(course)
         with current_site(folder):
             removed = []
+            # pylint: disable=too-many-function-args
             registry = folder.getSiteManager()
             # remove registered assets
             for name, item, container in course_assets(course):
