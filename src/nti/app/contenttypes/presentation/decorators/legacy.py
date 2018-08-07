@@ -95,6 +95,7 @@ class _BaseAssessmentRefDecorator(_BaseAssetDecorator):
             question_count = getattr(target, 'draw', None) \
                           or len(target.questions)
         external['question-count'] = str(question_count)
+        external['TargetMimeType'] = getattr(target, 'mime_type', '')
 
 
 @component.adapter(INTIQuestionSetRef)
@@ -115,6 +116,8 @@ class _NTIAssignmentRefDecorator(_BaseAssetDecorator):
 
     def decorateExternalObject(self, original, external):
         super(_NTIAssignmentRefDecorator, self).decorateExternalObject(original, external)
+        target = find_object_with_ntiid(original.target)
+        external['TargetMimeType'] = getattr(target, 'mime_type', '')
         if 'containerId' in external:
             external['ContainerId'] = external.pop('containerId')
 
