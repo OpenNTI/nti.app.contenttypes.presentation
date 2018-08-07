@@ -140,6 +140,7 @@ class LessonProgressView(AbstractAuthenticatedView):
         # - Locally, this is quick. ~1s (much less when cached) to get
         # ntiids under node; ~.05s to get empty resource set.  Bumps up to ~.3s
         # once the user starts accumulating events.
+        # pylint: disable=no-member
         ntiid = self.context.LessonOverviewNTIID
         course = ICourseInstance(self.context, None)
         try:
@@ -211,6 +212,7 @@ class LessonCompletionStatisticsView(AbstractAuthenticatedView):
         """
         Get the enrolled non-instructor, non-editor usernames.
         """
+        # pylint: disable=too-many-function-args
         usernames = set(ICourseEnrollments(self.course).iter_principals())
         admins = list(get_course_instructors(self.course))
         editors = list(get_course_editors(self.course))
@@ -242,7 +244,7 @@ class LessonCompletionStatisticsView(AbstractAuthenticatedView):
             self._accum_item(child, accum)
 
     def _get_completable_items(self, lesson):
-        # TODO: Seems useful to have this logic elsewhere
+        # Seems useful to have this logic elsewhere
         result = set()
         for group in lesson or ():
             for item in group or ():
@@ -269,6 +271,7 @@ class LessonCompletionStatisticsView(AbstractAuthenticatedView):
 
     def __call__(self):
         self._validate()
+        # pylint: disable=no-member
         ntiid = self.context.LessonOverviewNTIID
         lesson = find_object_with_ntiid(ntiid)
         # We might have to get smarter about this, some students may not have
