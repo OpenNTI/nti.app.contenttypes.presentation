@@ -18,6 +18,8 @@ from zope.cachedescriptors.property import Lazy
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
+from nti.app.contenttypes.presentation import MessageFactory as _
+
 from nti.app.contenttypes.presentation.views import VIEW_LESSON_PROGRESS
 from nti.app.contenttypes.presentation.views import VIEW_LESSON_PROGRESS_STATS
 
