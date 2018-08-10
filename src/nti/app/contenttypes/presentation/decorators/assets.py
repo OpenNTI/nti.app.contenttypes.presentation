@@ -20,6 +20,8 @@ from zope.location.interfaces import ILocation
 
 from pyramid.interfaces import IRequest
 
+from nti.app.assessment.common.evaluations import get_course_assignments
+
 from nti.app.assessment.decorators.assignment import AssessmentPolicyEditLinkDecorator
 
 from nti.app.contentfolder.resources import is_internal_file_link
@@ -32,6 +34,7 @@ from nti.app.contenttypes.presentation.decorators import LEGACY_UAS_40
 from nti.app.contenttypes.presentation.decorators import VIEW_ORDERED_CONTENTS
 
 from nti.app.contenttypes.presentation.decorators import is_legacy_uas
+from nti.app.contenttypes.presentation.decorators import get_omit_published
 from nti.app.contenttypes.presentation.decorators import can_view_publishable
 from nti.app.contenttypes.presentation.decorators import _AbstractMoveLinkDecorator
 
@@ -48,7 +51,6 @@ from nti.appserver.pyramid_authorization import has_permission
 
 from nti.assessment.interfaces import IQSurvey
 from nti.assessment.interfaces import IQAssignment
-from nti.assessment.interfaces import IQAssessmentPolicies
 
 from nti.base.interfaces import IFile
 
@@ -302,14 +304,6 @@ class _NTIMediaRollDecorator(_VisibleMixinDecorator):
 @component.adapter(INTICourseOverviewGroup)
 class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
 
-    def assessment_policies(self, context):
-        record = self.record(context)
-        if record:
-            course = record.CourseInstance
-        else:
-            course = find_interface(context, ICourseInstance)
-        return IQAssessmentPolicies(course)
-
     @Lazy
     def is_legacy_ipad(self):
         result = is_legacy_uas(self.request, LEGACY_UAS_40)
@@ -328,9 +322,8 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
     def _is_editor(self):
         return has_permission(ACT_CONTENT_EDIT, self.request.context)
 
-    def _filter_legacy_discussions(self, context, indexes, removal):
+    def _filter_legacy_discussions(self, context, indexes, removal, record):
         items = context.Items
-        record = self.record(context)
         scope = record.Scope if record is not None else None
         scope = ES_CREDIT if scope == ES_ALL else scope  # map to credit
         m_scope = ENROLLMENT_LINEAGE_MAP.get(scope or u'')
@@ -357,42 +350,38 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
                 elif m_scope == ES_CREDIT and scope == ES_PUBLIC and has_credit:
                     removal.add(idx)
 
-    def _allow_discussion_course_bundle(self, context, item):
-        record = self.record(context)
+    def _allow_discussion_course_bundle(self, context, item, record):
         resolved = resolve_discussion_course_bundle(user=self.remoteUser,
                                                     item=item,
                                                     context=context,
                                                     record=record)
         return bool(resolved is not None)
 
-    def _is_assessment_excluded(self, assessment, policies):
-        assessment_policy = policies.getPolicyForAssessment(assessment.ntiid)
-        return assessment_policy.get('excluded', False)
-
-    def _allow_assessmentref(self, iface, context, item):
-        policies = self.assessment_policies(context)
+    def _allow_assessmentref(self, iface, item, record, course, target_ntiids=None, show_unpublished=False):
         assg = iface(item, None)
+        # We want to return all assignment refs if in edit mode; otherwise
+        # we want to exclude refs pointing to objects not in our target_ntiids.
         if     assg is None \
-            or self._is_assessment_excluded(assg, policies):
+            or (    not show_unpublished
+                and target_ntiids
+                and assg.ntiid not in target_ntiids):
             return False
         if self._is_editor:
             return True
         # Instructor
-        record = self.record(context)
         if record.Scope == ES_ALL:
             return True
-        course = record.CourseInstance
         predicate = get_course_assessment_predicate_for_user(self.remoteUser,
                                                              course)
         result = predicate is not None and predicate(assg)
         return result
 
-    def allow_assignmentref(self, context, item):
-        result = self._allow_assessmentref(IQAssignment, context, item)
+    def allow_assignmentref(self, item, record, course, target_ntiids, show_unpublished):
+        result = self._allow_assessmentref(IQAssignment, item, record, course, target_ntiids, show_unpublished)
         return result
 
-    def allow_surveyref(self, context, item):
-        result = self._allow_assessmentref(IQSurvey, context, item)
+    def allow_surveyref(self, item, record, course):
+        result = self._allow_assessmentref(IQSurvey, item, record, course)
         return result
 
     def allow_mediaroll(self, ext_item):
@@ -432,6 +421,21 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
         removal = set()
         discussions = []
         items = result[ITEMS]
+        record = self.record(context)
+        # We prefer the request course instance, which should be a section if
+        # the end-user is in that context. This way we can filter/exclude
+        # assessments that are not available.
+        course = ICourseInstance(self.request, None)
+        if course is None:
+            course = record.CourseInstance
+        if course is None:
+            course = find_interface(context, ICourseInstance)
+        # Get our assignment set; we do not to return assessment refs across sections
+        course_assignments = get_course_assignments(course,
+                                                    do_filtering=True,
+                                                    parent_course=True)
+        assignment_ntiids = [x.ntiid for x in course_assignments]
+        show_unpublished = not get_omit_published(self.request)
 
         # loop through sources
         for idx, item in enumerate(context):
@@ -440,7 +444,7 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
             elif INTIDiscussionRef.providedBy(item):
                 if item.isCourseBundle():
                     if      not self._is_editor \
-                        and not self._allow_discussion_course_bundle(context, item):
+                        and not self._allow_discussion_course_bundle(context, item, record):
                         removal.add(idx)
                 elif self._is_legacy_discussion(item):
                     discussions.append(idx)
@@ -458,17 +462,17 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
                 and not self._handle_relatedworkref_pointer(context, items, item, idx):
                 removal.add(idx)
             elif    INTIAssignmentRef.providedBy(item) \
-                and not self.allow_assignmentref(context, item):
+                and not self.allow_assignmentref(item, record, course, assignment_ntiids, show_unpublished):
                 removal.add(idx)
             elif    INTISurveyRef.providedBy(item) \
-                and not self.allow_surveyref(context, item):
+                and not self.allow_surveyref(item, record, course):
                 removal.add(idx)
             elif INTIMediaRoll.providedBy(item) and not self.allow_mediaroll(items[idx]):
                 removal.add(idx)
 
         # filter legacy discussions
         if discussions and not self._is_editor:
-            self._filter_legacy_discussions(context, discussions, removal)
+            self._filter_legacy_discussions(context, discussions, removal, record)
 
         # remove disallowed items
         if removal:
