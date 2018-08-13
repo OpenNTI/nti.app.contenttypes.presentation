@@ -140,7 +140,8 @@ class AssetExporterMixin(object):
                 for name in ('sources', 'transcripts'):
                     for item in ext_obj.get(name) or ():
                         [item.pop(x, None) for x in (OID, NTIID, INTERNAL_NTIID)]
-            if IUserCreatedAsset.providedBy(concrete):
+            if      IUserCreatedAsset.providedBy(concrete) \
+                and not IContentBackedPresentationAsset.providedBy(concrete):
                 # Update/hash our ntiid so refs line up correctly.
                 new_ntiid = self.hash_ntiid(concrete.ntiid, salt)
                 ext_obj[NTIID] = ext_obj[INTERNAL_NTIID] = new_ntiid
