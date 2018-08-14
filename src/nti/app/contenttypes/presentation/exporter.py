@@ -182,6 +182,8 @@ class AssetExporterMixin(object):
                 ext_items = ext_obj.get(ITEMS) or ()
                 asset_items = asset.Items if asset.Items is not None else ()
                 for item, item_ext in zip(asset_items, ext_items):
+                    if INonExportableAsset.providedBy(item):
+                        continue
                     if     not item_ext.get(NTIID) \
                         or not item_ext.get(INTERNAL_NTIID):  # check valid NTIID
                         item_ext.pop(NTIID, None)
