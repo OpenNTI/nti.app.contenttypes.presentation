@@ -246,6 +246,8 @@
 	<subscriber handler=".subscribers._on_evaluation_modified" />
 	<subscriber handler=".subscribers._on_content_file_removed" />
 	<subscriber handler=".subscribers._on_course_instance_removed" />
+	<subscriber handler=".subscribers._on_course_instance_imported" />
+
 	<subscriber handler=".subscribers.update_course_asset_containers" />
 
 	<subscriber handler=".subscribers._clear_data_when_course_removed"

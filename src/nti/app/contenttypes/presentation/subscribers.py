@@ -19,6 +19,7 @@ from zope.component.hooks import getSite
 
 from zope.interface.interfaces import IUnregistered
 
+from zope.intid.interfaces import IIntIds
 from zope.intid.interfaces import IIntIdAddedEvent
 
 from zope.event import notify
@@ -62,6 +63,7 @@ from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackage
 from nti.contentlibrary.interfaces import IContentUnitRemovedEvent
 from nti.contentlibrary.interfaces import IContentUnitAssociations
+from nti.contentlibrary.interfaces import IRenderableContentPackage
 from nti.contentlibrary.interfaces import IContentPackageRemovedEvent
 
 from nti.contenttypes.completion.interfaces import ICompletableItem
@@ -74,6 +76,7 @@ from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseBundleUpdatedEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceRemovedEvent
+from nti.contenttypes.courses.interfaces import ICourseInstanceImportedEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
@@ -197,6 +200,37 @@ def _clear_data_when_course_removed(course, _):
         remove_transaction_history(item)
 
 
+def _package_assets(package):
+    result = set()
+    def recur(unit):
+        for child in unit.children or ():
+            recur(child)
+        container = IPresentationAssetContainer(unit)
+        # pylint: disable=too-many-function-args
+        result.update(container.assets())
+    recur(package)
+    return result
+
+
+@component.adapter(ICourseInstance, ICourseInstanceImportedEvent)
+def _on_course_instance_imported(course, unused_event):
+    entry = ICourseCatalogEntry(course)
+    assets_catalog = get_assets_catalog()
+    library_catalog = get_library_catalog()
+    intids = component.getUtility(IIntIds)
+    for package in get_course_packages(course):
+        # ignore authored packages
+        if IRenderableContentPackage.providedBy(package):
+            continue
+        # update containers for the unit assets
+        # to mark the new course
+        for asset in _package_assets(package):
+            if assets_catalog is not None:
+                assets_catalog.update_containers(asset, (entry.ntiid,), intids)
+            if library_catalog is not None:
+                library_catalog.update_containers(asset, (entry.ntiid,), intids)
+
+
 # Outline nodes
 
 
@@ -210,6 +244,7 @@ def _on_outlinenode_unregistered(node, _):
     # ground lesson
     lesson.__parent__ = None
     # unregister empty lesson overviews to avoid leaking
+    # pylint: disable=too-many-function-args
     registry = get_site_registry() if folder is None else folder.getSiteManager()
     if not lesson.Items and registry != component.getGlobalSiteManager():
         remove_presentation_asset(lesson, registry)
