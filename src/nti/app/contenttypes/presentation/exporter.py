@@ -209,7 +209,8 @@ class AssetExporterMixin(object):
                     for name in ('target', 'href'):
                         ext_obj[name] = self.hash_ntiid(concrete.target, salt)
             elif    INTIMediaRef.providedBy(asset) \
-                and IUserCreatedAsset.providedBy(concrete):
+                and IUserCreatedAsset.providedBy(concrete) \
+                and not IContentBackedPresentationAsset.providedBy(concrete):
                 # We need to update our ref targets here
                 ext_obj['target'] = self.hash_ntiid(asset.target, salt)
             # don't leak internal OIDs
