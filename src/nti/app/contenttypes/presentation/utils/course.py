@@ -57,28 +57,17 @@ def get_containers(ntiids=()):
 
 def get_courses(ntiids=()):
     result = set()
-    content_ntiids = set()
     for ntiid in ntiids or ():
-        # As shortcut, we only want our entry types. This
-        # prevents expensive lookups of content units.
-        if not is_ntiid_of_type(ntiid, NTIID_ENTRY_TYPE):
-            content_ntiids.add(ntiid)
-            continue
-        course = None
         context = find_object_with_ntiid(ntiid)
         if     ICourseInstance.providedBy(context) \
             or ICourseCatalogEntry.providedBy(context):
             course = ICourseInstance(context, None)
-        if course is not None:
-            result.add(course)
-    if not result:
-        # If not courses, see if we can resolve via content.
-        for content_ntiid in content_ntiids:
-            context = find_object_with_ntiid(content_ntiid)
-            if IContentPackage.providedBy(context):
-                courses = get_courses_for_package(context.ntiid)
-                if courses:
-                    result.update(courses)
+            if course is not None:
+                result.add(course)
+        elif IContentPackage.providedBy(context):
+            courses = get_courses_for_package(context.ntiid)
+            if courses:
+                result.update(courses)
     return result
 
 
