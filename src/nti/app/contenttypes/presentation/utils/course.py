@@ -1,13 +1,12 @@
-# #!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from ordered_set import OrderedSet
 
@@ -23,8 +22,6 @@ from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
 
 from nti.contenttypes.courses.discussions.utils import get_topic_key
 
-from nti.contenttypes.courses.interfaces import NTIID_ENTRY_TYPE
-
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
@@ -34,10 +31,11 @@ from nti.contenttypes.courses.utils import get_courses_for_packages
 
 from nti.contenttypes.presentation import PACKAGE_CONTAINER_INTERFACES
 
-from nti.ntiids.ntiids import is_ntiid_of_type
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.site.interfaces import IHostPolicyFolder
+
+logger = __import__('logging').getLogger(__name__)
 
 
 def get_courses_for_package(ntiid, sites=None):
@@ -164,6 +162,7 @@ def course_discussions(course, by_topic_key=True):
     courses.discard(None)
     for course in courses:
         discussions = ICourseDiscussions(course)
+        # pylint: disable=too-many-function-args 
         for discussion in discussions.values():
             if by_topic_key:
                 key = get_topic_key(discussion)
