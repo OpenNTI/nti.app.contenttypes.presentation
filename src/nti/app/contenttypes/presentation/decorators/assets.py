@@ -45,6 +45,8 @@ from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_SECTION_TOP
 
 from nti.app.products.courseware.decorators import BaseRecursiveAuditLogLinkDecorator
 
+from nti.app.products.courseware.resources.interfaces import ICourseContentFile
+
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
 from nti.appserver.pyramid_authorization import has_permission
@@ -119,8 +121,9 @@ from nti.ntiids.ntiids import make_provider_safe
 from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
 
-from nti.traversal.traversal import find_interface
 from nti.publishing.interfaces import IPublishable
+
+from nti.traversal.traversal import find_interface
 
 LINKS = StandardExternalFields.LINKS
 ITEMS = StandardExternalFields.ITEMS
@@ -403,15 +406,22 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
             return True
         return False
 
-    def _can_view_ref_target(self, ref):
+    def _can_view_ref_target(self, ref, course):
         target = find_object_with_ntiid(ref.target)
-        return can_view_publishable(target, self.request)
+        result = can_view_publishable(target, self.request)
+        if result and ICourseContentFile.providedBy(target):
+            # We could check read permission here, but that may return content
+            # from other courses, which would be confusing for editors. So we
+            # can simply check the course lines up.
+            file_course = find_interface(target, ICourseInstance, strict=True)
+            result = course == file_course
+        return result
 
-    def _handle_relatedworkref_pointer(self, context, items, item, idx):
+    def _handle_relatedworkref_pointer(self, context, items, course, item, idx):
         source = INTIRelatedWorkRef(item, None)
         if      source is not None \
             and self._allow_visible(context, source) \
-            and self._can_view_ref_target(source):
+            and self._can_view_ref_target(source, course):
             items[idx] = to_external_object(source)
             return True
         return False
@@ -459,7 +469,7 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
                 and not self._handle_timeline_ref(items, item, idx):
                 removal.add(idx)
             elif    INTIRelatedWorkRefPointer.providedBy(item) \
-                and not self._handle_relatedworkref_pointer(context, items, item, idx):
+                and not self._handle_relatedworkref_pointer(context, items, course, item, idx):
                 removal.add(idx)
             elif    INTIAssignmentRef.providedBy(item) \
                 and not self.allow_assignmentref(item, record, course, assignment_ntiids, show_unpublished):
