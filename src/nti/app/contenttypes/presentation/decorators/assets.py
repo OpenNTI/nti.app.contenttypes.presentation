@@ -409,12 +409,14 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
     def _can_view_ref_target(self, ref, course):
         target = find_object_with_ntiid(ref.target)
         result = can_view_publishable(target, self.request)
-        if result and ICourseContentFile.providedBy(target):
-            # We could check read permission here, but that may return content
-            # from other courses, which would be confusing for editors. So we
-            # can simply check the course lines up.
-            file_course = find_interface(target, ICourseInstance, strict=True)
-            result = course == file_course
+        if result and is_internal_file_link(ref.href):
+            content_file = get_file_from_external_link(ref.href)
+            if ICourseContentFile.providedBy(content_file):
+                # We could check read permission here, but that may return content
+                # from other courses, which would be confusing for editors. So we
+                # can simply check the course lines up.
+                file_course = find_interface(content_file, ICourseInstance, strict=True)
+                result = course == file_course
         return result
 
     def _handle_relatedworkref_pointer(self, context, items, course, item, idx):
