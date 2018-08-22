@@ -68,7 +68,7 @@ from nti.contenttypes.courses.common import get_course_packages
 
 from nti.contenttypes.courses.discussions.utils import resolve_discussion_course_bundle
 
-from nti.contenttypes.courses.interfaces import OPEN
+from nti.contenttypes.courses.interfaces import OPEN, ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import IN_CLASS
 from nti.contenttypes.courses.interfaces import ES_CREDIT
@@ -412,11 +412,14 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
         if result and is_internal_file_link(ref.href):
             content_file = get_file_from_external_link(ref.href)
             if ICourseContentFile.providedBy(content_file):
-                # We could check read permission here, but that may return content
-                # from other courses, which would be confusing for editors. So we
-                # can simply check the course lines up.
+                # We could check read permission here, but that may return
+                # content from other courses, which would be confusing for
+                # editors. So we can simply check the course lines up.
                 file_course = find_interface(content_file, ICourseInstance, strict=True)
-                result = course == file_course
+                # If file is stored in parent course, all child courses should
+                # be able to see it.
+                result = not ICourseSubInstance.providedBy(file_course) \
+                      or course == file_course
         return result
 
     def _handle_relatedworkref_pointer(self, context, items, course, item, idx):
