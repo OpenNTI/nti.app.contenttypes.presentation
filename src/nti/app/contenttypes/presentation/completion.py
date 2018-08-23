@@ -19,6 +19,7 @@ from nti.app.contenttypes.presentation.utils import is_item_visible
 
 from nti.contenttypes.completion.completion import CompletedItem
 
+from nti.contenttypes.completion.interfaces import ICompletables
 from nti.contenttypes.completion.interfaces import ICompletableItem
 from nti.contenttypes.completion.interfaces import ICompletableItemProvider
 from nti.contenttypes.completion.interfaces import IRequiredCompletableItemProvider
@@ -37,6 +38,7 @@ from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import IPresentationAsset
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -228,7 +230,7 @@ class _CourseAssetItemProvider(_LessonAssetItemProvider):
                 self._get_items_for_node(node, result, user, record)
             for child_node in node.values():
                 _recur(child_node)
-
+        # pylint: disable=no-member
         _recur(self.course.Outline)
         return result
 
@@ -245,3 +247,17 @@ class _CourseAssetRequiredItemProvider(_CourseAssetItemProvider):
     def _include_item(self, item):
         result = super(_CourseAssetRequiredItemProvider, self)._include_item(item)
         return result and is_item_required(item, self.course)
+
+
+@interface.implementer(ICompletables)
+class AssetCompletables(object):
+
+    __slots__ = ()
+
+    def __init__(self, *args):
+        pass
+
+    def iter_objects(self):
+        for unused_name, item in component.getUtilitiesFor(IPresentationAsset):
+            if ICompletableItem.providedBy(item):
+                yield item
