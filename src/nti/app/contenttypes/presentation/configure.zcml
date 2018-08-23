@@ -221,6 +221,8 @@
                 provides="nti.contenttypes.completion.interfaces.IRequiredCompletableItemProvider"
                 for="nti.contenttypes.courses.interfaces.ICourseInstance" />
 
+	<utility factory=".completion.AssetCompletables" name="assets" />
+
 	<!-- Events -->
 	<subscriber handler=".subscribers._on_outlinenode_unregistered" />
 
