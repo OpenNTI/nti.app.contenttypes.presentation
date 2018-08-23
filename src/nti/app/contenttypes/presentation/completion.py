@@ -41,7 +41,7 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.publishing.interfaces import IPublishable
-from nti.dataserver.interfaces import ICalendarPublishable
+from nti.publishing.interfaces import ICalendarPublishable
 
 
 logger = __import__('logging').getLogger(__name__)
