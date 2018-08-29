@@ -143,6 +143,7 @@ class LessonOverviewsImporter(BaseSectionImporter):
             interface.alsoProvides(concrete, IUserCreatedAsset)
         # check 'children'
         if IItemAssetContainer.providedBy(asset):
+            asset.lock()
             for item in asset.Items or ():
                 self._post_process_asset(item, source_filer, target_filer)
         # set proper target
