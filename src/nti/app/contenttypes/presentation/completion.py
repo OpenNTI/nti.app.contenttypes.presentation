@@ -162,9 +162,9 @@ class _LessonAssetItemProvider(object):
 
         target = getattr(item, 'target', '')
         target = find_object_with_ntiid(target)
-        if self._include_item(target):
+        if ICompletableItem.providedBy(target):
             # If the target is a completable item, prefer it over the ref.
-            if self._is_visible(target, user, record):
+            if self._include_item(target) and self._is_visible(target, user, record):
                 accum.add(target)
         elif self._include_item(item):
             accum.add(item)
