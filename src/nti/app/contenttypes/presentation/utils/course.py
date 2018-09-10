@@ -81,6 +81,16 @@ def get_presentation_asset_containers(item):
     return get_containers(entries) if entries else ()
 
 
+def is_video_included(video, courses):
+    # check if a video is created in any of the courses.
+    if courses:
+        container_courses = get_presentation_asset_courses(video)
+        if container_courses:
+            for _course in courses:
+                if _course in container_courses:
+                    return True
+    return False
+
 def find_course_by_parts(catalog, parts=()):
     result = None
     context = catalog

@@ -17,6 +17,8 @@ from zope.cachedescriptors.property import Lazy
 
 from nti.app.contenttypes.presentation.utils import is_item_visible
 
+from nti.app.contenttypes.presentation.utils.course import is_video_included
+
 from nti.contenttypes.completion.completion import CompletedItem
 
 from nti.contenttypes.completion.interfaces import ICompletables
@@ -30,8 +32,10 @@ from nti.contenttypes.completion.utils import is_item_required
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
+from nti.contenttypes.courses.interfaces import ICourseSubInstance
 
 from nti.contenttypes.courses.utils import get_enrollment_record
+from nti.contenttypes.courses.utils import get_parent_course
 
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
@@ -152,12 +156,21 @@ class _LessonAssetItemProvider(object):
         return  ICompletableItem.providedBy(item) \
             and self._is_available(item) \
 
+    @Lazy
+    def _courses(self):
+        course = self.course
+        return [course, get_parent_course(course)] if ICourseSubInstance.providedBy(course) else [course]
+
     def _accum_item(self, item, accum, user, record):
         item = IConcreteAsset(item, item)
         if     INTIAssignmentRef.providedBy(item) \
             or not self._is_visible(item, user, record):
             # Do not pull in target if we are an assignment ref (different
             # provider) or we are not visible.
+            return
+
+        if INTIVideo.providedBy(item) and not is_video_included(item, self._courses):
+            # If video is created by child course, it shouldn't show in the parent and other child courses.
             return
 
         target = getattr(item, 'target', '')
