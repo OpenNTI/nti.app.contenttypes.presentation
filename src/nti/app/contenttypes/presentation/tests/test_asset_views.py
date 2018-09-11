@@ -939,6 +939,19 @@ class TestAssetViews(ApplicationLayerTest):
             for item in obj.get('Items', ()):
                 _remove_ntiids(item)
         _remove_ntiids(source)
+
+        def _init_videos(source):
+            _videos_ntiids = []
+            _video_sources = source['Items'][-1]['Items']
+            for _video_source in _video_sources:
+                res = self.testapp.post_json(self.assets_url, _video_source, status=201)
+                _videos_ntiids.append(res.json_body['NTIID'])
+            return _videos_ntiids
+
+        video_ntiids = _init_videos(source)
+        for i, ntiid in enumerate(video_ntiids):
+            source['Items'][-1]['Items'][i]['NTIID'] = ntiid
+
         res = self.testapp.post_json(self.assets_url, source, status=201)
         res = res.json_body
         move_link = self.require_link_href_with_rel(res, VIEW_NODE_MOVE)
@@ -957,7 +970,7 @@ class TestAssetViews(ApplicationLayerTest):
         group = _get_group(res.json_body)
         group_items = group.get('Items')
         assert_that(group_items, has_length(original_size))
-        assert_that(group_items[-1].get('NTIID'), is_(video_ntiid))
+        assert_that(group_items[-1].get('Target-NTIID'), is_(video_ntiid))
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_relatedwork(self):

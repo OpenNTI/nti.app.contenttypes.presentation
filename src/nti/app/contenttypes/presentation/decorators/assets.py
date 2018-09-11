@@ -40,6 +40,8 @@ from nti.app.contenttypes.presentation.decorators import _AbstractMoveLinkDecora
 
 from nti.app.contenttypes.presentation.utils import is_item_visible
 
+from nti.app.contenttypes.presentation.utils.course import is_video_included
+
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_TOPIC
 from nti.app.products.courseware.interfaces import NTIID_TYPE_COURSE_SECTION_TOPIC
 
@@ -81,6 +83,7 @@ from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInst
 from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_for_user
 
 from nti.contenttypes.courses.utils import get_user_or_instructor_enrollment_record as get_any_enrollment_record
+from nti.contenttypes.courses.utils import get_parent_course
 
 from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import INTISlide
@@ -293,6 +296,7 @@ class _NTIMediaRollDecorator(_VisibleMixinDecorator):
                 removal.add(idx)
             elif IMediaRef.providedBy(item):
                 self._handle_media_ref(items, item, idx)
+
         # remove disallowed items
         if removal:
             result[ITEMS] = [
@@ -431,6 +435,17 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
             return True
         return False
 
+    def _handle_media_ref(self, items, item, idx, courses):
+        source = INTIMedia(item, None)
+        if source is not None:
+            if is_video_included(source, courses=courses):
+                items[idx] = to_external_object(source)
+                return True
+        return False
+
+    def _get_courses(self, course):
+        return [course, get_parent_course(course)] if ICourseSubInstance.providedBy(course) else [course]
+
     def _decorate_external_impl(self, context, result):
         idx = 0
         removal = set()
@@ -452,6 +467,8 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
         assignment_ntiids = [x.ntiid for x in course_assignments]
         show_unpublished = not get_omit_published(self.request)
 
+        courses = self._get_courses(course)
+
         # loop through sources
         for idx, item in enumerate(context):
             if IVisible.providedBy(item) and not self._allow_visible(context, item):
@@ -465,8 +482,9 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
                     discussions.append(idx)
                 elif not self._is_viewable_discussion(item):
                     removal.add(idx)
-            elif IMediaRef.providedBy(item):
-                self._handle_media_ref(items, item, idx)
+            elif IMediaRef.providedBy(item) \
+                and not self._handle_media_ref(items, item, idx, courses):
+                removal.add(idx)
             elif    INTISlideDeckRef.providedBy(item) \
                 and not self._handle_slidedeck_ref(items, item, idx):
                 removal.add(idx)
