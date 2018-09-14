@@ -121,6 +121,8 @@ from nti.contenttypes.presentation.interfaces import IWillRemovePresentationAsse
 from nti.contenttypes.presentation.interfaces import ItemRemovedFromItemAssetContainerEvent
 from nti.contenttypes.presentation.interfaces import IItemRemovedFromItemAssetContainerEvent
 
+from nti.contenttypes.presentation.lesson import constraints_for_lesson
+
 from nti.coremetadata.utils import current_principal as core_current_principal
 
 from nti.dataserver.contenttypes.forums.interfaces import ITopic
@@ -373,6 +375,13 @@ def _on_course_overview_registered(group, _):
 @component.adapter(INTICourseOverviewGroup, IObjectModifiedEvent)
 def _on_course_overview_modified(group, _):
     _on_course_overview_registered(group, None)
+
+
+@component.adapter(INTILessonOverview, IBeforeIdRemovedEvent)
+def _on_lesson_removed(lesson, unused_event=None):
+    constraints = constraints_for_lesson(lesson, False)
+    if constraints:
+        constraints.clear()
 
 
 @component.adapter(IContentBaseFile, IBeforeIdRemovedEvent)
