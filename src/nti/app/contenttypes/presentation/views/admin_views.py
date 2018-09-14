@@ -17,7 +17,7 @@ from requests.structures import CaseInsensitiveDict
 
 import transaction
 
-from zope import component
+from zope import component, lifecycleevent
 
 from zope.cachedescriptors.property import Lazy
 
@@ -61,11 +61,15 @@ from nti.contenttypes.presentation.interfaces import INTISlide
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import INTISlideVideo
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
+from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraints
+
+from nti.contenttypes.presentation.lesson import LessonConstraintContainer
 
 from nti.dataserver import authorization as nauth
 
 from nti.dataserver.interfaces import IDataserverFolder
 
+from nti.dataserver.metadata.index import IX_MIMETYPE
 from nti.dataserver.metadata.index import get_metadata_catalog
 
 from nti.externalization.interfaces import LocatedExternalDict
@@ -151,6 +155,34 @@ class RebuildPresentationAssetCatalogView(AbstractAuthenticatedView):
         return result
 
 
+@view_config(route_name='objects.generic.traversal',
+             renderer='rest',
+             request_method='POST',
+             permission=nauth.ACT_NTI_ADMIN,
+             context=IDataserverFolder,
+             name='RemoveInvalidLessonConstraints')
+class RemoveInvalidLessonConstraintsView(AbstractAuthenticatedView):
+
+    def __call__(self):
+        catalog = get_metadata_catalog()
+        query = {
+            IX_MIMETYPE: {'any_of': (LessonConstraintContainer.mimeType,)},
+        }
+        count = 0
+        result = LocatedExternalDict()
+        intids = component.getUtility(IIntIds)
+        for doc_id in catalog.apply(query) or ():
+            constraints = intids.queryObject(doc_id)
+            if ILessonPublicationConstraints.providedBy(constraints):
+                lesson = constraints.__parent__ 
+                if intids.queryId(lesson) is None:
+                    count += 1
+                    constraints.clear()
+                    lifecycleevent.removed(constraints)
+        result["RemovedCount"] = count
+        return result
+
+
 @view_config(context=ICourseInstance)
 @view_config(context=ICourseCatalogEntry)
 @view_defaults(route_name='objects.generic.traversal',
@@ -181,6 +213,7 @@ class FixImportCourseReferences(AbstractAuthenticatedView):
         change_count = 0
         discussions = ICourseDiscussions(course)
         if discussions is not None:
+            # pylint: disable=too-many-function-args
             for discussion in discussions.values():
                 transfer_result = transfer_resources_from_filer(ICourseDiscussion,
                                                                 discussion,
