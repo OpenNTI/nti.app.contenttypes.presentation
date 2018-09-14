@@ -25,6 +25,7 @@ from nti.app.testing.application_webtest import ApplicationLayerTest
 from nti.app.testing.decorators import WithSharedApplicationMockDS
 
 from nti.contenttypes.presentation.lesson import LessonConstraintContainer
+from nti.contenttypes.presentation.lesson import AssignmentCompletionConstraint
 
 from nti.dataserver.metadata.index import get_metadata_catalog
 
@@ -53,13 +54,15 @@ class TestAdminViews(ApplicationLayerTest):
 
             # sample meeting
             container = LessonConstraintContainer()
-            container.__parent__ = None
             conn.add(container)
-            intids.register(container)
+            
+            constraint = AssignmentCompletionConstraint()
+            conn.add(constraint)
+            container.append(constraint)
 
             # index
-            doc_id = intids.getId(container)
-            get_metadata_catalog().index_doc(doc_id, container)
+            doc_id = intids.getId(constraint)
+            get_metadata_catalog().index_doc(doc_id, constraint)
 
         res = self.testapp.post('/dataserver2/@@RemoveInvalidLessonConstraints',
                                 status=200)
