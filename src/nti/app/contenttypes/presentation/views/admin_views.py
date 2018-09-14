@@ -80,6 +80,8 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.site.hostpolicy import get_all_host_sites
 
+from nti.zodb import isBroken
+
 ITEMS = StandardExternalFields.ITEMS
 TOTAL = StandardExternalFields.TOTAL
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
@@ -185,17 +187,18 @@ class RemoveInvalidLessonConstraintsView(AbstractAuthenticatedView):
             lesson = INTILessonOverview(constraint, None) 
             if intids.queryId(lesson) is None:
                 count += 1
-                # add container
-                containers.add(constraint.__parent__)
+                removeIntId(constraint)
+                # pylint: disable=protected-access
+                if not isBroken(constraint.__parent__):
+                    # add container
+                    containers.add(constraint.__parent__)
         
         # clear containers:
         containers.discard(None)
         for container in containers:
-            for constraint in container:
-                removeIntId(constraint)
             try:
                 container.clear()
-            except AttributeError:
+            except Exception:  # pylint: broad-except
                 pass
             lifecycleevent.removed(container)
             container.__parent__ = None
