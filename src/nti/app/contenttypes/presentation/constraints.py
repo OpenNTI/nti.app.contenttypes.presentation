@@ -4,17 +4,14 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from datetime import datetime
 
 from zope import component
 from zope import interface
-
-from zope.security.interfaces import IPrincipal
 
 from nti.app.assessment.common.utils import get_user
 from nti.app.assessment.common.utils import get_available_for_submission_ending
@@ -40,19 +37,9 @@ from nti.contenttypes.presentation.lesson import constraints_for_lesson
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
-from nti.dataserver.interfaces import IUser
-
-from nti.dataserver.users.users import User
-
 from nti.publishing.interfaces import ICalendarPublishablePredicate
 
-
-def get_user(user):
-    if IPrincipal.providedBy(user):
-        user = user.id
-    if user is not None and not IUser.providedBy(user):
-        user = User.get_user(str(user))
-    return user
+logger = __import__('logging').getLogger(__name__)
 
 
 @interface.implementer(ILessonPublicationConstraintChecker)
@@ -71,6 +58,7 @@ class LessonPublicationConstraintChecker(object):
         # Don't run through this for instructors or editors.
         if not (   is_course_instructor_or_editor(course, user)
                 or has_permission(ACT_CONTENT_EDIT, course)):
+            # pylint: disable=no-member
             for item in self.get_constraint_items(constraint) or ():
                 item_time = self.check_time_constraint_item(item, user, constraint)
                 if item_time is None:
@@ -153,10 +141,12 @@ class LessonPublishablePredicate(object):
     def __init__(self, *args):
         pass
 
+    # pylint: disable=keyword-arg-before-vararg
     def is_published(self, lesson, principal=None, *unused_args, **unused_kwargs):
         constraints = constraints_for_lesson(lesson, False)
         if constraints is not None:
             for constraint in constraints.Items:
+                # pylint: disable=too-many-function-args
                 checker = ILessonPublicationConstraintChecker(constraint, None)
                 if      checker is not None \
                     and not checker.is_satisfied(principal, constraint):

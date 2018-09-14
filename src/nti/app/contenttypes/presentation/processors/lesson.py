@@ -4,17 +4,18 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 import uuid
+
+from pyramid import httpexceptions as hexc
 
 from zope import component
 from zope import interface
 
-from pyramid import httpexceptions as hexc
+from nti.app.contenttypes.presentation import MessageFactory as _
 
 from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProcessor
 
@@ -29,6 +30,8 @@ from nti.app.contenttypes.presentation.processors.mixins import check_exists
 from nti.app.contenttypes.presentation.processors.mixins import get_context_registry
 
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+
+logger = __import__('logging').getLogger(__name__)
 
 
 def handle_lesson_overview(lesson, context, creator, request=None):
@@ -57,6 +60,7 @@ def handle_lesson_overview(lesson, context, creator, request=None):
                              None)
         # take ownership
         group.__parent__ = lesson
+        # pylint: disable=too-many-function-args
         processor = IPresentationAssetProcessor(group)
         processor.handle(group, context, creator, request)
 
