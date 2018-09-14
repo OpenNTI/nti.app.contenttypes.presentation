@@ -234,6 +234,7 @@
     <subscriber handler=".subscribers._on_audio_removed" />
     <subscriber handler=".subscribers._on_video_removed" />
 	<subscriber handler=".subscribers._on_asset_modified" />
+	<subscriber handler=".subscribers._on_lesson_removed" />
 	<subscriber handler=".subscribers._on_asset_registered" />
 	<subscriber handler=".subscribers._on_docket_asset_removed" />
 	<subscriber handler=".subscribers._on_presentation_asset_created" />
