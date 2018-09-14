@@ -61,9 +61,8 @@ from nti.contenttypes.presentation.interfaces import INTISlide
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import INTISlideVideo
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
-from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraints
-
-from nti.contenttypes.presentation.lesson import LessonConstraintContainer
+from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraint
 
 from nti.dataserver import authorization as nauth
 
@@ -163,22 +162,36 @@ class RebuildPresentationAssetCatalogView(AbstractAuthenticatedView):
              name='RemoveInvalidLessonConstraints')
 class RemoveInvalidLessonConstraintsView(AbstractAuthenticatedView):
 
+    @property
+    def mimeTypes(self):
+        return ("application/vnd.nextthought.lesson.assignmentcompletionconstraint",
+                "application/vnd.nextthought.lesson.surveycompletionconstraint")
+
     def __call__(self):
         catalog = get_metadata_catalog()
         query = {
-            IX_MIMETYPE: {'any_of': (LessonConstraintContainer.mimeType,)},
+            IX_MIMETYPE: {'any_of': self.mimeTypes},
         }
         count = 0
+        containers = set()
         result = LocatedExternalDict()
         intids = component.getUtility(IIntIds)
         for doc_id in catalog.apply(query) or ():
-            constraints = intids.queryObject(doc_id)
-            if ILessonPublicationConstraints.providedBy(constraints):
-                lesson = constraints.__parent__ 
-                if intids.queryId(lesson) is None:
-                    count += 1
-                    constraints.clear()
-                    lifecycleevent.removed(constraints)
+            constraint = intids.queryObject(doc_id)
+            if not ILessonPublicationConstraint.providedBy(constraint):
+                continue
+            lesson = INTILessonOverview(constraint, None) 
+            if intids.queryId(lesson) is None:
+                count += 1
+                # add container
+                containers.add(constraint.__parent__)
+        
+        # clear containers:
+        containers.discard(None)
+        for container in containers:
+            container.clear()
+            lifecycleevent.removed(container)
+
         result["RemovedCount"] = count
         return result
 
