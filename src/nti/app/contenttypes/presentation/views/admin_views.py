@@ -74,6 +74,8 @@ from nti.dataserver.metadata.index import get_metadata_catalog
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 
+from nti.intid.common import removeIntId
+
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.site.hostpolicy import get_all_host_sites
@@ -189,8 +191,14 @@ class RemoveInvalidLessonConstraintsView(AbstractAuthenticatedView):
         # clear containers:
         containers.discard(None)
         for container in containers:
-            container.clear()
+            for constraint in container:
+                removeIntId(constraint)
+            try:
+                container.clear()
+            except AttributeError:
+                pass
             lifecycleevent.removed(container)
+            container.__parent__ = None
 
         result["RemovedCount"] = count
         return result
