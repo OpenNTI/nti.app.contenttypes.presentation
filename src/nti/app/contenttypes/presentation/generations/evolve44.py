@@ -56,10 +56,11 @@ def _process_site(current, seen):
                 annotations = lesson.__annotations__
                 old_constraints = annotations[CONSTRAINT_ANNOTATION_KEY]
                 del annotations[CONSTRAINT_ANNOTATION_KEY]
-                
+
                 container = LessonConstraintContainer()
                 connection.add(container)
                 annotations[CONSTRAINT_ANNOTATION_KEY] = container
+                container.__parent__ = lesson
                 container.extend(old_constraints.values())
 
                 old_constraints.__parent__ = None
