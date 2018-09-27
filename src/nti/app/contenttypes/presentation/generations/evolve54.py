@@ -8,10 +8,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-logger = __import__('logging').getLogger(__name__)
-
-generation = 54
-
 from zope import component
 from zope import interface
 
@@ -26,6 +22,10 @@ from nti.dataserver.interfaces import IOIDResolver
 
 from nti.site.hostpolicy import get_all_host_sites
 
+generation = 54
+
+logger = __import__('logging').getLogger(__name__)
+
 
 @interface.implementer(IDataserver)
 class MockDataserver(object):
@@ -35,9 +35,9 @@ class MockDataserver(object):
     def get_by_oid(self, oid, ignore_creator=False):
         resolver = component.queryUtility(IOIDResolver)
         if resolver is None:
-            logger.warn("Using dataserver without a proper ISiteManager.")
+            logger.warning("Using dataserver without a proper ISiteManager.")
         else:
-            return resolver.get_object_by_oid(oid, ignore_creator=ignore_creator)
+            return resolver.get_object_by_oid(oid, ignore_creator)
         return None
 
 
@@ -60,7 +60,7 @@ def _process_site(current, seen):
     return result
 
 
-def do_evolve(context, generation=generation):
+def do_evolve(context, generation=generation):  # pylint: disable=redefined-outer-name
     conn = context.connection
     ds_folder = conn.root()['nti.dataserver']
 
