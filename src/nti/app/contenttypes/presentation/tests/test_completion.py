@@ -222,7 +222,7 @@ class TestCompletion(ApplicationLayerTest):
                                             has_property('ntiid', self.video_ntiid))))
             progress = component.queryMultiAdapter((user,course), IProgress)
             assert_that(progress.AbsoluteProgress, is_(0))
-            assert_that(progress.MaxPossibleProgress, is_(13))
+            assert_that(progress.MaxPossibleProgress, is_(74))
             assert_that(progress.HasProgress, is_(False))
             assert_that(progress.LastModified, none())
 

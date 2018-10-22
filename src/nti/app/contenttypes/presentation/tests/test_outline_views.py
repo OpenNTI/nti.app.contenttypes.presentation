@@ -123,11 +123,11 @@ class TestOutlineViews(ApplicationLayerTest):
 		res = self.testapp.get(video_asset_href, extra_environ=ichigo_environ)
 		data = res.json_body
 		# We do not have all the lessons setup in test course.
-		assert_that( data.get( 'ItemCount' ), is_( 12 ))
-		assert_that( data.get( 'Total' ), is_( 12 ))
-		assert_that( data.get( 'Items' ), has_length(12))
-		assert_that( data.get( 'Containers' ), has_length(4))
-		assert_that( data.get( 'ContainerOrder'), has_length(53))
+		assert_that( data.get( 'ItemCount' ), is_( 73 ))
+		assert_that( data.get( 'Total' ), is_( 73 ))
+		assert_that( data.get( 'Items' ), has_length(73))
+		assert_that( data.get( 'Containers' ), has_length(32))
+		assert_that( data.get( 'ContainerOrder'), has_length(54))
 		assert_that( data.get( 'Items' ).get( children[0] ),
 					 has_entries( 'mimeType', 'application/vnd.nextthought.ntivideo',
 								  'ntiid', children[0] ))
@@ -140,11 +140,11 @@ class TestOutlineViews(ApplicationLayerTest):
 		res = self.testapp.get(video_asset_href, extra_environ=ichigo_environ)
 		data = res.json_body
 		# We do not have all the lessons setup in test course.
-		assert_that( data.get( 'ItemCount' ), is_( 12 ))
-		assert_that( data.get( 'Total' ), is_( 12 ))
-		assert_that( data.get( 'Items' ), has_length(12))
-		assert_that( data.get( 'Containers' ), has_length(4))
-		assert_that( data.get( 'ContainerOrder'), has_length(53))
+		assert_that( data.get( 'ItemCount' ), is_( 73 ))
+		assert_that( data.get( 'Total' ), is_( 73 ))
+		assert_that( data.get( 'Items' ), has_length(73))
+		assert_that( data.get( 'Containers' ), has_length(32))
+		assert_that( data.get( 'ContainerOrder'), has_length(54))
 		assert_that( data.get( 'Items' ).get( children[0] ),
 					 has_entries( 'mimeType', 'application/vnd.nextthought.ntivideo',
 								  'ntiid', children[0] ))
@@ -153,10 +153,10 @@ class TestOutlineViews(ApplicationLayerTest):
 		# MediaByOutlineNode
 		res = self.testapp.get(media_href, extra_environ=ichigo_environ)
 		data = res.json_body
-		assert_that(data, has_entry('ItemCount', is_(63)))
-		assert_that(data, has_entry('Items', has_length(63)))
-		assert_that(data, has_entry('Containers', has_length(24)))
-		assert_that(data, has_entry('ContainerOrder', has_length(53)))
+		assert_that(data, has_entry('ItemCount', is_(132)))
+		assert_that(data, has_entry('Items', has_length(132)))
+		assert_that(data, has_entry('Containers', has_length(32)))
+		assert_that(data, has_entry('ContainerOrder', has_length(54)))
 
 		assert_that( data.get('Containers').get( lesson ), is_( children ))
 
@@ -180,14 +180,14 @@ class TestOutlineViews(ApplicationLayerTest):
 		res = self.testapp.get(asset_href, extra_environ=ichigo_environ)
 		data = res.json_body
 		# We do not have all the lessons setup in test course.
-		assert_that( data.get( 'ItemCount' ), is_( 4 ))
-		assert_that( data.get( 'Total' ), is_( 4 ))
+		assert_that( data.get( 'ItemCount' ), is_( 73 ))
+		assert_that( data.get( 'Total' ), is_( 73 ))
 		items = data.get( 'Items' )
-		assert_that( items, has_length(4))
+		assert_that( items, has_length(73))
 		for item in items.values():
 			assert_that( item.get( 'MimeType' ), is_('application/vnd.nextthought.assessment.assignment') )
-		assert_that( data.get( 'Containers' ), has_length(2))
-		assert_that( data.get( 'ContainerOrder'), has_length(53))
+		assert_that( data.get( 'Containers' ), has_length(35))
+		assert_that( data.get( 'ContainerOrder'), has_length(54))
 		assert_that( data.get( 'Containers').get( lesson ), is_( children ))
 
 		# QuestionSets
@@ -197,14 +197,14 @@ class TestOutlineViews(ApplicationLayerTest):
 		res = self.testapp.get(asset_href, extra_environ=ichigo_environ)
 		data = res.json_body
 		# We do not have all the lessons setup in test course.
-		assert_that( data.get( 'ItemCount' ), is_( 1 ))
-		assert_that( data.get( 'Total' ), is_( 1 ))
+		assert_that( data.get( 'ItemCount' ), is_( 5 ))
+		assert_that( data.get( 'Total' ), is_( 5 ))
 		items = data.get( 'Items' )
-		assert_that( items, has_length(1))
+		assert_that( items, has_length(5))
 		for item in items.values():
 			assert_that( item.get( 'MimeType' ), is_('application/vnd.nextthought.naquestionset') )
-		assert_that( data.get( 'Containers' ), has_length(1))
-		assert_that( data.get( 'ContainerOrder'), has_length(53))
+		assert_that( data.get( 'Containers' ), has_length(5))
+		assert_that( data.get( 'ContainerOrder'), has_length(54))
 		assert_that( data.get( 'Containers').get( lesson ), is_( children ))
 
 class TestOutlineEditViews(ApplicationLayerTest):
