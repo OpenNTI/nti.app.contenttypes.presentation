@@ -82,14 +82,14 @@ class TestImportExporter(ApplicationLayerTest):
                 exporter = LessonOverviewsExporter()
                 exporter.export(course, filer)
                 assert_that(filer.list(), contains('Lessons'))
-                assert_that(filer.list("Lessons"), has_length(18))
+                assert_that(filer.list("Lessons"), has_length(54))
 
             # import
             with mock_dataserver.mock_db_trans(self.ds, site_name='platform.ou.edu'):
                 course = ICourseInstance(self.course_entry())
                 importer = LessonOverviewsImporter()
                 result = importer.process(course, filer, False)
-                assert_that(result, has_length(18))
+                assert_that(result, has_length(54))
         finally:
             shutil.rmtree(tmp_dir, True)
 
@@ -229,7 +229,7 @@ class TestImportExporter(ApplicationLayerTest):
                                                               'user_assets.json',
                                                               'course_outline.xml',
                                                               'course_outline.json'))
-                assert_that(filer.list("Lessons"), has_length(19))
+                assert_that(filer.list("Lessons"), has_length(55))
 
             with mock_dataserver.mock_db_trans(self.ds, site_name='platform.ou.edu'):
                 course = ICourseInstance(self.course_entry())
