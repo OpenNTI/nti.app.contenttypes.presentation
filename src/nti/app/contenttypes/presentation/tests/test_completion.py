@@ -10,6 +10,7 @@ from hamcrest import none
 from hamcrest import is_not
 from hamcrest import has_items
 from hamcrest import has_length
+from hamcrest import has_entries
 from hamcrest import assert_that
 from hamcrest import has_property
 from hamcrest import greater_than_or_equal_to
@@ -36,6 +37,7 @@ from nti.app.testing.decorators import WithSharedApplicationMockDS
 
 from nti.contenttypes.completion.interfaces import IProgress
 from nti.contenttypes.completion.interfaces import IRequiredCompletableItemProvider
+from nti.contenttypes.completion.interfaces import ICompletableItemCompletionPolicy
 from nti.contenttypes.completion.interfaces import ICompletableItemDefaultRequiredPolicy
 
 from nti.contenttypes.completion.policies import CompletableItemAggregateCompletionPolicy
@@ -46,9 +48,15 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.presentation import VIDEO_MIME_TYPES
 
+from nti.contenttypes.presentation.relatedwork import NTIRelatedWorkRef
+
+from nti.contenttypes.presentation.media import NTIVideo
+
 from nti.dataserver.tests import mock_dataserver
 
 from nti.dataserver.users import User
+
+from nti.externalization.externalization import to_external_object
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -233,3 +241,12 @@ class TestCompletion(ApplicationLayerTest):
 
             possible_items = get_completable_items_for_user(user, ref_lesson)
             assert_that(possible_items, has_length(7))
+
+    def test_externalization(self):
+        ref = NTIRelatedWorkRef()
+        policy = ICompletableItemCompletionPolicy(ref)
+        assert_that(to_external_object(policy), has_entries({'Class': 'DefaultRelatedWorkRefCompletionPolicy'}))
+
+        video = NTIVideo(title=u'ok')
+        policy = ICompletableItemCompletionPolicy(video)
+        assert_that(to_external_object(policy), has_entries({'Class': 'DefaultVideoCompletionPolicy'}))
