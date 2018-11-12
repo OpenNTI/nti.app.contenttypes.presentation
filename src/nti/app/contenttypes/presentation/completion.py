@@ -28,6 +28,8 @@ from nti.contenttypes.completion.interfaces import IRequiredCompletableItemProvi
 from nti.contenttypes.completion.interfaces import ICompletableItemCompletionPolicy
 from nti.contenttypes.completion.interfaces import ICompletionContextCompletionPolicyContainer
 
+from nti.contenttypes.completion.policies import AbstractCompletableItemCompletionPolicy
+
 from nti.contenttypes.completion.utils import is_item_required
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -44,6 +46,8 @@ from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 
+from nti.externalization.persistence import NoPickle
+
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.publishing.interfaces import IPublishable
@@ -53,9 +57,10 @@ from nti.publishing.interfaces import ICalendarPublishable
 logger = __import__('logging').getLogger(__name__)
 
 
+@NoPickle
 @component.adapter(INTIRelatedWorkRef)
 @interface.implementer(ICompletableItemCompletionPolicy)
-class DefaultRelatedWorkRefCompletionPolicy(object):
+class DefaultRelatedWorkRefCompletionPolicy(AbstractCompletableItemCompletionPolicy):
     """
     A simple completion policy that only cares about some progress on related
     work refs.
@@ -73,9 +78,10 @@ class DefaultRelatedWorkRefCompletionPolicy(object):
         return result
 
 
+@NoPickle
 @component.adapter(INTIVideo)
 @interface.implementer(ICompletableItemCompletionPolicy)
-class DefaultVideoCompletionPolicy(object):
+class DefaultVideoCompletionPolicy(AbstractCompletableItemCompletionPolicy):
     """
     A simple completion policy that cares about some portion of progress
     being made on videos.
