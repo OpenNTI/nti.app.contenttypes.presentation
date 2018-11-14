@@ -99,8 +99,10 @@ class AssignmentCompletionConstraintChecker(LessonPublicationConstraintChecker):
         histories = component.queryMultiAdapter((course, user),
                                                 IUsersCourseAssignmentHistory)
         if histories is not None:
-            submission = histories.get(item_ntiid, None)
-            if submission is not None:
+            submission_container = histories.get(item_ntiid, None)
+            if submission_container:
+                # First submission created time
+                submission = submission_container.values()[0]
                 completed_time = submission.createdTime
         return completed_time
 
