@@ -29,6 +29,7 @@
 	<adapter factory=".validators._TimelineRefValidator" />
 	<adapter factory=".validators._SlideDeckRefValidator" />
 	<adapter factory=".validators._AssignmentRefValidator" />
+	<adapter factory=".validators._CalendarEventRefValidator" />
 	<adapter factory=".validators._RelatedWorkRefPointerValidator" />
 	<adapter factory=".validators._SurveyCompletionConstraintValidator" />
 	<adapter factory=".validators._AssignmentCompletionConstraintValidator" />
@@ -46,6 +47,7 @@
 	<adapter factory=".adapters._assignmentref_to_assignment" />
 	<adapter factory=".adapters._evaluationref_to_evaluation" />
 	<adapter factory=".adapters._questionsetref_to_questionset" />
+	<adapter factory=".adapters._calendareventref_to_calendarref" />
 	<adapter factory=".adapters._relatedworkrefpointer_to_relatedworkref" />
 
 	<adapter factory=".adapters._outlinenode_to_lesson" />
@@ -158,6 +160,8 @@
 	<utility factory=".ntiids._NTIInquiryRef" name="NTIPollRef" />
 	<utility factory=".ntiids._NTIInquiryRef" name="NTISurveyRef" />
 
+	<utility factory=".ntiids._NTICalendarEventRef" name="NTICalendarEventRef" />
+
 	<utility factory=".ntiids._NTIDiscussionRefResolver" name="DiscussionRef" />
 	<utility factory=".ntiids._NTIDiscussionRefResolver" name="NTIDiscussionRef" />
 	<utility factory=".ntiids._NTIDiscussionRefResolver" name="DiscussionRef:EnrolledCourseRoot" />
@@ -248,6 +252,7 @@
 	<subscriber handler=".subscribers._on_assignment_removed" />
 	<subscriber handler=".subscribers._on_evaluation_modified" />
 	<subscriber handler=".subscribers._on_content_file_removed" />
+	<subscriber handler=".subscribers._on_calendar_event_removed" />
 	<subscriber handler=".subscribers._on_course_instance_removed" />
 	<subscriber handler=".subscribers._on_course_instance_imported" />
 

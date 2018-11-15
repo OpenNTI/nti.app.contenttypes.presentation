@@ -47,6 +47,7 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
+from nti.contenttypes.presentation.interfaces import INTICalendarEventRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraints
@@ -142,6 +143,10 @@ class _NTIRelatedWorkRefPointerResolver(_PresentationResolver):
 
 class _NTIDiscussionRefResolver(_PresentationResolver):
     _ext_iface = INTIDiscussionRef
+
+
+class _NTICalendarEventRef(_PresentationResolver):
+    _ext_iface = INTICalendarEventRef
 
 
 class _GroupOverViewableResolver(_PresentationResolver):

@@ -23,6 +23,8 @@ from nti.assessment.interfaces import IQPoll
 from nti.assessment.interfaces import IQSurvey
 from nti.assessment.interfaces import IQAssignment
 
+from nti.contenttypes.calendar.interfaces import ICalendarEvent
+
 from nti.contenttypes.presentation.interfaces import INTIAudio
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTIPollRef
@@ -35,6 +37,7 @@ from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTISlideDeckRef
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
+from nti.contenttypes.presentation.interfaces import INTICalendarEventRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import ISurveyCompletionConstraint
 from nti.contenttypes.presentation.interfaces import IAssignmentCompletionConstraint
@@ -112,6 +115,13 @@ class _RelatedWorkRefPointerValidator(_ItemRefValidator):
     field_name = 'target'
     item_type = 'RelatedWork'
     provided = INTIRelatedWorkRef
+
+
+@component.adapter(INTICalendarEventRef)
+class _CalendarEventRefValidator(_ItemRefValidator):
+    field_name = 'target'
+    item_type = 'CalendarEvent'
+    provided = ICalendarEvent
 
 
 @component.adapter(IAssignmentCompletionConstraint)

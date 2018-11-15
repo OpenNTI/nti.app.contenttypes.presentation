@@ -233,6 +233,10 @@
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"
 				for="nti.contenttypes.presentation.interfaces.INTIAudio" />
 
+	<subscriber factory=".legacy._NTICalendarEventRefDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTICalendarEventRef" />
+
 	<!-- Lessons -->
 	<subscriber factory=".lessons._LessonPublicationConstraintsLinkDecorator"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"

@@ -64,6 +64,8 @@ from nti.contentlibrary.interfaces import IContentUnitHrefMapper
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
+from nti.contenttypes.calendar.interfaces import ICalendarEvent
+
 from nti.contenttypes.completion.interfaces import ICompletableItem
 
 from nti.contenttypes.courses.common import get_course_packages
@@ -104,6 +106,7 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
+from nti.contenttypes.presentation.interfaces import INTICalendarEventRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 
@@ -410,6 +413,12 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
             return True
         return False
 
+    def _handle_calendar_event_ref(self, items, item, idx):
+        source = ICalendarEvent(item, None)
+        if source is not None:
+            return True
+        return False
+
     def _can_view_ref_target(self, ref, course):
         target = find_object_with_ntiid(ref.target)
         result = can_view_publishable(target, self.request)
@@ -501,6 +510,8 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
                 and not self.allow_surveyref(item, record, course):
                 removal.add(idx)
             elif INTIMediaRoll.providedBy(item) and not self.allow_mediaroll(items[idx]):
+                removal.add(idx)
+            elif INTICalendarEventRef.providedBy(item) and not self._handle_calendar_event_ref(items, item, idx):
                 removal.add(idx)
 
         # filter legacy discussions
