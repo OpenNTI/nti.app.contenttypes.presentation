@@ -92,6 +92,8 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackage
 
+from nti.contenttypes.calendar.interfaces import ICalendar
+
 from nti.contenttypes.courses.common import get_course_packages
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -485,6 +487,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 		elif INTICalendarEventRef.providedBy(item):
 			target = find_object_with_ntiid(item.target or '')
+			# TODO may need to check if the target is within the current course.
 			if target is None or not ICourseCalendarEvent.providedBy(target):
 				raise hexc.HTTPUnprocessableEntity(
 								_('No valid calendar event found for given ntiid.'))

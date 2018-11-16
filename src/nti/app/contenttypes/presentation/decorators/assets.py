@@ -64,6 +64,7 @@ from nti.contentlibrary.interfaces import IContentUnitHrefMapper
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
+from nti.contenttypes.calendar.interfaces import ICalendar
 from nti.contenttypes.calendar.interfaces import ICalendarEvent
 
 from nti.contenttypes.completion.interfaces import ICompletableItem
@@ -413,10 +414,12 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
             return True
         return False
 
-    def _handle_calendar_event_ref(self, items, item, idx):
+    def _handle_calendar_event_ref(self, items, item, idx, course):
+        # if event is not in the course, it doesn't show.
         source = ICalendarEvent(item, None)
-        if source is not None:
-            return True
+        if source is not None and source.__parent__ is not None:
+            calendar = ICalendar(course)
+            return bool(source.__parent__ == calendar)
         return False
 
     def _can_view_ref_target(self, ref, course):
@@ -511,7 +514,7 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
                 removal.add(idx)
             elif INTIMediaRoll.providedBy(item) and not self.allow_mediaroll(items[idx]):
                 removal.add(idx)
-            elif INTICalendarEventRef.providedBy(item) and not self._handle_calendar_event_ref(items, item, idx):
+            elif INTICalendarEventRef.providedBy(item) and not self._handle_calendar_event_ref(items, item, idx, course):
                 removal.add(idx)
 
         # filter legacy discussions

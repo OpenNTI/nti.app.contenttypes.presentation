@@ -1058,13 +1058,23 @@ class TestAssetViews(ApplicationLayerTest):
             source['target'] = event.ntiid
             event_oid = to_external_ntiid_oid(event)
 
-        # non-existing ntiid.
+            # section course sharing outline with parent
+            section = course.SubInstances['001']
+            section_event = ICalendar(section).store_event(CourseCalendarEvent(title=u'testing_child'))
+            section_event_ntiid = section_event.ntiid
+
+        # target isn't in the parent's calendar. currently this failed.
+        #res = self.testapp.post_json(contents_link,
+        #                            {'MimeType': 'application/vnd.nextthought.nticalendareventref',
+        #                             'target': section_event_ntiid}, status=422)
+
+        # target doesn't exist.
         res = self.testapp.post_json(contents_link,
                                     {'MimeType': 'application/vnd.nextthought.nticalendareventref',
                                      'target': source['target']+'_non_existing'}, status=422)
         assert_that('No valid calendar event found for given ntiid.' in res.body, is_(True))
 
-        # wrong type
+        # target is not a ICourseCalendarEvent.
         with mock_dataserver.mock_db_trans(self.ds):
             user = self._create_user('test001')
             wrong_ntiid = ICalendar(user).store_event(UserCalendarEvent(title=u'tennis')).ntiid
