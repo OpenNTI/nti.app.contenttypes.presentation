@@ -29,6 +29,8 @@ from nti.assessment.interfaces import IQAssignment
 
 from nti.contenttypes.presentation import interface_of_asset
 
+from nti.contenttypes.calendar.interfaces import ICalendarEvent
+
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 
@@ -56,12 +58,15 @@ from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
+from nti.contenttypes.presentation.interfaces import INTICalendarEventRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
 from nti.contenttypes.presentation.interfaces import IUserAssetVisibilityUtility
 from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraint
 
 from nti.dataserver.interfaces import IUser
+
+from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.namedfile.constraints import FileConstraints
 
@@ -183,6 +188,12 @@ def _timelineref_to_timeline(context):
 @component.adapter(INTIRelatedWorkRefPointer)
 def _relatedworkrefpointer_to_relatedworkref(context):
     return component.queryUtility(INTIRelatedWorkRef, name=context.target or '')
+
+
+@interface.implementer(ICalendarEvent)
+@component.adapter(INTICalendarEventRef)
+def _calendareventref_to_calendarref(context):
+    return find_object_with_ntiid(context.target or '')
 
 
 @component.adapter(IAssetRef)

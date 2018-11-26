@@ -18,6 +18,7 @@ from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import has_property
+from hamcrest import same_instance
 from hamcrest import contains_inanyorder
 from hamcrest import greater_than_or_equal_to
 does_not = is_not
@@ -43,6 +44,8 @@ from nti.app.contentfolder.resources import is_internal_file_link
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
+from nti.contenttypes.calendar.interfaces import ICalendar
+
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 
@@ -53,6 +56,7 @@ from nti.contenttypes.presentation.interfaces import INTIVideoRoll
 from nti.contenttypes.presentation.interfaces import INTISlideDeck
 from nti.contenttypes.presentation.interfaces import INTITimelineRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import INTICalendarEventRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
@@ -71,7 +75,11 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.recorder.interfaces import ITransactionRecordHistory
 
+from nti.app.contenttypes.calendar.entity.model import UserCalendarEvent
+
 from nti.app.contenttypes.presentation.tests import INVALID_TITLE_LENGTH
+
+from nti.app.products.courseware.calendar.model import CourseCalendarEvent
 
 from nti.app.products.courseware.tests import InstructedCourseApplicationTestLayer
 
@@ -81,6 +89,8 @@ from nti.app.testing.decorators import WithSharedApplicationMockDS
 
 from nti.dataserver.tests import mock_dataserver
 
+from nti.ntiids.oids import to_external_ntiid_oid
+
 INVALID_TITLE = 'x' * INVALID_TITLE_LENGTH
 
 
@@ -88,7 +98,7 @@ class TestAssetViews(ApplicationLayerTest):
 
     layer = InstructedCourseApplicationTestLayer
 
-    default_origin = b'http://janux.ou.edu'
+    default_origin = b'http://platform.ou.edu'
 
     course_ntiid = 'tag:nextthought.com,2011-10:NTI-CourseInfo-Fall2015_CS_1323'
     course_url = '/dataserver2/%2B%2Betc%2B%2Bhostsites/platform.ou.edu/%2B%2Betc%2B%2Bsite/Courses/Fall2015/CS%201323'
@@ -1030,6 +1040,81 @@ class TestAssetViews(ApplicationLayerTest):
         href = res.get('href')
         assert_that(href, not_none())
         assert_that(is_internal_file_link(href), is_(True))
+
+    @WithSharedApplicationMockDS(testapp=True, users=True)
+    def test_calendar_event(self):
+        group_ntiid = 'tag:nextthought.com,2011-10:OU-NTICourseOverviewGroup-CS1323_F_2015_Intro_to_Computer_Programming.lec:01.01_LESSON.0'
+        res = self.testapp.get('/dataserver2/Objects/%s' % group_ntiid).json_body
+        group_ntiid = res.get('ntiid')
+        assert_that(res.get('Items'), has_length(1))
+        contents_link = self.require_link_href_with_rel(res, VIEW_ORDERED_CONTENTS)
+
+        # prepare course calendar event ref.
+        source = {'MimeType': 'application/vnd.nextthought.nticalendareventref'}
+        with mock_dataserver.mock_db_trans(self.ds, 'janux.ou.edu'):
+            entry = find_object_with_ntiid(self.course_ntiid)
+            course = ICourseInstance(entry)
+            event = ICalendar(course).store_event(CourseCalendarEvent(title=u'testing'))
+            source['target'] = event.ntiid
+            event_oid = to_external_ntiid_oid(event)
+
+            # section course sharing outline with parent
+            section = course.SubInstances['001']
+            section_event = ICalendar(section).store_event(CourseCalendarEvent(title=u'testing_child'))
+            section_event_ntiid = section_event.ntiid
+
+        # target isn't in the parent's calendar. currently this failed.
+        #res = self.testapp.post_json(contents_link,
+        #                            {'MimeType': 'application/vnd.nextthought.nticalendareventref',
+        #                             'target': section_event_ntiid}, status=422)
+
+        # target doesn't exist.
+        res = self.testapp.post_json(contents_link,
+                                    {'MimeType': 'application/vnd.nextthought.nticalendareventref',
+                                     'target': source['target']+'_non_existing'}, status=422)
+        assert_that('No valid calendar event found for given ntiid.' in res.body, is_(True))
+
+        # target is not a ICourseCalendarEvent.
+        with mock_dataserver.mock_db_trans(self.ds):
+            user = self._create_user('test001')
+            wrong_ntiid = ICalendar(user).store_event(UserCalendarEvent(title=u'tennis')).ntiid
+
+        res = self.testapp.post_json(contents_link,
+                                    {'MimeType': 'application/vnd.nextthought.nticalendareventref',
+                                     'target': wrong_ntiid}, status=422)
+        assert_that('No valid calendar event found for given ntiid.' in res.body, is_(True))
+
+        res = self.testapp.post_json(contents_link, source, status=201).json_body
+        ref_ntiid = res.get('NTIID')
+
+        assert_that(ref_ntiid, not_none())
+        assert_that(res.get('TargetMimeType'), 'application/vnd.nextthought.courseware.coursecalendarevent')
+        assert_that(res.get('Target-NTIID'), source['target'])
+        self.require_link_href_with_rel(res, 'edit')
+        self.require_link_href_with_rel(res, 'schema')
+
+        with mock_dataserver.mock_db_trans(self.ds, 'platform.ou.edu'):
+            ref = find_object_with_ntiid(ref_ntiid)
+            assert_that(INTICalendarEventRef.providedBy(ref), is_(True))
+            assert_that(component.getUtility(INTICalendarEventRef, name=ref_ntiid), same_instance(ref))
+
+            group = find_object_with_ntiid(group_ntiid)
+            assert_that(ref in group.Items, is_(True))
+
+            catalog = get_library_catalog()
+            refs = catalog.search_objects(provided=INTICalendarEventRef, target=event.ntiid)
+            assert_that(refs, has_item(ref))
+
+        #remove calendar event
+        self.testapp.delete('/dataserver2/Objects/%s' % event_oid, status=204)
+
+        with mock_dataserver.mock_db_trans(self.ds, 'platform.ou.edu'):
+            assert_that(ref in group.Items, is_(False))
+
+            refs = catalog.search_objects(provided=INTICalendarEventRef, target=event.ntiid)
+            assert_that(refs, has_length(0))
+
+            assert_that(component.queryUtility(INTICalendarEventRef, name=ref_ntiid), is_(None))
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_timeline(self):

@@ -29,6 +29,7 @@ from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTIDiscussionRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
+from nti.contenttypes.presentation.interfaces import INTICalendarEventRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.externalization.interfaces import StandardExternalFields
@@ -274,3 +275,13 @@ class _NTIVideoDecorator(_BaseMediaDecorator):
 @interface.implementer(IExternalObjectDecorator)
 class _NTIAudioDecorator(_BaseMediaDecorator):
     pass
+
+
+@component.adapter(INTICalendarEventRef)
+@interface.implementer(IExternalObjectDecorator)
+class _NTICalendarEventRefDecorator(_BaseAssetDecorator):
+
+    def decorateExternalObject(self, original, external):
+        super(_NTICalendarEventRefDecorator, self).decorateExternalObject(original, external)
+        target = find_object_with_ntiid(original.target)
+        external['TargetMimeType'] = getattr(target, 'mime_type', '')

@@ -66,6 +66,8 @@ from nti.contentlibrary.interfaces import IContentUnitAssociations
 from nti.contentlibrary.interfaces import IRenderableContentPackage
 from nti.contentlibrary.interfaces import IContentPackageRemovedEvent
 
+from nti.contenttypes.calendar.interfaces import ICalendarEvent
+
 from nti.contenttypes.completion.interfaces import ICompletableItem
 from nti.contenttypes.completion.interfaces import IUserProgressUpdatedEvent
 
@@ -110,6 +112,7 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
+from nti.contenttypes.presentation.interfaces import INTICalendarEventRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import IOverviewGroupMovedEvent
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
@@ -463,6 +466,35 @@ def _on_evaluation_modified(evaluation, _):
                 or INTISurveyRef.providedBy(item):
                 item.question_count = getattr(evaluation, 'draw', None) \
                                    or len(evaluation.questions or ())
+
+
+@component.adapter(ICalendarEvent, IBeforeIdRemovedEvent)
+def _on_calendar_event_removed(calendar_event, _):
+    """
+    Remove deleted calendar events from all overview groups referencing it.
+    """
+    count = 0
+    ntiid = getattr(calendar_event, 'ntiid', None)
+    registry = get_site_registry()
+    if     not ntiid \
+        or current_principal() is None \
+        or registry == component.getGlobalSiteManager():
+        return count
+
+    catalog = get_library_catalog()
+    sites = get_component_hierarchy_names()
+    items = catalog.search_objects(provided=INTICalendarEventRef,
+                                   target=ntiid,
+                                   sites=sites)
+    for item in items or ():
+        if      INTICalendarEventRef.providedBy(item) \
+            and calendar_event.ntiid == getattr(item, 'target', ''):
+            # This ends up removing from containers.
+            remove_presentation_asset(item, registry)
+            count += 1
+    if count:
+        logger.info('Removed calendar event (%s) from %s overview group(s)', ntiid, count)
+    return count
 
 
 @component.adapter(IContentUnit)

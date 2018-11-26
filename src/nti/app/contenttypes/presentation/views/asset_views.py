@@ -65,6 +65,8 @@ from nti.app.externalization.error import raise_json_error
 
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
+from nti.app.products.courseware.calendar.interfaces import ICourseCalendarEvent
+
 from nti.app.products.courseware.resources.utils import get_course_filer
 
 from nti.app.products.courseware.views.view_mixins import IndexedRequestMixin
@@ -89,6 +91,8 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackage
+
+from nti.contenttypes.calendar.interfaces import ICalendar
 
 from nti.contenttypes.courses.common import get_course_packages
 
@@ -142,6 +146,7 @@ from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INTIQuestionSetRef
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
+from nti.contenttypes.presentation.interfaces import INTICalendarEventRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import ICoursePresentationAsset
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
@@ -479,6 +484,14 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 															context=self._course)
 				if resolved is not None:  #  (discussion, topic)
 					item.target = resolved[1].NTIID
+
+		elif INTICalendarEventRef.providedBy(item):
+			target = find_object_with_ntiid(item.target or '')
+			# TODO may need to check if the target is within the current course.
+			if target is None or not ICourseCalendarEvent.providedBy(target):
+				raise hexc.HTTPUnprocessableEntity(
+								_('No valid calendar event found for given ntiid.'))
+
 
 	def _handle_overview_group(self, group, creator, extended=None):
 		# set creator
