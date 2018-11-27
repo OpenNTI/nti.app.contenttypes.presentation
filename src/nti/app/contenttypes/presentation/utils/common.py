@@ -309,7 +309,7 @@ def fix_inaccessible_assets(seen=None):
         if doc_id is None or doc_id in seen:
             return
         seen.add(doc_id)
-        for key, value, container in context_assets(course):
+        for key, value, container in context_assets(context):
             containers[key] = (value, container)
         for child in context.children or ():
             _recur(child)
@@ -375,9 +375,9 @@ def fix_inaccessible_assets(seen=None):
             if value is not item:
                 container[ntiid] = item
         if container is None:
-            parent = find_interface(container, ICourseInstance, strict=False)
+            parent = find_interface(item, ICourseInstance, strict=False)
             if parent is None:
-                parent = find_interface(container, IContentUnit, strict=False)
+                parent = find_interface(item, IContentUnit, strict=False)
                 namespace = getattr(parent, 'ntiid', None)
             else:
                 entry = ICourseCatalogEntry(parent)
