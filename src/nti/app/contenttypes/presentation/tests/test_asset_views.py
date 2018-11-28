@@ -15,6 +15,7 @@ from hamcrest import contains
 from hamcrest import not_none
 from hamcrest import has_item
 from hamcrest import has_entry
+from hamcrest import has_entries
 from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import has_property
@@ -1090,6 +1091,9 @@ class TestAssetViews(ApplicationLayerTest):
         assert_that(ref_ntiid, not_none())
         assert_that(res.get('TargetMimeType'), 'application/vnd.nextthought.courseware.coursecalendarevent')
         assert_that(res.get('Target-NTIID'), source['target'])
+        assert_that(res.get('CalendarEvent'), has_entries({'NTIID': source['target'],
+                                                           'title': 'testing',
+                                                           'MimeType': 'application/vnd.nextthought.courseware.coursecalendarevent'}))
         self.require_link_href_with_rel(res, 'edit')
         self.require_link_href_with_rel(res, 'schema')
 
