@@ -21,6 +21,7 @@ from zope import component, lifecycleevent
 
 from zope.cachedescriptors.property import Lazy
 
+from zope.component.hooks import getSite
 from zope.component.hooks import site as current_site
 
 from zope.intid.interfaces import IIntIds
@@ -53,6 +54,10 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.courses.utils import get_course_packages
 
+from nti.contentlibrary.indexed_data import get_library_catalog
+
+from nti.contentlibrary.interfaces import IContentPackageLibrary
+
 from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.presentation.index import get_assets_catalog
@@ -62,6 +67,8 @@ from nti.contenttypes.presentation.interfaces import IConcreteAsset
 from nti.contenttypes.presentation.interfaces import INTISlideVideo
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
+from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
+from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraint
 
 from nti.dataserver import authorization as nauth
@@ -184,7 +191,7 @@ class RemoveInvalidLessonConstraintsView(AbstractAuthenticatedView):
             constraint = intids.queryObject(doc_id)
             if not ILessonPublicationConstraint.providedBy(constraint):
                 continue
-            lesson = INTILessonOverview(constraint, None) 
+            lesson = INTILessonOverview(constraint, None)
             if intids.queryId(lesson) is None:
                 count += 1
                 removeIntId(constraint)
@@ -192,7 +199,7 @@ class RemoveInvalidLessonConstraintsView(AbstractAuthenticatedView):
                 if not isBroken(constraint.__parent__):
                     # add container
                     containers.add(constraint.__parent__)
-        
+
         # clear containers:
         containers.discard(None)
         for container in containers:
@@ -327,4 +334,99 @@ class FixCourseAssetContainersView(AbstractAuthenticatedView,
         logger.info('Removed %s package assets from course containers (%s) (%s)',
                     count, package_ntiid, entry_ntiid)
         result["RemovedCount"] = count
+        return result
+
+
+@view_config(route_name='objects.generic.traversal',
+             renderer='rest',
+             context=IDataserverFolder,
+             request_method='GET',
+             name="AssetContainerAudit",
+             permission=nauth.ACT_NTI_ADMIN)
+class AssetContainerAuditView(AbstractAuthenticatedView):
+    """
+    A view to find assets that are present in more than one
+    IPresentationAssetContainer. This should only occur in top level
+    containers due to a bug in early 2017. Thus, we dont have to traverse
+    through children.
+    """
+
+    @Lazy
+    def _params(self):
+        values = self.request.params
+        return CaseInsensitiveDict(values)
+
+    def perform_audit(self, seen):
+        """
+        Return a dict of asset_ntiid -> list of multiple packages containing
+        that asset.
+        """
+        result = dict()
+        asset_packages = dict()
+        library = component.queryUtility(IContentPackageLibrary)
+        if library is not None:
+            for package in library.contentPackages:
+                if package.ntiid not in seen:
+                    seen.add(package.ntiid)
+                    asset_ntiids = tuple(IPresentationAssetContainer(package))
+                    for asset_ntiid in asset_ntiids or ():
+                        asset_packages.setdefault(asset_ntiid, [])
+                        asset_packages[asset_ntiid].append(package.ntiid)
+        for asset_ntiid, package_ntiids in asset_packages.items():
+            if len(package_ntiids) > 1:
+                result[asset_ntiid] = package_ntiids
+        return result
+
+    def __call__(self):
+        result = LocatedExternalDict()
+        result.__name__ = self.request.view_name
+        result.__parent__ = self.request.context
+        seen = set()
+        result[ITEMS] = items = dict()
+        if 'all_sites' in self._params:
+            for host_site in get_all_host_sites():
+                with current_site(host_site):
+                    site_result = self.perform_audit(seen)
+                    if site_result:
+                        items[host_site.__name__] = site_result
+        else:
+            site_result = self.perform_audit(seen)
+            items[getSite().__name__] = site_result
+        result['SiteCount'] = len(items)
+        result['PackageCount'] = sum(len(x) for x in items.values())
+        return result
+
+
+@view_config(route_name='objects.generic.traversal',
+             renderer='rest',
+             permission=nauth.ACT_NTI_ADMIN,
+             context=IDataserverFolder,
+             name='FixRelatedWorkRefHrefs')
+class FixRelatedWorkRefHrefsView(AbstractAuthenticatedView):
+    """
+    Some related work refs had their `href` attribute updated (usually during
+    icon updates). This caused the icon to have an absolute path via a content
+    package, which would break if the content package was ever updated to a
+    new location (via ImportRenderedContent). This view will simply revert the
+    ref href to a `resources` relative path.
+    """
+
+    def __call__(self):
+        catalog = get_library_catalog()
+        intids = component.getUtility(IIntIds)
+        provided = (INTIRelatedWorkRef,)
+        rs = catalog.search_objects(intids=intids,
+                                    provided=provided)
+        related_work_refs = tuple(rs)
+        result = LocatedExternalDict()
+        result[ITEMS] = items = dict()
+        count = 0
+        for ref in related_work_refs or ():
+            if ref.href and ref.href.startswith('/content/'):
+                old_href = ref.href
+                new_href = 'resources%s' % (old_href.split('resources')[-1])
+                ref.href = new_href
+                items[ref.ntiid] = (old_href, new_href)
+                count += 1
+        result["UpdatedCount"] = count
         return result
