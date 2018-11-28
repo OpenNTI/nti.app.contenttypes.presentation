@@ -259,4 +259,10 @@
 				for="nti.contenttypes.presentation.interfaces.INTITranscript
 					 pyramid.interfaces.IRequest" />
 
+	<!-- calendar -->
+	<subscriber factory=".calendar._CalendarEventDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTICalendarEventRef
+					 pyramid.interfaces.IRequest" />
+
 </configure>
