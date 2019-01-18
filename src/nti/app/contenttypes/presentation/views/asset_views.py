@@ -92,8 +92,6 @@ from nti.contentlibrary.indexed_data import get_library_catalog
 from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackage
 
-from nti.contenttypes.calendar.interfaces import ICalendar
-
 from nti.contenttypes.courses.common import get_course_packages
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
