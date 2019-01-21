@@ -179,7 +179,7 @@ class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecor
         # Only API created PDF refs can change their uploaded files.
         # Import/export does not handle this case currently for
         # content backed assets.
-        if      not IContentBackedPresentationAsset(context) \
+        if      not IContentBackedPresentationAsset.providedBy(context) \
             and INTIRelatedWorkRef.providedBy(context) \
             and getattr(context, 'type', '') == "application/pdf":
             link = Link(context, rel='edit-target')
