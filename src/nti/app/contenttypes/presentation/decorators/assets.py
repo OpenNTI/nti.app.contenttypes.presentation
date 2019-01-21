@@ -88,7 +88,8 @@ from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_
 from nti.contenttypes.courses.utils import get_user_or_instructor_enrollment_record as get_any_enrollment_record
 from nti.contenttypes.courses.utils import get_parent_course
 
-from nti.contenttypes.presentation.interfaces import IVisible
+from nti.contenttypes.presentation.interfaces import IVisible,\
+    IContentBackedPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTISlide
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
@@ -175,6 +176,17 @@ class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecor
         link.__name__ = ''
         link.__parent__ = context
         _links.append(link)
+        # Only API created PDF refs can change their uploaded files.
+        # Import/export does not handle this case currently for
+        # content backed assets.
+        if      not IContentBackedPresentationAsset(context) \
+            and INTIRelatedWorkRef.providedBy(context) \
+            and getattr(context, 'type', '') == "application/pdf":
+            link = Link(context, rel='edit-target')
+            interface.alsoProvides(link, ILocation)
+            link.__name__ = ''
+            link.__parent__ = context
+            _links.append(link)
 
 
 @component.adapter(IPresentationAsset)
