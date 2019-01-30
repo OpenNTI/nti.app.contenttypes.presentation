@@ -180,8 +180,7 @@ class _PresentationAssetEditLinkDecorator(AbstractAuthenticatedRequestAwareDecor
         # Import/export does not handle this case currently for
         # content backed assets.
         if      not IContentBackedPresentationAsset.providedBy(context) \
-            and INTIRelatedWorkRef.providedBy(context) \
-            and getattr(context, 'type', '') == "application/pdf":
+            and INTIRelatedWorkRef.providedBy(context):
             link = Link(context, rel='edit-target')
             interface.alsoProvides(link, ILocation)
             link.__name__ = ''
