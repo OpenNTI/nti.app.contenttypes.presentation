@@ -53,7 +53,7 @@ from nti.contenttypes.presentation.interfaces import ItemRemovedFromItemAssetCon
 
 from nti.dataserver import authorization as nauth
 
-from nti.externalization.externalization import StandardExternalFields
+from nti.externalization.interfaces import StandardExternalFields
 
 ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID

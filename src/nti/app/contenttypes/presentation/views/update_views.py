@@ -115,7 +115,7 @@ from nti.contenttypes.presentation.utils import get_external_pre_hook
 
 from nti.dataserver import authorization as nauth
 
-from nti.externalization.externalization import StandardExternalFields
+from nti.externalization.interfaces import StandardExternalFields
 
 from nti.externalization.internalization import notifyModified as notify_modified
 
