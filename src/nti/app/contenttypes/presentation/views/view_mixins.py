@@ -44,7 +44,7 @@ from nti.contenttypes.presentation.interfaces import IGroupOverViewable
 
 from nti.dataserver import authorization as nauth
 
-from nti.externalization.interfaces import to_external_object
+from nti.externalization.externalization import to_external_object
 from nti.externalization.interfaces import StandardExternalFields
 
 from nti.ntiids.ntiids import find_object_with_ntiid
