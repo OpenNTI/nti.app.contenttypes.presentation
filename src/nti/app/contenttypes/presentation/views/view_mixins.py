@@ -44,8 +44,8 @@ from nti.contenttypes.presentation.interfaces import IGroupOverViewable
 
 from nti.dataserver import authorization as nauth
 
-from nti.externalization.externalization import to_external_object
-from nti.externalization.externalization import StandardExternalFields
+from nti.externalization.interfaces import to_external_object
+from nti.externalization.interfaces import StandardExternalFields
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -126,7 +126,7 @@ def preflight_mediaroll(external_value, request=None):
                                     'message':  _(u'Missing media roll item.'),
                                  },
                                  None)
-            if (   INTIMedia.providedBy(resolved) 
+            if (   INTIMedia.providedBy(resolved)
                 or INTIMediaRef.providedBy(resolved)):
                 item[MIMETYPE] = resolved.mimeType
             else:
