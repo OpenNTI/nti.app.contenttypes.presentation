@@ -362,6 +362,9 @@ class TestAssetViews(ApplicationLayerTest):
         roll_item_zero_ntiid = roll_item_zero.get('ntiid')
         assert_that(roll_item_zero.get('MimeType'),
                     is_('application/vnd.nextthought.ntivideo'))
+        for video_ext in res.get('Items'):
+            ref_link = self.link_with_rel(video_ext, 'Ref')
+            assert_that(ref_link, has_entry('RefNTIID', not_none()))
 
         group_res = self.testapp.get(group_href)
         group_res = group_res.json_body
@@ -972,7 +975,10 @@ class TestAssetViews(ApplicationLayerTest):
 
         group = _get_group(res)
         last_group_ntiid = group.get('NTIID')
-        video_ntiid = group.get('Items')[0].get('NTIID')
+        video_ext = group.get('Items')[0]
+        video_ntiid = video_ext.get('NTIID')
+        ref_link = self.link_with_rel(video_ext, 'Ref')
+        assert_that(ref_link, has_entry('RefNTIID', not_none()))
         original_size = len(group.get('Items'))
 
         # Moving a video does not create a new video.
