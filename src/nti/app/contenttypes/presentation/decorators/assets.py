@@ -88,8 +88,7 @@ from nti.contenttypes.courses.interfaces import get_course_assessment_predicate_
 from nti.contenttypes.courses.utils import get_user_or_instructor_enrollment_record as get_any_enrollment_record
 from nti.contenttypes.courses.utils import get_parent_course
 
-from nti.contenttypes.presentation.interfaces import IVisible,\
-    IContentBackedPresentationAsset
+from nti.contenttypes.presentation.interfaces import IVisible
 from nti.contenttypes.presentation.interfaces import INTISlide
 from nti.contenttypes.presentation.interfaces import IMediaRef
 from nti.contenttypes.presentation.interfaces import INTIMedia
@@ -111,6 +110,7 @@ from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import INTICalendarEventRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRefPointer
+from nti.contenttypes.presentation.interfaces import IContentBackedPresentationAsset
 
 from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
@@ -120,6 +120,8 @@ from nti.externalization.externalization import to_external_object
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalObjectDecorator
 from nti.externalization.interfaces import IExternalMappingDecorator
+
+from nti.links.externalization import render_link
 
 from nti.links.links import Link
 
@@ -252,6 +254,20 @@ class _NTIAssetOrderedContentsLinkDecorator(AbstractAuthenticatedRequestAwareDec
         links.append(link)
 
 
+def add_ref_rel(ext_obj, ref):
+    # Include a path back to the actual ref in the lesson
+    _links = ext_obj.setdefault(LINKS, [])
+    link = Link(ref,
+                rel='Ref')
+    interface.alsoProvides(link, ILocation)
+    link.__name__ = ''
+    link.__parent__ = ref
+    link = render_link(link)
+    link['RefNTIID'] = ref.ntiid
+    _links.append(link)
+
+
+
 @interface.implementer(IExternalObjectDecorator)
 class _VisibleMixinDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
@@ -273,7 +289,9 @@ class _VisibleMixinDecorator(AbstractAuthenticatedRequestAwareDecorator):
     def _handle_media_ref(self, items, item, idx):
         source = INTIMedia(item, None)
         if source is not None:
-            items[idx] = to_external_object(source)
+            items[idx] = ext_obj = to_external_object(source)
+            if item != source:
+                add_ref_rel(ext_obj, item)
             return True
         return False
 
@@ -462,7 +480,9 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
         source = INTIMedia(item, None)
         if source is not None:
             if is_video_included(source, courses=courses):
-                items[idx] = to_external_object(source)
+                items[idx] = ext_obj = to_external_object(source)
+                if source != item:
+                    add_ref_rel(ext_obj, item)
                 return True
         return False
 
