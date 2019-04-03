@@ -289,7 +289,8 @@ class _VisibleMixinDecorator(AbstractAuthenticatedRequestAwareDecorator):
     def _handle_media_ref(self, items, item, idx):
         source = INTIMedia(item, None)
         if source is not None:
-            items[idx] = ext_obj = to_external_object(source)
+            items[idx] = ext_obj = to_external_object(source,
+                                                      useCache=False)
             if item != source:
                 add_ref_rel(ext_obj, item)
             return True
@@ -480,7 +481,10 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
         source = INTIMedia(item, None)
         if source is not None:
             if is_video_included(source, courses=courses):
-                items[idx] = ext_obj = to_external_object(source)
+                # For duplicate videos in a lesson (rare?) we want to accurately
+                # decorate ref info for navigation purposes at a performance cost.
+                items[idx] = ext_obj = to_external_object(source,
+                                                          useCache=False)
                 if source != item:
                     add_ref_rel(ext_obj, item)
                 return True
