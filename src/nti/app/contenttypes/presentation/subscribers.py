@@ -595,8 +595,13 @@ def _on_content_removed(unit, _):
     XXX: This must be a content removed event because we may churn intids
     during re-renders.
     """
+    # This get's all refs to the given unit (why don't we
+    # make this event listen for package removal?).
     refs = get_content_related_work_refs(unit)
     for ref in refs or ():
+        # If the ref is not pointing to the removed unit, ignore.
+        if ref.target != unit.ntiid:
+            continue
         ref_ntiid = ref.ntiid
         # Must get these before deleting ref.
         pointers = _get_ref_pointers(ref)
