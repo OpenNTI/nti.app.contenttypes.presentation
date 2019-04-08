@@ -440,7 +440,11 @@ class _NTICourseOverviewGroupDecorator(_VisibleMixinDecorator):
     def _handle_timeline_ref(self, items, item, idx):
         source = INTITimeline(item, None)
         if source is not None:
-            items[idx] = to_external_object(source)
+            # See note in `_handle_media_ref`
+            items[idx] = ext_obj = to_external_object(source,
+                                                      useCache=False)
+            if source != item:
+                add_ref_rel(ext_obj, item)
             return True
         return False
 
