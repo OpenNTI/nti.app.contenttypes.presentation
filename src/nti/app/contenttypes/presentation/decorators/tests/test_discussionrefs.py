@@ -29,6 +29,7 @@ from nti.externalization.interfaces import StandardExternalFields
 
 from nti.app.contenttypes.presentation.decorators.tests import SharedConfiguringTestLayer
 
+NTIID = StandardExternalFields.NTIID
 CLASS = StandardExternalFields.CLASS
 MIMETYPE = StandardExternalFields.MIMETYPE
 
@@ -58,7 +59,7 @@ class TestDiscussionRefs(unittest.TestCase):
 
         ext_obj = to_external_object(discussion)
         for k, v in original.items():
-            if k not in (MIMETYPE, CLASS):
+            if k not in (MIMETYPE, CLASS, NTIID):
                 assert_that(ext_obj, has_entry(k, is_(v)))
 
         assert_that(ext_obj, has_key('MimeType'))

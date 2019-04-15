@@ -129,10 +129,10 @@ class _NTIDiscussionRefDecorator(_BaseAssetDecorator):
 
     def decorateExternalObject(self, original, external):
         super(_NTIDiscussionRefDecorator, self).decorateExternalObject(original, external)
+        # We used to map the Target-NTIID to the ref's NTIID here, but that interferes
+        # with UI navigation.
         if 'target' in external:
             external['Target-NTIID'] = external.pop('target')
-        if 'Target-NTIID' in external and not original.isCourseBundle():
-            external[NTIID] = external['Target-NTIID']
 
 
 @component.adapter(INTIRelatedWorkRef)
