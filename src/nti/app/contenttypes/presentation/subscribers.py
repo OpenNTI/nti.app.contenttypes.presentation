@@ -5,12 +5,9 @@
 """
 
 from __future__ import print_function, absolute_import, division
-from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProcessor
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
-
-import uuid
 
 from itertools import chain
 
@@ -42,6 +39,8 @@ from nti.app.contentfolder.resources import to_external_file_link
 from nti.app.contentfolder.resources import get_file_from_external_link
 
 from nti.app.contenttypes.presentation import MessageFactory as _
+
+from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProcessor
 
 from nti.app.contenttypes.presentation.synchronizer import clear_course_assets
 from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
@@ -103,8 +102,8 @@ from nti.contenttypes.courses.outlines import CourseOutlineContentNode
 
 from nti.contenttypes.presentation import NTI_LESSON_OVERVIEW
 
-from nti.contenttypes.presentation.group import DuplicateReference,\
-    NTICourseOverViewGroup
+from nti.contenttypes.presentation.group import DuplicateReference
+from nti.contenttypes.presentation.group import NTICourseOverViewGroup
 
 from nti.contenttypes.presentation.index import IX_SITE
 from nti.contenttypes.presentation.index import IX_CONTAINERS
@@ -767,6 +766,10 @@ def _course_default_outline(course, unused_event):
     group.accentColor = u"F9824E"
     processor = IPresentationAssetProcessor(group)
     processor.handle(group, course)
+    registerUtility(registry,
+                    component=group,
+                    name=group.ntiid,
+                    provided=INTICourseOverviewGroup)
     intid_register(group, registry)
     lesson.insert(0, group)
     lesson.child_order_locked = True
