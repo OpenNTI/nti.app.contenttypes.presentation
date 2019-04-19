@@ -398,7 +398,6 @@ def fix_inaccessible_assets(seen=None):
         lifecycleevent.modified(asset)
     return result
 
-
 def fix_all_inaccessible_assets():
     seen = set()
     result = LocatedExternalDict()
