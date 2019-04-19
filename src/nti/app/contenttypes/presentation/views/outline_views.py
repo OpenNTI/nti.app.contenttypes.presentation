@@ -9,7 +9,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-import time
 import simplejson
 
 from requests.structures import CaseInsensitiveDict
@@ -42,6 +41,7 @@ from nti.app.contenttypes.presentation.views import VIEW_OVERVIEW_CONTENT
 from nti.app.contenttypes.presentation.views import VIEW_OVERVIEW_SUMMARY
 
 from nti.app.contenttypes.presentation.utils import is_item_visible
+from nti.app.contenttypes.presentation.utils import generate_node_ntiid
 from nti.app.contenttypes.presentation.utils import get_participation_principal
 
 from nti.app.contenttypes.presentation.utils.asset import create_lesson_4_node
@@ -77,8 +77,6 @@ from nti.common.string import is_true
 
 from nti.contentlibrary.indexed_data import get_library_catalog
 
-from nti.contenttypes.courses.interfaces import NTI_COURSE_OUTLINE_NODE
-
 from nti.contenttypes.courses.interfaces import iface_of_node
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -95,7 +93,6 @@ from nti.contenttypes.courses.interfaces import ES_ALL
 
 from nti.contenttypes.courses.utils import get_user_or_instructor_enrollment_record as get_any_enrollment_record
 
-from nti.contenttypes.presentation import NTI
 from nti.contenttypes.presentation import AUDIO_MIME_TYPES
 from nti.contenttypes.presentation import VIDEO_MIME_TYPES
 from nti.contenttypes.presentation import TIMELINE_MIME_TYPES
@@ -140,9 +137,6 @@ from nti.externalization.interfaces import StandardExternalFields
 from nti.mimetype.mimetype import MIME_BASE
 
 from nti.ntiids.ntiids import make_ntiid
-from nti.ntiids.ntiids import get_provider
-from nti.ntiids.ntiids import get_specific
-from nti.ntiids.ntiids import make_specific_safe
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.ntiids.oids import to_external_ntiid_oid
@@ -157,8 +151,6 @@ from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
 
 from nti.traversal.traversal import find_interface
-
-from nti.zodb.containers import time_to_64bit_int
 
 CLASS = StandardExternalFields.CLASS
 ITEMS = StandardExternalFields.ITEMS
@@ -292,7 +284,7 @@ class OutlineNodeInsertView(AbstractAuthenticatedView,
     We could generalize this and the index views for
     all IOrderedContainers.
     """
-    
+
     @Lazy
     def _site(self):
         folder = find_interface(self.context, IHostPolicyFolder, strict=False)
@@ -312,36 +304,9 @@ class OutlineNodeInsertView(AbstractAuthenticatedView,
         return result
 
     def _create_node_ntiid(self):
-        """
-        Build an ntiid for our new node, making sure we don't conflict
-        with other ntiids. To help ensure this (and to avoid collisions
-        with deleted nodes), we use the creator and a timestamp.
-        """
-        parent = self.context
-        try:
-            base = parent.ntiid
-        except AttributeError:
-            # Outline, use catalog entry
-            entry = self._get_catalog_entry(parent)
-            base = entry.ntiid if entry is not None else None
-
-        provider = get_provider(base) or NTI
-        current_time = time_to_64bit_int(time.time())
-        specific_base = u'%s.%s.%s' % (get_specific(base),
-                                       self.remoteUser.username,
-                                       current_time)
-        idx = 0
-        while True:
-            specific = specific_base + u".%s" % idx
-            specific = make_specific_safe(specific)
-            ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
-                               base=base,
-                               provider=provider,
-                               specific=specific)
-            if ntiid not in parent:
-                break
-            idx += 1
-        return ntiid
+        return generate_node_ntiid(self.context,
+                                   self._get_catalog_entry(self.context),
+                                   self.remoteUser)
 
     def iface_of_obj(self, obj):
         return iface_of_node(obj)

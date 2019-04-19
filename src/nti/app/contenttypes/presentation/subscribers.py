@@ -5,9 +5,12 @@
 """
 
 from __future__ import print_function, absolute_import, division
+from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProcessor
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
+
+import uuid
 
 from itertools import chain
 
@@ -32,16 +35,24 @@ from zope.security.management import queryInteraction
 from zc.intid.interfaces import IAfterIdAddedEvent
 from zc.intid.interfaces import IBeforeIdRemovedEvent
 
+from nti.app.authentication import get_remote_user
+
 from nti.app.contentfolder.resources import is_internal_file_link
 from nti.app.contentfolder.resources import to_external_file_link
 from nti.app.contentfolder.resources import get_file_from_external_link
+
+from nti.app.contenttypes.presentation import MessageFactory as _
 
 from nti.app.contenttypes.presentation.synchronizer import clear_course_assets
 from nti.app.contenttypes.presentation.synchronizer import clear_namespace_last_modified
 from nti.app.contenttypes.presentation.synchronizer import remove_and_unindex_course_assets
 from nti.app.contenttypes.presentation.synchronizer import synchronize_course_lesson_overview
 
+from nti.app.contenttypes.presentation.utils import generate_node_ntiid
+
+from nti.app.contenttypes.presentation.utils.asset import intid_register
 from nti.app.contenttypes.presentation.utils.asset import remove_mediaroll
+from nti.app.contenttypes.presentation.utils.asset import create_lesson_4_node
 from nti.app.contenttypes.presentation.utils.asset import remove_presentation_asset
 
 from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_containers
@@ -76,16 +87,24 @@ from nti.contenttypes.completion.utils import update_completion
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 from nti.contenttypes.courses.interfaces import ICourseBundleUpdatedEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceRemovedEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceImportedEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
+from nti.contenttypes.courses.interfaces import IDoNotCreateDefaultOutlineCourseInstance
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.courses.common import get_course_packages
 
-from nti.contenttypes.presentation.group import DuplicateReference
+from nti.contenttypes.courses.outlines import CourseOutlineNode
+from nti.contenttypes.courses.outlines import CourseOutlineContentNode
+
+from nti.contenttypes.presentation import NTI_LESSON_OVERVIEW
+
+from nti.contenttypes.presentation.group import DuplicateReference,\
+    NTICourseOverViewGroup
 
 from nti.contenttypes.presentation.index import IX_SITE
 from nti.contenttypes.presentation.index import IX_CONTAINERS
@@ -133,6 +152,7 @@ from nti.dataserver.contenttypes.forums.interfaces import ITopic
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IObjectModifiedFromExternalEvent
 
+from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.ntiids.oids import to_external_ntiid_oid
@@ -148,6 +168,8 @@ from nti.recorder.utils import record_transaction
 from nti.site.interfaces import IHostPolicyFolder
 
 from nti.site.site import get_component_hierarchy_names
+
+from nti.site.utils import registerUtility
 
 from nti.traversal.traversal import find_interface
 
@@ -183,7 +205,7 @@ def _on_course_instance_available(course, event):
 
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
-def _clear_data_when_course_removed(course, _):
+def _clear_data_when_course_removed(course, unused_event):
     catalog = get_library_catalog()
     if catalog is None or ILegacyCourseInstance.providedBy(course):
         return
@@ -240,7 +262,7 @@ def _on_course_instance_imported(course, unused_event):
 
 
 @component.adapter(ICourseOutlineNode, IUnregistered)
-def _on_outlinenode_unregistered(node, _):
+def _on_outlinenode_unregistered(node, unused_event):
     course = find_interface(node, ICourseInstance, strict=False)
     folder = IHostPolicyFolder(course, None)
     lesson = INTILessonOverview(node, None)
@@ -259,14 +281,14 @@ def _on_outlinenode_unregistered(node, _):
 
 
 @component.adapter(INTICourseOverviewGroup, IWillRemovePresentationAssetEvent)
-def _on_will_remove_course_overview_group(group, _):
+def _on_will_remove_course_overview_group(group, unused_event):
     lesson = group.__parent__
     if INTILessonOverview.providedBy(lesson):
         lesson.remove(group)
 
 
 @component.adapter(IItemAssetContainer, IItemRemovedFromItemAssetContainerEvent)
-def _on_item_asset_containter_modified(container, _):
+def _on_item_asset_containter_modified(container, unused_event):
     principal = current_principal()
     if principal is not None and IRecordable.providedBy(container):
         record_transaction(container, principal=principal, descriptions=(ITEMS,),
@@ -305,13 +327,13 @@ def _on_asset_moved(asset, event):
 
 
 @component.adapter(IPresentationAsset, IIntIdAddedEvent)
-def _on_asset_registered(asset, _):
+def _on_asset_registered(asset, unused_event):
     if queryInteraction() is not None:
         interface.alsoProvides(asset, IUserCreatedAsset)
 
 
 @component.adapter(IPresentationAsset, IObjectModifiedFromExternalEvent)
-def _on_asset_modified(asset, _):
+def _on_asset_modified(asset, unused_event):
     if current_principal() is not None:
         catalog = get_library_catalog()
         containers = catalog.get_containers(asset)
@@ -322,7 +344,7 @@ def _on_asset_modified(asset, _):
 
 
 @component.adapter(IPresentationAsset, IWillRemovePresentationAssetEvent)
-def _on_will_remove_presentation_asset(asset, _):
+def _on_will_remove_presentation_asset(asset, unused_event):
     # remove from containers
     for context in get_presentation_asset_containers(asset):
         if ICourseInstance.providedBy(context):
@@ -353,7 +375,7 @@ def _on_will_update_presentation_asset(asset, event):
 
 
 @component.adapter(INTIDocketAsset, IBeforeIdRemovedEvent)
-def _on_docket_asset_removed(asset, _):
+def _on_docket_asset_removed(asset, unused_event):
     for name in ('href', 'icon'):
         value = getattr(asset, name, None)
         if value and is_internal_file_link(value):
@@ -364,7 +386,7 @@ def _on_docket_asset_removed(asset, _):
 
 
 @component.adapter(INTICourseOverviewGroup, IAfterIdAddedEvent)
-def _on_course_overview_registered(group, _):
+def _on_course_overview_registered(group, unused_event):
     # TODO: Execute only if there is an interaction
     parent = group.__parent__
     catalog = get_library_catalog()
@@ -376,7 +398,7 @@ def _on_course_overview_registered(group, _):
 
 
 @component.adapter(INTICourseOverviewGroup, IObjectModifiedEvent)
-def _on_course_overview_modified(group, _):
+def _on_course_overview_modified(group, unused_event):
     _on_course_overview_registered(group, None)
 
 
@@ -388,7 +410,7 @@ def _on_lesson_removed(lesson, unused_event=None):
 
 
 @component.adapter(IContentBaseFile, IBeforeIdRemovedEvent)
-def _on_content_file_removed(context, _):
+def _on_content_file_removed(context, unused_event):
     if not context.has_associations():
         return
     oid = to_external_ntiid_oid(context)
@@ -404,7 +426,7 @@ def _on_content_file_removed(context, _):
 
 
 @component.adapter(IQAssignment, IBeforeIdRemovedEvent)
-def _on_assignment_removed(assignment, _):
+def _on_assignment_removed(assignment, unused_event):
     """
     Remove deleted (editable) assignment from all overview groups referencing
     it.
@@ -436,7 +458,7 @@ def _on_assignment_removed(assignment, _):
 
 
 @component.adapter(IQEvaluation, IObjectModifiedEvent)
-def _on_evaluation_modified(evaluation, _):
+def _on_evaluation_modified(evaluation, unused_event):
     ntiid = getattr(evaluation, 'ntiid', None)
     course = find_interface(evaluation, ICourseInstance, strict=False)
     if not ntiid \
@@ -469,7 +491,7 @@ def _on_evaluation_modified(evaluation, _):
 
 
 @component.adapter(ICalendarEvent, IBeforeIdRemovedEvent)
-def _on_calendar_event_removed(calendar_event, _):
+def _on_calendar_event_removed(calendar_event, unused_event):
     """
     Remove deleted calendar events from all overview groups referencing it.
     """
@@ -528,7 +550,7 @@ def _get_ref_pointers(ref):
 
 
 @component.adapter(ITopic, IBeforeIdRemovedEvent)
-def _on_topic_removed(topic, _):
+def _on_topic_removed(topic, unused_event):
     """
     When an :class:`ITopic` is deleted, clean up any refs pointing to it.
     """
@@ -571,7 +593,7 @@ def _remove_media_pointers(media, iface):
 
 
 @component.adapter(INTIVideo, IBeforeIdRemovedEvent)
-def _on_video_removed(video, _):
+def _on_video_removed(video, unused_event):
     """
      When an :class:`INTIVideo` is deleted, clean up any refs pointing to it.
     """
@@ -580,7 +602,7 @@ def _on_video_removed(video, _):
 
 
 @component.adapter(INTIAudio, IBeforeIdRemovedEvent)
-def _on_audio_removed(audio, _):
+def _on_audio_removed(audio, unused_event):
     """
      When an :class:`INTIAudio` is deleted, clean up any refs pointing to it.
     """
@@ -589,7 +611,7 @@ def _on_audio_removed(audio, _):
 
 
 @component.adapter(IContentUnit, IContentUnitRemovedEvent)
-def _on_content_removed(unit, _):
+def _on_content_removed(unit, unused_event):
     """
     Remove related work refs pointing to deleted content.
     XXX: This must be a content removed event because we may churn intids
@@ -680,3 +702,78 @@ def _asset_progress(asset, event):
                           asset.ntiid,
                           event.user,
                           event.context)
+
+
+@component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
+def _course_default_outline(course, unused_event):
+    """
+    On a valid new course, build out a default outline template.
+
+    XXX: This replicates a lot of work from outline and asset views.
+    """
+    if IDoNotCreateDefaultOutlineCourseInstance.providedBy(course):
+        return
+    outline = course.Outline
+    catalog_entry = ICourseCatalogEntry(course)
+    remote_user = get_remote_user()
+    folder = find_interface(course, IHostPolicyFolder)
+    registry = folder.getSiteManager()
+
+    # Unit node
+    unit_node = CourseOutlineNode()
+    unit_node.title = _(u'Unit 1')
+    unit_ntiid = generate_node_ntiid(outline,
+                                     catalog_entry,
+                                     remote_user)
+    unit_node.ntiid = unit_ntiid
+    registerUtility(registry,
+                    component=unit_node,
+                    name=unit_ntiid,
+                    provided=ICourseOutlineNode)
+
+    outline.insert(0, unit_node)
+    outline.child_order_locked = True
+    unit_node.locked = True
+
+    # Lesson node
+    lesson_node = CourseOutlineContentNode()
+    lesson_node.title = _(u'Lesson 1')
+    lesson_node_ntiid = generate_node_ntiid(unit_node,
+                                            catalog_entry,
+                                            remote_user)
+    lesson_node.ntiid = lesson_node_ntiid
+    registerUtility(registry,
+                    component=lesson_node,
+                    name=lesson_node_ntiid,
+                    provided=ICourseOutlineContentNode)
+    unit_node.insert(0, lesson_node)
+
+    # Create lesson
+    lesson_ntiid = make_ntiid(nttype=NTI_LESSON_OVERVIEW,
+                              base=lesson_node.ntiid)
+    lesson = create_lesson_4_node(lesson_node,
+                                  ntiid=lesson_ntiid,
+                                  registry=registry,
+                                  sites=folder.__name__)
+    unit_node.child_order_locked = True
+    lesson_node.locked = True
+    lesson.locked = True
+
+    # Group (section)
+    group = NTICourseOverViewGroup()
+    group.creator = remote_user.username
+    group.__parent__ = lesson
+    group.title = _(u'Section 1')
+    group.accentColor = u"F9824E"
+    processor = IPresentationAssetProcessor(group)
+    processor.handle(group, course)
+    intid_register(group, registry)
+    lesson.child_order_locked = True
+
+    container_ntiids = (catalog_entry.ntiid,)
+    catalog = get_library_catalog()
+    catalog.index(group,
+                  container_ntiids=container_ntiids,
+                  namespace=catalog_entry.ntiid,
+                  sites=folder.__name__)
+
