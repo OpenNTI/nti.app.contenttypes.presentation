@@ -398,3 +398,11 @@ def fix_inaccessible_assets(seen=None):
         lifecycleevent.modified(asset)
     return result
 
+def fix_all_inaccessible_assets():
+    seen = set()
+    result = LocatedExternalDict()
+    for current in get_all_host_sites():
+        with current_site(current):
+            fixed = fix_inaccessible_assets(seen)
+            result[current.__name__] = sorted(fixed)
+    return result
