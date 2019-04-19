@@ -768,6 +768,7 @@ def _course_default_outline(course, unused_event):
     processor = IPresentationAssetProcessor(group)
     processor.handle(group, course)
     intid_register(group, registry)
+    lesson.insert(0, group)
     lesson.child_order_locked = True
 
     container_ntiids = (catalog_entry.ntiid,)
