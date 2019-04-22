@@ -716,6 +716,10 @@ def _course_default_outline(course, unused_event):
     catalog_entry = ICourseCatalogEntry(course)
     remote_user = get_remote_user()
     folder = find_interface(course, IHostPolicyFolder)
+    if folder is None:
+        logger.info('Course without host policy folder in lineage (%s) (%s)',
+                    catalog_entry.ntiid, course.__parent__.__parent__)
+        return
     registry = folder.getSiteManager()
 
     # Unit node
