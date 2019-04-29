@@ -10,6 +10,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from pyramid.threadlocal import get_current_request
+
 from zope import component
 from zope import interface
 
@@ -33,11 +35,12 @@ from nti.contenttypes.completion.policies import AbstractCompletableItemCompleti
 from nti.contenttypes.completion.utils import is_item_required
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
-from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 
-from nti.contenttypes.courses.utils import get_enrollment_record
 from nti.contenttypes.courses.utils import get_parent_course
+from nti.contenttypes.courses.utils import get_enrollment_record
 
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import IConcreteAsset
@@ -238,6 +241,8 @@ class _CourseAssetItemProvider(_LessonAssetItemProvider):
     return any assignments.
     """
 
+    REQUEST_CACHE_KEY = 'course_completable_items_by_scope'
+
     def _get_items_for_node(self, node, accum, user, record):
         lesson = find_object_with_ntiid(node.LessonOverviewNTIID)
         return self._get_items_for_lesson(lesson, accum, user, record)
@@ -253,6 +258,20 @@ class _CourseAssetItemProvider(_LessonAssetItemProvider):
         _recur(self.course.Outline)
         return result
 
+    def iter_items(self, user):
+        request = get_current_request()
+        course_scope_items = getattr(request, self.REQUEST_CACHE_KEY, {})
+        entry_ntiid = ICourseCatalogEntry(self.course).ntiid
+        course_scopes = course_scope_items.setdefault(entry_ntiid, {})
+        record = get_enrollment_record(self.course, user)
+        scope = record.Scope if record is not None else 'ALL'
+        if scope in course_scopes:
+            result = course_scopes[scope]
+        else:
+            result = super(_CourseAssetItemProvider, self).iter_items(user)
+            course_scopes[scope] = result
+        setattr(request, self.REQUEST_CACHE_KEY, course_scope_items)
+        return result
 
 @component.adapter(ICourseInstance)
 @interface.implementer(IRequiredCompletableItemProvider)
@@ -263,9 +282,9 @@ class _CourseAssetRequiredItemProvider(_CourseAssetItemProvider):
     This provider will not return any assignments.
     """
 
-    def _include_item(self, item):
-        result = super(_CourseAssetRequiredItemProvider, self)._include_item(item)
-        return result and is_item_required(item, self.course)
+    def iter_items(self, user):
+        result = super(_CourseAssetRequiredItemProvider, self).iter_items(user)
+        return [x for x in result if is_item_required(x, self.course)]
 
 
 @interface.implementer(ICompletables)
