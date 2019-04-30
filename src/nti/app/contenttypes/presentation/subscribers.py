@@ -706,7 +706,8 @@ def _asset_progress(asset, event):
 @component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
 def _course_default_outline(course, unused_event):
     """
-    On a valid new course, build out a default outline template.
+    On a valid new course, build out a default outline template. This
+    should leave all publishable items published.
 
     XXX: This replicates a lot of work from outline and asset views.
     """
@@ -738,6 +739,7 @@ def _course_default_outline(course, unused_event):
     outline.insert(0, unit_node)
     outline.child_order_locked = True
     unit_node.locked = True
+    unit_node.publish()
 
     # Lesson node
     lesson_node = CourseOutlineContentNode()
@@ -751,6 +753,7 @@ def _course_default_outline(course, unused_event):
                     name=lesson_node_ntiid,
                     provided=ICourseOutlineContentNode)
     unit_node.insert(0, lesson_node)
+    lesson_node.publish()
 
     # Create lesson
     lesson_ntiid = make_ntiid(nttype=NTI_LESSON_OVERVIEW,
@@ -762,6 +765,7 @@ def _course_default_outline(course, unused_event):
     unit_node.child_order_locked = True
     lesson_node.locked = True
     lesson.locked = True
+    lesson.publish()
 
     # Group (section)
     group = NTICourseOverViewGroup()
