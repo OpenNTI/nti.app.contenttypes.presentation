@@ -108,7 +108,7 @@ class AssignmentCompletionConstraintChecker(LessonPublicationConstraintChecker):
         if completed_items:
             completed_item = completed_items.get(user.username, {}).get(item_ntiid, None)
 
-            if completed_item is not None:
+            if completed_item is not None and completed_item.Success:
                 completed_time = getattr(completed_item, "CompletedDate", None)
                 completed_time = completed_time and calendar.timegm(completed_time.utctimetuple())
 

@@ -61,8 +61,7 @@ class TestAssignmentCompletionConstraintChecker(unittest.TestCase):
         return completion_container
 
     @staticmethod
-    def _completed_item(username, completable, date=None):
-        kwargs = {}
+    def _completed_item(username, completable, date=None, **kwargs):
         if date is not None:
             kwargs['CompletedDate'] = date
         return CompletedItem(Principal=IPrincipal(username),
@@ -110,6 +109,18 @@ class TestAssignmentCompletionConstraintChecker(unittest.TestCase):
     @fudge.patch('nti.app.contenttypes.presentation.constraints.AssignmentCompletionConstraintChecker._completed_items')
     def test_check_time_constraint_item_no_date(self, completed_items):
         completed_item = self._completed_item(STUDENT, MockCompletableItem(self.assignment))
+        completion_container = self._completion_container(STUDENT, completed_items=(completed_item,))
+        completed_items.is_callable().returns(completion_container)
+
+        completed_time = self._test_check_time_constraint_item()
+
+        assert_that(completed_time, is_(none()))
+
+    @WithMockDSTrans
+    @fudge.patch('nti.app.contenttypes.presentation.constraints.AssignmentCompletionConstraintChecker._completed_items')
+    def test_check_time_constraint_item_no_success(self, completed_items):
+        completed_item = self._completed_item(STUDENT, MockCompletableItem(self.assignment), date=datetime.utcnow(),
+                                              Success=False)
         completion_container = self._completion_container(STUDENT, completed_items=(completed_item,))
         completed_items.is_callable().returns(completion_container)
 
