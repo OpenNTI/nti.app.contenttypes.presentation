@@ -8,6 +8,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+import calendar
+
 from datetime import datetime
 
 from zope import component
@@ -24,6 +26,8 @@ from nti.appserver.pyramid_authorization import has_permission
 from nti.assessment.interfaces import IQSurvey
 
 from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraintChecker
+
+from nti.contenttypes.completion.interfaces import ICompletedItemContainer
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
@@ -68,9 +72,9 @@ class LessonPublicationConstraintChecker(object):
         # So we have 3 possible cases: Returning 0 if there are no
         # assignments on this constraint for some reason or if the user
         # is an instructor or course editor or admin, returning
-        # the satisfied time if all assignments have been submitted,
+        # the satisfied time if all assignments have been completed,
         # and returning None if some assignments have not yet been
-        # submitted.
+        # completed.
         #
         # The time at which this constraint is satisfied is the most
         # recent time at which all assignments have been submitted
@@ -89,21 +93,25 @@ class AssignmentCompletionConstraintChecker(LessonPublicationConstraintChecker):
         constraint = self.constraint if constraint is None else constraint
         return constraint.assignments
 
+    def _completed_items(self, constraint):
+        course = ICourseInstance(constraint, None)  # lineage
+        return ICompletedItemContainer(course, None)
+
     def check_time_constraint_item(self, item_ntiid, user, constraint=None):
         # for each assignment in the constraint, we want to use the time
         # that it was first completed.
         user = get_user(user)
         completed_time = None
         constraint = self.constraint if constraint is None else constraint
-        course = ICourseInstance(constraint, None) # lineage
-        histories = component.queryMultiAdapter((course, user),
-                                                IUsersCourseAssignmentHistory)
-        if histories is not None:
-            submission_container = histories.get(item_ntiid, None)
-            if submission_container:
-                # First submission created time
-                submission = submission_container.values()[0]
-                completed_time = submission.createdTime
+        completed_items = self._completed_items(constraint)
+
+        if completed_items:
+            completed_item = completed_items.get(user.username, {}).get(item_ntiid, None)
+
+            if completed_item is not None and completed_item.Success:
+                completed_time = getattr(completed_item, "CompletedDate", None)
+                completed_time = completed_time and calendar.timegm(completed_time.utctimetuple())
+
         return completed_time
 
 

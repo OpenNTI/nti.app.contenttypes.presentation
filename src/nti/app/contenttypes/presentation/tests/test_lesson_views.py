@@ -2,10 +2,19 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, division
+
+from nti.contenttypes.completion.completion import CompletedItem
+from nti.contenttypes.completion.interfaces import ICompletionContext, IPrincipalCompletedItemContainer
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from zope import component
+from zope.security.interfaces import IPrincipal
+
 __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
+
+from datetime import datetime
 
 from hamcrest import is_
 from hamcrest import none
@@ -15,6 +24,8 @@ from hamcrest import has_length
 from hamcrest import assert_that
 
 import fudge
+
+from nti.app.contenttypes.presentation.tests.test_models import MockCompletableItem
 
 from nti.dataserver.users.users import User
 
@@ -57,8 +68,7 @@ class TestLessonViews(ApplicationLayerTest):
                                       status=201)
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
-    @fudge.patch('nti.app.contenttypes.presentation.constraints.AssignmentCompletionConstraintChecker.check_time_constraint_item')
-    def test_assignment_completion_constraints(self, check_time_constraint_assignment):
+    def test_assignment_completion_constraints(self):
 
         # create and enroll student
         with mock_dataserver.mock_db_trans(self.ds):
@@ -96,14 +106,24 @@ class TestLessonViews(ApplicationLayerTest):
             lesson_object = find_object_with_ntiid(lesson)
 
             student = User.get_user(STUDENT)
-
-            check_time_constraint_assignment.is_callable().returns(123456789)
-            result = lesson_object.is_published(principal=student)
-            assert_that(result, is_(True))
-
-            check_time_constraint_assignment.is_callable().returns(None)
             result = lesson_object.is_published(principal=student)
             assert_that(result, is_(False))
+
+            completable1 = MockCompletableItem(self.assignment)
+
+            user_principal = IPrincipal(STUDENT)
+            user_completion_container = component.queryMultiAdapter(
+                (user_principal, ICompletionContext(ICourseInstance(lesson_object))),
+                IPrincipalCompletedItemContainer)
+
+            now = datetime.utcnow()
+            completed_item1 = CompletedItem(Principal=user_principal,
+                                            Item=completable1,
+                                            CompletedDate=now)
+            user_completion_container.add_completed_item(completed_item1)
+
+            result = lesson_object.is_published(principal=student)
+            assert_that(result, is_(True))
 
         constraint_link = '/dataserver2/Objects/' + ntiid
         self.testapp.delete(constraint_link, status=204)
