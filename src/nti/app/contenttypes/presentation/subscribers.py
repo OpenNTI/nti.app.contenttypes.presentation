@@ -100,6 +100,8 @@ from nti.contenttypes.courses.common import get_course_packages
 from nti.contenttypes.courses.outlines import CourseOutlineNode
 from nti.contenttypes.courses.outlines import CourseOutlineContentNode
 
+from nti.contenttypes.courses.utils import get_parent_course
+
 from nti.contenttypes.presentation import NTI_LESSON_OVERVIEW
 
 from nti.contenttypes.presentation.group import DuplicateReference
@@ -712,6 +714,11 @@ def _course_default_outline(course, unused_event):
     XXX: This replicates a lot of work from outline and asset views.
     """
     if IDoNotCreateDefaultOutlineCourseInstance.providedBy(course):
+        return
+    parent_course = get_parent_course(course)
+    # Do not want to duplicate default outline content for shared outlines.
+    if      parent_course != course \
+        and course.Outline == parent_course.Outline:
         return
     outline = course.Outline
     catalog_entry = ICourseCatalogEntry(course)
