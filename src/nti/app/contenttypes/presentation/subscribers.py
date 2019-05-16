@@ -790,10 +790,13 @@ def _course_default_outline(course, unused_event):
     lesson.insert(0, group)
     lesson.child_order_locked = True
 
-    container_ntiids = (catalog_entry.ntiid,)
+    # container_ntiids and namespace should line up with
+    # _handle_overview_group in the nti.app.contenttypes.presentation.views.asset_views.py.
+    container_ntiids = (lesson.ntiid, catalog_entry.ntiid)
+    namespace = to_external_ntiid_oid(lesson)
     catalog = get_library_catalog()
     catalog.index(group,
                   container_ntiids=container_ntiids,
-                  namespace=catalog_entry.ntiid,
+                  namespace=namespace,
                   sites=folder.__name__)
 
