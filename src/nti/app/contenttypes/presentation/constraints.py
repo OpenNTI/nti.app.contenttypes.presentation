@@ -19,7 +19,8 @@ from nti.app.assessment.common.utils import get_user
 from nti.app.assessment.common.utils import get_available_for_submission_ending
 
 from nti.app.assessment.interfaces import IUsersCourseInquiry
-from nti.app.assessment.interfaces import IUsersCourseAssignmentHistory
+
+from nti.app.assessment.utils import get_course_from_request
 
 from nti.appserver.pyramid_authorization import has_permission
 
@@ -94,7 +95,7 @@ class AssignmentCompletionConstraintChecker(LessonPublicationConstraintChecker):
         return constraint.assignments
 
     def _completed_items(self, constraint):
-        course = ICourseInstance(constraint, None)  # lineage
+        course = get_course_from_request() or ICourseInstance(constraint, None)
         return ICompletedItemContainer(course, None)
 
     def check_time_constraint_item(self, item_ntiid, user, constraint=None):
