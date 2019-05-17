@@ -34,6 +34,8 @@ from nti.appserver.pyramid_authorization import has_permission
 
 from nti.common.string import is_true
 
+from nti.contenttypes.presentation.lesson import constraints_for_lesson
+
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.externalization.interfaces import StandardExternalFields
@@ -109,3 +111,24 @@ class _AbstractMoveLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
         link.__name__ = ''
         link.__parent__ = context
         links.append(link)
+
+class _AbstractPublicationConstraintsDecorator(AbstractAuthenticatedRequestAwareDecorator):
+    """
+    Provide the constraints gating a lesson, to facilitate either
+    display or knowing that the lesson may be available at some point
+    in the future.
+    """
+
+    CONSTRAINTS_ATTR = 'PublicationConstraints'
+
+    def _lesson(self, context):
+        pass
+
+    def _do_decorate_external(self, context, result):
+        lesson = self._lesson(context)
+
+        constraints = constraints_for_lesson(lesson, False) \
+            if lesson is not None else None
+
+        if constraints:
+            result[self.CONSTRAINTS_ATTR] = constraints

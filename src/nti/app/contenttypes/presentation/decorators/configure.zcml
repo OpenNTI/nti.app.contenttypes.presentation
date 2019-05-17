@@ -42,6 +42,11 @@
                 for="nti.contenttypes.courses.interfaces.ICourseOutlineContentNode
                      pyramid.interfaces.IRequest"  />
 
+	<subscriber factory=".outlines._CourseOutlineNodePublicationConstraintsDecorator"
+                provides="nti.externalization.interfaces.IExternalObjectDecorator"
+                for="nti.contenttypes.courses.interfaces.ICourseOutlineNode
+                     pyramid.interfaces.IRequest"  />
+
 	<!-- Courses -->
 	<subscriber factory=".courses._ByOutlineNodeDecorator"
 				provides="nti.externalization.interfaces.IExternalMappingDecorator"
@@ -239,6 +244,11 @@
 
 	<!-- Lessons -->
 	<subscriber factory=".lessons._LessonPublicationConstraintsLinkDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTILessonOverview
+					 pyramid.interfaces.IRequest" />
+
+	<subscriber factory=".lessons._LessonPublicationConstraintsDecorator"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"
 				for="nti.contenttypes.presentation.interfaces.INTILessonOverview
 					 pyramid.interfaces.IRequest" />
