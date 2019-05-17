@@ -9,6 +9,7 @@ from __future__ import absolute_import
 # pylint: disable=W0212,R0904
 
 from hamcrest import is_
+from hamcrest import not_
 from hamcrest import none
 from hamcrest import is_not
 from hamcrest import has_key
@@ -17,18 +18,21 @@ from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import has_property
 
-from nti.testing.matchers import validly_provides
-
 import os
 import copy
 import unittest
 import simplejson
 
+from nti.app.contenttypes.presentation.decorators.lessons import _LessonPublicationConstraintsDecorator
+
 from nti.contenttypes.presentation.interfaces import INTIVideoRef
+from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraints
 from nti.contenttypes.presentation.interfaces import INTIAssignmentRef
 from nti.contenttypes.presentation.interfaces import INTICourseOverviewGroup
 
 from nti.contenttypes.presentation.lesson import NTICourseOverViewSpacer
+from nti.contenttypes.presentation.lesson import NTILessonOverView
+from nti.contenttypes.presentation.lesson import AssignmentCompletionConstraint
 
 from nti.contenttypes.presentation.utils import prepare_json_text
 from nti.contenttypes.presentation.utils import create_object_from_external
@@ -38,7 +42,9 @@ from nti.externalization.externalization import to_external_object
 
 from nti.externalization.interfaces import StandardExternalFields
 
-from nti.app.contenttypes.presentation.decorators.tests import SharedConfiguringTestLayer
+from nti.testing.matchers import validly_provides
+
+from . import SharedConfiguringTestLayer
 
 
 ITEMS = StandardExternalFields.ITEMS
@@ -125,3 +131,28 @@ class TestLesson(unittest.TestCase):
         assert_that(ext_obj, 
 					has_entry('title', is_("11.6 Apply Your Knowledge")))
         assert_that(ext_obj, has_entry('Items', has_length(5)))
+
+
+class TestDecoration(unittest.TestCase):
+
+    layer = SharedConfiguringTestLayer
+
+    def _decorate(self, decorator, context):
+        external = to_external_object(context, decorate=False)
+        decorator = decorator(context, None)
+        decorator.authenticated_userid = 'testuser'
+        decorator.decorateExternalMapping(context, external)
+        return external
+
+    def testPublicationConstraints(self):
+        context = NTILessonOverView()
+
+        external = self._decorate(_LessonPublicationConstraintsDecorator, context)
+        assert_that(external, not_(has_key('PublicationConstraints')))
+
+        assignment_ntiid = u'tag:nextthought.com,2011-10:specific'
+        constraint = AssignmentCompletionConstraint(assignments=(assignment_ntiid,))
+        ILessonPublicationConstraints(context).append(constraint)
+
+        external = self._decorate(_LessonPublicationConstraintsDecorator, context)
+        assert_that(external, has_key('PublicationConstraints'))

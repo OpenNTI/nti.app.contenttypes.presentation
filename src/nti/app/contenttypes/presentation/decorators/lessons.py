@@ -28,6 +28,8 @@ from nti.externalization.interfaces import IExternalMappingDecorator
 
 from nti.links.links import Link
 
+from . import _AbstractPublicationConstraintsDecorator
+
 LINKS = StandardExternalFields.LINKS
 
 logger = __import__('logging').getLogger(__name__)
@@ -50,6 +52,14 @@ class _LessonPublicationConstraintsLinkDecorator(AbstractAuthenticatedRequestAwa
         link.__name__ = ''
         link.__parent__ = context
         _links.append(link)
+
+
+@component.adapter(INTILessonOverview)
+@interface.implementer(IExternalMappingDecorator)
+class _LessonPublicationConstraintsDecorator(_AbstractPublicationConstraintsDecorator):
+
+    def _lesson(self, context):
+        return context
 
 
 @component.adapter(INTILessonOverview)

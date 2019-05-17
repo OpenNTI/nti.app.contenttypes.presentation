@@ -59,6 +59,8 @@ from nti.links import render_link
 
 from nti.links.links import Link
 
+from . import _AbstractPublicationConstraintsDecorator
+
 LINKS = StandardExternalFields.LINKS
 
 logger = __import__('logging').getLogger(__name__)
@@ -234,3 +236,11 @@ class _CourseOutlineNodeProgressLinkDecorator(Singleton):
             link.__name__ = ''
             link.__parent__ = original
             links.append(link)
+
+
+@component.adapter(ICourseOutlineNode)
+@interface.implementer(IExternalMappingDecorator)
+class _CourseOutlineNodePublicationConstraintsDecorator(_AbstractPublicationConstraintsDecorator):
+
+    def _lesson(self, context):
+        return INTILessonOverview(context, None)
