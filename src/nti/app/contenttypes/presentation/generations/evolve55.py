@@ -13,6 +13,8 @@ from zope import interface
 
 from zope.component.hooks import site as current_site
 
+from nti.app.contenttypes.presentation.utils.asset import get_component_site_name
+
 from nti.contentlibrary.indexed_data import get_library_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -52,10 +54,9 @@ class MockDataserver(object):
         return None
 
 
-def _process_site(current, catalog):
+def _process_site(current, catalog, seen):
     result = 0
     with current_site(current):
-        seen = set()
         for name, group in list(component.getUtilitiesFor(INTICourseOverviewGroup)):
             if name in seen:
                 continue
@@ -72,10 +73,15 @@ def _process_site(current, catalog):
             entry = ICourseCatalogEntry(course)
             namespace = to_external_ntiid_oid(lesson)
             container_ntiids = (lesson.ntiid, entry.ntiid)
+            # Can not use current site for indexing group which may be registered in parent site, if we happen to process
+            # the child site first (then parent site), it can not be found in parent site when searching the index based on site name.
+            site_name = get_component_site_name(group,
+                                                INTICourseOverviewGroup,
+                                                name=group.ntiid)
             catalog.index(group,
                           container_ntiids=container_ntiids,
                           namespace=namespace,
-                          sites=current.__name__)
+                          sites=site_name)
             result += 1
     return result
 
@@ -93,9 +99,10 @@ def do_evolve(context, generation=generation):  # pylint: disable=redefined-oute
         assert component.getSiteManager() == ds_folder.getSiteManager(), \
                "Hooks not installed?"
 
+        seen = set()
         catalog = get_library_catalog()
         for current in get_all_host_sites():
-            result += _process_site(current, catalog)
+            result += _process_site(current, catalog, seen)
 
     component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
     logger.info('Evolution %s done, %s groups re-indexed.', generation, result)
