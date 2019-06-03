@@ -60,7 +60,7 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 
 
 @interface.implementer(INTIIDResolver)
-class _PresentationResolver(object):
+class PresentationResolver(object):
 
     _ext_iface = IPresentationAsset
 
@@ -68,6 +68,7 @@ class _PresentationResolver(object):
         result = component.queryUtility(self._ext_iface, name=key)
         return result
 
+_PresentationResolver = PresentationResolver
 
 class _NTIQuestionRef(_PresentationResolver):
     _ext_iface = INTIQuestionRef
