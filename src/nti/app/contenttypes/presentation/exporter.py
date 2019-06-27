@@ -61,6 +61,7 @@ from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import INTIRelatedWorkRef
 from nti.contenttypes.presentation.interfaces import INonExportableAsset
 from nti.contenttypes.presentation.interfaces import IItemAssetContainer
+from nti.contenttypes.presentation.interfaces import IAssetExportPostProcessor
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import ISurveyCompletionConstraint
 from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraints
@@ -219,6 +220,11 @@ class AssetExporterMixin(object):
                 if      value \
                     and is_ntiid_of_types(value, (TYPE_OID, TYPE_UUID)):
                     ext_obj.pop(name, None)
+
+        # TODO: It would be nice to use this adapter to encapsulate above logic.
+        post_processor = IAssetExportPostProcessor(concrete, None)
+        if post_processor is not None:
+            post_processor.process(self, asset, ext_obj, backup, salt)
         # save asset/concrete resources
         save_resources_to_filer(provided, concrete, filer, ext_obj)
 
