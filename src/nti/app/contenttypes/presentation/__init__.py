@@ -21,6 +21,9 @@ from nti.contenttypes.presentation import interface_of_asset as iface_of_thing
 #: View to store/fetch presentation assets.
 VIEW_ASSETS = 'assets'
 
+#: View to get course content library information
+VIEW_COURSE_CONTENT_LIBRARY_SUMMARY = 'CourseContentLibrarySummary'
+
 # View to move objects underneath a group/node.
 VIEW_NODE_MOVE = 'move'
 

@@ -91,6 +91,7 @@ from nti.contenttypes.courses.interfaces import ICourseBundleUpdatedEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceRemovedEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceImportedEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
+from nti.contenttypes.courses.interfaces import ICourseContentLibraryProvider
 from nti.contenttypes.courses.interfaces import IDoNotCreateDefaultOutlineCourseInstance
 
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
@@ -118,6 +119,7 @@ from nti.contenttypes.presentation.interfaces import TRX_ASSET_REMOVED_FROM_ITEM
 from nti.contenttypes.presentation.interfaces import INTIAudio
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTIPollRef
+from nti.contenttypes.presentation.interfaces import INTITimeline
 from nti.contenttypes.presentation.interfaces import INTIAudioRef
 from nti.contenttypes.presentation.interfaces import INTIVideoRef
 from nti.contenttypes.presentation.interfaces import INTIMediaRoll
@@ -145,6 +147,14 @@ from nti.contenttypes.presentation.interfaces import ItemRemovedFromItemAssetCon
 from nti.contenttypes.presentation.interfaces import IItemRemovedFromItemAssetContainerEvent
 
 from nti.contenttypes.presentation.lesson import constraints_for_lesson
+
+from nti.contenttypes.presentation.media import NTIVideo
+
+from nti.contenttypes.presentation.relatedwork import NTIRelatedWorkRef
+
+from nti.contenttypes.presentation.timeline import NTITimeLine
+
+from nti.coremetadata.interfaces import IUser
 
 from nti.coremetadata.utils import current_principal as core_current_principal
 
@@ -800,3 +810,56 @@ def _course_default_outline(course, unused_event):
                   namespace=namespace,
                   sites=folder.__name__)
 
+
+@component.adapter(IUser, ICourseInstance)
+@interface.implementer(ICourseContentLibraryProvider)
+class _CourseContentLibraryProvider(object):
+    """
+    Return the mimetypes of objects of course content that could be
+    added to this course by this user.
+    """
+
+    def __init__(self, user, course):
+        self.user = user
+        self.course = course
+
+    def pkg_containers(self, package):
+        result = []
+        def recur(unit):
+            for child in unit.children or ():
+                recur(child)
+            result.append(unit.ntiid)
+        recur(package)
+        return result
+
+    def course_containers(self, course):
+        result = set()
+        courses = {course, get_parent_course(course)}
+        courses.discard(None)
+        for _course in courses:
+            entry = ICourseCatalogEntry(_course)
+            for package in get_course_packages(_course):
+                result.update(self.pkg_containers(package))
+            result.add(entry.ntiid)
+        return result
+
+    def has_timelines(self):
+        catalog = get_library_catalog()
+        intids = component.getUtility(IIntIds)
+        container_ntiids = self.course_containers(self.course)
+        return tuple(catalog.search_objects(intids=intids,
+                                            container_all_of=False,
+                                            container_ntiids=container_ntiids,
+                                            sites=get_component_hierarchy_names(),
+                                            provided=(INTITimeline,)))
+
+    def get_item_mime_types(self):
+        """
+        Returns the collection of mimetypes that may be available (either
+        they exist or can exist) in this course.
+        """
+        result = [NTIVideo.mime_type,
+                  NTIRelatedWorkRef.mime_type]
+        if self.has_timelines():
+            result.append(NTITimeLine.mime_type)
+        return result
