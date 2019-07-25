@@ -124,6 +124,7 @@ class AssetExporterMixin(object):
     def _post_process_asset(self, asset, ext_obj, filer, backup=True, salt=None):
         concrete = IConcreteAsset(asset, asset)
         provided = interface_of_asset(concrete)
+        __traceback_info__ = getattr(asset, 'ntiid', ''), concrete.ntiid
         # remove identifying data if not backup mode
         [ext_obj.pop(x, None) for x in (OID, CONTAINER_ID)]
         if not backup:  # remove unrequired keys

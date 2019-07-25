@@ -13,6 +13,8 @@ from zope import interface
 
 from zope.location.interfaces import ILocation
 
+from nti.app.contenttypes.presentation import VIEW_COURSE_CONTENT_LIBRARY_SUMMARY
+
 from nti.app.contenttypes.presentation.decorators import VIEW_ASSETS
 from nti.app.contenttypes.presentation.decorators import PreviewCourseAccessPredicateDecorator
 
@@ -51,11 +53,12 @@ class _CourseAssetsLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
     def _do_decorate_external(self, context, result):
         _links = result.setdefault(LINKS, [])
-        link = Link(context, rel=VIEW_ASSETS, elements=('@@' + VIEW_ASSETS,))
-        interface.alsoProvides(link, ILocation)
-        link.__name__ = ''
-        link.__parent__ = context
-        _links.append(link)
+        for rel in (VIEW_ASSETS, VIEW_COURSE_CONTENT_LIBRARY_SUMMARY):
+            link = Link(context, rel=rel, elements=('@@' + rel,))
+            interface.alsoProvides(link, ILocation)
+            link.__name__ = ''
+            link.__parent__ = context
+            _links.append(link)
 
 
 @interface.implementer(IExternalMappingDecorator)
@@ -80,8 +83,8 @@ class _CourseDiscussionDecorator(AbstractAuthenticatedRequestAwareDecorator):
     def _do_decorate_external(self, context, result_map):
         if is_nti_course_bundle(context):
             course = ICourseInstance(context, None)
-            resolved = resolve_discussion_course_bundle(self.remoteUser, 
-														context, 
+            resolved = resolve_discussion_course_bundle(self.remoteUser,
+														context,
 														course)
             if resolved is not None:
                 _, topic = resolved

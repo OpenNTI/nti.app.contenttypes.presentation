@@ -22,6 +22,7 @@ from zope.mimetype.interfaces import IContentTypeAware
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.contenttypes.presentation.views import VIEW_ASSETS
+from nti.app.contenttypes.presentation.views import VIEW_COURSE_CONTENT_LIBRARY_SUMMARY
 
 from nti.app.externalization.view_mixins import BatchingUtilsMixin
 
@@ -31,6 +32,7 @@ from nti.contenttypes.courses.common import get_course_packages
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseContentLibraryProvider
 
 from nti.contenttypes.courses.utils import get_parent_course
 
@@ -147,3 +149,36 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView,
 
     def __call__(self):
         return self._do_call()
+
+
+@view_config(context=ICourseInstance)
+@view_config(context=ICourseCatalogEntry)
+@view_defaults(route_name='objects.generic.traversal',
+               renderer='rest',
+               name=VIEW_COURSE_CONTENT_LIBRARY_SUMMARY,
+               request_method='GET',
+               permission=nauth.ACT_CONTENT_EDIT)
+class CourseContentLibraryView(AbstractAuthenticatedView):
+    """
+    A view that exposes course content information, defined as those mimetypes
+    that either exist in a course or could be added to a course. Useful when
+    determining which presentation assets can be added to course lessons.
+    """
+
+    def __call__(self):
+        course = ICourseInstance(self.context)
+        providers = component.subscribers((self.remoteUser, course),
+                                          ICourseContentLibraryProvider)
+        result = LocatedExternalDict()
+        result.__name__ = self.request.view_name
+        result.__parent__ = self.request.context
+        result[ITEMS] = items = []
+
+        for provider in providers or ():
+            mime_types = provider.get_item_mime_types()
+            if mime_types:
+                items.extend(mime_types)
+        result[ITEM_COUNT] = len(items)
+
+        result[TOTAL] = len(items)
+        return result

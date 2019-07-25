@@ -103,6 +103,11 @@
                 provides="nti.contentsearch.interfaces.ISearchHitPredicate"
                 for="nti.contenttypes.presentation.interfaces.IPresentationAsset" />
 
+    <subscriber factory=".subscribers._CourseContentLibraryProvider"
+                provides="nti.contenttypes.courses.interfaces.ICourseContentLibraryProvider"
+                for="nti.coremetadata.interfaces.IUser
+                     nti.contenttypes.courses.interfaces.ICourseInstance" />
+
 	<!-- ACLs -->
 	<adapter factory=".acl.NTIAudioACLProvider" />
 	<adapter factory=".acl.NTIVideoACLProvider" />

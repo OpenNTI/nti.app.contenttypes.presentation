@@ -14,6 +14,7 @@ from hamcrest import has_key
 from hamcrest import contains
 from hamcrest import not_none
 from hamcrest import has_item
+from hamcrest import has_items
 from hamcrest import has_entry
 from hamcrest import has_entries
 from hamcrest import has_length
@@ -40,6 +41,7 @@ from zope.intid.interfaces import IIntIds
 from nti.app.contenttypes.presentation import VIEW_NODE_MOVE
 from nti.app.contenttypes.presentation import VIEW_ORDERED_CONTENTS
 from nti.app.contenttypes.presentation import VIEW_LESSON_REMOVE_REFS
+from nti.app.contenttypes.presentation import VIEW_COURSE_CONTENT_LIBRARY_SUMMARY
 
 from nti.app.contentfolder.resources import is_internal_file_link
 
@@ -64,7 +66,10 @@ from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 from nti.contenttypes.presentation.interfaces import TRX_ASSET_MOVE_TYPE
 from nti.contenttypes.presentation.interfaces import TRX_OVERVIEW_GROUP_MOVE_TYPE
 
+from nti.contenttypes.presentation.media import NTIVideo
 from nti.contenttypes.presentation.media import NTIVideoRoll
+
+from nti.contenttypes.presentation.relatedwork import NTIRelatedWorkRef
 
 from nti.contenttypes.presentation.timeline import NTITimeLine
 
@@ -1128,6 +1133,16 @@ class TestAssetViews(ApplicationLayerTest):
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_timeline(self):
+        # No timeline mimetype in course content
+        course_res = self.testapp.get(self.course_url).json_body
+        content_mimetypes_url = self.require_link_href_with_rel(course_res,
+                                                                VIEW_COURSE_CONTENT_LIBRARY_SUMMARY)
+        content_mimetypes_res = self.testapp.get(content_mimetypes_url).json_body
+        assert_that(content_mimetypes_res['Items'], has_items(NTIVideo.mime_type,
+                                                              NTIRelatedWorkRef.mime_type))
+        assert_that(content_mimetypes_res['Items'],
+                    does_not(has_item(NTITimeLine.mime_type)))
+
         group_ntiid = 'tag:nextthought.com,2011-10:OU-NTICourseOverviewGroup-CS1323_F_2015_Intro_to_Computer_Programming.lec:01.01_LESSON.0'
         res = self.testapp.get('/dataserver2/Objects/%s' % group_ntiid)
         res = res.json_body
@@ -1176,6 +1191,12 @@ class TestAssetViews(ApplicationLayerTest):
         items = res.get('Items')
         assert_that(items, has_length(1))
         assert_that(items[0].get('NTIID'), is_(timeline_ntiid))
+
+        # Now we can add timelines
+        content_mimetypes_res = self.testapp.get(content_mimetypes_url).json_body
+        assert_that(content_mimetypes_res['Items'], has_items(NTIVideo.mime_type,
+                                                              NTIRelatedWorkRef.mime_type,
+                                                              NTITimeLine.mime_type))
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_timeline_with_file(self):
