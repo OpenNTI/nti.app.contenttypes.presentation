@@ -19,6 +19,9 @@ from nti.app.contenttypes.presentation.utils.course import get_presentation_asse
 
 from nti.app.contentfile.acl import ContentBaseFileACLProvider
 
+from nti.appserver.pyramid_authorization import get_cache_acl
+from nti.appserver.pyramid_authorization import get_request_acl_cache
+
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.presentation.interfaces import INTIAudio
@@ -74,9 +77,11 @@ class BasePresentationAssetACLProvider(object):
                                    ALL_PERMISSIONS, type(self)))
         # TODO: Maybe we should lookup package for asset and then gather the courses
         # for that package.
+        acl_cache = get_request_acl_cache()
         courses = get_presentation_asset_courses(self.context)
         for course in courses or ():
-            result.extend(IACLProvider(course).__acl__)
+            acl = get_cache_acl(course, acl_cache)
+            result.extend(acl)
         # If legacy, let parent objects determine ACL.
         if not ILegacyPresentationAsset.providedBy(self.context):
             result.append(ACE_DENY_ALL)
@@ -134,7 +139,9 @@ class AbstractCourseLineageACLProvider(object):
         )
         course = find_interface(self.context, ICourseInstance, strict=False)
         if course is not None:
-            result.extend(IACLProvider(course).__acl__)
+            acl_cache = get_request_acl_cache()
+            acl = get_cache_acl(course, acl_cache)
+            result.extend(acl)
         result.append(ACE_DENY_ALL)
         return result
 
