@@ -81,7 +81,10 @@ class BasePresentationAssetACLProvider(object):
         courses = get_presentation_asset_courses(self.context)
         for course in courses or ():
             acl = get_cache_acl(course, acl_cache)
-            result.extend(acl)
+            try:
+                result.extend(acl.__acl__)
+            except AttributeError:
+                pass
         # If legacy, let parent objects determine ACL.
         if not ILegacyPresentationAsset.providedBy(self.context):
             result.append(ACE_DENY_ALL)
@@ -141,7 +144,10 @@ class AbstractCourseLineageACLProvider(object):
         if course is not None:
             acl_cache = get_request_acl_cache()
             acl = get_cache_acl(course, acl_cache)
-            result.extend(acl)
+            try:
+                result.extend(acl.__acl__)
+            except AttributeError:
+                pass
         result.append(ACE_DENY_ALL)
         return result
 
