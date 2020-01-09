@@ -183,9 +183,11 @@ class AssetExporterMixin(object):
             else:
                 ext_items = ext_obj.get(ITEMS) or ()
                 asset_items = asset.Items if asset.Items is not None else ()
+                exported_items = []
                 for item, item_ext in zip(asset_items, ext_items):
                     if INonExportableAsset.providedBy(item):
                         continue
+                    exported_items.append(item_ext)
                     if     not item_ext.get(NTIID) \
                         or not item_ext.get(INTERNAL_NTIID):  # check valid NTIID
                         item_ext.pop(NTIID, None)
@@ -195,6 +197,7 @@ class AssetExporterMixin(object):
                                              filer=filer,
                                              backup=backup,
                                              salt=salt)
+                ext_obj[ITEMS] = exported_items
         if not backup:
             # check references to authored evaluations
             if      INTIAssessmentRef.providedBy(asset) \
