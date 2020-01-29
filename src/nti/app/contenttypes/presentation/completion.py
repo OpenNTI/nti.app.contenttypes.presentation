@@ -149,21 +149,21 @@ class _LessonAssetItemProvider(object):
         return  ICalendarPublishable.providedBy(obj) \
             and (obj.publishBeginning or obj.publishEnding)
 
-    def _is_available(self, obj):
+    def _is_available(self, obj, user):
         """
         An object is considered part of completion if it is either published
         or scheduled to be published.
         """
         return not IPublishable.providedBy(obj) \
-            or obj.is_published() \
+            or obj.is_published(principal=user) \
             or self._is_scheduled(obj)
 
     def _is_visible(self, obj, user, record):
         return is_item_visible(obj, user, context=self.course, record=record)
 
-    def _include_item(self, item):
+    def _include_item(self, item, user):
         return  ICompletableItem.providedBy(item) \
-            and self._is_available(item) \
+            and self._is_available(item, user) \
 
     @Lazy
     def _courses(self):
@@ -186,16 +186,16 @@ class _LessonAssetItemProvider(object):
         target = find_object_with_ntiid(target)
         if ICompletableItem.providedBy(target):
             # If the target is a completable item, prefer it over the ref.
-            if self._include_item(target) and self._is_visible(target, user, record):
+            if self._include_item(target, user) and self._is_visible(target, user, record):
                 accum.add(target)
-        elif self._include_item(item):
+        elif self._include_item(item, user):
             accum.add(item)
         children = getattr(item, 'Items', None)
         for child in children or ():
             self._accum_item(child, accum, user, record)
 
     def _get_items_for_lesson(self, lesson, accum, user, record):
-        if lesson is not None and self._is_available(lesson):
+        if lesson is not None and self._is_available(lesson, user):
             for group in lesson or ():
                 for item in group or ():
                     self._accum_item(item, accum, user, record)
@@ -227,8 +227,8 @@ class _LessonAssetRequiredItemProvider(_LessonAssetItemProvider):
     This provider will not return any assignments.
     """
 
-    def _include_item(self, item):
-        result = super(_LessonAssetRequiredItemProvider, self)._include_item(item)
+    def _include_item(self, item, user):
+        result = super(_LessonAssetRequiredItemProvider, self)._include_item(item, user)
         return result and is_item_required(item, self.course)
 
 
@@ -272,6 +272,7 @@ class _CourseAssetItemProvider(_LessonAssetItemProvider):
             course_scopes[scope] = result
         setattr(request, self.REQUEST_CACHE_KEY, course_scope_items)
         return result
+
 
 @component.adapter(ICourseInstance)
 @interface.implementer(IRequiredCompletableItemProvider)
