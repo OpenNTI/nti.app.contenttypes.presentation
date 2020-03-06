@@ -8,6 +8,8 @@ from __future__ import print_function, absolute_import, division
 
 logger = __import__('logging').getLogger(__name__)
 
+import itertools
+
 from zope import interface
 
 from pyramid.threadlocal import get_current_request
@@ -36,6 +38,8 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.publishing.interfaces import IPublishable
 
+from nti.site.site import get_component_hierarchy_names
+
 from nti.traversal.traversal import find_interface
 
 
@@ -49,40 +53,51 @@ class _LessonsSearchHitPredicate(DefaultSearchHitPredicate):
 
     __name__ = u'LessonsPresentationAsset'
 
-    def _get_lessons_for_item(self, item):
+    def _get_target_refs(self, target_ntiid):
+        """
+        For a target_ntiid and interface, get all references.
+        """
+        catalog = get_library_catalog()
+        sites = get_component_hierarchy_names()
+        refs = tuple(catalog.search_objects(target=target_ntiid,
+                                            sites=sites))
+        return refs
+
+    def _iter_lessons(self, item):
         """
         For the given item, get all containing lessons.
         """
-        results = set()
         catalog = get_library_catalog()
-        for container in catalog.get_containers(item):
-            if container is not None:
-                container = find_object_with_ntiid(container)
-            if container is not None:
-                lesson = find_interface(container,
-                                        INTILessonOverview,
-                                        strict=False)
-                if lesson is not None:
-                    results.add(lesson)
-        return results
+        # We can only reliably get lessons via refs (in a few cases).
+        refs = self._get_target_refs(item.ntiid)
+        all_items = refs + (item,)
+        for item in all_items:
+            for container in catalog.get_containers(item):
+                if container is not None:
+                    container = find_object_with_ntiid(container)
+                if container is not None:
+                    lesson = find_interface(container,
+                                            INTILessonOverview,
+                                            strict=False)
+                    if lesson is not None:
+                        yield lesson
 
     def _is_published(self, lesson):
         return not IPublishable.providedBy(lesson) or lesson.is_published()
 
     def allow(self, item, unused_score, unused_query=None):
-        lessons = self._get_lessons_for_item(item)
-        if not lessons:
-            # If no lesson, we're allowed.
-            return True
-
+        # If no lessons, we're allowed.
+        result = True
         request = get_current_request()
-        for lesson in lessons:
+        for lesson in self._iter_lessons(item):
+            # If we have any lessons, we default to False
+            result = False
+
             # Just need a single available/readable lesson to allow.
             if      self._is_published(lesson) \
                 and has_permission(ACT_READ, lesson, request):
                 return True
-        # We have lessons, but no access.
-        return False
+        return result
 
 
 @interface.implementer(ISearchHitPredicate)
@@ -94,10 +109,9 @@ class _TranscriptSearchHitPredicate(_LessonsSearchHitPredicate):
         #: Look for our media lessons first, falling back to ourselves.
         #: Only the media lessons are probably in the container catalog.
         media = find_interface(item, INTIMedia, strict=False)
-        result = super(_TranscriptSearchHitPredicate, self)._get_lessons_for_item(media)
-        if not result:
-            result = super(_TranscriptSearchHitPredicate, self)._get_lessons_for_item(item)
-        return result
+        media_iter = super(_TranscriptSearchHitPredicate, self)._get_lessons_for_item(media)
+        transcript_iter = super(_TranscriptSearchHitPredicate, self)._get_lessons_for_item(item)
+        return itertools.chain(media_iter, transcript_iter)
 
 
 @interface.implementer(ISearchHitPredicate)
