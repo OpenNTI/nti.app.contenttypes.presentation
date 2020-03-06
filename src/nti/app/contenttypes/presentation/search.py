@@ -5,7 +5,6 @@
 """
 
 from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -28,6 +27,7 @@ from nti.contentsearch.interfaces import ISearchHitPredicate
 from nti.contentsearch.predicates import DefaultSearchHitPredicate
 
 from nti.contenttypes.presentation.interfaces import IVisible
+from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 
 from nti.dataserver.authorization import ACT_READ
@@ -83,6 +83,21 @@ class _LessonsSearchHitPredicate(DefaultSearchHitPredicate):
                 return True
         # We have lessons, but no access.
         return False
+
+
+@interface.implementer(ISearchHitPredicate)
+class _TranscriptSearchHitPredicate(_LessonsSearchHitPredicate):
+
+    __name__ = u'TranscriptLessonsPresentationAsset'
+
+    def _get_lessons_for_item(self, item):
+        #: Look for our media lessons first, falling back to ourselves.
+        #: Only the media lessons are probably in the container catalog.
+        media = find_interface(item, INTIMedia, strict=False)
+        result = super(_TranscriptSearchHitPredicate, self)._get_lessons_for_item(media)
+        if not result:
+            result = super(_TranscriptSearchHitPredicate, self)._get_lessons_for_item(item)
+        return result
 
 
 @interface.implementer(ISearchHitPredicate)

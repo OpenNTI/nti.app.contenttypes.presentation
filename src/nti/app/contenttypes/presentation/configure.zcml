@@ -99,6 +99,10 @@
 				provides="nti.contentsearch.interfaces.ISearchHitPredicate"
 				for="nti.contenttypes.presentation.interfaces.IPresentationAsset" />
 
+	<subscriber factory=".search._TranscriptSearchHitPredicate"
+                provides="nti.contentsearch.interfaces.ISearchHitPredicate"
+                for="nti.contenttypes.presentation.interfaces.INTITranscript" />
+
 	<subscriber factory=".search._AssetVisibleSearchPredicate"
                 provides="nti.contentsearch.interfaces.ISearchHitPredicate"
                 for="nti.contenttypes.presentation.interfaces.IPresentationAsset" />
