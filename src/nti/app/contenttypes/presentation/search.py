@@ -105,12 +105,12 @@ class _TranscriptSearchHitPredicate(_LessonsSearchHitPredicate):
 
     __name__ = u'TranscriptLessonsPresentationAsset'
 
-    def _get_lessons_for_item(self, item):
+    def _iter_lessons(self, item):
         #: Look for our media lessons first, falling back to ourselves.
         #: Only the media lessons are probably in the container catalog.
         media = find_interface(item, INTIMedia, strict=False)
-        media_iter = super(_TranscriptSearchHitPredicate, self)._get_lessons_for_item(media)
-        transcript_iter = super(_TranscriptSearchHitPredicate, self)._get_lessons_for_item(item)
+        media_iter = super(_TranscriptSearchHitPredicate, self)._iter_lessons(media)
+        transcript_iter = super(_TranscriptSearchHitPredicate, self)._iter_lessons(item)
         return itertools.chain(media_iter, transcript_iter)
 
 
