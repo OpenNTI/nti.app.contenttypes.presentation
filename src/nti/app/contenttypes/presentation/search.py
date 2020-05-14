@@ -33,6 +33,7 @@ from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 
 from nti.dataserver.authorization import ACT_READ
+from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -94,8 +95,9 @@ class _LessonsSearchHitPredicate(DefaultSearchHitPredicate):
             result = False
 
             # Just need a single available/readable lesson to allow.
-            if      self._is_published(lesson) \
-                and has_permission(ACT_READ, lesson, request):
+            if         (self._is_published(lesson) \
+                   and has_permission(ACT_READ, lesson, request)) \
+                or has_permission(ACT_CONTENT_EDIT, lesson, request):
                 return True
         return result
 
