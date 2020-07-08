@@ -173,6 +173,7 @@ from nti.externalization.internalization import notifyModified as notify_modifie
 from nti.ntiids.ntiids import TYPE_UUID
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_specific
+from nti.ntiids.ntiids import make_specific_safe
 from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -378,6 +379,7 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		self._handle_package_asset(provided, item, creator, extended)
 
 		# capture updated/previous data
+		# ntiid ends up being the `target`
 		ntiid, href = item.target, item.href
 		contentType = item.type or text_(DEFAULT_CONTENT_TYPE) # default
 
@@ -399,10 +401,14 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 
 		# parse href
 		parsed = urllib_parse.urlparse(href) if href else None
-		if ntiid is None and parsed is not None and (parsed.scheme or parsed.netloc):  # full url
+		if ntiid is None and parsed is not None and (parsed.scheme or parsed.netloc):
+			# full url
+			# XXX not sure how this used
+			specific = make_specific_safe(href.lower())
+			specific = hexdigest(specific)
 			ntiid = make_ntiid(nttype=TYPE_UUID,
 							   provider='NTI',
-							   specific=hexdigest(href.lower()))
+							   specific=specific)
 
 		# replace if needed
 		if item.target != ntiid:

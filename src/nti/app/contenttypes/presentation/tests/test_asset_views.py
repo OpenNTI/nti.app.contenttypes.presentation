@@ -789,7 +789,8 @@ class TestAssetViews(ApplicationLayerTest):
         contents_url = href + '/@@contents'
 
         # Insert external link at index 0
-        external_link = "http://www.google.com"
+        # Note: trailing non-ascii spaces
+        external_link = "http://www.google.com  "
         related_work = {"href": external_link,
                         "MimeType": "application/vnd.nextthought.relatedworkref",
                         "label": "afd",
