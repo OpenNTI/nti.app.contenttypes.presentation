@@ -110,12 +110,7 @@ def is_item_visible(item, user, context=None, record=None):
         if scope != ES_ALL and get_visibility_for_scope(scope) != item.visibility:
             # Our item is scoped and not-visible to us, but editors always have
             # access. We may be checking this on behalf of another user.
-            endInteraction()
-            try:
-                newInteraction(IParticipation(user))
-                result = has_permission(ACT_CONTENT_EDIT, context, user.username)
-            finally:
-                restoreInteraction()
+            result = has_permission(ACT_CONTENT_EDIT, context, user.username)
     return result
 
 
