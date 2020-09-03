@@ -42,6 +42,7 @@ from nti.externalization.externalization import to_external_object
 
 from nti.externalization.interfaces import StandardExternalFields
 
+from nti.testing.matchers import is_false
 from nti.testing.matchers import validly_provides
 
 from . import SharedConfiguringTestLayer
@@ -69,7 +70,7 @@ class TestLesson(unittest.TestCase):
 
         spacer = create_object_from_external(source)
         assert_that(spacer, has_property('ntiid', is_not(none())))
-        assert_that(spacer, 
+        assert_that(spacer,
 					has_property('mimeType', is_("application/vnd.nextthought.nticourseoverviewspacer")))
 
         ext_obj = to_external_object(spacer)
@@ -82,12 +83,12 @@ class TestLesson(unittest.TestCase):
             source = simplejson.loads(prepare_json_text(fp.read()))
 
         lesson = create_ntilessonoverview_from_external(source)
-        assert_that(lesson, 
+        assert_that(lesson,
 					has_property('ntiid', is_('tag:nextthought.com,2011-10:OU-NTILessonOverview-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:11.06_LESSON')))
-        assert_that(lesson, 
+        assert_that(lesson,
 					has_property('lesson', is_('tag:nextthought.com,2011-10:OU-HTML-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:11.06_LESSON')))
         assert_that(lesson, has_property('Items', has_length(5)))
-        assert_that(lesson, 
+        assert_that(lesson,
 					has_property('mimeType', is_("application/vnd.nextthought.ntilessonoverview")))
 
         assert_that(lesson, has_length(5))
@@ -105,11 +106,11 @@ class TestLesson(unittest.TestCase):
 
         ext_obj = to_external_object(lesson)
         assert_that(ext_obj, has_key('Class'))
-        assert_that(ext_obj, 
+        assert_that(ext_obj,
 					has_entry('NTIID', is_("tag:nextthought.com,2011-10:OU-NTILessonOverview-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:11.06_LESSON")))
-        assert_that(ext_obj, 
+        assert_that(ext_obj,
 					has_entry('MimeType', is_("application/vnd.nextthought.ntilessonoverview")))
-        assert_that(ext_obj, 
+        assert_that(ext_obj,
 					has_entry('title', is_("11.6 Apply Your Knowledge")))
         assert_that(ext_obj, has_entry('Items', has_length(5)))
 
@@ -124,13 +125,16 @@ class TestLesson(unittest.TestCase):
         lesson = create_ntilessonoverview_from_external(source)
         ext_obj = to_external_object(lesson, name="exporter")
         assert_that(ext_obj, has_key('Class'))
-        assert_that(ext_obj, 
+        assert_that(ext_obj,
 					has_entry('NTIID', is_("tag:nextthought.com,2011-10:OU-NTILessonOverview-LSTD1153_S_2015_History_United_States_1865_to_Present.lec:11.06_LESSON")))
-        assert_that(ext_obj, 
+        assert_that(ext_obj,
 					has_entry('MimeType', is_("application/vnd.nextthought.ntilessonoverview")))
-        assert_that(ext_obj, 
+        assert_that(ext_obj,
 					has_entry('title', is_("11.6 Apply Your Knowledge")))
         assert_that(ext_obj, has_entry('Items', has_length(5)))
+        assert_that(ext_obj, has_entry('isPublished', is_false()))
+        assert_that(ext_obj, has_entry('isLocked', is_false()))
+        assert_that(ext_obj, has_entry('isChildOrderLocked', is_false()))
 
 
 class TestDecoration(unittest.TestCase):
