@@ -18,6 +18,8 @@ from pyramid.threadlocal import get_current_request
 
 from nti.app.authentication import get_remote_user
 
+from nti.app.contenttypes.presentation import MessageFactory as _
+
 from nti.app.contenttypes.presentation.interfaces import IPresentationAssetProcessor
 
 from nti.app.contenttypes.presentation.processors.asset import handle_asset
@@ -58,7 +60,7 @@ def handle_assessment_ref(item, context, creator=None, request=None):
         reference = IQInquiry(item, None)
     else:
         reference = IQAssessment(item, None)
-    if reference == None:
+    if reference is None:
         request = request or get_current_request()
         raise_json_error(request,
                          hexc.HTTPUnprocessableEntity,
@@ -67,10 +69,10 @@ def handle_assessment_ref(item, context, creator=None, request=None):
                              'field': 'ntiid'
                          },
                          None)
-    if INTIAssignmentRef.providedBy(item):
+    if INTIAssignmentRef.providedBy(item) or INTISurveyRef.providedBy(item):
         item.label = reference.title if not item.label else item.label
         item.title = reference.title if not item.title else item.title
-    elif INTIQuestionSetRef.providedBy(item) or INTISurveyRef.providedBy(item):
+    if INTIQuestionSetRef.providedBy(item) or INTISurveyRef.providedBy(item):
         draw = getattr(reference, 'draw', None)
         item.question_count = draw or len(reference)
         item.label = reference.title if not item.label else item.label

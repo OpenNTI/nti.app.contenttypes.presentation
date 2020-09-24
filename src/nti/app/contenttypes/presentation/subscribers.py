@@ -59,6 +59,8 @@ from nti.app.contenttypes.presentation.utils.course import remove_package_assets
 
 from nti.app.products.courseware.utils import get_content_related_work_refs
 
+from nti.assessment import IQSurvey
+
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQEvaluation
 from nti.assessment.interfaces import IQuestionSet
@@ -436,48 +438,69 @@ def _on_content_file_removed(context, unused_event):
                 obj.icon = None
 
 
+def _on_target_removed(context, iface):
+    count = 0
+    ntiid = getattr(context, 'ntiid', None)
+    registry = get_site_registry()
+    if     not ntiid \
+        or current_principal() is None \
+        or not IQEditableEvaluation.providedBy(context) \
+        or registry == component.getGlobalSiteManager():
+        return count
+
+    catalog = get_library_catalog()
+    sites = get_component_hierarchy_names()
+    items = catalog.search_objects(provided=iface,
+                                   target=ntiid,
+                                   sites=sites)
+
+    for item in items or ():
+        if      iface.providedBy(item) \
+            and context.ntiid == getattr(item, 'target', ''):
+            # This ends up removing from containers.
+            remove_presentation_asset(item, registry)
+            count += 1
+
+    return count
+
+
 @component.adapter(IQAssignment, IBeforeIdRemovedEvent)
 def _on_assignment_removed(assignment, unused_event):
     """
     Remove deleted (editable) assignment from all overview groups referencing
     it.
     """
-    count = 0
-    ntiid = getattr(assignment, 'ntiid', None)
-    registry = get_site_registry()
-    if     not ntiid \
-        or current_principal() is None \
-        or not IQEditableEvaluation.providedBy(assignment) \
-        or registry == component.getGlobalSiteManager():
-        return count
-
-    catalog = get_library_catalog()
-    sites = get_component_hierarchy_names()
-    items = catalog.search_objects(provided=INTIAssignmentRef,
-                                   target=ntiid,
-                                   sites=sites)
-    for item in items or ():
-        if      INTIAssignmentRef.providedBy(item) \
-            and assignment.ntiid == getattr(item, 'target', ''):
-            # This ends up removing from containers.
-            remove_presentation_asset(item, registry)
-            count += 1
+    count = _on_target_removed(assignment, INTIAssignmentRef)
     if count:
         logger.info('Removed assignment (%s) from %s overview group(s)',
-                    ntiid, count)
+                    getattr(assignment, 'ntiid', None), count)
+    return count
+
+
+@component.adapter(IQSurvey, IBeforeIdRemovedEvent)
+def _on_survey_removed(assignment, unused_event):
+    """
+    Remove deleted (editable) survey from all overview groups referencing
+    it.
+    """
+    count = _on_target_removed(assignment, INTISurveyRef)
+    if count:
+        logger.info('Removed survey (%s) from %s overview group(s)',
+                    getattr(assignment, 'ntiid', None), count)
     return count
 
 
 @component.adapter(IQEvaluation, IObjectModifiedEvent)
 def _on_evaluation_modified(evaluation, unused_event):
-    ntiid = getattr(evaluation, 'ntiid', None)
+    eval_ntiid = getattr(evaluation, 'ntiid', None)
     course = find_interface(evaluation, ICourseInstance, strict=False)
-    if not ntiid \
+    if not eval_ntiid \
         or course is None \
         or current_principal() is None \
         or not IQEditableEvaluation.providedBy(evaluation) \
         or not (IQAssignment.providedBy(evaluation)
-                or IQuestionSet.providedBy(evaluation)):
+                or IQuestionSet.providedBy(evaluation)
+                or IQSurvey.providedBy(evaluation)):
         return
 
     # Get all item refs for course.
@@ -493,7 +516,7 @@ def _on_evaluation_modified(evaluation, unused_event):
                                    sites=sites)
     for item in items or ():
         target = getattr(item, 'target', '')
-        if target == ntiid:
+        if target == eval_ntiid:
             item.title = evaluation.title or item.title
             if     INTIQuestionSetRef.providedBy(item) \
                 or INTISurveyRef.providedBy(item):
