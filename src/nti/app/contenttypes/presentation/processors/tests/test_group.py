@@ -28,6 +28,7 @@ from nti.contenttypes.presentation.interfaces import IPresentationAsset
 from nti.contenttypes.presentation.interfaces import IPresentationAssetContainer
 
 from nti.contenttypes.presentation.assessment import NTIAssignmentRef
+from nti.contenttypes.presentation.assessment import NTISurveyRef
 
 from nti.contenttypes.presentation.discussion import NTIDiscussionRef
 
@@ -122,3 +123,71 @@ class TestGroup(ApplicationLayerTest):
 
             reg = component.queryUtility(IPresentationAsset, pointer.ntiid)
             assert_that(reg, is_(pointer))
+
+
+class TestGroupWithSurveys(ApplicationLayerTest):
+
+    layer = PersistentInstructedCourseApplicationTestLayer
+
+    default_origin = 'http://janux.ou.edu'
+    entry_ntiid = 'tag:nextthought.com,2011-10:NTI-CourseInfo-Fall2013_CLC3403_LawAndJustice'
+
+    @classmethod
+    def course_entry(cls):
+        return find_object_with_ntiid(cls.entry_ntiid)
+
+    @WithSharedApplicationMockDS(users=True, testapp=False)
+    @fudge.patch("nti.app.contenttypes.presentation.processors.group.get_remote_user")
+    def test_handle_group(self, mock_grm):
+
+        with mock_dataserver.mock_db_trans(self.ds, site_name='platform.ou.edu'):
+            user = self._get_user(self.default_username)
+            mock_grm.is_callable().with_args().returns(user)
+
+            course = ICourseInstance(self.course_entry())
+            group = NTICourseOverViewGroup()
+
+            survey_ref = NTISurveyRef()
+            survey_ref.target = u"tag:nextthought.com,2011-10:OU-NAQ-CLC3403_LawAndJustice.naq.set.survey:KNOWING_aristotle"
+            survey = find_object_with_ntiid(survey_ref.target)
+            survey.title = u"Kurosaki, Inc."
+            group.append(survey_ref)
+
+            survey_two_ref = NTISurveyRef()
+            survey_two_ref.target = u"tag:nextthought.com,2011-10:OU-NAQ-CLC3403_LawAndJustice.naq.set.survey:KNOWING_aristotle"
+            survey_two_ref.title = u"Bleach"
+            survey_two_ref.label = u"Just Bleach"
+            survey = find_object_with_ntiid(survey_two_ref.target)
+            survey.title = u"Kurosaki, Inc."
+            group.append(survey_two_ref)
+
+            request = DummyRequest()
+            processor = IPresentationAssetProcessor(group)
+            processor.handle(group, course, "ichigo", request)
+
+            assert_that(group,
+                        has_properties('creator', "ichigo",
+                                       "__parent__", is_(course)))
+
+            assert_that(survey_ref,
+                        has_properties('creator', "ichigo",
+                                       'title', u"Kurosaki, Inc.",
+                                       'label', u"Kurosaki, Inc.",
+                                       "__parent__", is_(group),
+                                       'containerId', is_(not_none())))
+
+            assert_that(survey_two_ref,
+                        has_properties('creator', "ichigo",
+                                       'title', u"Bleach",
+                                       'label', u"Just Bleach",
+                                       "__parent__", is_(group),
+                                       'containerId', is_(not_none())))
+
+            container = IPresentationAssetContainer(course)
+            assert_that(container,
+                        has_entry(group.ntiid, is_(group)))
+            assert_that(container,
+                        has_entry(survey_ref.ntiid, is_(survey_ref)))
+
+            reg = component.queryUtility(IPresentationAsset, survey_ref.ntiid)
+            assert_that(reg, is_(survey_ref))

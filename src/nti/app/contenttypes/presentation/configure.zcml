@@ -259,6 +259,7 @@
     <subscriber handler=".subscribers._on_content_removed" />
     <subscriber handler=".subscribers._on_package_removed" />
 	<subscriber handler=".subscribers._on_assignment_removed" />
+	<subscriber handler=".subscribers._on_survey_removed" />
 	<subscriber handler=".subscribers._course_default_outline" />
 	<subscriber handler=".subscribers._on_evaluation_modified" />
 	<subscriber handler=".subscribers._on_content_file_removed" />

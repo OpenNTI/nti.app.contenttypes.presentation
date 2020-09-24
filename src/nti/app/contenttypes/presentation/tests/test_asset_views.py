@@ -34,6 +34,8 @@ from itertools import chain
 
 import simplejson
 
+from six.moves.urllib_parse import quote
+
 from zope import component
 
 from zope.intid.interfaces import IIntIds
@@ -51,6 +53,8 @@ from nti.contenttypes.calendar.interfaces import ICalendar
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
+
+from nti.contenttypes.presentation.assessment import NTISurveyRef
 
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTITimeline
@@ -109,6 +113,7 @@ class TestAssetViews(ApplicationLayerTest):
     course_ntiid = 'tag:nextthought.com,2011-10:NTI-CourseInfo-Fall2015_CS_1323'
     course_url = '/dataserver2/%2B%2Betc%2B%2Bhostsites/platform.ou.edu/%2B%2Betc%2B%2Bsite/Courses/Fall2015/CS%201323'
     assets_url = course_url + '/assets'
+    evaluations_url = course_url + '/CourseEvaluations'
 
     @property
     def intids(self):
@@ -776,6 +781,36 @@ class TestAssetViews(ApplicationLayerTest):
         self.testapp.post(contents_url,
                           upload_files=[('icon', 'ichigo.png', b'ichigo')],
                           status=422)
+
+    @WithSharedApplicationMockDS(testapp=True, users=True)
+    def test_survey_refs(self):
+        # Insert survey ref
+        survey_data = self._load_resource('survey-freeresponse.json')
+        res = self.testapp.post_json(self.evaluations_url, survey_data, status=201)
+        survey_ntiid = res.json_body['NTIID']
+
+        survey_ref_data = {
+            "MimeType": NTISurveyRef.mime_type,
+            "Target-NTIID": survey_ntiid
+        }
+        group_ntiid = "tag:nextthought.com,2011-10:OU-NTICourseOverviewGroup-CS1323_F_2015_Intro_to_Computer_Programming.lec:03.02_LESSON.1"
+        group_url = "/dataserver2/NTIIDs/%s" % quote(group_ntiid)
+
+        res = self.testapp.post_json(group_url + '/@@contents/index/1',
+                                     survey_ref_data,
+                                     status=201)
+        res = res.json_body
+        assert_that(res['title'], is_("Survey FR1"))
+        assert_that(res['label'], is_("Survey FR1"))
+
+        survey_ref_data['title'] = "New Title"
+        survey_ref_data['label'] = "New Label"
+        res = self.testapp.post_json(group_url + '/@@contents/index/2',
+                                     survey_ref_data,
+                                     status=201)
+        res = res.json_body
+        assert_that(res['title'], is_("New Title"))
+        assert_that(res['label'], is_("New Label"))
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_overview_group_post(self):

@@ -464,10 +464,10 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 				raise hexc.HTTPUnprocessableEntity(
 								_('No assessment/inquiry found for given ntiid.'))
 
-			if INTIAssignmentRef.providedBy(item):
+			if INTIAssignmentRef.providedBy(item) or INTISurveyRef.providedBy(item):
 				item.label = reference.title if not item.label else item.label
 				item.title = reference.title if not item.title else item.title
-			elif INTIQuestionSetRef.providedBy(item) or INTISurveyRef.providedBy(item):
+			if INTIQuestionSetRef.providedBy(item) or INTISurveyRef.providedBy(item):
 				item.question_count = getattr(reference, 'draw', None) or len(reference)
 				item.label = reference.title if not item.label else item.label
 
