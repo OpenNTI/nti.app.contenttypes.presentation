@@ -478,15 +478,15 @@ def _on_assignment_removed(assignment, unused_event):
 
 
 @component.adapter(IQSurvey, IBeforeIdRemovedEvent)
-def _on_survey_removed(assignment, unused_event):
+def _on_survey_removed(survey, unused_event):
     """
     Remove deleted (editable) survey from all overview groups referencing
     it.
     """
-    count = _on_target_removed(assignment, INTISurveyRef)
+    count = _on_target_removed(survey, INTISurveyRef)
     if count:
         logger.info('Removed survey (%s) from %s overview group(s)',
-                    getattr(assignment, 'ntiid', None), count)
+                    getattr(survey, 'ntiid', None), count)
     return count
 
 
