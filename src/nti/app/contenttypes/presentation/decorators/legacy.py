@@ -13,6 +13,12 @@ import six
 from zope import component
 from zope import interface
 
+from nti.app.assessment.common.utils import get_available_for_submission_beginning
+
+from nti.app.assessment.utils import get_course_from_request
+
+from nti.contenttypes.courses.interfaces import ICourseInstance
+
 from nti.contenttypes.presentation.interfaces import INTISlide
 from nti.contenttypes.presentation.interfaces import INTIVideo
 from nti.contenttypes.presentation.interfaces import INTIAudio
@@ -38,6 +44,10 @@ from nti.externalization.interfaces import IExternalObjectDecorator
 from nti.externalization.singleton import Singleton
 
 from nti.ntiids.ntiids import find_object_with_ntiid
+
+from nti.publishing.interfaces import IPublishable
+
+from nti.traversal.traversal import find_interface
 
 NTIID = StandardExternalFields.NTIID
 CLASS = StandardExternalFields.CLASS
@@ -108,7 +118,26 @@ class _NTIQuestionSetRefDecorator(_BaseAssessmentRefDecorator):
 @component.adapter(INTISurveyRef)
 @interface.implementer(IExternalObjectDecorator)
 class _NTISurveyRefDecorator(_BaseAssessmentRefDecorator):
-    pass
+
+    def _get_course(self, ref):
+        course = get_course_from_request()
+        if course is None:
+            course = find_interface(ref, ICourseInstance, strict=False)
+        return course
+
+    def decorateExternalObject(self, original, external):
+        super(_NTISurveyRefDecorator, self).decorateExternalObject(original, external)
+        target = find_object_with_ntiid(original.target)
+        if target is not None:
+            target_publish_state = None
+            if IPublishable.providedBy(target):
+                target_publish_state = 'DefaultPublished' if target.is_published() else 'Unpublished'
+            external['TargetPublishState'] = target_publish_state
+            external['TargetIsClosed'] = target.isClosed
+            course = self._get_course(original)
+            if course is not None:
+                beginning = get_available_for_submission_beginning(target, course)
+                external['TargetAvailableForSubmissionBeginning'] = beginning
 
 
 @component.adapter(INTIAssignmentRef)
