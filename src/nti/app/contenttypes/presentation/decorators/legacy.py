@@ -8,12 +8,16 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from datetime import datetime
+
 import six
+from nti.app.assessment.evaluations.utils import is_inquiry_closed
 
 from zope import component
 from zope import interface
 
 from nti.app.assessment.common.utils import get_available_for_submission_beginning
+from nti.app.assessment.common.utils import get_available_for_submission_ending
 
 from nti.app.assessment.utils import get_course_from_request
 
@@ -138,6 +142,11 @@ class _NTISurveyRefDecorator(_BaseAssessmentRefDecorator):
             if course is not None:
                 beginning = get_available_for_submission_beginning(target, course)
                 external['TargetAvailableForSubmissionBeginning'] = beginning
+
+                ending = get_available_for_submission_ending(target, course)
+                external['TargetAvailableForSubmissionEnding'] = ending
+
+                external['TargetIsClosed'] = is_inquiry_closed(target, beginning, ending)
 
 
 @component.adapter(INTIAssignmentRef)
