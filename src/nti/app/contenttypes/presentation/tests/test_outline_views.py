@@ -659,12 +659,10 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		res = self.testapp.post_json(unit_url, content_data,
 									 extra_environ=instructor_environ)
 		res = res.json_body
-		assert_that(res.get('PublicationState', is_("DefaultPublished")))
+		content_node_ntiid3 = res.get('NTIID')
 		lesson_ntiid3 = res.get('ContentNTIID')
-		res = self.testapp.get('/dataserver2/Objects/%s' % lesson_ntiid3,
-								extra_environ=instructor_environ)
-		res = res.json_body
-		assert_that(res.get('PublicationState', is_("DefaultPublished")))
+		self._check_obj_state(content_node_ntiid3, is_published=True)
+		self._check_obj_state(lesson_ntiid3, is_published=True)
 
 	def _test_moving_content_nodes(self):
 		"""
