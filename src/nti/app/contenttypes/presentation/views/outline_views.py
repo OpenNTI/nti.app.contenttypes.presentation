@@ -298,6 +298,21 @@ class OutlineNodeInsertView(AbstractAuthenticatedView,
     def _registry(self):
         return self._site.getSiteManager()
 
+    def readInput(self, value=None):
+        result = super(OutlineNodeInsertView, self).readInput(value)
+        return CaseInsensitiveDict(result)
+
+    @Lazy
+    def _params(self):
+        return self.readInput()
+
+    @Lazy
+    def _auto_publish(self):
+        """
+        Auto publish the new node, defaults to False.
+        """
+        return is_true(self._params.get('auto_publish'))
+
     def _get_catalog_entry(self, outline):
         course = find_interface(outline, ICourseInstance, strict=False)
         result = ICourseCatalogEntry(course, None)
@@ -344,11 +359,16 @@ class OutlineNodeInsertView(AbstractAuthenticatedView,
         self.context.insert(index, new_node)
         self.context.child_order_locked = True
 
+        if self._auto_publish:
+            new_node.publish()
+
         # After insert, create our lesson. This makes sure lineage
         # is hooked up correctly when we do so.
         if ICourseOutlineContentNode.providedBy(new_node):
             new_lesson = self._make_lesson_node(new_node)
             new_lesson.locked = True
+            if self._auto_publish:
+                new_lesson.publish()
 
         logger.info('Created new outline node (%s)', new_node.ntiid)
         self.request.response.status_int = 201
