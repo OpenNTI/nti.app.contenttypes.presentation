@@ -651,6 +651,21 @@ class TestOutlineEditViews(ApplicationLayerTest):
 							extra_environ=instructor_environ)
 		self.testapp.get( '/dataserver2/Objects/%s' % lesson_ntiid, status=404 )
 
+		# Test auto publish
+		new_content_title3 = 'new content node title3'
+		content_data = {'title': new_content_title3,
+						'MimeType': self.content_mime_type,
+						'auto_publish': True}
+		res = self.testapp.post_json(unit_url, content_data,
+									 extra_environ=instructor_environ)
+		res = res.json_body
+		assert_that(res.get('PublicationState', is_("DefaultPublished")))
+		lesson_ntiid3 = res.get('ContentNTIID')
+		res = self.testapp.get('/dataserver2/Objects/%s' % lesson_ntiid3,
+								extra_environ=instructor_environ)
+		res = res.json_body
+		assert_that(res.get('PublicationState', is_("DefaultPublished")))
+
 	def _test_moving_content_nodes(self):
 		"""
 		Move nodes between unit nodes.
@@ -827,8 +842,8 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		assert_that(unit_ntiids[-2], is_(new_ntiid3))
 		assert_that(unit_ntiids[-1], is_(new_ntiid))
 
-		self._check_obj_state( outline_ntiid, is_locked=False,
-							is_child_locked=True )
+		self._check_obj_state(outline_ntiid, is_locked=False,
+							  is_child_locked=True )
 
 		# Invalid
 		invalid_data = {'title': INVALID_TITLE,
@@ -836,6 +851,12 @@ class TestOutlineEditViews(ApplicationLayerTest):
 		self.testapp.post_json(at_index_url, invalid_data,
 								extra_environ=instructor_environ,
 								status=422)
+
+		unit_data3['auto_publish'] = True
+		res = self.testapp.post_json(at_index_url, unit_data3,
+									 extra_environ=instructor_environ)
+		node_count += 1
+		assert_that(res.json_body.get("PublicationState"), is_('DefaultPublished'))
 
 		return node_count
 
