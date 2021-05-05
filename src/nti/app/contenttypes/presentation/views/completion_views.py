@@ -217,7 +217,7 @@ class LessonCompletionStatisticsView(AbstractAuthenticatedView):
         admins = list(get_course_instructors(self.course))
         editors = list(get_course_editors(self.course))
         admins.extend(editors)
-        admin_usernames = set(getattr(x, 'username', x) for x in admins)
+        admin_usernames = set(getattr(x, 'id', x) for x in admins)
         return usernames - admin_usernames
 
     def _validate(self):
