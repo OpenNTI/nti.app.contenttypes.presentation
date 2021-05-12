@@ -11,6 +11,8 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope import interface
 
+from zope.location.interfaces import ILocation
+
 from nti.contenttypes.courses.interfaces import ICourseSectionExporter
 from nti.contenttypes.courses.interfaces import ICourseSectionImporter
 
@@ -53,3 +55,19 @@ class ILessonOverviewsSectionExporter(ICourseSectionExporter):
 
 class ILessonOverviewsSectionImporter(ICourseSectionImporter):
     pass
+
+
+class ICoursePresentationAssets(ILocation):
+    """
+    Assets associated with a course.
+    """
+
+    def intids():
+        pass
+
+    def items():
+        pass
+
+    def __getitem__(ntiid):
+        pass
+    

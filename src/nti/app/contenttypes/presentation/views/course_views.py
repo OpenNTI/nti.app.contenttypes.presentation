@@ -21,6 +21,8 @@ from zope.mimetype.interfaces import IContentTypeAware
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
+from nti.app.contenttypes.presentation.interfaces import ICoursePresentationAssets
+
 from nti.app.contenttypes.presentation.views import VIEW_ASSETS
 from nti.app.contenttypes.presentation.views import VIEW_COURSE_CONTENT_LIBRARY_SUMMARY
 
@@ -110,14 +112,13 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView,
         return bool(size is not None and start is not None)
 
     def yield_course_items(self, course, mimeTypes=()):
-        catalog = get_library_catalog()
-        intids = component.getUtility(IIntIds)
-        container_ntiids = self.course_containers(course)
-        for item in catalog.search_objects(intids=intids,
-                                           container_all_of=False,
-                                           container_ntiids=container_ntiids,
-                                           sites=get_component_hierarchy_names(),
-                                           provided=ALL_PRESENTATION_ASSETS_INTERFACES):
+        # TODO it's really unfortunate we have to reify here to check
+        # mimetypes. We index the type which ends up being something like
+        # 'INTIVideoRef`, perhaps we can get from mimetype to indexed types
+        # so we can do this with the index? There's also a level of indirection
+        # here for things that are IContentTypeAware, is that needed?
+        assets = ICoursePresentationAssets(course)
+        for item in assets.items():
             if self.check_mimeType(item, mimeTypes):
                 yield item
 

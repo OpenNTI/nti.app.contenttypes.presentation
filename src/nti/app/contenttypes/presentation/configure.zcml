@@ -77,10 +77,12 @@
 			 for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef"
 			 provides="nti.namedfile.interfaces.IFileConstraints" />
 
-    <adapter factory=".adapters._UserAssetVisibilityUtility"
+	<adapter factory=".adapters._UserAssetVisibilityUtility"
              for="nti.dataserver.interfaces.IUser
                   nti.contenttypes.courses.interfaces.ICourseInstance"
              provides="nti.contenttypes.presentation.interfaces.IUserAssetVisibilityUtility" />
+
+	<adapter factory=".adapters.CoursePresentationAssets" />
 
 	<!-- Constraints -->
 	<adapter factory=".constraints.AssignmentCompletionConstraintChecker"
