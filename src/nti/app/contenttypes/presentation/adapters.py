@@ -11,9 +11,13 @@ from __future__ import absolute_import
 from zope import component
 from zope import interface
 
+from zope.container.contained import Contained
+
 from zope.interface.interfaces import IMethod
 
 from zope.intid.interfaces import IIntIds
+
+from zope.location.location import LocationProxy
 
 from nti.app.contenttypes.presentation.interfaces import ICoursePresentationAssets
 
@@ -294,7 +298,7 @@ class _UserAssetVisibilityUtility(object):
 @NoPickle
 @component.adapter(ICourseInstance)
 @interface.implementer(ICoursePresentationAssets)
-class CoursePresentationAssets(object):
+class CoursePresentationAssets(Contained):
 
     __name__ = 'assets'
     __parent__ = None
@@ -344,3 +348,22 @@ class CoursePresentationAssets(object):
                                       container_ntiids=container_ntiids,
                                       sites=get_component_hierarchy_names(),
                                       provided=provided)
+
+    def __getitem__(self, ntiid):
+        catalog = get_library_catalog()
+        intids = component.getUtility(IIntIds)
+        container_ntiids = self.course_containers(self.course)
+        res = catalog.search_objects(intids=intids,
+                                     ntiid=ntiid,
+                                     container_all_of=False,
+                                     container_ntiids=container_ntiids,
+                                     sites=get_component_hierarchy_names(),
+                                     provided=ALL_PRESENTATION_ASSETS_INTERFACES)
+        try:
+            # TODO We probably want to LocationProxy this with
+            # self as the parent. Consider the case where our context (__parent__) is
+            # a subinstnace, but we've just looked up a presentation item
+            # whose parent is our parent course instance.
+            return next(res.items())[1]
+        except StopIteration:
+            return KeyError(ntiid)

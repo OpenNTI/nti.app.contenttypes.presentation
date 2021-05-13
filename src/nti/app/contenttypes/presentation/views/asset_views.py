@@ -642,6 +642,8 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 		return result
 
 
+#TODO this doesn't belong on the ICourseCatalogEntry.
+#Consider moving to ICoursePresentationAssets
 @view_config(context=ICourseInstance)
 @view_config(context=ICourseCatalogEntry)
 @view_defaults(route_name='objects.generic.traversal',

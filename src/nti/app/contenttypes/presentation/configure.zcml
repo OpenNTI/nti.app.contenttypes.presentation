@@ -82,7 +82,8 @@
                   nti.contenttypes.courses.interfaces.ICourseInstance"
              provides="nti.contenttypes.presentation.interfaces.IUserAssetVisibilityUtility" />
 
-	<adapter factory=".adapters.CoursePresentationAssets" />
+	<adapter factory=".adapters.CoursePresentationAssets"
+		 provides=".interfaces.ICoursePresentationAssets"/>
 
 	<!-- Constraints -->
 	<adapter factory=".constraints.AssignmentCompletionConstraintChecker"
@@ -114,7 +115,12 @@
                 for="nti.coremetadata.interfaces.IUser
                      nti.contenttypes.courses.interfaces.ICourseInstance" />
 
-	<!-- ACLs -->
+    <!-- ACLs -->
+    <adapter name="assets"
+		 for="nti.contenttypes.courses.interfaces.ICourseInstance pyramid.interfaces.IRequest"
+		 factory=".traversal._course_assets_path_adapter"
+		 provides="zope.traversing.interfaces.IPathAdapter" />
+    
 	<adapter factory=".acl.NTIAudioACLProvider" />
 	<adapter factory=".acl.NTIVideoACLProvider" />
 	<adapter factory=".acl.NTITimelineACLProvider" />
@@ -284,7 +290,8 @@
 			 name="017:User_Assets" />
 
 	<utility factory=".exporter.LessonOverviewsExporter"
-			 provides=".interfaces.ILessonOverviewsSectionExporter"
+
+provides=".interfaces.ILessonOverviewsSectionExporter"
 			 name="018:Lesson_Overviews" />
 
 	<subscriber handler=".exporter._on_course_section_exported_event" />

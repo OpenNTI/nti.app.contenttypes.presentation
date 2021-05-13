@@ -27,15 +27,16 @@ class TestCourseViews(ApplicationLayerTest):
 
     default_origin = 'http://janux.ou.edu'
     entry_ntiid = 'tag:nextthought.com,2011-10:NTI-CourseInfo-Fall2015_CS_1323'
+    instance_href = '/dataserver2/++etc++hostsites/platform.ou.edu/++etc++site/Courses/Fall2015/CS%201323'
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_course_assets(self):
-        href = '/dataserver2/Objects/%s/@@assets' % self.entry_ntiid
+        href = '%s/assets' % self.instance_href
         res = self.testapp.get(href, status=200)
         assert_that(res.json_body,
                     has_entry('Items', has_length(greater_than(0))))
         
-        href = '/dataserver2/Objects/%s/@@assets?accept=foo' % self.entry_ntiid
+        href = '%s/assets?accept=foo' % self.instance_href
         res = self.testapp.get(href, status=200)
         assert_that(res.json_body,
                     has_entry('Items', has_length(0)))
