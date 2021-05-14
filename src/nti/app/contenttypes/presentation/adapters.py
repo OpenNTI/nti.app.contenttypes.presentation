@@ -367,3 +367,9 @@ class CoursePresentationAssets(Contained):
             return next(res.items())[1]
         except StopIteration:
             return KeyError(ntiid)
+
+def _course_for_assets(assets):
+    return assets.__parent__
+
+def _catalog_entry_for_assets(assets):
+    return ICourseCatalogEntry(assets.__parent__)

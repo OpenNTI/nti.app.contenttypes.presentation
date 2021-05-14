@@ -85,6 +85,14 @@
 	<adapter factory=".adapters.CoursePresentationAssets"
 		 provides=".interfaces.ICoursePresentationAssets"/>
 
+	<adapter factory=".adapters._course_for_assets"
+			 for=".interfaces.ICoursePresentationAssets"
+			 provides="nti.contenttypes.courses.interfaces.ICourseInstance" />
+
+	<adapter factory=".adapters._catalog_entry_for_assets"
+			 for=".interfaces.ICoursePresentationAssets"
+			 provides="nti.contenttypes.courses.interfaces.ICourseCatalogEntry" />
+
 	<!-- Constraints -->
 	<adapter factory=".constraints.AssignmentCompletionConstraintChecker"
 			 for="nti.contenttypes.presentation.interfaces.IAssignmentCompletionConstraint"

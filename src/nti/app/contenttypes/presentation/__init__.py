@@ -18,7 +18,7 @@ from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.contenttypes.presentation import interface_of_asset as iface_of_thing
 
-#: View to store/fetch presentation assets.
+#: Path component designating ICoursePresentationAssets
 VIEW_ASSETS = 'assets'
 
 #: View to get course content library information

@@ -40,6 +40,8 @@ from nti.app.contentfolder.resources import get_file_from_external_link
 
 from nti.app.contenttypes.presentation import MessageFactory as _
 
+from nti.app.contenttypes.presentation.interfaces import ICoursePresentationAssets
+
 from nti.app.contenttypes.presentation.utils.asset import intid_register
 from nti.app.contenttypes.presentation.utils.asset import add_2_connection
 from nti.app.contenttypes.presentation.utils.asset import make_asset_ntiid
@@ -49,7 +51,6 @@ from nti.app.contenttypes.presentation.utils.asset import remove_presentation_as
 
 from nti.app.contenttypes.presentation.utils.course import get_presentation_asset_courses
 
-from nti.app.contenttypes.presentation.views import VIEW_ASSETS
 from nti.app.contenttypes.presentation.views import VIEW_CONTENTS
 
 from nti.app.contenttypes.presentation.views.view_mixins import hexdigest
@@ -646,11 +647,11 @@ class PresentationAssetSubmitViewMixin(PresentationAssetMixin,
 #Consider moving to ICoursePresentationAssets
 @view_config(context=ICourseInstance)
 @view_config(context=ICourseCatalogEntry)
-@view_defaults(route_name='objects.generic.traversal',
-			   renderer='rest',
-			   name=VIEW_ASSETS,
-			   request_method='POST',
-			   permission=nauth.ACT_CONTENT_EDIT)
+@view_config(route_name='objects.generic.traversal',
+			 renderer='rest',
+			 context=ICoursePresentationAssets,
+			 request_method='POST',
+			 permission=nauth.ACT_CONTENT_EDIT)
 class PresentationAssetPostView(PresentationAssetSubmitViewMixin,
 								ModeledContentUploadRequestUtilsMixin):  # order matters
 

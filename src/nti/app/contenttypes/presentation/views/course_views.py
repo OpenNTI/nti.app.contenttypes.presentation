@@ -23,7 +23,6 @@ from nti.app.base.abstract_views import AbstractAuthenticatedView
 
 from nti.app.contenttypes.presentation.interfaces import ICoursePresentationAssets
 
-from nti.app.contenttypes.presentation.views import VIEW_ASSETS
 from nti.app.contenttypes.presentation.views import VIEW_COURSE_CONTENT_LIBRARY_SUMMARY
 
 from nti.app.externalization.view_mixins import BatchingUtilsMixin
