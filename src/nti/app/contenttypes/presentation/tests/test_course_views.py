@@ -12,6 +12,7 @@ from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import greater_than
+from hamcrest import contains_inanyorder
 does_not = is_not
 
 from nti.app.products.courseware.tests import PersistentInstructedCourseApplicationTestLayer
@@ -39,3 +40,17 @@ class TestCourseViews(ApplicationLayerTest):
         res = self.testapp.get(href, status=200)
         assert_that(res.json_body,
                     has_entry('Items', has_length(0)))
+
+        href = '/dataserver2/Objects/%s/@@assets?accept=application/vnd.nextthought.ntivideo' % self.entry_ntiid
+        res = self.testapp.get(href, status=200).json_body
+        assert_that(res, has_entry('Items', has_length(greater_than(0))))
+        assert_that(res['Items'][0], has_entry('MimeType', 'application/vnd.nextthought.ntivideo'))
+
+        href = '/dataserver2/Objects/%s/@@assets?accept=application/vnd.nextthought.questionsetref' % self.entry_ntiid
+        res = self.testapp.get(href, status=200).json_body
+        assert_that(res, has_entry('Items', has_length(greater_than(0))))
+        assert_that(res['Items'][0], has_entry('MimeType', 'application/vnd.nextthought.questionsetref'))
+
+        href = '/dataserver2/Objects/%s/@@assets?accept=application/vnd.nextthought.questionsetref,application/vnd.nextthought.ntivideo' % self.entry_ntiid
+        res = self.testapp.get(href, status=200).json_body
+        assert_that(set([x['MimeType'] for x in res['Items']]), contains_inanyorder('application/vnd.nextthought.ntivideo', 'application/vnd.nextthought.questionsetref'))

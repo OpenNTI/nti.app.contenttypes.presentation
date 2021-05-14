@@ -37,6 +37,7 @@ from nti.contenttypes.courses.interfaces import ICourseContentLibraryProvider
 from nti.contenttypes.courses.utils import get_parent_course
 
 from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
+from nti.contenttypes.presentation import asset_iface_with_mimetype
 
 from nti.dataserver import authorization as nauth
 
@@ -94,32 +95,35 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView,
             result.add(entry.ntiid)
         return result
 
-    def check_mimeType(self, item, mimeTypes=()):
-        if not mimeTypes:
-            return True
-        else:
-            item = IContentTypeAware(item, item)
-            mimeType = getattr(item, 'mimeType', None) \
-                    or getattr(item, 'mime_type', None)
-            if mimeType in mimeTypes:
-                return True
-        return False
-
     def isBatching(self):
         size, start = self._get_batch_size_start()
         return bool(size is not None and start is not None)
+
+    def _provided(self, mimeTypes):
+        if not mimeTypes:
+            return ALL_PRESENTATION_ASSETS_INTERFACES
+
+        ifaces = set()
+        for mimeType in mimeTypes:
+            _iface = asset_iface_with_mimetype(mimeType)
+            if _iface:
+                ifaces.add(_iface)
+        return tuple(ifaces)
 
     def yield_course_items(self, course, mimeTypes=()):
         catalog = get_library_catalog()
         intids = component.getUtility(IIntIds)
         container_ntiids = self.course_containers(course)
+        ifaces = self._provided(mimeTypes)
+        if not ifaces:
+            return
+
         for item in catalog.search_objects(intids=intids,
                                            container_all_of=False,
                                            container_ntiids=container_ntiids,
                                            sites=get_component_hierarchy_names(),
-                                           provided=ALL_PRESENTATION_ASSETS_INTERFACES):
-            if self.check_mimeType(item, mimeTypes):
-                yield item
+                                           provided=ifaces):
+            yield item
 
     def _do_call(self):
         batching = self.isBatching()
