@@ -13,6 +13,8 @@ from zope import interface
 
 from zope.container.interfaces import IContained
 
+from zope.interface.common.mapping import IItemMapping
+
 from nti.contenttypes.courses.interfaces import ICourseSectionExporter
 from nti.contenttypes.courses.interfaces import ICourseSectionImporter
 
@@ -63,11 +65,23 @@ class ICoursePresentationAssets(IContained):
     """
 
     def intids():
+        """
+        An iterable of intids for IPresentationAsset objects
+        accessible in this course. This may include assets from parent
+        courses when applicable.
+        """
         pass
 
     def items():
+        """
+        An iterable of IPresentationAsset objects accessible in this
+        course. This may include assets from parent courses when applicable
+        """
         pass
 
     def __getitem__(ntiid):
+        """
+        Get the asset with the provided ``ntiid``
+        """
         pass
     

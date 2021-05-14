@@ -360,13 +360,13 @@ class CoursePresentationAssets(Contained):
                                      sites=get_component_hierarchy_names(),
                                      provided=ALL_PRESENTATION_ASSETS_INTERFACES)
         try:
-            # TODO We probably want to LocationProxy this with
-            # self as the parent. Consider the case where our context (__parent__) is
+            # TODO Do we want to LocationProxy this with
+            # self as the parent? Consider the case where our context (__parent__) is
             # a subinstnace, but we've just looked up a presentation item
             # whose parent is our parent course instance.
             return next(res.items())[1]
         except StopIteration:
-            return KeyError(ntiid)
+            raise KeyError(ntiid)
 
 def _course_for_assets(assets):
     return assets.__parent__

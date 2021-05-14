@@ -124,10 +124,6 @@
                      nti.contenttypes.courses.interfaces.ICourseInstance" />
 
     <!-- ACLs -->
-    <adapter name="assets"
-		 for="nti.contenttypes.courses.interfaces.ICourseInstance pyramid.interfaces.IRequest"
-		 factory=".traversal._course_assets_path_adapter"
-		 provides="zope.traversing.interfaces.IPathAdapter" />
     
 	<adapter factory=".acl.NTIAudioACLProvider" />
 	<adapter factory=".acl.NTIVideoACLProvider" />
@@ -147,6 +143,12 @@
 	<adapter factory=".acl.LessonPublicationConstraintsACLProvider" />
 
 	<!-- Traversal-ish stuff -->
+
+	<adapter name="assets"
+		 for="nti.contenttypes.courses.interfaces.ICourseInstance pyramid.interfaces.IRequest"
+		 factory=".traversal._course_assets_path_adapter"
+		 provides="zope.traversing.interfaces.IPathAdapter" />
+	    
 	<utility factory=".ntiids._NTIAudioRefResolver" name="NTIAudioRef" />
 	<utility factory=".ntiids._NTIVideoRefResolver" name="NTIVideoRef" />
 
