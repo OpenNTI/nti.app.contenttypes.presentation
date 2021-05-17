@@ -21,7 +21,8 @@ from zope.mimetype.interfaces import IContentTypeAware
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
 
-from nti.app.contenttypes.presentation.views import VIEW_ASSETS
+from nti.app.contenttypes.presentation.interfaces import ICoursePresentationAssets
+
 from nti.app.contenttypes.presentation.views import VIEW_COURSE_CONTENT_LIBRARY_SUMMARY
 
 from nti.app.externalization.view_mixins import BatchingUtilsMixin
@@ -53,11 +54,9 @@ LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 logger = __import__('logging').getLogger(__name__)
 
 
-@view_config(context=ICourseInstance)
-@view_config(context=ICourseCatalogEntry)
+@view_config(context=ICoursePresentationAssets)
 @view_defaults(route_name='objects.generic.traversal',
                renderer='rest',
-               name=VIEW_ASSETS,
                request_method='GET',
                permission=nauth.ACT_CONTENT_EDIT)
 class CoursePresentationAssetsView(AbstractAuthenticatedView,
@@ -74,26 +73,6 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView,
             accept = ()
         return accept
 
-    def pkg_containers(self, pacakge):
-        result = []
-        def recur(unit):
-            for child in unit.children or ():
-                recur(child)
-            result.append(unit.ntiid)
-        recur(pacakge)
-        return result
-
-    def course_containers(self, course):
-        result = set()
-        courses = {course, get_parent_course(course)}
-        courses.discard(None)
-        for _course in courses:
-            entry = ICourseCatalogEntry(_course)
-            for package in get_course_packages(_course):
-                result.update(self.pkg_containers(package))
-            result.add(entry.ntiid)
-        return result
-
     def check_mimeType(self, item, mimeTypes=()):
         if not mimeTypes:
             return True
@@ -109,15 +88,13 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView,
         size, start = self._get_batch_size_start()
         return bool(size is not None and start is not None)
 
-    def yield_course_items(self, course, mimeTypes=()):
-        catalog = get_library_catalog()
-        intids = component.getUtility(IIntIds)
-        container_ntiids = self.course_containers(course)
-        for item in catalog.search_objects(intids=intids,
-                                           container_all_of=False,
-                                           container_ntiids=container_ntiids,
-                                           sites=get_component_hierarchy_names(),
-                                           provided=ALL_PRESENTATION_ASSETS_INTERFACES):
+    def yield_course_items(self, mimeTypes=()):
+        # TODO it's really unfortunate we have to reify here to check
+        # mimetypes. We index the type which ends up being something like
+        # 'INTIVideoRef`, perhaps we can get from mimetype to indexed types
+        # so we can do this with the index? There's also a level of indirection
+        # here for things that are IContentTypeAware, is that needed?
+        for item in self.context.items():
             if self.check_mimeType(item, mimeTypes):
                 yield item
 
@@ -129,10 +106,9 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView,
         self.request.acl_decoration = not batching  # decoration
 
         mimeTypes = self.get_mimeTypes()
-        course = ICourseInstance(self.context)
 
         result[ITEMS] = items = []
-        items.extend(x for x in self.yield_course_items(course, mimeTypes))
+        items.extend(x for x in self.yield_course_items(mimeTypes))
         items.sort()  # natural order
         lastModified = reduce(
             lambda x, y: max(x, getattr(y, 'lastModified', 0)), items, 0

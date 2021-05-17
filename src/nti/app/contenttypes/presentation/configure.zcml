@@ -18,8 +18,8 @@
 	<include package="zope.generations" file="subscriber.zcml" />
 
 	<utility factory=".generations.install._SchemaManager"
-			 name="nti.dataserver-app-contenttypes-presentation"
-			 provides="zope.generations.interfaces.IInstallableSchemaManager" />
+		 name="nti.dataserver-app-contenttypes-presentation"
+		 provides="zope.generations.interfaces.IInstallableSchemaManager" />
 
 	<!-- Adapters -->
 	<adapter factory=".validators._PollRefValidator" />
@@ -62,57 +62,69 @@
 	<adapter factory=".adapters._asset_to_policy_folder" />
 
 	<adapter factory="nti.app.contentlibrary.adapters.presentation_asset_items_factory"
-			 for="nti.contenttypes.courses.interfaces.ICourseInstance"
-			 provides="nti.contenttypes.presentation.interfaces.IPresentationAssetContainer" />
+		 for="nti.contenttypes.courses.interfaces.ICourseInstance"
+		 provides="nti.contenttypes.presentation.interfaces.IPresentationAssetContainer" />
 
 	<adapter factory=".adapters._MediaFileConstraints"
-			 for="nti.contenttypes.presentation.interfaces.INTIMedia"
-			 provides="nti.namedfile.interfaces.IFileConstraints" />
+		 for="nti.contenttypes.presentation.interfaces.INTIMedia"
+		 provides="nti.namedfile.interfaces.IFileConstraints" />
 
 	<adapter factory=".adapters._DiscussionRefFileConstraints"
-			 for="nti.contenttypes.presentation.interfaces.INTIDiscussionRef"
-			 provides="nti.namedfile.interfaces.IFileConstraints" />
+		 for="nti.contenttypes.presentation.interfaces.INTIDiscussionRef"
+		 provides="nti.namedfile.interfaces.IFileConstraints" />
 
 	<adapter factory=".adapters._RelatedWorkRefFileConstraints"
-			 for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef"
-			 provides="nti.namedfile.interfaces.IFileConstraints" />
+		 for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef"
+		 provides="nti.namedfile.interfaces.IFileConstraints" />
 
-    <adapter factory=".adapters._UserAssetVisibilityUtility"
-             for="nti.dataserver.interfaces.IUser
-                  nti.contenttypes.courses.interfaces.ICourseInstance"
-             provides="nti.contenttypes.presentation.interfaces.IUserAssetVisibilityUtility" />
+	<adapter factory=".adapters._UserAssetVisibilityUtility"
+		 for="nti.dataserver.interfaces.IUser
+                      nti.contenttypes.courses.interfaces.ICourseInstance"
+		 provides="nti.contenttypes.presentation.interfaces.IUserAssetVisibilityUtility" />
 
+	<adapter factory=".adapters.CoursePresentationAssets"
+		 provides=".interfaces.ICoursePresentationAssets"/>
+
+	<adapter factory=".adapters._course_for_assets"
+		 for=".interfaces.ICoursePresentationAssets"
+		 provides="nti.contenttypes.courses.interfaces.ICourseInstance" />
+
+	<adapter factory=".adapters._catalog_entry_for_assets"
+		 for=".interfaces.ICoursePresentationAssets"
+		 provides="nti.contenttypes.courses.interfaces.ICourseCatalogEntry" />
+	
 	<!-- Constraints -->
 	<adapter factory=".constraints.AssignmentCompletionConstraintChecker"
-			 for="nti.contenttypes.presentation.interfaces.IAssignmentCompletionConstraint"
-			 provides="nti.contenttypes.presentation.interfaces.ILessonPublicationConstraintChecker" />
+		 for="nti.contenttypes.presentation.interfaces.IAssignmentCompletionConstraint"
+		 provides="nti.contenttypes.presentation.interfaces.ILessonPublicationConstraintChecker" />
 
 	<adapter factory=".constraints.SurveyCompletionConstraintChecker"
-			 for="nti.contenttypes.presentation.interfaces.ISurveyCompletionConstraint"
-			 provides="nti.contenttypes.presentation.interfaces.ILessonPublicationConstraintChecker" />
+		 for="nti.contenttypes.presentation.interfaces.ISurveyCompletionConstraint"
+		 provides="nti.contenttypes.presentation.interfaces.ILessonPublicationConstraintChecker" />
 
 	<subscriber factory=".constraints.LessonPublishablePredicate"
-				provides="nti.publishing.interfaces.ICalendarPublishablePredicate" />
+		    provides="nti.publishing.interfaces.ICalendarPublishablePredicate" />
 
 	<!-- Search filters -->
 	<subscriber factory=".search._LessonsSearchHitPredicate"
-				provides="nti.contentsearch.interfaces.ISearchHitPredicate"
-				for="nti.contenttypes.presentation.interfaces.IPresentationAsset" />
+		    provides="nti.contentsearch.interfaces.ISearchHitPredicate"
+		    for="nti.contenttypes.presentation.interfaces.IPresentationAsset" />
 
 	<subscriber factory=".search._TranscriptSearchHitPredicate"
-                provides="nti.contentsearch.interfaces.ISearchHitPredicate"
-                for="nti.contenttypes.presentation.interfaces.INTITranscript" />
+                    provides="nti.contentsearch.interfaces.ISearchHitPredicate"
+                    for="nti.contenttypes.presentation.interfaces.INTITranscript" />
 
 	<subscriber factory=".search._AssetVisibleSearchPredicate"
-                provides="nti.contentsearch.interfaces.ISearchHitPredicate"
-                for="nti.contenttypes.presentation.interfaces.IPresentationAsset" />
+                    provides="nti.contentsearch.interfaces.ISearchHitPredicate"
+                    for="nti.contenttypes.presentation.interfaces.IPresentationAsset" />
 
-    <subscriber factory=".subscribers._CourseContentLibraryProvider"
-                provides="nti.contenttypes.courses.interfaces.ICourseContentLibraryProvider"
-                for="nti.coremetadata.interfaces.IUser
-                     nti.contenttypes.courses.interfaces.ICourseInstance" />
+	<subscriber factory=".subscribers._CourseContentLibraryProvider"
+                    provides="nti.contenttypes.courses.interfaces.ICourseContentLibraryProvider"
+                    for="nti.coremetadata.interfaces.IUser
+			 nti.contenttypes.courses.interfaces.ICourseInstance" />
 
 	<!-- ACLs -->
+    
 	<adapter factory=".acl.NTIAudioACLProvider" />
 	<adapter factory=".acl.NTIVideoACLProvider" />
 	<adapter factory=".acl.NTITimelineACLProvider" />
@@ -131,6 +143,12 @@
 	<adapter factory=".acl.LessonPublicationConstraintsACLProvider" />
 
 	<!-- Traversal-ish stuff -->
+
+	<adapter name="assets"
+		 for="nti.contenttypes.courses.interfaces.ICourseInstance pyramid.interfaces.IRequest"
+		 factory=".traversal._course_assets_path_adapter"
+		 provides="zope.traversing.interfaces.IPathAdapter" />
+	    
 	<utility factory=".ntiids._NTIAudioRefResolver" name="NTIAudioRef" />
 	<utility factory=".ntiids._NTIVideoRefResolver" name="NTIVideoRef" />
 
@@ -186,53 +204,53 @@
 	<utility factory=".ntiids._NTILessonCompletionConstraintResolver" name="NTILessonCompletionConstraint" />
 
 	<adapter factory=".traversal._LessonOverviewTraversable"
-			 for="nti.contenttypes.presentation.interfaces.INTILessonOverview pyramid.interfaces.IRequest"
-			 provides="zope.traversing.interfaces.ITraversable" />
+		 for="nti.contenttypes.presentation.interfaces.INTILessonOverview pyramid.interfaces.IRequest"
+		 provides="zope.traversing.interfaces.ITraversable" />
 
 	<adapter factory=".traversal._LessonPublicationConstraintsTraversable" />
 
 	<!-- Asset update -->
 	<adapter factory=".adapters._PresentationAssetExternalFieldTraverser"
-			 for="nti.contenttypes.presentation.interfaces.IPresentationAsset pyramid.interfaces.IRequest"
-			 provides="zope.traversing.interfaces.ITraversable"
-			 name="fields" />
+		 for="nti.contenttypes.presentation.interfaces.IPresentationAsset pyramid.interfaces.IRequest"
+		 provides="zope.traversing.interfaces.ITraversable"
+		 name="fields" />
 
-    <!-- Completion -->
-    <subscriber handler=".subscribers._asset_progress" />
+	<!-- Completion -->
+	<subscriber handler=".subscribers._asset_progress" />
 
-    <adapter factory=".completion._video_completion_policy"
-             provides="nti.contenttypes.completion.interfaces.ICompletableItemCompletionPolicy"
-             for="nti.contenttypes.presentation.interfaces.INTIVideo
-                  nti.contenttypes.courses.interfaces.ICourseInstance" />
+	<adapter factory=".completion._video_completion_policy"
+		 provides="nti.contenttypes.completion.interfaces.ICompletableItemCompletionPolicy"
+		 for="nti.contenttypes.presentation.interfaces.INTIVideo
+                      nti.contenttypes.courses.interfaces.ICourseInstance" />
 
-    <adapter factory=".completion._related_work_ref_completion_policy"
-             provides="nti.contenttypes.completion.interfaces.ICompletableItemCompletionPolicy"
-             for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef
-                  nti.contenttypes.courses.interfaces.ICourseInstance" />
+	<adapter factory=".completion._related_work_ref_completion_policy"
+		 provides="nti.contenttypes.completion.interfaces.ICompletableItemCompletionPolicy"
+		 for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef
+                      nti.contenttypes.courses.interfaces.ICourseInstance" />
 
-    <adapter factory=".completion.DefaultVideoCompletionPolicy"
-             provides="nti.contenttypes.completion.interfaces.ICompletableItemCompletionPolicy"
-             for="nti.contenttypes.presentation.interfaces.INTIVideo" />
+	<adapter factory=".completion.DefaultVideoCompletionPolicy"
+		 provides="nti.contenttypes.completion.interfaces.ICompletableItemCompletionPolicy"
+		 for="nti.contenttypes.presentation.interfaces.INTIVideo" />
 
-    <adapter factory=".completion.DefaultRelatedWorkRefCompletionPolicy"
-             provides="nti.contenttypes.completion.interfaces.ICompletableItemCompletionPolicy"
-             for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef" />
+	<adapter factory=".completion.DefaultRelatedWorkRefCompletionPolicy"
+		 provides="nti.contenttypes.completion.interfaces.ICompletableItemCompletionPolicy"
+		 for="nti.contenttypes.presentation.interfaces.INTIRelatedWorkRef" />
 
-    <subscriber factory=".completion._LessonAssetItemProvider"
-                provides="nti.contenttypes.completion.interfaces.ICompletableItemProvider"
-                for="nti.contenttypes.presentation.interfaces.INTILessonOverview" />
+	<subscriber factory=".completion._LessonAssetItemProvider"
+                    provides="nti.contenttypes.completion.interfaces.ICompletableItemProvider"
+                    for="nti.contenttypes.presentation.interfaces.INTILessonOverview" />
 
-    <subscriber factory=".completion._LessonAssetRequiredItemProvider"
-                provides="nti.contenttypes.completion.interfaces.IRequiredCompletableItemProvider"
-                for="nti.contenttypes.presentation.interfaces.INTILessonOverview" />
+	<subscriber factory=".completion._LessonAssetRequiredItemProvider"
+                    provides="nti.contenttypes.completion.interfaces.IRequiredCompletableItemProvider"
+                    for="nti.contenttypes.presentation.interfaces.INTILessonOverview" />
 
-    <subscriber factory=".completion._CourseAssetItemProvider"
-                provides="nti.contenttypes.completion.interfaces.ICompletableItemProvider"
-                for="nti.contenttypes.courses.interfaces.ICourseInstance" />
+	<subscriber factory=".completion._CourseAssetItemProvider"
+                    provides="nti.contenttypes.completion.interfaces.ICompletableItemProvider"
+                    for="nti.contenttypes.courses.interfaces.ICourseInstance" />
 
-    <subscriber factory=".completion._CourseAssetRequiredItemProvider"
-                provides="nti.contenttypes.completion.interfaces.IRequiredCompletableItemProvider"
-                for="nti.contenttypes.courses.interfaces.ICourseInstance" />
+	<subscriber factory=".completion._CourseAssetRequiredItemProvider"
+                    provides="nti.contenttypes.completion.interfaces.IRequiredCompletableItemProvider"
+                    for="nti.contenttypes.courses.interfaces.ICourseInstance" />
 
 	<utility factory=".completion.AssetCompletables" name="assets" />
 
@@ -244,8 +262,8 @@
 	<subscriber handler=".subscribers._on_asset_moved" />
 	<subscriber handler=".subscribers._on_group_moved" />
 	<subscriber handler=".subscribers._on_topic_removed" />
-    <subscriber handler=".subscribers._on_audio_removed" />
-    <subscriber handler=".subscribers._on_video_removed" />
+	<subscriber handler=".subscribers._on_audio_removed" />
+	<subscriber handler=".subscribers._on_video_removed" />
 	<subscriber handler=".subscribers._on_asset_modified" />
 	<subscriber handler=".subscribers._on_lesson_removed" />
 	<subscriber handler=".subscribers._on_asset_registered" />
@@ -256,8 +274,8 @@
 	<subscriber handler=".subscribers._on_will_update_presentation_asset" />
 	<subscriber handler=".subscribers._on_will_remove_course_overview_group" />
 
-    <subscriber handler=".subscribers._on_content_removed" />
-    <subscriber handler=".subscribers._on_package_removed" />
+	<subscriber handler=".subscribers._on_content_removed" />
+	<subscriber handler=".subscribers._on_package_removed" />
 	<subscriber handler=".subscribers._on_assignment_removed" />
 	<subscriber handler=".subscribers._on_survey_removed" />
 	<subscriber handler=".subscribers._course_default_outline" />
@@ -270,33 +288,33 @@
 	<subscriber handler=".subscribers.update_course_asset_containers" />
 
 	<subscriber handler=".subscribers._clear_data_when_course_removed"
-				for="nti.contenttypes.courses.interfaces.ICourseInstance
-					 zope.lifecycleevent.IObjectRemovedEvent" />
+		    for="nti.contenttypes.courses.interfaces.ICourseInstance
+			 zope.lifecycleevent.IObjectRemovedEvent" />
 
-    <subscriber factory=".subscribers._RelatedWorkRefContentUnitAssociations"
-                provides="nti.contentlibrary.interfaces.IContentUnitAssociations"
-                for="nti.contentlibrary.interfaces.IContentUnit" />
+	<subscriber factory=".subscribers._RelatedWorkRefContentUnitAssociations"
+                    provides="nti.contentlibrary.interfaces.IContentUnitAssociations"
+                    for="nti.contentlibrary.interfaces.IContentUnit" />
 
 	<!-- Exporters -->
 	<utility factory=".exporter.UserAssetsExporter"
-			 name="017:User_Assets" />
+		 name="017:User_Assets" />
 
 	<utility factory=".exporter.LessonOverviewsExporter"
-			 provides=".interfaces.ILessonOverviewsSectionExporter"
-			 name="018:Lesson_Overviews" />
+		 provides=".interfaces.ILessonOverviewsSectionExporter"
+		 name="018:Lesson_Overviews" />
 
 	<subscriber handler=".exporter._on_course_section_exported_event" />
 
 	<!-- Importers -->
 	<utility factory=".importer.UserAssetsImporter"
-			 name="017:User_Assets" />
+		 name="017:User_Assets" />
 
 	<utility factory=".importer.AssetCleanerImporter"
-			 name="016:Asset_Cleaner" />
+		 name="016:Asset_Cleaner" />
 
 	<utility factory=".importer.LessonOverviewsImporter"
-			 provides=".interfaces.ILessonOverviewsSectionImporter"
-			 name="018:Lesson_Overviews" />
+		 provides=".interfaces.ILessonOverviewsSectionImporter"
+		 name="018:Lesson_Overviews" />
 
 	<!-- Decorators -->
 	<include package=".decorators" />
@@ -305,11 +323,11 @@
 	<include package=".processors" />
 
 	<!-- Metadata -->
-	<subscriber	factory=".predicates._SystemPresentationAssets"
-				provides="nti.dataserver.metadata.interfaces.IPrincipalMetadataObjects" />
+	<subscriber factory=".predicates._SystemPresentationAssets"
+		    provides="nti.dataserver.metadata.interfaces.IPrincipalMetadataObjects" />
 
-	<subscriber	factory=".predicates._UserPresentationAssets"
-				provides="nti.dataserver.metadata.interfaces.IPrincipalMetadataObjects" />
+	<subscriber factory=".predicates._UserPresentationAssets"
+		    provides="nti.dataserver.metadata.interfaces.IPrincipalMetadataObjects" />
 
 	<!-- Catalog -->
 	<adapter factory=".catalog._asset_to_site" />

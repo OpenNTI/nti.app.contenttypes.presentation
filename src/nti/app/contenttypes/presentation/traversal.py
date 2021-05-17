@@ -15,6 +15,8 @@ from zope.location.interfaces import LocationError
 
 from pyramid.interfaces import IRequest
 
+from nti.app.contenttypes.presentation.interfaces import ICoursePresentationAssets
+
 from nti.contenttypes.presentation.interfaces import INTILessonOverview
 from nti.contenttypes.presentation.interfaces import ILessonPublicationConstraints
 
@@ -36,3 +38,6 @@ class _LessonPublicationConstraintsTraversable(ContainerAdapterTraversable):
 
     def traverse(self, key, remaining_path):
         return ContainerAdapterTraversable.traverse(self, key, remaining_path)
+
+def _course_assets_path_adapter(context, request):
+    return ICoursePresentationAssets(context)

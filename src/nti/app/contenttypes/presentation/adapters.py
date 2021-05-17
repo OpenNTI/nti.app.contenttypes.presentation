@@ -11,7 +11,15 @@ from __future__ import absolute_import
 from zope import component
 from zope import interface
 
+from zope.container.contained import Contained
+
 from zope.interface.interfaces import IMethod
+
+from zope.intid.interfaces import IIntIds
+
+from zope.location.location import LocationProxy
+
+from nti.app.contenttypes.presentation.interfaces import ICoursePresentationAssets
 
 from nti.app.contenttypes.presentation.utils import is_item_visible
 
@@ -27,12 +35,21 @@ from nti.assessment.interfaces import IQEvaluation
 from nti.assessment.interfaces import IQuestionSet
 from nti.assessment.interfaces import IQAssignment
 
+from nti.contentlibrary.indexed_data import get_library_catalog
+
 from nti.contenttypes.presentation import interface_of_asset
 
 from nti.contenttypes.calendar.interfaces import ICalendarEvent
 
+from nti.contenttypes.courses.common import get_course_packages
+
+from nti.contenttypes.courses.utils import get_parent_course
+
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
+
+from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
 
 from nti.contenttypes.presentation.interfaces import IAssetRef
 from nti.contenttypes.presentation.interfaces import INTIAudio
@@ -66,6 +83,8 @@ from nti.contenttypes.presentation.interfaces import ILessonPublicationConstrain
 
 from nti.dataserver.interfaces import IUser
 
+from nti.externalization.persistence import NoPickle
+
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.namedfile.constraints import FileConstraints
@@ -73,6 +92,8 @@ from nti.namedfile.constraints import FileConstraints
 from nti.schema.jsonschema import TAG_HIDDEN_IN_UI
 
 from nti.site.interfaces import IHostPolicyFolder
+
+from nti.site.site import get_component_hierarchy_names
 
 from nti.traversal.traversal import find_interface
 
@@ -272,3 +293,83 @@ class _UserAssetVisibilityUtility(object):
         user = user if user is not None else self.user
         course = course if course is not None else self.course
         return is_item_visible(item, user, course)
+
+
+@NoPickle
+@component.adapter(ICourseInstance)
+@interface.implementer(ICoursePresentationAssets)
+class CoursePresentationAssets(Contained):
+
+    __name__ = 'assets'
+    __parent__ = None
+
+    def __init__(self, course):
+        self.__parent__ = course
+
+    @property
+    def course(self):
+        return self.__parent__
+
+    def pkg_containers(self, pacakge):
+        result = []
+        def recur(unit):
+            for child in unit.children or ():
+                recur(child)
+            result.append(unit.ntiid)
+        recur(pacakge)
+        return result
+
+    def course_containers(self, course):
+        result = set()
+        courses = {course, get_parent_course(course)}
+        courses.discard(None)
+        for _course in courses:
+            entry = ICourseCatalogEntry(_course)
+            for package in get_course_packages(_course):
+                result.update(self.pkg_containers(package))
+            result.add(entry.ntiid)
+        return result
+
+    def intids(self, provided=ALL_PRESENTATION_ASSETS_INTERFACES):
+        catalog = get_library_catalog()
+        container_ntiids = self.course_containers(self.course)
+        return catalog.get_references(container_all_of=False,
+                                      container_ntiids=container_ntiids,
+                                      sites=get_component_hierarchy_names(),
+                                      provided=provided)
+        
+
+    def items(self, provided=ALL_PRESENTATION_ASSETS_INTERFACES):
+        catalog = get_library_catalog()
+        intids = component.getUtility(IIntIds)
+        container_ntiids = self.course_containers(self.course)
+        return catalog.search_objects(intids=intids,
+                                      container_all_of=False,
+                                      container_ntiids=container_ntiids,
+                                      sites=get_component_hierarchy_names(),
+                                      provided=provided)
+
+    def __getitem__(self, ntiid):
+        catalog = get_library_catalog()
+        intids = component.getUtility(IIntIds)
+        container_ntiids = self.course_containers(self.course)
+        res = catalog.search_objects(intids=intids,
+                                     ntiid=ntiid,
+                                     container_all_of=False,
+                                     container_ntiids=container_ntiids,
+                                     sites=get_component_hierarchy_names(),
+                                     provided=ALL_PRESENTATION_ASSETS_INTERFACES)
+        try:
+            # TODO Do we want to LocationProxy this with
+            # self as the parent? Consider the case where our context (__parent__) is
+            # a subinstnace, but we've just looked up a presentation item
+            # whose parent is our parent course instance.
+            return next(res.items())[1]
+        except StopIteration:
+            raise KeyError(ntiid)
+
+def _course_for_assets(assets):
+    return assets.__parent__
+
+def _catalog_entry_for_assets(assets):
+    return ICourseCatalogEntry(assets.__parent__)

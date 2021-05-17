@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 
 from hamcrest import is_not
 from hamcrest import has_entry
+from hamcrest import has_entries
 from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import greater_than
@@ -27,15 +28,33 @@ class TestCourseViews(ApplicationLayerTest):
 
     default_origin = 'http://janux.ou.edu'
     entry_ntiid = 'tag:nextthought.com,2011-10:NTI-CourseInfo-Fall2015_CS_1323'
+    instance_href = '/dataserver2/++etc++hostsites/platform.ou.edu/++etc++site/Courses/Fall2015/CS%201323'
 
     @WithSharedApplicationMockDS(testapp=True, users=True)
     def test_course_assets(self):
-        href = '/dataserver2/Objects/%s/@@assets' % self.entry_ntiid
+        href = '%s/assets' % self.instance_href
         res = self.testapp.get(href, status=200)
         assert_that(res.json_body,
                     has_entry('Items', has_length(greater_than(0))))
         
-        href = '/dataserver2/Objects/%s/@@assets?accept=foo' % self.entry_ntiid
+        href = '%s/assets?accept=foo' % self.instance_href
         res = self.testapp.get(href, status=200)
         assert_that(res.json_body,
                     has_entry('Items', has_length(0)))
+
+    @WithSharedApplicationMockDS(testapp=True, users=True)
+    def test_course_asset_traversal(self):
+        href = '%s/assets' % self.instance_href
+        res = self.testapp.get(href, status=200)
+
+        asset_href = '%s/assets/%s' % (self.instance_href, 'thisdoesnotexist')
+        self.testapp.get(asset_href, status=404)
+
+        asset_id = 'tag:nextthought.com,2011-10:OU-RelatedWorkRef-CS1323_F_2015_Intro_to_Computer_Programming.relatedworkref.relwk:homework_4_solution'
+        asset_href = '%s/assets/%s' % (self.instance_href, asset_id)
+        
+        res = self.testapp.get(asset_href, status=200)
+
+        assert_that(res.json_body,
+                    has_entries('MimeType', 'application/vnd.nextthought.relatedworkref',
+                                'NTIID', asset_id))
