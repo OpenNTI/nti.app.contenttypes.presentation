@@ -43,7 +43,6 @@ LINKS = StandardExternalFields.LINKS
 
 logger = __import__('logging').getLogger(__name__)
 
-@component.adapter(INTIMedia)
 @interface.implementer(IExternalObjectDecorator)
 class _MediaHrefRewriter(AbstractAuthenticatedRequestAwareDecorator):
     """
