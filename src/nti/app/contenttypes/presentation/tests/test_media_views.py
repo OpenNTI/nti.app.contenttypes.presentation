@@ -215,7 +215,7 @@ class TestMediaViews(ApplicationLayerTest):
         video.pop('sources', None)
         video['transcripts'] = transcripts
         href = res.json_body['href']
-        assert_that(href, ends_with('assets/'+ntiid))
+        assert_that(href, ends_with('assets/' + ntiid))
         video_res = self.testapp.put_json(href, video, status=200)
         assert_that(video_res.json_body,
                     has_entry('transcripts', is_(none())))
