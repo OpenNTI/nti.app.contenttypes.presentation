@@ -262,6 +262,11 @@
 	<subscriber factory=".media._TranscriptLinkDecorator"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"
 				for="nti.contenttypes.presentation.interfaces.INTITranscript
+				     pyramid.interfaces.IRequest" />
+
+	<subscriber factory=".media._MediaHrefRewriter"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"
+				for="nti.contenttypes.presentation.interfaces.INTIMedia
 					 pyramid.interfaces.IRequest" />
 
 	<!-- calendar -->

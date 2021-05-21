@@ -17,9 +17,13 @@ from zope.location.interfaces import ILocation
 
 from nti.app.contenttypes.presentation.decorators import VIEW_TRANSCRIPTS
 
+from nti.app.contenttypes.presentation.interfaces import ICoursePresentationAssets
+
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
 from nti.appserver.pyramid_authorization import has_permission
+
+from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.presentation.interfaces import INTIMedia
 from nti.contenttypes.presentation.interfaces import INTITranscript
@@ -27,6 +31,8 @@ from nti.contenttypes.presentation.interfaces import IUserCreatedAsset
 from nti.contenttypes.presentation.interfaces import IUserCreatedTranscript
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
+
+from nti.dataserver.interfaces import ILinkExternalHrefOnly
 
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalObjectDecorator
@@ -37,6 +43,33 @@ LINKS = StandardExternalFields.LINKS
 
 logger = __import__('logging').getLogger(__name__)
 
+@interface.implementer(IExternalObjectDecorator)
+class _MediaHrefRewriter(AbstractAuthenticatedRequestAwareDecorator):
+    """
+    When we can, we want access to our media (all assets?) to come
+    through our assets location. Ideally we could just use
+    IShouldHaveTraversablePath to accomplish this, but there are a few
+    things to work out prior to that. Primarily we need to have
+    ICoursePresnetationAssets be in the lineage of the assets and have
+    a plan for how to acquire them appropriately from parent courses
+    when possible. This might makes sense to tackle in tandom with
+    registering these things in a ISiteManager tied to the course
+    instead of the global site.
+    """
+
+    @Lazy
+    def course(self):
+        return ICourseInstance(self.request, None)
+    
+    def _predicate(self, context, result):
+        return self.course is not None
+
+    def _do_decorate_external(self, context, result):
+        assets = ICoursePresentationAssets(self.course)
+        link = Link(assets, elements=(context.ntiid,))
+        interface.alsoProvides(link, ILinkExternalHrefOnly)
+        result['href'] = link
+        
 
 @component.adapter(INTIMedia)
 @interface.implementer(IExternalObjectDecorator)

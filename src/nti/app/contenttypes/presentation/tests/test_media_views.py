@@ -7,6 +7,7 @@ __docformat__ = "restructuredtext en"
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
 
+from hamcrest import ends_with
 from hamcrest import is_
 from hamcrest import none
 from hamcrest import is_not
@@ -213,7 +214,8 @@ class TestMediaViews(ApplicationLayerTest):
         # transcripts cannot be put
         video.pop('sources', None)
         video['transcripts'] = transcripts
-        href = '/dataserver2/Objects/%s' % ntiid
+        href = res.json_body['href']
+        assert_that(href, ends_with('assets/' + ntiid))
         video_res = self.testapp.put_json(href, video, status=200)
         assert_that(video_res.json_body,
                     has_entry('transcripts', is_(none())))
