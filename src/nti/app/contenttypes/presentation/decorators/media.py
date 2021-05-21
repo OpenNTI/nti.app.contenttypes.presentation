@@ -32,12 +32,11 @@ from nti.contenttypes.presentation.interfaces import IUserCreatedTranscript
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
-from nti.dataserver.interfaces import ILinkExternalHrefOnly
-
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalObjectDecorator
 
 from nti.links.links import Link
+from nti.links.links import LinkExternalHrefOnly
 
 LINKS = StandardExternalFields.LINKS
 
@@ -66,9 +65,7 @@ class _MediaHrefRewriter(AbstractAuthenticatedRequestAwareDecorator):
 
     def _do_decorate_external(self, context, result):
         assets = ICoursePresentationAssets(self.course)
-        link = Link(assets, elements=(context.ntiid,))
-        interface.alsoProvides(link, ILinkExternalHrefOnly)
-        result['href'] = link
+        result['href'] = LinkExternalHrefOnly(assets, elements=(context.ntiid,))
         
 
 @component.adapter(INTIMedia)
