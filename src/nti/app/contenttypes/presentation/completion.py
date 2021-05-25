@@ -31,6 +31,7 @@ from nti.contenttypes.completion.interfaces import ICompletableItemCompletionPol
 from nti.contenttypes.completion.interfaces import ICompletionContextCompletionPolicyContainer
 
 from nti.contenttypes.completion.policies import AbstractCompletableItemCompletionPolicy
+from nti.contenttypes.completion.policies import CompletableItemAggregateCompletionPolicy
 
 from nti.contenttypes.completion.utils import is_item_required
 
@@ -84,22 +85,15 @@ class DefaultRelatedWorkRefCompletionPolicy(AbstractCompletableItemCompletionPol
 @NoPickle
 @component.adapter(INTIVideo)
 @interface.implementer(ICompletableItemCompletionPolicy)
-class DefaultVideoCompletionPolicy(AbstractCompletableItemCompletionPolicy):
+class DefaultVideoCompletionPolicy(CompletableItemAggregateCompletionPolicy):
     """
-    A simple completion policy that cares about some portion of progress
-    being made on videos.
+    By default, videos are not complete unless 95% watched.
     """
+
+    percentage = 0.95
 
     def __init__(self, obj):
         self.asset = obj
-
-    def is_complete(self, progress):
-        result = None
-        if progress is not None and progress.HasProgress:
-            result = CompletedItem(Item=progress.Item,
-                                   Principal=progress.User,
-                                   CompletedDate=progress.LastModified)
-        return result
 
 
 def _asset_completion_policy(asset, course):
