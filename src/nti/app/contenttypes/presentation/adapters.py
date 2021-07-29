@@ -9,7 +9,6 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 from zc.displayname.adapters import convertName
-from zc.displayname.adapters import DefaultDisplayNameGenerator
 
 from zc.displayname.interfaces import IDisplayNameGenerator
 
