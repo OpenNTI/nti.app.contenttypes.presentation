@@ -8,6 +8,13 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from zc.displayname.adapters import convertName
+from zc.displayname.adapters import DefaultDisplayNameGenerator
+
+from zc.displayname.interfaces import IDisplayNameGenerator
+
+from pyramid.interfaces import IRequest
+
 from zope import component
 from zope import interface
 
@@ -373,3 +380,17 @@ def _course_for_assets(assets):
 
 def _catalog_entry_for_assets(assets):
     return ICourseCatalogEntry(assets.__parent__)
+
+
+@interface.implementer(IDisplayNameGenerator)
+@component.adapter(IPresentationAsset, IRequest)
+class PresentationAssetDisplayNameGenerator(object):
+
+    def __init__(self, context, unused_request):
+        self.context = context
+
+    def __call__(self, maxlength=None):
+        title = getattr(self.context, 'title', None)
+        if not title:
+            title = getattr(self.context, 'label', '')
+        return convertName(title, self.request, maxlength)

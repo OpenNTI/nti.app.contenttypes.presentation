@@ -49,6 +49,8 @@
 	<adapter factory=".adapters._questionsetref_to_questionset" />
 	<adapter factory=".adapters._calendareventref_to_calendarref" />
 	<adapter factory=".adapters._relatedworkrefpointer_to_relatedworkref" />
+	
+	<adapter factory=".adapters.PresentationAssetDisplayNameGenerator" />
 
 	<adapter factory=".adapters._outlinenode_to_lesson" />
 
