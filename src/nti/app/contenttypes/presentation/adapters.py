@@ -385,8 +385,9 @@ def _catalog_entry_for_assets(assets):
 @component.adapter(IPresentationAsset, IRequest)
 class PresentationAssetDisplayNameGenerator(object):
 
-    def __init__(self, context, unused_request):
+    def __init__(self, context, request):
         self.context = context
+        self.request = request
 
     def __call__(self, maxlength=None):
         title = getattr(self.context, 'title', None)
