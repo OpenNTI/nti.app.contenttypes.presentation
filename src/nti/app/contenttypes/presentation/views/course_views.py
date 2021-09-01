@@ -15,6 +15,8 @@ from requests.structures import CaseInsensitiveDict
 
 from zope import component
 
+from zope.catalog.catalog import ResultSet
+
 from zope.intid.interfaces import IIntIds
 
 from zope.mimetype.interfaces import IContentTypeAware
@@ -27,24 +29,18 @@ from nti.app.contenttypes.presentation.views import VIEW_COURSE_CONTENT_LIBRARY_
 
 from nti.app.externalization.view_mixins import BatchingUtilsMixin
 
-from nti.contentlibrary.indexed_data import get_library_catalog
-
-from nti.contenttypes.courses.common import get_course_packages
-
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseContentLibraryProvider
 
-from nti.contenttypes.courses.utils import get_parent_course
-
-from nti.contenttypes.presentation import ALL_PRESENTATION_ASSETS_INTERFACES
-
 from nti.dataserver import authorization as nauth
+
+from nti.dataserver.metadata.index import IX_MIMETYPE
+
+from nti.dataserver.metadata.index import get_metadata_catalog
 
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
-
-from nti.site.site import get_component_hierarchy_names
 
 ITEMS = StandardExternalFields.ITEMS
 TOTAL = StandardExternalFields.TOTAL
@@ -73,31 +69,19 @@ class CoursePresentationAssetsView(AbstractAuthenticatedView,
             accept = ()
         return accept
 
-    def check_mimeType(self, item, mimeTypes=()):
-        if not mimeTypes:
-            return True
-        else:
-            item = IContentTypeAware(item, item)
-            mimeType = getattr(item, 'mimeType', None) \
-                    or getattr(item, 'mime_type', None)
-            if mimeType in mimeTypes:
-                return True
-        return False
-
     def isBatching(self):
         size, start = self._get_batch_size_start()
         return bool(size is not None and start is not None)
 
     def yield_course_items(self, mimeTypes=()):
-        # TODO it's really unfortunate we have to reify here to check
-        # mimetypes. We index the type which ends up being something like
-        # 'INTIVideoRef`, perhaps we can get from mimetype to indexed types
-        # so we can do this with the index? There's also a level of indirection
-        # here for things that are IContentTypeAware, is that needed?
-        for item in self.context.items():
-            if self.check_mimeType(item, mimeTypes):
-                yield item
-
+        rs = self.context.intids()
+        if mimeTypes:
+            md_catalog = get_metadata_catalog()
+            mime_intids = md_catalog.apply({IX_MIMETYPE: {'any_of': mimeTypes}})
+            rs = md_catalog.family.IF.intersection(rs, mime_intids)
+        intids = component.getUtility(IIntIds)
+        return ResultSet(rs, intids)
+        
     def _do_call(self):
         batching = self.isBatching()
         result = LocatedExternalDict()
