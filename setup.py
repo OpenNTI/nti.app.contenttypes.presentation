@@ -9,6 +9,8 @@ entry_points = {
 
 
 TESTS_REQUIRE = [
+    'nti.app.products.ou',
+    'nti.app.metadata',
     'nti.app.testing',
     'nti.testing',
     'zope.dottedname',
